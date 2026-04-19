@@ -1,0 +1,26 @@
+{
+  "name": "DALIGHT Head Spa Japonais",
+  "short_name": "DALIGHT",
+  "description": "L'excellence du Head Spa Japonais en Haïti. Rituels de soin du cuir chevelu, massages crâniens et relaxation profonde.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4A3728",
+  "orientation": "portrait-primary",
+  "categories": ["health", "wellness", "lifestyle"],
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "assets/images/logodaligth.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/images/logodaligth.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

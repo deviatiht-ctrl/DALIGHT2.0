@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Commande Confirmée - DALIGHT</title>
+  <link rel="icon" href="../assets/images/logodaligth.jpg" type="image/jpeg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <style>
+    .confirmation-container {
+      max-width: 800px;
+      margin: 3rem auto;
+      padding: 0 1rem;
+      text-align: center;
+    }
+    
+    .success-icon {
+      width: 100px;
+      height: 100px;
+      background: #059669;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 2rem;
+      animation: scaleIn 0.5s ease-out;
+    }
+    
+    @keyframes scaleIn {
+      from {
+        transform: scale(0);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    
+    .success-icon svg {
+      width: 50px;
+      height: 50px;
+      color: white;
+    }
+    
+    .order-number {
+      background: #f3f4f6;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      display: inline-block;
+      margin: 1rem 0;
+      font-family: monospace;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #059669;
+    }
+    
+    .confirmation-card {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin: 2rem 0;
+      text-align: left;
+    }
+    
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    
+    .info-item h3 {
+      font-size: 0.9rem;
+      color: #6b7280;
+      margin-bottom: 0.5rem;
+    }
+    
+    .info-item p {
+      font-weight: 600;
+      color: #1f2937;
+    }
+    
+    .btn-continue {
+      display: inline-block;
+      padding: 1rem 2rem;
+      background: #059669;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 700;
+      margin-top: 2rem;
+    }
+    
+    .btn-continue:hover {
+      background: #047857;
+    }
+    
+    @media (max-width: 768px) {
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header internal">
+    <nav class="top-nav">
+      <a class="brand" href="../index.html">
+        <img class="brand-logo" src="../assets/images/logodaligth.jpg" alt="DALIGHT" />
+        <div>
+          <strong>DALIGHT</strong>
+          <small>Head Spa Japonais</small>
+        </div>
+      </a>
+    </nav>
+  </header>
+
+  <main class="page-shell fade-in">
+    <div class="confirmation-container">
+      <div class="success-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      
+      <h1 style="font-family: 'Playfair Display', serif; font-size: 2.5rem; margin-bottom: 1rem;">
+        Commande Confirmée!
+      </h1>
+      
+      <p style="font-size: 1.1rem; color: #6b7280; margin-bottom: 2rem;">
+        Merci pour votre commande. Nous vous avons envoyé un email de confirmation.
+      </p>
+      
+      <div class="order-number" id="order-number">
+        Chargement...
+      </div>
+      
+      <div class="confirmation-card">
+        <h2 style="margin-bottom: 1rem;">Détails de la Commande</h2>
+        <div class="info-grid">
+          <div class="info-item">
+            <h3>Statut</h3>
+            <p style="color: #f59e0b;">⏳ En attente de paiement</p>
+          </div>
+          <div class="info-item">
+            <h3>Mode de paiement</h3>
+            <p id="payment-method">—</p>
+          </div>
+          <div class="info-item">
+            <h3>Email de confirmation</h3>
+            <p id="customer-email">—</p>
+          </div>
+          <div class="info-item">
+            <h3>Adresse de livraison</h3>
+            <p id="customer-address">—</p>
+          </div>
+        </div>
+        
+        <div style="margin-top: 2rem; padding: 1.5rem; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
+          <h3 style="margin-bottom: 0.5rem;">📋 Prochaines étapes:</h3>
+          <ul style="margin-left: 1.5rem; color: #92400e;">
+            <li>Vous recevrez un email de confirmation shortly</li>
+            <li>Notre équipe vérifiera votre commande</li>
+            <li>Nous vous contacterons pour confirmer la livraison</li>
+          </ul>
+        </div>
+      </div>
+      
+      <a href="./shop.html" class="btn-continue">
+        Continuer les achats
+      </a>
+    </div>
+  </main>
+
+  <script>
+    // Get order number from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderNumber = urlParams.get('order');
+    
+    if (orderNumber) {
+      document.getElementById('order-number').textContent = orderNumber;
+    }
+    
+    // TODO: Fetch order details from Supabase
+    // For now, display placeholder data
+  </script>
+</body>
+</html>

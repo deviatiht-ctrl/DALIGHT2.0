@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panier - DALIGHT</title>
+  <link rel="icon" href="../assets/images/logodaligth.jpg" type="image/jpeg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module" src="../js/main.js"></script>
+  <script type="module" src="../js/cart.js"></script>
+  <style>
+    .cart-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 2rem;
+    }
+    
+    .cart-items {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .cart-item {
+      display: grid;
+      grid-template-columns: 100px 1fr auto;
+      gap: 1.5rem;
+      padding: 1.5rem 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .cart-item-image {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    
+    .cart-item-info h3 {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .quantity-control {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .quantity-btn {
+      width: 32px;
+      height: 32px;
+      border: 2px solid #e5e7eb;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    
+    .quantity-btn:hover {
+      background: #f3f4f6;
+    }
+    
+    .cart-summary {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      height: fit-content;
+      position: sticky;
+      top: 2rem;
+    }
+    
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .summary-total {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #059669;
+    }
+    
+    .btn-checkout {
+      width: 100%;
+      padding: 1rem;
+      background: #059669;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+    
+    .btn-checkout:hover {
+      background: #047857;
+    }
+    
+    .empty-cart {
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+    
+    @media (max-width: 968px) {
+      .cart-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .cart-summary {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body data-page="cart">
+  <header class="site-header internal">
+    <nav class="top-nav">
+      <a class="brand" href="../index.html">
+        <img class="brand-logo" src="../assets/images/logodaligth.jpg" alt="DALIGHT" />
+        <div>
+          <strong>DALIGHT</strong>
+          <small>Head Spa Japonais</small>
+        </div>
+      </a>
+      <button class="nav-toggle"><span></span><span></span></button>
+      <div class="nav-links">
+        <a href="../index.html">Accueil</a>
+        <a href="./shop.html" class="active">Boutique</a>
+        <a href="./reservation.html">Réservation</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="page-shell fade-in">
+    <h1 style="text-align: center; margin: 2rem 0;">Votre Panier</h1>
+    
+    <div class="cart-container">
+      <div class="cart-items" id="cart-items">
+        <!-- Cart items will be rendered here -->
+      </div>
+      
+      <div class="cart-summary" id="cart-summary" style="display: none;">
+        <h2 style="margin-bottom: 1.5rem;">Résumé</h2>
+        <div class="summary-row">
+          <span>Sous-total</span>
+          <span id="subtotal">0 HTG</span>
+        </div>
+        <div class="summary-row">
+          <span>Taxe (0%)</span>
+          <span>0 HTG</span>
+        </div>
+        <div class="summary-row summary-total">
+          <span>Total</span>
+          <span id="total">0 HTG</span>
+        </div>
+        <button class="btn-checkout" onclick="window.location.href='./checkout.html'">
+          Passer la commande
+        </button>
+        <a href="./shop.html" style="display: block; text-align: center; margin-top: 1rem; color: #6b7280;">
+          ← Continuer les achats
+        </a>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

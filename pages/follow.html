@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Suivre · DALIGHT Head Spa Japonais</title>
+    <link rel="icon" href="../assets/images/logodaligth.jpg" type="image/jpeg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/responsive.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
+    <script type="module" src="../js/main.js"></script>
+    <script type="module" src="../js/follow.js" defer></script>
+  </head>
+  <body data-page="follow">
+    <header class="site-header internal">
+      <nav class="top-nav">
+        <a class="brand" href="../index.html">
+          <img class="brand-logo" src="../assets/images/logodaligth.jpg" alt="DALIGHT Head Spa Japonais" />
+          <div>
+            <strong>DALIGHT</strong>
+            <small>Head Spa Japonais</small>
+          </div>
+        </a>
+        <button class="nav-toggle" aria-label="Ouvrir la navigation">
+          <span></span>
+          <span></span>
+        </button>
+        <div class="nav-links">
+          <a href="../index.html">Accueil</a>
+          <a href="./services.html">Services</a>
+          <a href="./reservation.html">Réservation</a>
+          <a href="./follow.html" class="active">Suivre</a>
+          <a href="../admin/dashboard.html" class="admin-link">Admin</a>
+        </div>
+        <div class="nav-cta">
+          <button class="btn ghost" id="logout-btn" type="button">Se déconnecter</button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="page-shell follow-shell fade-in">
+      <section class="card follow-profile reveal-on-scroll">
+        <div class="profile-avatar">
+          <img src="../assets/images/logodaligth.jpg" alt="DALIGHT Head Spa Logo" />
+        </div>
+        <div class="profile-info">
+          <h1>DALIGHT Head Spa Japonais</h1>
+          <p class="profile-bio">L'art de la renaissance par le soin du cuir chevelu. Rituels ancestraux &amp; Bien-être.</p>
+          <div class="profile-stats">
+            <div class="subscriber-card">
+              <div class="subscriber-pill">
+                <span class="pill-dot" aria-hidden="true"></span>
+                Communauté active
+              </div>
+              <div class="subscriber-value" aria-live="polite">
+                <strong id="subscriber-count">0</strong>
+                <span>abonnés</span>
+              </div>
+              <p class="subscriber-note">Rejoignez des clients zen chaque semaine.</p>
+            </div>
+          </div>
+          <button class="btn subscribe-btn" type="button" id="subscribe-btn">
+            <span class="btn-icon" aria-hidden="true">✦</span>
+            <span class="btn-label">S'abonner</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="follow-feed">
+        <div class="feed-header">
+          <div>
+            <p class="feed-pill">Studio communautaire</p>
+            <h2>Fil d'actualité</h2>
+          </div>
+          <p>Partagez vos avis, découvrez nos vidéos et interagissez avec la communauté.</p>
+        </div>
+
+        <section class="card feed-spotlight">
+          <div class="spotlight-copy">
+            <p class="spotlight-pill">Vidéo du studio</p>
+            <h3>Immersion avec notre équipe</h3>
+            <p>Découvrez les secrets de nos rituels et les conseils de l'Assistant DALIGHT. Les sessions DALIGHT sont immortalisées ici.</p>
+          </div>
+          <div class="spotlight-video">
+            <div class="spotlight-video__frame">
+              <video id="featured-video" controls playsinline preload="metadata" poster="../assets/images/logodaligth.jpg"></video>
+            </div>
+            <div class="spotlight-video__meta">
+              <span id="featured-video-date">Ajoutez une capsule via l'interface admin.</span>
+              <p id="featured-video-caption">Publiez une vidéo pour présenter vos rituels.</p>
+              <p class="spotlight-empty" id="featured-video-empty" hidden>Aucune capsule vidéo n'a encore été publiée.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="review-grid">
+          <section class="card review-form" id="review-form-section">
+            <div class="review-form__intro">
+              <h3>Partagez votre avis</h3>
+              <p>Décrivez votre séance, vos sensations et inspirez la communauté.</p>
+            </div>
+            <form id="review-form">
+              <div class="input-group">
+                <label for="review-content">Votre avis</label>
+                <textarea
+                  id="review-content"
+                  name="content"
+                  rows="4"
+                  placeholder="Racontez votre voyage chez DALIGHT..."
+                  required
+                ></textarea>
+              </div>
+              <button class="btn" type="submit">Publier l'avis</button>
+            </form>
+            <div class="review-lock" id="review-lock" hidden>
+              <p>Connectez-vous pour publier votre avis. Vos mots guideront les autres membres.</p>
+              <button class="btn secondary" type="button" id="review-login-cta">Se connecter</button>
+            </div>
+          </section>
+
+          <section class="card review-wall">
+            <div class="review-wall__header">
+              <p class="spotlight-pill">Mur des avis</p>
+              <h3>Les voix de la communauté</h3>
+              <p>Chaque avis est publié publiquement pour inspirer les futurs clients.</p>
+            </div>
+            <div class="review-gallery" id="review-gallery">
+              <!-- Filled dynamically -->
+            </div>
+          </section>
+        </section>
+
+        <section class="card video-feed">
+          <div class="video-feed__header">
+            <p class="spotlight-pill">Capsules immersives</p>
+            <h3>Rituels en vidéo</h3>
+            <p>Faites défiler les capsules officielles comme dans TikTok, likez et partagez vos favoris.</p>
+          </div>
+          <div id="feed-posts" class="video-stack">
+            <p class="video-feed__empty">Publiez une première capsule depuis l’admin pour alimenter le fil.</p>
+          </div>
+        </section>
+      </section>
+
+      <!-- Admin post form (hidden for non-admins) -->
+      <section class="card admin-post-form" id="admin-post-form" hidden>
+        <h3>Publier une vidéo</h3>
+        <form id="post-video-form">
+          <div class="input-group">
+            <label for="video-url">URL de la vidéo</label>
+            <input type="url" id="video-url" name="video_url" placeholder="https://..." required />
+          </div>
+          <div class="input-group">
+            <label for="video-caption">Légende</label>
+            <textarea id="video-caption" name="caption" rows="3" placeholder="Ajoutez une légende..."></textarea>
+          </div>
+          <button class="btn" type="submit">Publier</button>
+        </form>
+      </section>
+    </main>
+
+    <nav class="mobile-nav">
+      <a href="../index.html" data-page="home">
+        <i data-lucide="home"></i>
+      </a>
+      <a href="./services.html" data-page="services">
+        <i data-lucide="sparkles"></i>
+      </a>
+      <a href="./reservation.html" data-page="reservation">
+        <i data-lucide="calendar"></i>
+      </a>
+      <a href="./shop.html" data-page="shop">
+        <i data-lucide="shopping-bag"></i>
+      </a>
+    </nav>
+  </body>
+</html>

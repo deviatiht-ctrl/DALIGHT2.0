@@ -1,0 +1,384 @@
+@media (max-width: 1120px) {
+  .top-nav {
+    flex-wrap: wrap;
+    padding: 0.75rem 1.5rem;
+    gap: 1rem;
+  }
+
+  .nav-links,
+  .nav-cta {
+    order: 3;
+  }
+}
+
+@media (max-width: 900px) {
+  .top-nav {
+    position: static;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem 1.5rem;
+  }
+
+  .nav-links,
+  .nav-cta {
+    display: none;
+    width: 100%;
+  }
+
+  .nav-toggle {
+    display: flex;
+  }
+
+  .site-header.internal {
+    padding-bottom: 3rem;
+  }
+
+  .contact-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .hero-copy {
+    text-align: center;
+  }
+
+  .hero-visual {
+    order: -1;
+    max-width: 420px;
+    margin: 0 auto 1.5rem;
+  }
+
+  .hero-card img {
+    max-height: 360px;
+  }
+
+  .top-nav.open .nav-links,
+  .top-nav.open .nav-cta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-xl);
+  }
+
+  .top-nav.open .nav-links a {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+  }
+
+  .top-nav.open .nav-cta {
+    align-items: stretch;
+  }
+
+  .top-nav.open .nav-cta .btn {
+    width: 100%;
+  }
+
+  .follow-profile {
+    grid-template-columns: 1fr;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .profile-avatar {
+    margin: 0 auto;
+  }
+
+  .profile-info {
+    align-items: center;
+  }
+
+  .subscriber-card {
+    text-align: left;
+  }
+
+  .subscribe-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .feed-spotlight {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  body {
+    padding-bottom: 8rem;
+  }
+
+  main,
+  .section,
+  .page-shell {
+    padding: 3rem 1.25rem;
+  }
+
+  .page-shell {
+    padding-bottom: 5.5rem;
+  }
+
+  .section.tinted {
+    padding: 3rem 1.5rem;
+  }
+
+  .hero-copy {
+    text-align: center;
+  }
+
+  .hero-actions,
+  .section-actions {
+    justify-content: center;
+  }
+
+  .hero-stats {
+    justify-content: center;
+  }
+
+  .contact-card {
+    padding: 2.5rem;
+  }
+
+  .grid.two,
+  .grid.three,
+  .service-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card,
+  .service-tile {
+    padding: 1.5rem;
+  }
+
+  .reservation-hero,
+  .orders-hero {
+    flex-direction: column;
+  }
+
+  .reservation-stats,
+  .orders-highlights {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  .reservation-grid,
+  .orders-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-panel {
+    position: static;
+  }
+
+  .orders-table {
+    padding: 1.5rem;
+  }
+
+  .table-heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .auth-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-panel {
+    order: 2;
+  }
+
+  .auth-form {
+    order: 1;
+  }
+
+  .service-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .floating-card {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    margin-top: 1rem;
+  }
+
+  .mobile-nav {
+    display: grid;
+  }
+
+  .mobile-nav a {
+    padding: 0.65rem 0.75rem;
+  }
+
+  .mobile-nav a span {
+    display: none;
+  }
+
+  .mobile-nav a i {
+    width: 22px;
+    height: 22px;
+  }
+
+  .site-header {
+    padding: 1.5rem 1.25rem 2.5rem;
+    border-bottom-left-radius: 1.5rem;
+    border-bottom-right-radius: 1.5rem;
+  }
+
+  .site-footer {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .auth-panel {
+    order: 2;
+  }
+
+  .auth-form {
+    order: 1;
+  }
+
+  .feed-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .review-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .review-form,
+  .review-wall {
+    padding: 1.8rem;
+  }
+
+  .feed-stream {
+    grid-template-columns: 1fr;
+  }
+
+  .post-card {
+    padding: 1.5rem;
+  }
+
+  .admin-post-form {
+    padding: 1.8rem;
+  }
+
+  .subscribe-btn {
+    font-size: 0.95rem;
+    padding: 0.9rem 1.3rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .social-hub__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .services-carousel {
+    gap: 0.75rem;
+  }
+
+  .service-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .service-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 2rem 1.5rem;
+  }
+
+  .pay-timing-group {
+    grid-template-columns: 1fr;
+  }
+
+  .pay-methods {
+    flex-direction: column;
+  }
+
+  .pay-method-option {
+    min-width: unset;
+  }
+
+  .pay-method-option > span {
+    flex-direction: row;
+    justify-content: flex-start;
+    text-align: left;
+    padding: 0.75rem 1rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .hero-stats li {
+    flex: 1 1 45%;
+  }
+
+  table {
+    font-size: 0.9rem;
+  }
+
+  th,
+  td {
+    padding: 0.7rem;
+  }
+
+  .hero-visual {
+    max-width: 100%;
+  }
+
+  .aesthetics-grid {
+    grid-template-columns: 1fr;
+    grid-auto-rows: 160px;
+  }
+
+  .aesthetic-card:nth-child(1) {
+    grid-column: span 1;
+  }
+
+  .aesthetic-card:nth-child(1),
+  .aesthetic-card:nth-child(2),
+  .aesthetic-card:nth-child(3) {
+    min-height: 160px;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .post-actions {
+    flex-direction: column;
+  }
+
+  .post-actions button {
+    width: 100%;
+    text-align: center;
+  }
+
+  .subscriber-card {
+    padding: 1.25rem;
+  }
+
+  .spotlight-video__meta {
+    font-size: 0.9rem;
+  }
+
+  .review-card {
+    padding: 1rem;
+  }
+}

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Boutique - DALIGHT Head Spa</title>
+  <link rel="icon" href="../assets/images/logodaligth.jpg" type="image/jpeg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module" src="../js/main.js"></script>
+  <script type="module" src="../js/shop.js"></script>
+  <script type="module" src="../js/chat-widget.js" defer></script>
+  <script type="module">
+    import { initChatWidget } from '../js/chat-widget.js';
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+      initChatWidget();
+    });
+  </script>
+  <style>
+    .shop-container {
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 2rem;
+    }
+    
+    .shop-sidebar {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      height: fit-content;
+      position: sticky;
+      top: 2rem;
+    }
+    
+    .filter-section {
+      margin-bottom: 2rem;
+    }
+    
+    .filter-section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: #1f2937;
+    }
+    
+    .search-input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    
+    .category-checkbox {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      cursor: pointer;
+    }
+    
+    .category-checkbox input {
+      margin-right: 0.5rem;
+    }
+    
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+    
+    .product-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    
+    .product-image {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+    }
+    
+    .product-info {
+      padding: 1.5rem;
+    }
+    
+    .product-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #1f2937;
+    }
+    
+    .product-price {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #059669;
+      margin-bottom: 1rem;
+    }
+    
+    .product-price .original {
+      text-decoration: line-through;
+      color: #9ca3af;
+      font-size: 1rem;
+      margin-right: 0.5rem;
+    }
+    
+    .product-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .btn-view, .btn-add-cart {
+      flex: 1;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .btn-view {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    
+    .btn-view:hover {
+      background: #e5e7eb;
+    }
+    
+    .btn-add-cart {
+      background: #059669;
+      color: white;
+    }
+    
+    .btn-add-cart:hover {
+      background: #047857;
+    }
+    
+    .cart-badge {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: #ef4444;
+      color: white;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      z-index: 1000;
+      cursor: pointer;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #6b7280;
+    }
+    
+    @media (max-width: 768px) {
+      .shop-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .shop-sidebar {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body data-page="shop">
+  <header class="site-header internal">
+    <nav class="top-nav">
+      <a class="brand" href="../index.html">
+        <img class="brand-logo" src="../assets/images/logodaligth.jpg" alt="DALIGHT Head Spa Japonais" />
+        <div>
+          <strong>DALIGHT</strong>
+          <small>Head Spa Japonais</small>
+        </div>
+      </a>
+      <button class="nav-toggle" aria-label="Ouvrir la navigation">
+        <span></span>
+        <span></span>
+      </button>
+      <div class="nav-links">
+        <a href="../index.html">Accueil</a>
+        <a href="./services.html">Services</a>
+        <a href="./shop.html" class="active">Boutique</a>
+        <a href="./reservation.html">Réservation</a>
+        <a href="./orders.html">Dossiers</a>
+        <a href="../admin/dashboard.html" class="admin-link">Admin</a>
+      </div>
+      <div class="nav-cta">
+        <a class="btn" href="./cart.html">
+          <i data-lucide="shopping-cart" style="width: 18px; height: 18px;"></i>
+          Panier
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="page-shell fade-in">
+    <section style="background: linear-gradient(135deg, #4A3728 0%, #6B4F3B 100%); padding: 3rem 1rem; text-align: center; color: white; border-radius: 0 0 1.75rem 1.75rem;">
+      <p class="kicker" style="color: rgba(255,255,255,.7); margin-bottom: .5rem;">Boutique DALIGHT</p>
+      <h1 style="font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.5rem); margin-bottom: 0.5rem; color: white;">Notre Boutique</h1>
+      <p style="font-size: 1.05rem; opacity: 0.85; max-width: 520px; margin: 0 auto;">Découvrez nos produits de bien-être et de relaxation</p>
+    </section>
+
+    <div class="shop-container">
+      <!-- Sidebar Filters -->
+      <aside class="shop-sidebar">
+        <div class="filter-section">
+          <h3>Rechercher</h3>
+          <input type="text" id="search-input" class="search-input" placeholder="Nom du produit...">
+        </div>
+
+        <div class="filter-section">
+          <h3>Catégories</h3>
+          <div id="category-filters">
+            <p style="color: #6b7280; font-size: 0.9rem;">Chargement...</p>
+          </div>
+        </div>
+
+        <div class="filter-section">
+          <h3>Prix</h3>
+          <select id="price-sort" style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 2px solid #e5e7eb;">
+            <option value="">Tous les prix</option>
+            <option value="asc">Prix croissant</option>
+            <option value="desc">Prix décroissant</option>
+          </select>
+        </div>
+
+        <div class="filter-section">
+          <label class="category-checkbox">
+            <input type="checkbox" id="featured-only">
+            <span>Produits vedettes</span>
+          </label>
+          <label class="category-checkbox">
+            <input type="checkbox" id="in-stock-only">
+            <span>En stock seulement</span>
+          </label>
+        </div>
+
+        <button onclick="resetFilters()" style="width: 100%; padding: 0.75rem; background: #f3f4f6; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+          Réinitialiser les filtres
+        </button>
+      </aside>
+
+      <!-- Products Grid -->
+      <div>
+        <div id="products-grid" class="product-grid">
+          <div class="empty-state">
+            <p>Chargement des produits...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Cart Badge -->
+  <div id="cart-badge" class="cart-badge" style="display: none;" onclick="window.location.href='./cart.html'">0</div>
+
+  <nav class="mobile-nav">
+    <a href="../index.html" data-page="home">
+      <i data-lucide="home"></i>
+    </a>
+    <a href="./shop.html" data-page="shop" class="active">
+      <i data-lucide="shopping-bag"></i>
+    </a>
+    <a href="./cart.html" data-page="cart">
+      <i data-lucide="shopping-cart"></i>
+    </a>
+    <a href="./reservation.html" data-page="reservation">
+      <i data-lucide="calendar"></i>
+    </a>
+  </nav>
+
+  <!-- Chat Widget -->
+  <div class="chat-widget" id="chat-widget">
+    <button class="chat-bubble" id="chat-bubble">
+      <i data-lucide="message-circle"></i>
+    </button>
+    <div class="chat-window" id="chat-window" style="display:none;">
+      <div class="chat-header">
+        <h4>Assistant DALIGHT</h4>
+        <span class="chat-status">En ligne</span>
+        <button class="chat-close" id="chat-close">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-input-area">
+        <input type="text" id="chat-input" placeholder="Écrivez votre message...">
+        <button id="chat-send">
+          <i data-lucide="send"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

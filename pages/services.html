@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nos Rituels — DALIGHT Head Spa Japonais</title>
+    <link rel="icon" href="../assets/images/logodaligth.jpg" type="image/jpeg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/responsive.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
+    <script type="module" src="../js/main.js"></script>
+    <script type="module" src="../js/chat-widget.js" defer></script>
+  </head>
+  <body data-page="services">
+    <header class="site-header internal">
+      <nav class="top-nav">
+        <a class="brand" href="../index.html">
+          <img class="brand-logo" src="../assets/images/logodaligth.jpg" alt="DALIGHT Head Spa Japonais" />
+          <div>
+            <strong>DALIGHT</strong>
+            <small>Head Spa Japonais</small>
+          </div>
+        </a>
+        <button class="nav-toggle" aria-label="Ouvrir la navigation">
+          <span></span>
+          <span></span>
+        </button>
+        <div class="nav-links">
+          <a href="../index.html">Accueil</a>
+          <a href="./about.html">À propos</a>
+          <a href="./services.html" class="active">Services</a>
+          <a href="./shop.html">Boutique</a>
+          <a href="./reservation.html">Réservation</a>
+          <a href="./orders.html">Dossiers</a>
+          <a href="../admin/dashboard.html" class="admin-link">Admin</a>
+        </div>
+        <div class="nav-cta">
+          <a class="btn" href="./reservation.html">Réserver</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="page-shell fade-in">
+      <section>
+        <p class="kicker">Carte des Rituels</p>
+        <h1>L'art de la renaissance par le soin du cuir chevelu.</h1>
+        <p class="page-subtitle">
+          Chaque rituel DALIGHT inclut un diagnostic capillaire, une immersion sensorielle aux huiles précieuses 
+          et un massage crânien profond pour une relaxation absolue.
+        </p>
+        <div class="service-grid" id="services-grid">
+          <!-- Loaded dynamically from Supabase -->
+          <div style="grid-column:1/-1;text-align:center;padding:2rem;color:rgba(74,55,40,.6);">Chargement des rituels…</div>
+        </div>
+      </section>
+
+      <section class="section tinted section-spacing-lg">
+        <div class="section-heading">
+          <p class="kicker">L'Immersion DALIGHT</p>
+          <h2>Célébrations &amp; Bien-être Profond.</h2>
+          <p>Des attentions pensées pour sublimer vos moments précieux et vos cures de revitalisation.</p>
+        </div>
+        <div class="grid two">
+          <article class="card">
+            <header class="service-tier">
+              <h3>Love &amp; Zen Package</h3>
+              <p>Head Spa Signature + bulles + douceur sucrée</p>
+              <span class="price">12 000 HTG · $100</span>
+              <p class="tier-option">Option Bouquet Zen · 14 000 HTG · $115</p>
+            </header>
+            <p>Une parenthèse enchantée dans une atmosphère florale et tamisée pour les amoureux de la sérénité.</p>
+          </article>
+          <article class="card">
+            <header class="service-tier">
+              <h3>Cure Vitalité Intense</h3>
+              <p>Pack 6 rituels · 50 000 HTG · $420</p>
+              <p>Pack 10 rituels · 80 000 HTG · $670</p>
+            </header>
+            <p>Le summum du soin capillaire pour une chevelure transformée et une gestion durable du stress.</p>
+          </article>
+        </div>
+        <p class="note">NB : Les tarifs sont indiqués en HTG (Taxes Inclues). Équivalent USD pour information uniquement.</p>
+      </section>
+
+      <section class="section tinted section-spacing-lg" style="text-align:center;">
+        <p class="kicker">Chaque rituel inclut</p>
+        <div class="inclus-grid">
+          <span>🌿 Vapeur d'herbes</span>
+          <span>🔬 Diagnostic capillaire</span>
+          <span>🍵 Thé à la lavande</span>
+          <span>📋 Plan bien-être</span>
+          <span>💬 WhatsApp dédié</span>
+          <span>🚗 Service à domicile</span>
+        </div>
+        <div class="section-actions" style="margin-top:1.5rem;">
+          <a class="btn" href="./reservation.html">Réserver un rituel</a>
+        </div>
+      </section>
+    </main>
+
+    <nav class="mobile-nav">
+      <a href="../index.html" data-page="home">
+        <i data-lucide="home"></i>
+      </a>
+      <a href="./services.html" class="active" data-page="services">
+        <i data-lucide="sparkles"></i>
+      </a>
+      <a href="./reservation.html" data-page="reservation">
+        <i data-lucide="calendar"></i>
+      </a>
+      <a href="./shop.html" data-page="shop">
+        <i data-lucide="shopping-bag"></i>
+      </a>
+    </nav>
+
+    <!-- Chat Widget -->
+    <div class="chat-widget" id="chat-widget">
+      <button class="chat-bubble" id="chat-bubble">
+        <i data-lucide="message-circle"></i>
+      </button>
+      <div class="chat-window" id="chat-window" style="display:none;">
+        <div class="chat-header">
+          <h4>Assistant DALIGHT</h4>
+          <span class="chat-status">En ligne</span>
+          <button class="chat-close" id="chat-close">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area">
+          <input type="text" id="chat-input" placeholder="Écrivez votre message...">
+          <button id="chat-send">
+            <i data-lucide="send"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="../js/main.js"></script>
+    <script type="module">
+      import { initChatWidget } from '../js/chat-widget.js';
+      import { getSupabase } from '../js/main.js';
+
+      const FALLBACK_SERVICES = [
+        { name: 'Head Spa Signature', description: 'Soin complet du cuir chevelu, massage crânien et détente cervicale.', duration: '60 min', price_usd: 85, price_htg: 10000 },
+        { name: 'Rituel Zen Impérial', description: "L'expérience ultime : Head Spa, bain de vapeur aux herbes et massage épaules.", duration: '90 min', price_usd: 125, price_htg: 15000 },
+        { name: 'Soin Détox & Équilibre', description: 'Exfoliation délicate, massage purifiant et masque capillaire revitalisant.', duration: '75 min', price_usd: 100, price_htg: 12000 },
+        { name: 'Head Spa & Éclat Visage', description: 'Duo prestigieux : Soin crânien profond et massage sculptant du visage.', duration: '105 min', price_usd: 150, price_htg: 18000 },
+        { name: 'Duo Sérénité', description: "Vivez l'expérience DALIGHT à deux, un moment suspendu de pure harmonie.", duration: '60 min', price_usd: 160, price_htg: 19000 },
+        { name: 'Rituel Renaissance 4', description: 'Cure de 4 rituels personnalisés pour une chevelure éclatante et un esprit apaisé.', duration: '4 rituels', price_usd: 300, price_htg: 35000 },
+      ];
+
+      function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+      function renderGrid(services) {
+        const grid = document.getElementById('services-grid');
+        if (!grid) return;
+        grid.innerHTML = services.map(s => `
+          <article class="service-tile">
+            <header>
+              <h3>${esc(s.name)}</h3>
+              <span class="price">${Number(s.price_htg).toLocaleString()} HTG · $${Number(s.price_usd)}</span>
+            </header>
+            <p>${esc(s.description || '')} ${s.duration ? '(' + esc(s.duration) + ')' : ''}</p>
+            <button class="btn secondary" data-service="${esc(s.name)}">Réserver</button>
+          </article>
+        `).join('');
+
+        // Wire reserve buttons
+        grid.querySelectorAll('[data-service]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            localStorage.setItem('dalight:selectedRitual', btn.dataset.service);
+            window.location.href = './reservation.html';
+          });
+        });
+      }
+
+      async function loadServices() {
+        let attempts = 0;
+        let supabase = getSupabase();
+        while (!supabase && attempts < 30) {
+          await new Promise(r => setTimeout(r, 100));
+          supabase = getSupabase();
+          attempts++;
+        }
+
+        if (supabase) {
+          try {
+            const { data, error } = await supabase
+              .from('services')
+              .select('*')
+              .eq('is_active', true)
+              .order('sort_order');
+
+            if (!error && data && data.length > 0) {
+              renderGrid(data);
+              return;
+            }
+          } catch (e) {
+            console.warn('Services DB load failed, using fallback', e);
+          }
+        }
+
+        renderGrid(FALLBACK_SERVICES);
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        if (window.lucide) lucide.createIcons();
+        initChatWidget();
+        loadServices();
+      });
+    </script>
+  </body>
+</html>

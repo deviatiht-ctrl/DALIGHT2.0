@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Connection Test - DALIGHT</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #4A3728;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+        }
+        
+        .status {
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-weight: 600;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .test-section {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #4A3728;
+        }
+        
+        .test-section h2 {
+            color: #4A3728;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        
+        button {
+            background: #4A3728;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0.5rem 0.5rem 0.5rem 0;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #6B4F3B;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .log-entry {
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        
+        .log-entry.success { background: #d4edda; }
+        .log-entry.error { background: #f8d7da; }
+        .log-entry.info { background: #d1ecf1; }
+        .log-entry.warning { background: #fff3cd; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Supabase Connection Test</h1>
+        <p style="color: #666; margin-bottom: 1rem;">
+            This page tests your Supabase connection to identify why login isn't working.
+        </p>
+        
+        <div id="overall-status" class="status info">
+            ⏳ Waiting to start tests...
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 1: Supabase CDN</h2>
+            <p>Check if Supabase library loaded correctly</p>
+            <button onclick="testCDN()">Run Test</button>
+            <div id="cdn-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 2: Supabase Client</h2>
+            <p>Create Supabase client with your configuration</p>
+            <button onclick="testClient()">Run Test</button>
+            <div id="client-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 3: Database Connection</h2>
+            <p>Test if you can query the database</p>
+            <button onclick="testDatabase()">Run Test</button>
+            <div id="db-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 4: Auth Session</h2>
+            <p>Check if authentication works</p>
+            <button onclick="testAuth()">Run Test</button>
+            <div id="auth-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📋 Console Logs</h2>
+            <div id="logs"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔧 Quick Fix</h2>
+            <p>If tests fail, try these solutions:</p>
+            <ol style="margin-left: 1.5rem; line-height: 2;">
+                <li>Check your internet connection</li>
+                <li>Verify Supabase URL and Anon Key in <code>js/main.js</code></li>
+                <li>Make sure you executed all SQL files in Supabase dashboard</li>
+                <li>Check browser console for detailed errors</li>
+                <li>Clear browser cache and try again</li>
+            </ol>
+            <button onclick="runAllTests()" style="margin-top: 1rem; background: #28a745;">
+                Run All Tests
+            </button>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
+    <script>
+        const CONFIG = {
+            supabaseUrl: 'https://rbwoiejztrkghfkpxquo.supabase.co',
+            supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U'
+        };
+        
+        let supabase = null;
+        
+        function addLog(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logsDiv.appendChild(entry);
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+        
+        function setStatus(elementId, message, type) {
+            const el = document.getElementById(elementId);
+            el.className = `status ${type}`;
+            el.innerHTML = message;
+        }
+        
+        async function testCDN() {
+            addLog('Testing Supabase CDN...', 'info');
+            
+            if (typeof window.supabase === 'undefined') {
+                setStatus('cdn-result', '❌ FAILED: Supabase CDN not loaded', 'error');
+                addLog('Supabase CDN failed to load', 'error');
+                return false;
+            }
+            
+            if (typeof window.supabase.createClient !== 'function') {
+                setStatus('cdn-result', '❌ FAILED: createClient function not found', 'error');
+                addLog('createClient function missing', 'error');
+                return false;
+            }
+            
+            setStatus('cdn-result', '✅ PASSED: Supabase CDN loaded successfully', 'success');
+            addLog('Supabase CDN loaded successfully', 'success');
+            return true;
+        }
+        
+        async function testClient() {
+            addLog('Creating Supabase client...', 'info');
+            
+            try {
+                supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
+                setStatus('client-result', '✅ PASSED: Client created successfully', 'success');
+                addLog('Supabase client initialized', 'success');
+                return true;
+            } catch (error) {
+                setStatus('client-result', `❌ FAILED: ${error.message}`, 'error');
+                addLog(`Client creation failed: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        async function testDatabase() {
+            if (!supabase) {
+                setStatus('db-result', '❌ FAILED: Client not initialized. Run Test 2 first.', 'error');
+                return false;
+            }
+            
+            addLog('Testing database connection...', 'info');
+            
+            try {
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('count')
+                    .limit(1);
+                
+                if (error) {
+                    setStatus('db-result', `❌ FAILED: ${error.message}`, 'error');
+                    addLog(`Database query failed: ${error.message}`, 'error');
+                    
+                    if (error.message.includes('relation') || error.message.includes('does not exist')) {
+                        addLog('⚠️ Tables may not exist. Run SQL schema files in Supabase dashboard!', 'warning');
+                    }
+                    
+                    return false;
+                }
+                
+                setStatus('db-result', '✅ PASSED: Database connection working', 'success');
+                addLog('Database connection successful', 'success');
+                return true;
+            } catch (error) {
+                setStatus('db-result', `❌ FAILED: ${error.message}`, 'error');
+                addLog(`Database test failed: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        async function testAuth() {
+            if (!supabase) {
+                setStatus('auth-result', '❌ FAILED: Client not initialized. Run Test 2 first.', 'error');
+                return false;
+            }
+            
+            addLog('Testing authentication...', 'info');
+            
+            try {
+                const { data, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    setStatus('auth-result', `❌ FAILED: ${error.message}`, 'error');
+                    addLog(`Auth test failed: ${error.message}`, 'error');
+                    return false;
+                }
+                
+                if (data.session) {
+                    setStatus('auth-result', 
+                        `✅ PASSED: Active session found<br>User: ${data.session.user?.email}`, 
+                        'success');
+                    addLog(`Active session: ${data.session.user?.email}`, 'success');
+                } else {
+                    setStatus('auth-result', 
+                        '✅ PASSED: Auth working (no active session - this is normal)', 
+                        'success');
+                    addLog('No active session (normal if not logged in)', 'info');
+                }
+                
+                return true;
+            } catch (error) {
+                setStatus('auth-result', `❌ FAILED: ${error.message}`, 'error');
+                addLog(`Auth test failed: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        async function runAllTests() {
+            document.getElementById('overall-status').innerHTML = '⏳ Running all tests...';
+            document.getElementById('overall-status').className = 'status info';
+            
+            addLog('=== Starting all tests ===', 'info');
+            
+            const cdn = await testCDN();
+            if (!cdn) {
+                document.getElementById('overall-status').innerHTML = '❌ FAILED: CDN not loaded. Check internet connection.';
+                document.getElementById('overall-status').className = 'status error';
+                return;
+            }
+            
+            const client = await testClient();
+            if (!client) {
+                document.getElementById('overall-status').innerHTML = '❌ FAILED: Client creation failed.';
+                document.getElementById('overall-status').className = 'status error';
+                return;
+            }
+            
+            const db = await testDatabase();
+            const auth = await testAuth();
+            
+            if (db && auth) {
+                document.getElementById('overall-status').innerHTML = '✅ ALL TESTS PASSED: Supabase is working correctly!';
+                document.getElementById('overall-status').className = 'status success';
+                addLog('All tests passed!', 'success');
+            } else {
+                document.getElementById('overall-status').innerHTML = '⚠️ Some tests failed. Check results above.';
+                document.getElementById('overall-status').className = 'status error';
+                addLog('Some tests failed', 'warning');
+            }
+        }
+        
+        // Auto-run tests on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            addLog('Page loaded, starting auto-test...', 'info');
+            setTimeout(runAllTests, 500);
+        });
+    </script>
+</body>
+</html>

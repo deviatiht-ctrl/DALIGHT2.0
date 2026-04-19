@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Templates Email - DALIGHT Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .template-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.25rem;margin-bottom:2rem}
+    .tpl-card{cursor:pointer;transition:all .25s}
+    .tpl-card:hover{border-color:var(--admin-accent);transform:translateY(-2px)}
+    .tpl-card .tpl-key{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--admin-text-muted);margin-bottom:.35rem}
+    .tpl-card .tpl-label{font-size:1.05rem;font-weight:600;margin-bottom:.4rem}
+    .tpl-card .tpl-subject{font-size:.85rem;color:var(--admin-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .tpl-card .tpl-badge{display:inline-block;padding:.2rem .6rem;border-radius:999px;font-size:.72rem;font-weight:600;margin-top:.6rem}
+    .tpl-card .tpl-badge.active{background:rgba(74,222,128,.15);color:var(--admin-success)}
+    .tpl-card .tpl-badge.inactive{background:rgba(248,113,113,.15);color:var(--admin-danger)}
+    .preview-frame{background:#f5f5f5;border-radius:12px;padding:0;overflow:hidden;border:1px solid var(--admin-border);margin-top:1rem}
+    .preview-frame iframe{width:100%;height:500px;border:none;background:white}
+    .field-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    @media(max-width:768px){.field-row{grid-template-columns:1fr}.template-cards{grid-template-columns:1fr}}
+    .color-swatch{width:32px;height:32px;border-radius:8px;border:2px solid var(--admin-border);cursor:pointer;display:inline-block;vertical-align:middle}
+    .color-input-wrap{display:flex;align-items:center;gap:.75rem}
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="admin-sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="sidebar-logo">
+        <img src="../assets/images/logodaligth.jpg" alt="DALIGHT" onerror="this.style.display='none'">
+        <div class="sidebar-logo-text">DALIGHT<span>Administration</span></div>
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Principal</div>
+        <a href="dashboard.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+        <a href="reservations.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Réservations
+          <span class="badge" id="pending-count">0</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Contenu</div>
+        <a href="posts.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          Posts & Vidéos
+        </a>
+        <a href="services.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          Rituels
+        </a>
+        <a href="products.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          Produits
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Communication</div>
+        <a href="emails.html" class="nav-item active">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          Templates Email
+        </a>
+        <a href="messages.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          Messages
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Utilisateurs</div>
+        <a href="clients.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          Clients
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Système</div>
+        <a href="settings.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Paramètres
+        </a>
+        <a href="../index.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          Voir le site
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="user-avatar">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="user-name">Admin</div>
+          <div class="sidebar-user-role">Administrateur</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="admin-main">
+    <header class="admin-header">
+      <div class="header-left">
+        <button class="mobile-menu-btn" id="mobile-menu-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div>
+          <h1 class="page-title">Templates Email</h1>
+          <p class="admin-header-subtitle">Personnalisez le contenu et le design de chaque email envoyé aux clients</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="header-btn" id="logout-btn" title="Déconnexion">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="admin-content">
+      <!-- Template list -->
+      <div id="templates-list" class="template-cards">
+        <div class="glass-card" style="grid-column:1/-1;text-align:center;padding:2rem;">
+          <div class="loading-spinner"></div>
+          Chargement des templates...
+        </div>
+      </div>
+
+      <!-- Editor (hidden until a template is selected) -->
+      <div id="editor-section" style="display:none;">
+        <div class="glass-card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title" id="editor-title">Modifier le template</h3>
+              <p class="card-subtitle" id="editor-key">template_key</p>
+            </div>
+            <div style="display:flex;gap:.5rem;">
+              <button class="btn btn-secondary" id="btn-preview">Aperçu</button>
+              <button class="btn btn-primary" id="btn-save">Enregistrer</button>
+              <button class="btn btn-secondary" id="btn-back">← Retour</button>
+            </div>
+          </div>
+
+          <div style="padding:0 1.5rem 1.5rem;">
+            <form id="tpl-form">
+              <input type="hidden" id="tpl-id">
+              <input type="hidden" id="tpl-key-val">
+
+              <!-- Row 1 -->
+              <div class="field-row">
+                <div class="form-group">
+                  <label class="form-label">Libellé interne</label>
+                  <input class="form-input" id="tpl-label" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Sujet de l'email</label>
+                  <input class="form-input" id="tpl-subject" required>
+                </div>
+              </div>
+
+              <!-- Row 2 -->
+              <div class="field-row">
+                <div class="form-group">
+                  <label class="form-label">Titre du header</label>
+                  <input class="form-input" id="tpl-header-title">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Sous-titre du header</label>
+                  <input class="form-input" id="tpl-header-subtitle">
+                </div>
+              </div>
+
+              <!-- Row 3: Design -->
+              <div class="field-row">
+                <div class="form-group">
+                  <label class="form-label">URL du Logo</label>
+                  <input class="form-input" id="tpl-logo-url" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Couleur d'accent</label>
+                  <div class="color-input-wrap">
+                    <input type="color" id="tpl-accent-picker" class="color-swatch">
+                    <input class="form-input" id="tpl-accent-color" placeholder="#D4AF37" style="flex:1">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 4 -->
+              <div class="form-group">
+                <label class="form-label">Background du header (CSS gradient)</label>
+                <input class="form-input" id="tpl-header-bg" placeholder="linear-gradient(135deg, #4A3728, #6B4F3B)">
+              </div>
+
+              <!-- Greeting -->
+              <div class="form-group">
+                <label class="form-label">Formule de salutation</label>
+                <input class="form-input" id="tpl-greeting" placeholder="Cher(e) {{client_name}},">
+              </div>
+
+              <!-- Body -->
+              <div class="form-group">
+                <label class="form-label">Contenu HTML du corps (variables: <code style="color:var(--admin-accent);">{{client_name}}, {{service}}, {{date}}, {{time}}, {{location}}, {{notes}}, {{order_number}}, {{client_email}}, {{year}}</code>)</label>
+                <textarea class="form-textarea" id="tpl-body" rows="14" style="font-family:monospace;font-size:.82rem;"></textarea>
+              </div>
+
+              <!-- Footer -->
+              <div class="form-group">
+                <label class="form-label">Texte du pied de page</label>
+                <input class="form-input" id="tpl-footer" placeholder="© {{year}} DALIGHT Head Spa">
+              </div>
+
+              <div class="form-group" style="display:flex;align-items:center;gap:.75rem;">
+                <label style="position:relative;width:44px;height:24px;display:inline-block;">
+                  <input type="checkbox" id="tpl-active" checked style="opacity:0;width:0;height:0;">
+                  <span style="position:absolute;inset:0;background:rgba(255,255,255,.12);border-radius:24px;cursor:pointer;transition:.25s;" class="toggle-track"></span>
+                </label>
+                <span style="font-size:.9rem;">Template actif</span>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Live preview -->
+        <div class="glass-card mt-3" id="preview-card" style="display:none;">
+          <div class="card-header">
+            <h3 class="card-title">Aperçu de l'email</h3>
+          </div>
+          <div class="preview-frame">
+            <iframe id="preview-iframe" sandbox="allow-same-origin"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/admin-core.js"></script>
+  <script>
+    let allTemplates = [];
+    let currentTpl = null;
+
+    // ── Init ──
+    document.addEventListener('DOMContentLoaded', async () => {
+      await new Promise(r => setTimeout(r, 150));
+      // If adminCore not ready after 2s, show error
+      const ready = await Promise.race([
+        (async () => { while (!window.adminCore) await new Promise(r => setTimeout(r, 100)); return true; })(),
+        new Promise(r => setTimeout(() => r(false), 3000))
+      ]);
+      if (!ready) {
+        document.getElementById('templates-list').innerHTML = `
+          <div class="glass-card" style="grid-column:1/-1;text-align:center;padding:2rem;">
+            <p class="text-danger">⚠️ admin-core.js non chargé. Vérifiez la console.</p>
+            <button class="btn btn-primary" style="margin-top:1rem;" onclick="location.reload()">🔄 Recharger</button>
+          </div>`;
+        return;
+      }
+      const session = await window.adminCore.checkAdminAuth();
+      if (!session) return;
+      loadTemplates();
+      wireUI();
+    });
+
+    function wireUI() {
+      document.getElementById('btn-back').addEventListener('click', showList);
+      document.getElementById('btn-save').addEventListener('click', saveTemplate);
+      document.getElementById('btn-preview').addEventListener('click', showPreview);
+
+      // Sync color picker
+      const picker = document.getElementById('tpl-accent-picker');
+      const colorInput = document.getElementById('tpl-accent-color');
+      picker.addEventListener('input', () => { colorInput.value = picker.value; });
+      colorInput.addEventListener('input', () => { picker.value = colorInput.value; });
+
+      // Toggle track styling
+      const style = document.createElement('style');
+      style.textContent = `
+        .toggle-track::before{content:'';position:absolute;left:3px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.25s;}
+        input:checked+.toggle-track{background:var(--admin-success)!important}
+        input:checked+.toggle-track::before{transform:translateX(20px)}
+      `;
+      document.head.appendChild(style);
+    }
+
+    // ── Load ──
+    async function loadTemplates() {
+      const list = document.getElementById('templates-list');
+      try {
+        // Wait for supabaseClient to be available
+        if (!window.supabaseClient) {
+          await new Promise(r => setTimeout(r, 500));
+        }
+        if (!window.supabaseClient) {
+          throw new Error('Supabase client non disponible');
+        }
+        const { data, error } = await window.supabaseClient
+          .from('email_templates')
+          .select('*')
+          .order('created_at');
+        if (error) throw error;
+        allTemplates = data || [];
+        renderList();
+      } catch (err) {
+        console.error('Load error:', err);
+        const msg = err.message || String(err);
+        const isTableMissing = msg.includes('does not exist') || msg.includes('relation') || msg.includes('42P01');
+        list.innerHTML = `
+          <div class="glass-card" style="grid-column:1/-1;text-align:center;padding:2rem;">
+            <p class="text-danger" style="margin-bottom:.75rem;">⚠️ ${esc(msg)}</p>
+            ${isTableMissing ? `
+              <p class="text-muted">La table <code>email_templates</code> n'existe pas encore.</p>
+              <p class="text-muted">Exécutez le fichier <code>email_templates.sql</code> dans le <strong>SQL Editor</strong> de Supabase, puis rechargez cette page.</p>
+            ` : `
+              <p class="text-muted">Vérifiez que <code>email_templates.sql</code> a été exécuté dans Supabase.</p>
+            `}
+            <button class="btn btn-primary" style="margin-top:1rem;" onclick="location.reload()">🔄 Recharger</button>
+          </div>`;
+      }
+    }
+
+    function renderList() {
+      const list = document.getElementById('templates-list');
+      if (allTemplates.length === 0) {
+        list.innerHTML = `
+          <div class="glass-card" style="grid-column:1/-1;text-align:center;padding:2.5rem;">
+            <div style="font-size:2.5rem;margin-bottom:1rem;">📧</div>
+            <h3 class="card-title" style="margin-bottom:.5rem;">Aucun template trouvé</h3>
+            <p class="text-muted" style="margin-bottom:1.25rem;">
+              La table <code>email_templates</code> est vide.<br>
+              Allez dans <strong>Supabase → SQL Editor</strong> et exécutez le fichier <code>email_templates.sql</code>.
+            </p>
+            <button class="btn btn-primary" onclick="location.reload()">🔄 Recharger après exécution SQL</button>
+          </div>`;
+        return;
+      }
+      list.innerHTML = allTemplates.map(t => `
+        <div class="glass-card tpl-card" onclick="openEditor('${t.id}')">
+          <div class="tpl-key">${esc(t.template_key)}</div>
+          <div class="tpl-label">${esc(t.label)}</div>
+          <div class="tpl-subject">${esc(t.subject)}</div>
+          <span class="tpl-badge ${t.is_active ? 'active' : 'inactive'}">${t.is_active ? 'Actif' : 'Inactif'}</span>
+        </div>
+      `).join('');
+    }
+
+    // ── Editor ──
+    function openEditor(id) {
+      currentTpl = allTemplates.find(t => t.id === id);
+      if (!currentTpl) return;
+
+      document.getElementById('templates-list').style.display = 'none';
+      document.getElementById('editor-section').style.display = 'block';
+      document.getElementById('preview-card').style.display = 'none';
+
+      document.getElementById('editor-title').textContent = currentTpl.label;
+      document.getElementById('editor-key').textContent = currentTpl.template_key;
+      document.getElementById('tpl-id').value = currentTpl.id;
+      document.getElementById('tpl-key-val').value = currentTpl.template_key;
+      document.getElementById('tpl-label').value = currentTpl.label;
+      document.getElementById('tpl-subject').value = currentTpl.subject;
+      document.getElementById('tpl-header-title').value = currentTpl.header_title || '';
+      document.getElementById('tpl-header-subtitle').value = currentTpl.header_subtitle || '';
+      document.getElementById('tpl-logo-url').value = currentTpl.logo_url || '';
+      document.getElementById('tpl-accent-color').value = currentTpl.accent_color || '#D4AF37';
+      document.getElementById('tpl-accent-picker').value = currentTpl.accent_color || '#D4AF37';
+      document.getElementById('tpl-header-bg').value = currentTpl.header_bg || '';
+      document.getElementById('tpl-greeting').value = currentTpl.greeting || '';
+      document.getElementById('tpl-body').value = currentTpl.body_html || '';
+      document.getElementById('tpl-footer').value = currentTpl.footer_text || '';
+      document.getElementById('tpl-active').checked = currentTpl.is_active;
+    }
+
+    function showList() {
+      document.getElementById('templates-list').style.display = '';
+      document.getElementById('editor-section').style.display = 'none';
+      currentTpl = null;
+    }
+
+    // ── Save ──
+    async function saveTemplate() {
+      const id = document.getElementById('tpl-id').value;
+      const payload = {
+        label: document.getElementById('tpl-label').value.trim(),
+        subject: document.getElementById('tpl-subject').value.trim(),
+        header_title: document.getElementById('tpl-header-title').value.trim(),
+        header_subtitle: document.getElementById('tpl-header-subtitle').value.trim(),
+        logo_url: document.getElementById('tpl-logo-url').value.trim(),
+        accent_color: document.getElementById('tpl-accent-color').value.trim(),
+        header_bg: document.getElementById('tpl-header-bg').value.trim(),
+        greeting: document.getElementById('tpl-greeting').value.trim(),
+        body_html: document.getElementById('tpl-body').value,
+        footer_text: document.getElementById('tpl-footer').value.trim(),
+        is_active: document.getElementById('tpl-active').checked,
+      };
+
+      try {
+        const { error } = await window.supabaseClient
+          .from('email_templates')
+          .update(payload)
+          .eq('id', id);
+        if (error) throw error;
+        window.adminCore.showToast('Template enregistré');
+        await loadTemplates();
+        // Update current from refreshed list
+        currentTpl = allTemplates.find(t => t.id === id);
+      } catch (err) {
+        console.error('Save error:', err);
+        alert('Erreur: ' + (err.message || 'Sauvegarde impossible'));
+      }
+    }
+
+    // ── Preview ──
+    function showPreview() {
+      const card = document.getElementById('preview-card');
+      card.style.display = 'block';
+      const iframe = document.getElementById('preview-iframe');
+
+      const logoUrl = document.getElementById('tpl-logo-url').value || '';
+      const headerBg = document.getElementById('tpl-header-bg').value || 'linear-gradient(135deg, #4A3728, #6B4F3B)';
+      const accentColor = document.getElementById('tpl-accent-color').value || '#D4AF37';
+      const headerTitle = document.getElementById('tpl-header-title').value || 'DALIGHT Head Spa';
+      const headerSubtitle = document.getElementById('tpl-header-subtitle').value || '';
+      const greeting = replaceVars(document.getElementById('tpl-greeting').value || '');
+      const bodyHtml = replaceVars(document.getElementById('tpl-body').value || '');
+      const footerText = replaceVars(document.getElementById('tpl-footer').value || '');
+
+      const html = buildPreviewHTML({ logoUrl, headerBg, accentColor, headerTitle, headerSubtitle, greeting, bodyHtml, footerText });
+      iframe.srcdoc = html;
+      card.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function replaceVars(str) {
+      return str
+        .replace(/\{\{client_name\}\}/g, 'Marie Dupont')
+        .replace(/\{\{client_email\}\}/g, 'marie@example.com')
+        .replace(/\{\{service\}\}/g, 'Head Spa Signature')
+        .replace(/\{\{date\}\}/g, 'samedi 19 avril 2025')
+        .replace(/\{\{time\}\}/g, '14:00')
+        .replace(/\{\{location\}\}/g, 'DALIGHT — Delmas 65')
+        .replace(/\{\{notes\}\}/g, 'Cheveux secs, besoin hydratation')
+        .replace(/\{\{order_number\}\}/g, 'ORD-20250419-001')
+        .replace(/\{\{year\}\}/g, new Date().getFullYear().toString())
+        .replace(/\{\{#notes\}\}([\s\S]*?)\{\{\/notes\}\}/g, '$1');
+    }
+
+    function buildPreviewHTML({ logoUrl, headerBg, accentColor, headerTitle, headerSubtitle, greeting, bodyHtml, footerText }) {
+      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<style>
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;line-height:1.6;color:#333;margin:0;padding:0;background:#f5f5f5}
+.email-wrapper{background:#f5f5f5;padding:20px}
+.container{max-width:600px;margin:0 auto;background:white;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)}
+.header{background:${headerBg};color:white;padding:40px 30px;text-align:center}
+.logo{max-width:150px;margin-bottom:20px;border-radius:8px}
+.header h1{margin:10px 0 5px 0;font-size:28px;font-weight:600}
+.header p{margin:0;font-size:16px;opacity:.9}
+.content{background:#fff;padding:40px 30px}
+.greeting{font-size:18px;color:#4A3728;margin-bottom:20px;font-weight:500}
+.message{color:#666;margin-bottom:25px;line-height:1.8}
+.detail-box{background:#f9f7f5;border-left:4px solid ${accentColor};padding:20px;margin:25px 0;border-radius:8px}
+.detail-row{margin:12px 0;display:flex;align-items:flex-start}
+.label{font-weight:600;color:#4A3728;min-width:120px}
+.value{color:#555;flex:1}
+.info-box{background:#fff3cd;border-left:4px solid ${accentColor};padding:20px;margin:25px 0;border-radius:8px}
+.alert-box{background:#fff3cd;border-left:4px solid ${accentColor};padding:20px;margin:0 0 25px 0;border-radius:8px}
+.alert-box strong{color:#4A3728;font-size:16px}
+.section-title{color:#4A3728;font-size:18px;font-weight:600;margin:25px 0 15px 0;border-bottom:2px solid ${accentColor};padding-bottom:8px}
+.action-box{background:#e8f5e9;border-left:4px solid #4CAF50;padding:20px;margin:25px 0;border-radius:8px}
+.action-box strong{color:#2e7d32}
+.order-number{background:#f9f7f5;padding:15px;margin:20px 0;border-radius:8px;text-align:center;border-left:4px solid ${accentColor}}
+.order-number strong{color:#4A3728;font-size:20px}
+.contact-box{background:#f9f7f5;padding:25px;margin:25px 0;border-radius:8px;text-align:center}
+.contact-item{margin:10px 0;color:#666}
+.footer{background:#4A3728;color:white;text-align:center;padding:25px;font-size:14px}
+.footer a{color:${accentColor};text-decoration:none}
+.divider{height:1px;background:#e0e0e0;margin:25px 0}
+</style></head><body>
+<div class="email-wrapper"><div class="container">
+<div class="header">
+  ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="logo" onerror="this.style.display='none'">` : ''}
+  <h1>${headerTitle}</h1>
+  ${headerSubtitle ? `<p>${headerSubtitle}</p>` : ''}
+</div>
+<div class="content">
+  ${greeting ? `<p class="greeting">${greeting}</p>` : ''}
+  ${bodyHtml}
+  <div class="divider"></div>
+  <div class="contact-box">
+    <div class="contact-item">📞 <strong>+509 48 48 12 25</strong></div>
+    <div class="contact-item">📍 <strong>Delmas 65, Faustin Premier Durandise #10</strong></div>
+    <div class="contact-item">📧 <strong>laurorejeanclarens0@gmail.com</strong></div>
+  </div>
+</div>
+<div class="footer">
+  <p style="margin:0 0 10px 0;">${footerText}</p>
+  <p style="margin:0;font-size:12px;opacity:.8;">L'art du bien-être et de la relaxation</p>
+</div>
+</div></div></body></html>`;
+    }
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+  </script>
+</body>
+</html>

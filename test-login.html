@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Login Test - No Service Worker</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #4A3728;
+            margin-bottom: 1rem;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 0.5rem 0.5rem 0.5rem 0;
+        }
+        button:hover { background: #c82333; }
+        button.success { background: #28a745; }
+        button.success:hover { background: #218838; }
+        .form-group {
+            margin: 1rem 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #4A3728;
+        }
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .status {
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+        }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .logs {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+        .log-entry {
+            margin: 0.25rem 0;
+            padding: 0.25rem 0;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Quick Login Test</h1>
+        <div class="warning">
+            ⚠️ <strong>Important:</strong> This test bypasses Service Worker to isolate the issue.
+        </div>
+        
+        <button onclick="unregisterSW()" style="background: #ffc107; color: #000;">
+            🗑️ Unregister Service Worker
+        </button>
+        <button onclick="clearAllCache()">
+            🧹 Clear All Cache
+        </button>
+        
+        <hr style="margin: 2rem 0; border: none; border-top: 2px solid #eee;">
+        
+        <h2 style="color: #4A3728; margin-bottom: 1rem;">Test Login</h2>
+        
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" value="laurorejeanclarens0@gmail.com" placeholder="your@email.com">
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" placeholder="••••••••">
+        </div>
+        
+        <button onclick="testLogin()" class="success">
+            🔐 Test Login
+        </button>
+        
+        <div id="status" class="status info" style="display: none;"></div>
+        <div class="logs" id="logs"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
+    <script>
+        const CONFIG = {
+            supabaseUrl: 'https://rbwoiejztrkghfkpxquo.supabase.co',
+            supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U'
+        };
+        
+        let supabase = null;
+        
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            logsDiv.appendChild(entry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            console.log(`[${type}]`, message);
+        }
+        
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.style.display = 'block';
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+        }
+        
+        async function unregisterSW() {
+            log('Unregistering Service Workers...', 'info');
+            
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                
+                if (registrations.length === 0) {
+                    showStatus('✅ No Service Workers found', 'success');
+                    log('No Service Workers to unregister', 'success');
+                    return;
+                }
+                
+                for (const registration of registrations) {
+                    await registration.unregister();
+                    log(`Unregistered: ${registration.scope}`, 'success');
+                }
+                
+                showStatus(`✅ Unregistered ${registrations.length} Service Worker(s)`, 'success');
+                log('All Service Workers unregistered!', 'success');
+            } else {
+                showStatus('❌ Service Workers not supported', 'error');
+            }
+        }
+        
+        async function clearAllCache() {
+            log('Clearing all caches...', 'info');
+            
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                for (const cacheName of cacheNames) {
+                    await caches.delete(cacheName);
+                    log(`Deleted cache: ${cacheName}`, 'success');
+                }
+                showStatus(`✅ Cleared ${cacheNames.length} cache(s)`, 'success');
+            } else {
+                showStatus('❌ Cache API not available', 'error');
+            }
+            
+            // Also clear localStorage
+            localStorage.clear();
+            sessionStorage.clear();
+            log('Cleared localStorage and sessionStorage', 'success');
+        }
+        
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showStatus('❌ Please enter email and password', 'error');
+                return;
+            }
+            
+            log('=== Starting Login Test ===', 'info');
+            showStatus('⏳ Initializing...', 'info');
+            
+            // Check if Supabase loaded
+            if (typeof window.supabase === 'undefined') {
+                showStatus('❌ Supabase CDN not loaded!', 'error');
+                log('Supabase CDN failed to load', 'error');
+                return;
+            }
+            
+            log('✅ Supabase CDN loaded', 'success');
+            
+            // Create client
+            try {
+                supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
+                log('✅ Supabase client created', 'success');
+            } catch (error) {
+                showStatus(`❌ Failed to create client: ${error.message}`, 'error');
+                log(`Client creation error: ${error.message}`, 'error');
+                return;
+            }
+            
+            // Test connection
+            try {
+                log('Testing connection to Supabase...', 'info');
+                const { data, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    log(`Connection test error: ${error.message}`, 'error');
+                } else {
+                    log('✅ Connection test passed', 'success');
+                }
+            } catch (error) {
+                log(`Connection test failed: ${error.message}`, 'error');
+            }
+            
+            // Attempt login
+            showStatus('⏳ Attempting login...', 'info');
+            log(`Attempting login for: ${email}`, 'info');
+            
+            try {
+                const startTime = Date.now();
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+                const duration = Date.now() - startTime;
+                
+                log(`Login request took: ${duration}ms`, 'info');
+                
+                if (error) {
+                    showStatus(`❌ Login failed: ${error.message}`, 'error');
+                    log(`Login error: ${error.message}`, 'error');
+                    return;
+                }
+                
+                log('✅ Login successful!', 'success');
+                log(`User: ${data.user?.email}`, 'success');
+                log(`Session created: ${data.session ? 'Yes' : 'No'}`, 'success');
+                
+                // Verify session
+                showStatus('⏳ Verifying session...', 'info');
+                log('Verifying session persists...', 'info');
+                
+                const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+                
+                if (sessionError) {
+                    showStatus(`❌ Session verification failed: ${sessionError.message}`, 'error');
+                    log(`Session error: ${sessionError.message}`, 'error');
+                    return;
+                }
+                
+                if (sessionData.session) {
+                    showStatus(`✅ SUCCESS! Login working perfectly!\nUser: ${sessionData.session.user?.email}\nSession: Active`, 'success');
+                    log('✅ Session verified successfully!', 'success');
+                    log('You can now use the main site - login should work!', 'success');
+                } else {
+                    showStatus('❌ Session not saved after login!', 'error');
+                    log('ERROR: Session not persisted after login', 'error');
+                }
+                
+            } catch (error) {
+                showStatus(`❌ Unexpected error: ${error.message}`, 'error');
+                log(`Unexpected error: ${error.message}`, 'error');
+                log(`Full error: ${JSON.stringify(error)}`, 'error');
+            }
+        }
+        
+        // Auto-unregister SW on load
+        window.addEventListener('DOMContentLoaded', async () => {
+            log('Page loaded', 'info');
+            log('Auto-unregistering Service Workers...', 'info');
+            await unregisterSW();
+            log('Ready to test login!', 'success');
+        });
+    </script>
+</body>
+</html>

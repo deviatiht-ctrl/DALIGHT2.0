@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Connexion · DALIGHT Head Spa Japonais</title>
+    <link rel="icon" href="../assets/images/logodaligth.jpg" type="image/jpeg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/responsive.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
+    <script type="module" src="../js/main.js"></script>
+    <script type="module" src="../js/auth.js" defer></script>
+  </head>
+  <body data-page="login">
+    <header class="site-header internal">
+      <nav class="top-nav">
+        <a class="brand" href="../index.html">
+          <img class="brand-logo" src="../assets/images/logodaligth.jpg" alt="DALIGHT Head Spa Japonais" />
+          <div>
+            <strong>DALIGHT</strong>
+            <small>Head Spa Japonais</small>
+          </div>
+        </a>
+        <button class="nav-toggle" aria-label="Ouvrir la navigation">
+          <span></span>
+          <span></span>
+        </button>
+        <div class="nav-links">
+          <a href="../index.html">Accueil</a>
+          <a href="./services.html">Services</a>
+          <a href="./reservation.html">Réservation</a>
+        </div>
+        <div class="nav-cta">
+          <a class="btn ghost" href="./register.html">Créer un compte</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="auth-shell fade-in">
+      <section class="auth-panel">
+        <div class="auth-panel__badge">Portail client</div>
+        <h1>Revenir à votre rituel</h1>
+        <p>
+          Suivez vos rituels, confirmez vos paiements et accédez à vos conseils personnalisés 
+          conçus par l’équipe DALIGHT.
+        </p>
+        <ul class="auth-list">
+        
+          <li>Reprogrammation en un geste</li>
+          <li>Support H24</li>
+        </ul>
+        <div class="auth-testimonial">
+          <p>
+            « Vivre l'expérience DALIGHT est devenu mon rendez-vous sacré. Le portail me permet de gérer 
+            mes rituels avec une simplicité déconcertante. »
+          </p>
+          <span>— Stéphanie, membre DALIGHT</span>
+        </div>
+      </section>
+      <section class="card form-card auth-form">
+        <h2>Ravi de vous revoir</h2>
+        <p class="page-subtitle">Connectez-vous pour piloter votre parcours bien-être.</p>
+        <form id="login-form">
+          <div class="input-group">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" name="email" required placeholder="you@email.com" />
+          </div>
+          <div class="input-group">
+            <label for="login-password">Mot de passe</label>
+            <input type="password" id="login-password" name="password" required placeholder="••••••••" />
+          </div>
+          <div class="form-inline">
+            <label class="remember">
+              <input type="checkbox" />
+              <span>Se souvenir de moi</span>
+            </label>
+            <a class="link-muted" href="#">Mot de passe oublié ?</a>
+          </div>
+          <button class="btn" type="submit">Se connecter</button>
+          <p class="form-note">Pas encore de compte ? <a href="./register.html">Créez-en un</a>.</p>
+          <div id="login-message" role="status"></div>
+        </form>
+        <div class="auth-security">
+          <span class="status-dot"></span>
+          
+        </div>
+      </section>
+    </main>
+
+    <nav class="mobile-nav">
+      <a href="../index.html" data-page="home">
+        <i data-lucide="home"></i>
+      </a>
+      <a href="./services.html" data-page="services">
+        <i data-lucide="sparkles"></i>
+      </a>
+      <a href="./reservation.html" data-page="reservation">
+        <i data-lucide="calendar"></i>
+      </a>
+    </nav>
+  </body>
+</html>

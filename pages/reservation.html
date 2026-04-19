@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Réserver un Rituel — DALIGHT Head Spa Japonais</title>
+    <link rel="icon" href="../assets/images/logodaligth.jpg" type="image/jpeg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/responsive.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
+    <script type="module" src="../js/main.js"></script>
+    <script type="module" src="../js/chat-widget.js"></script>
+    <script type="module">
+      import { initChatWidget } from '../js/chat-widget.js';
+      document.addEventListener('DOMContentLoaded', () => {
+        if (window.lucide) {
+          lucide.createIcons();
+        }
+        initChatWidget();
+      });
+    </script>
+    <script type="module" src="../js/reservation.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const timingInputs = document.querySelectorAll('input[name="pay_timing"]');
+        const methodGroup = document.getElementById('payment-method-group');
+        const depositInfo = document.getElementById('deposit-info');
+        timingInputs.forEach(input => {
+          input.addEventListener('change', () => {
+            const isOnline = input.value === 'online';
+            methodGroup.style.display = isOnline ? 'flex' : 'none';
+            depositInfo.style.display = isOnline ? 'flex' : 'none';
+            if (!isOnline) {
+              document.querySelectorAll('input[name="payment_method"]').forEach(m => m.checked = false);
+            }
+          });
+        });
+      });
+    </script>
+  </head>
+  <body data-page="reservation">
+    <header class="site-header internal">
+      <nav class="top-nav">
+        <a class="brand" href="../index.html">
+          <img class="brand-logo" src="../assets/images/logodaligth.jpg" alt="DALIGHT Head Spa Japonais" />
+          <div>
+            <strong>DALIGHT</strong>
+            <small>Head Spa Japonais</small>
+          </div>
+        </a>
+        <button class="nav-toggle" aria-label="Ouvrir la navigation">
+          <span></span>
+          <span></span>
+        </button>
+        <div class="nav-links">
+          <a href="../index.html">Accueil</a>
+          <a href="./services.html">Services</a>
+          <a href="./shop.html">Boutique</a>
+          <a href="./reservation.html" class="active">Réservation</a>
+          <a href="./orders.html">Dossiers</a>
+          <a href="./admin.html" class="admin-link">Admin</a>
+        </div>
+        <div class="nav-cta">
+          <button class="btn ghost" id="logout-btn" type="button">Se déconnecter</button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="page-shell reservation-shell fade-in">
+      <section class="card reservation-hero reveal-on-scroll">
+        <div class="reservation-copy">
+          <p class="kicker">Réserver un rituel</p>
+          <h1>Planifiez votre prochaine parenthèse de sérénité</h1>
+          <p class="page-subtitle">
+            Plongez dans l'univers DALIGHT. Choisissez votre rituel et votre créneau. Chaque demande est traitée 
+            avec la plus grande attention par l'Assistant DALIGHT pour vous assurer une expérience d'exception.
+          </p>
+          <ul class="reservation-highlights">
+            <li>Thé à la lavande offert à l'accueil</li>
+            <li>Consultation capillaire personnalisée</li>
+            <li>Ambiance zen et rituels vapeur</li>
+          </ul>
+        </div>
+        <div class="reservation-stats">
+          <article>
+            <strong>99%</strong>
+            <span>Satisfaction client</span>
+          </article>
+          <article>
+            <strong>24/7</strong>
+            <span>Assistant DALIGHT</span>
+          </article>
+          <article>
+            <strong>Elite</strong>
+            <span>Head Spa Japonais</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="reservation-grid">
+        <form id="reservation-form" class="card form-panel">
+          <div class="form-header">
+            <div>
+              <p class="kicker">Détails de réservation</p>
+              <h2>Créez votre demande</h2>
+            </div>
+            <p class="form-note">Confirmation par e-mail &amp; chat. Vos données restent chiffrées .</p>
+          </div>
+
+          <div class="input-stack">
+            <div class="input-group">
+              <label for="service">Service</label>
+              <select id="service" name="service" required></select>
+            </div>
+            <div class="input-group">
+              <label for="location">Lieu</label>
+              <select id="location" name="location" required>
+                <option value="Spa">🏠 Au Spa — Delmas 65</option>
+                <option value="Domicile">🚗 À domicile</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="input-grid two identity-grid">
+            <div class="input-group">
+              <label for="id-type">Pièce d’identité</label>
+              <select id="id-type" name="id_type" required>
+                <option value="">Sélectionner un document</option>
+                <option value="Carte d'identité">Carte d'identité</option>
+                <option value="Permis de conduire">Permis de conduire</option>
+                <option value="Passeport">Passeport</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="id-number">Numéro du document</label>
+              <input type="text" id="id-number" name="id_number" placeholder="AA-1234567" required />
+            </div>
+          </div>
+
+          <div class="input-grid two">
+            <div class="input-group">
+              <label for="date">Date souhaitée</label>
+              <input type="date" id="date" name="date" required />
+            </div>
+            <div class="input-group">
+              <label for="time">Heure souhaitée</label>
+              <input type="time" id="time" name="time" required />
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="notes">Ajouter une note (optionnel)</label>
+            <textarea
+              id="notes"
+              name="notes"
+              rows="4"
+              placeholder="Indiquez vos besoins spécifiques, type de cheveux, allergies ou moments particuliers à célébrer."
+            ></textarea>
+          </div>
+
+          <!-- Payment section -->
+          <div class="payment-section">
+            <p class="kicker" style="margin-bottom:0.75rem;">Paiement</p>
+
+            <div class="input-group">
+              <label>Quand souhaitez-vous payer ?</label>
+              <div class="pay-timing-group">
+                <label class="pay-option">
+                  <input type="radio" name="pay_timing" value="online" id="pay-online" required>
+                  <span class="pay-option__card">
+                    <strong>💳 Payer maintenant</strong>
+                    <small>Acompte requis pour confirmer</small>
+                  </span>
+                </label>
+                <label class="pay-option">
+                  <input type="radio" name="pay_timing" value="onsite">
+                  <span class="pay-option__card">
+                    <strong>🏠 Payer au spa</strong>
+                    <small>Régler à votre arrivée</small>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div class="input-group" id="payment-method-group" style="display:none;">
+              <label>Méthode de paiement</label>
+              <div class="pay-methods">
+                <label class="pay-method-option">
+                  <input type="radio" name="payment_method" value="natcash">
+                  <span>
+                    <img src="../assets/images/natcash.png" alt="NatCash" onerror="this.style.display='none'">
+                    <strong>NatCash</strong>
+                  </span>
+                </label>
+                <label class="pay-method-option">
+                  <input type="radio" name="payment_method" value="mocash">
+                  <span>
+                    <img src="../assets/images/mocash.png" alt="MoCash" onerror="this.style.display='none'">
+                    <strong>MoCash</strong>
+                  </span>
+                </label>
+                <label class="pay-method-option">
+                  <input type="radio" name="payment_method" value="card">
+                  <span>
+                    <i data-lucide="credit-card" style="width:20px;height:20px;"></i>
+                    <strong>Carte Bancaire</strong>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div id="deposit-info" class="deposit-banner" style="display:none;">
+              <span>💰</span>
+              <div>
+                <strong>Acompte de 30% requis</strong>
+                <small>Le reste sera réglé au spa. Votre réservation sera confirmée après paiement.</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-footer">
+            <div class="assurance-tags">
+              <span>Confidentialité assurée</span>
+              <span>Pièce d'identité requise</span>
+              <span>Accompagnement personnalisé</span>
+            </div>
+            <button class="btn" type="submit">Envoyer la demande</button>
+          </div>
+          <div id="reservation-message" role="status"></div>
+        </form>
+
+        <aside class="card summary-panel">
+          <div class="summary-panel__content">
+            <p class="kicker">Guidance Support</p>
+            <h3>Besoin d’aide pour composer le rituel parfait ?</h3>
+            <p>
+              Besoin de conseils pour choisir le rituel adapté à votre type de cheveux ou votre état de stress ? 
+              L'Assistant DALIGHT vous accompagne pour créer l'instant de détente parfait.
+            </p>
+            <ul class="concierge-list">
+              <li><i data-lucide="sparkles" style="width:16px;height:16px;"></i> Diagnostic capillaire approfondi</li>
+              <li><i data-lucide="coffee" style="width:16px;height:16px;"></i> Rituel du thé et relaxation</li>
+              <li><i data-lucide="message-circle" style="width:16px;height:16px;"></i> Assistance WhatsApp dédiée</li>
+              <li><i data-lucide="file-text" style="width:16px;height:16px;"></i> Suivi personnalisé après-soin</li>
+            </ul>
+            <div class="contact-card">
+              <p>Envie d’échanger d’abord ?</p>
+              <a class="contact-link" href="tel:+50948481225">+509 48 48 12 25</a>
+              <span class="contact-hours">08:00 - 22:00 (GMT-5)</span>
+            </div>
+          </div>
+          <div class="summary-panel__footer">
+            <p>
+              Après la réservation, ouvrez la bulle de chat (en bas à droite) pour partager des détails ou coordonner un
+              transport avec notre équipe.
+            </p>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <nav class="mobile-nav">
+      <a href="../index.html" data-page="home">
+        <i data-lucide="home"></i>
+      </a>
+      <a href="./services.html" data-page="services">
+        <i data-lucide="sparkles"></i>
+      </a>
+      <a href="./reservation.html" data-page="reservation" class="active">
+        <i data-lucide="calendar"></i>
+      </a>
+      <a href="./orders.html" data-page="orders">
+        <i data-lucide="clipboard-list"></i>
+      </a>
+    </nav>
+
+    <!-- Chat Widget -->
+    <div class="chat-widget" id="chat-widget">
+      <button class="chat-bubble" id="chat-bubble">
+        <i data-lucide="message-circle"></i>
+      </button>
+      <div class="chat-window" id="chat-window" style="display:none;">
+        <div class="chat-header">
+          <h4>Assistant DALIGHT</h4>
+          <span class="chat-status">En ligne</span>
+          <button class="chat-close" id="chat-close">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area">
+          <input type="text" id="chat-input" placeholder="Écrivez votre message...">
+          <button id="chat-send">
+            <i data-lucide="send"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

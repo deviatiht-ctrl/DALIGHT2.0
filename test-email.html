@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Email - DALIGHT</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #4A3728;
+        }
+        button {
+            background: #4A3728;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 0.5rem;
+        }
+        button:hover {
+            background: #6B4F3B;
+        }
+        .log {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .success {
+            color: #4ade80;
+        }
+        .error {
+            color: #f87171;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 Test Email Backend</h1>
+        <p>Klike sou bouton yo pou teste Edge Function an:</p>
+        
+        <button onclick="testEdgeFunctionDirect()">1. Test Edge Function Direct</button>
+        <button onclick="testWithSupabase()">2. Test with Supabase Client</button>
+        <button onclick="clearLogs()">Clear Logs</button>
+        
+        <div class="log" id="logs"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
+    <script>
+        const SUPABASE_URL = 'https://rbwoiejztrkghfkpxquo.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U';
+        
+        let supabase;
+        
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            let className = '';
+            if (type === 'success') className = 'success';
+            if (type === 'error') className = 'error';
+            logs.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logs.scrollTop = logs.scrollHeight;
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+            log('Logs cleared');
+        }
+        
+        async function testEdgeFunctionDirect() {
+            log('\n🔵 Testing Edge Function (direct fetch)...');
+            
+            try {
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    },
+                    body: JSON.stringify({
+                        to: 'cvisualagency@gmail.com',
+                        subject: '🧪 Test Email - Direct',
+                        html: '<h1>Test Email</h1><p>This is a test email from Edge Function.</p>',
+                        isAdmin: false
+                    })
+                });
+                
+                log(`Response status: ${response.status}`);
+                
+                const data = await response.json();
+                log(`Response: ${JSON.stringify(data, null, 2)}`);
+                
+                if (response.ok) {
+                    log('✅ Email sent successfully!', 'success');
+                } else {
+                    log(`❌ Error: ${data.error || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testWithSupabase() {
+            log('\n🔵 Testing with Supabase Client...');
+            
+            try {
+                if (!supabase) {
+                    log('Initializing Supabase client...');
+                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    log('✅ Supabase client initialized');
+                }
+                
+                log('Invoking send-email function...');
+                
+                const { data, error } = await supabase.functions.invoke('send-email', {
+                    body: {
+                        to: 'cvisualagency@gmail.com',
+                        subject: '🧪 Test Email - Supabase Client',
+                        html: '<h1>Test Email</h1><p>This is a test email from Supabase Edge Function.</p>',
+                        isAdmin: false
+                    }
+                });
+                
+                if (error) {
+                    log(`❌ Error: ${error.message}`, 'error');
+                    log(`Error details: ${JSON.stringify(error, null, 2)}`, 'error');
+                } else {
+                    log(`✅ Response: ${JSON.stringify(data, null, 2)}`, 'success');
+                    log('✅ Email sent successfully!', 'success');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+                log(`Stack: ${error.stack}`, 'error');
+            }
+        }
+        
+        // Initialize
+        log('🚀 Email Test Page Ready');
+        log('Click a button to test the Edge Function');
+    </script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Paiement · DALIGHT Head Spa Japonais</title>
+    <link rel="icon" href="../assets/images/logodaligth.jpg" type="image/jpeg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/responsive.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
+    <script src="https://js.stripe.com/v3/" defer></script>
+    <script type="module" src="../js/main.js"></script>
+    <script type="module" src="../js/chat-widget.js" defer></script>
+    <script type="module">
+      import { initChatWidget } from '../js/chat-widget.js';
+      document.addEventListener('DOMContentLoaded', () => {
+        if (window.lucide) {
+          lucide.createIcons();
+        }
+        initChatWidget();
+      });
+    </script>
+    <script type="module" src="../js/payment.js" defer></script>
+  </head>
+  <body data-page="payment">
+    <header class="site-header internal">
+      <nav class="top-nav">
+        <a class="brand" href="../index.html">
+          <img class="brand-logo" src="../assets/images/logodaligth.jpg" alt="DALIGHT Head Spa Japonais" />
+          <div>
+            <strong>DALIGHT</strong>
+            <small>Head Spa Japonais</small>
+          </div>
+        </a>
+        <button class="nav-toggle" aria-label="Ouvrir la navigation">
+          <span></span>
+          <span></span>
+        </button>
+        <div class="nav-links">
+          <a href="../index.html">Accueil</a>
+          <a href="./services.html">Services</a>
+          <a href="./shop.html">Boutique</a>
+          <a href="./reservation.html">Réservation</a>
+          <a href="./orders.html">Dossiers</a>
+          <a href="./payment.html" class="active">Paiement</a>
+          <a href="./admin.html" class="admin-link">Admin</a>
+        </div>
+        <div class="nav-cta">
+          <button class="btn ghost" id="logout-btn" type="button">Se déconnecter</button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="page-shell fade-in">
+      <section class="card">
+        <p class="kicker">Paiement sécurisé</p>
+        <h1>Finalisez votre réservation</h1>
+        <p class="page-subtitle">
+          Sélectionnez le rituel que vous souhaitez régler. Nous utilisons Stripe Checkout pour une transaction 
+          100% sécurisée. Vos données bancaires ne sont jamais stockées.
+        </p>
+        <form id="payment-form">
+          <div>
+            <label for="payment-service">Service</label>
+            <select id="payment-service" name="service" required></select>
+          </div>
+          <div>
+            <label for="payment-amount">Montant (USD)</label>
+            <input type="text" id="payment-amount" name="amount" readonly />
+          </div>
+          <button class="btn" type="submit">Payer via Stripe</button>
+          <div id="payment-message" role="status"></div>
+        </form>
+        <p class="protected-note">
+          Après le paiement, vous serez redirigé avec un récapitulatif instantané dans la page Dossiers.
+        </p>
+      </section>
+
+      <section class="info-grid section-spacing-md">
+        <article class="info-card summary-card">
+          <h3>Pourquoi Stripe ?</h3>
+          <p>Stripe Checkout chiffre chaque transaction et supporte Apple Pay, Google Pay et toutes les cartes majeures.</p>
+        </article>
+        <article class="info-card summary-card">
+          <h3>Sérénité Totale</h3>
+          <p>Le tarif affiché sur la carte des rituels est celui facturé. Aucun frais caché n'est appliqué.</p>
+        </article>
+        <article class="info-card summary-card">
+          <h3>Une question ?</h3>
+          <p>Contactez l'Assistant DALIGHT au <a href="tel:+50948481225">4848-1225</a> ou par email à <a href="mailto:contact@dalight.com">contact@dalight.com</a>.</p>
+        </article>
+      </section>
+    </main>
+
+    <nav class="mobile-nav">
+      <a href="../index.html" data-page="home">
+        <i data-lucide="home"></i>
+      </a>
+      <a href="./reservation.html" data-page="reservation">
+        <i data-lucide="calendar"></i>
+      </a>
+      <a href="./payment.html" class="active" data-page="payment">
+        <i data-lucide="credit-card"></i>
+      </a>
+      <a href="./orders.html" data-page="orders">
+        <i data-lucide="clipboard-list"></i>
+      </a>
+    </nav>
+
+    <!-- Chat Widget -->
+    <div class="chat-widget" id="chat-widget">
+      <button class="chat-bubble" id="chat-bubble">
+        <i data-lucide="message-circle"></i>
+      </button>
+      <div class="chat-window" id="chat-window" style="display:none;">
+        <div class="chat-header">
+          <h4>Assistant DALIGHT</h4>
+          <span class="chat-status">En ligne</span>
+          <button class="chat-close" id="chat-close">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area">
+          <input type="text" id="chat-input" placeholder="Écrivez votre message...">
+          <button id="chat-send">
+            <i data-lucide="send"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

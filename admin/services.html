@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rituels - DALIGHT Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .toggle-switch{position:relative;width:44px;height:24px;display:inline-block;vertical-align:middle}
+    .toggle-switch input{opacity:0;width:0;height:0}
+    .toggle-slider{position:absolute;inset:0;background:rgba(255,255,255,.12);border-radius:24px;cursor:pointer;transition:.25s}
+    .toggle-slider::before{content:'';position:absolute;left:3px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.25s}
+    .toggle-switch input:checked+.toggle-slider{background:var(--admin-success)}
+    .toggle-switch input:checked+.toggle-slider::before{transform:translateX(20px)}
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="admin-sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="sidebar-logo">
+        <img src="../assets/images/logodaligth.jpg" alt="DALIGHT" onerror="this.style.display='none'">
+        <div class="sidebar-logo-text">DALIGHT<span>Administration</span></div>
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Principal</div>
+        <a href="dashboard.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+        <a href="reservations.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Réservations
+          <span class="badge" id="pending-count">0</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Contenu</div>
+        <a href="posts.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          Posts & Vidéos
+        </a>
+        <a href="services.html" class="nav-item active">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          Rituels
+        </a>
+        <a href="products.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          Produits
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Utilisateurs</div>
+        <a href="clients.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          Clients
+        </a>
+        <a href="emails.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          Templates Email
+        </a>
+        <a href="messages.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          Messages
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Système</div>
+        <a href="settings.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Paramètres
+        </a>
+        <a href="../index.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          Voir le site
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="user-avatar">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="user-name">Admin</div>
+          <div class="sidebar-user-role">Administrateur</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="admin-main">
+    <header class="admin-header">
+      <div class="header-left">
+        <button class="mobile-menu-btn" id="mobile-menu-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <h1 class="page-title">Services</h1>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-primary" id="add-service-btn">+ Ajouter un rituel</button>
+        <button class="header-btn" id="logout-btn" title="Déconnexion">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="admin-content">
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="glass-card stat-card">
+          <div class="stat-icon gold">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-label">Total services</div>
+          </div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-icon green">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-active">0</div>
+            <div class="stat-label">Actifs</div>
+          </div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-icon blue">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-categories">0</div>
+            <div class="stat-label">Catégories</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categories Manager -->
+      <div class="glass-card" id="cat-section">
+        <div class="card-header" style="cursor:pointer;" onclick="toggleCatSection()">
+          <div>
+            <h3 class="card-title">Gestion des catégories</h3>
+            <p class="card-subtitle">Créez, modifiez ou supprimez les types de services</p>
+          </div>
+          <span id="cat-toggle-icon" style="font-size:1.2rem;transition:.25s;">▼</span>
+        </div>
+        <div id="cat-body" style="display:none;padding:0 1.5rem 1.5rem;">
+          <div style="display:flex;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap;align-items:flex-end;">
+            <div class="form-group" style="flex:1;min-width:120px;margin-bottom:0;">
+              <label class="form-label" style="font-size:.78rem;">Slug (clé)</label>
+              <input class="form-input" id="cat-slug" placeholder="headspa" style="font-size:.85rem;">
+            </div>
+            <div class="form-group" style="flex:1;min-width:120px;margin-bottom:0;">
+              <label class="form-label" style="font-size:.78rem;">Libellé</label>
+              <input class="form-input" id="cat-label" placeholder="Head Spa" style="font-size:.85rem;">
+            </div>
+            <div class="form-group" style="width:80px;margin-bottom:0;">
+              <label class="form-label" style="font-size:.78rem;">Ordre</label>
+              <input class="form-input" id="cat-order" type="number" value="0" min="0" style="font-size:.85rem;">
+            </div>
+            <button class="btn btn-primary btn-sm" id="cat-add-btn" style="height:38px;">+ Ajouter</button>
+          </div>
+          <div class="table-responsive" style="overflow-x:auto;">
+            <table class="admin-table" style="font-size:.85rem;">
+              <thead>
+                <tr><th>Slug</th><th>Libellé</th><th>Ordre</th><th>Statut</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="cat-table">
+                <tr><td colspan="5" class="text-center text-muted" style="padding:1rem;">Chargement...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="text-muted" style="font-size:.75rem;margin-top:.5rem;">Exécutez <code>service_categories.sql</code> dans Supabase si cette table n'existe pas.</p>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="glass-card">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title">Catalogue des rituels</h3>
+            <p class="card-subtitle">Gérez les expériences proposées par DALIGHT</p>
+          </div>
+        </div>
+        <div class="table-responsive" style="overflow-x:auto;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Rituel</th>
+                <th>Catégorie</th>
+                <th>Durée</th>
+                <th>Prix USD</th>
+                <th>Prix HTG</th>
+                <th>Statut</th>
+                <th>Vedette</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="services-table">
+              <tr>
+                <td colspan="9" class="text-center text-muted" style="padding: 2rem;">
+                  <div class="loading-spinner"></div>
+                  Chargement...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Service Modal -->
+  <div class="modal-overlay" id="service-modal">
+    <div class="modal" style="max-width:600px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-title">Ajouter un rituel</h3>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="service-form">
+          <input type="hidden" id="svc-id">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Nom du rituel *</label>
+              <input class="form-input" id="svc-name" required placeholder="Head Spa Signature">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Catégorie *</label>
+              <select class="form-select" id="svc-category" required>
+                <option value="headspa">Head Spa</option>
+                <option value="package">Package</option>
+                <option value="cure">Cure</option>
+                <option value="soin">Soin</option>
+                <option value="autre">Autre</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Durée *</label>
+              <input class="form-input" id="svc-duration" required placeholder="60 min">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ordre d'affichage</label>
+              <input class="form-input" id="svc-sort" type="number" value="0" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Prix USD *</label>
+              <input class="form-input" id="svc-price-usd" type="number" step="0.01" min="0" required placeholder="85.00">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Prix HTG *</label>
+              <input class="form-input" id="svc-price-htg" type="number" step="0.01" min="0" required placeholder="10000">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-textarea" id="svc-description" rows="3" placeholder="Description du rituel..."></textarea>
+          </div>
+          <div class="form-grid">
+            <div class="form-group" style="display:flex;align-items:center;gap:.75rem;">
+              <label class="toggle-switch">
+                <input type="checkbox" id="svc-active" checked>
+                <span class="toggle-slider"></span>
+              </label>
+              <span style="font-size:.9rem;">Actif</span>
+            </div>
+            <div class="form-group" style="display:flex;align-items:center;gap:.75rem;">
+              <label class="toggle-switch">
+                <input type="checkbox" id="svc-featured">
+                <span class="toggle-slider"></span>
+              </label>
+              <span style="font-size:.9rem;">Vedette</span>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" id="modal-cancel">Annuler</button>
+            <button type="submit" class="btn btn-primary" id="modal-save">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation -->
+  <div class="modal-overlay" id="delete-modal">
+    <div class="modal" style="max-width:420px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Supprimer ce rituel ?</h3>
+        <button class="modal-close" id="delete-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted">Cette action est irréversible. Le rituel <strong id="delete-name"></strong> sera définitivement supprimé.</p>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" id="delete-cancel">Annuler</button>
+          <button class="btn btn-danger" id="delete-confirm">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/admin-core.js"></script>
+  <script>
+    // Dynamic categories from DB (fallback to defaults)
+    let CATEGORY_LABELS = {
+      headspa: 'Head Spa',
+      package: 'Package',
+      cure: 'Cure',
+      soin: 'Soin',
+      autre: 'Autre',
+    };
+    let allCategories = [];
+
+    let allServices = [];
+    let editingId = null;
+    let deletingId = null;
+
+    // DOM refs
+    const tbody = document.getElementById('services-table');
+    const modal = document.getElementById('service-modal');
+    const deleteModal = document.getElementById('delete-modal');
+
+    // ── Init ──
+    document.addEventListener('DOMContentLoaded', async () => {
+      await new Promise(r => setTimeout(r, 100));
+      const session = await window.adminCore?.checkAdminAuth();
+      if (!session) return;
+      await loadCategories();
+      loadServices();
+      wireUI();
+    });
+
+    function wireUI() {
+      document.getElementById('add-service-btn').addEventListener('click', () => openModal());
+      document.getElementById('modal-close').addEventListener('click', closeModal);
+      document.getElementById('modal-cancel').addEventListener('click', closeModal);
+      document.getElementById('delete-close').addEventListener('click', closeDelete);
+      document.getElementById('delete-cancel').addEventListener('click', closeDelete);
+      document.getElementById('delete-confirm').addEventListener('click', confirmDelete);
+      document.getElementById('service-form').addEventListener('submit', handleSave);
+      document.getElementById('cat-add-btn').addEventListener('click', addCategory);
+
+      // close modals on overlay click
+      modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+      deleteModal.addEventListener('click', (e) => { if (e.target === deleteModal) closeDelete(); });
+    }
+
+    // ── Categories ──
+    function toggleCatSection() {
+      const body = document.getElementById('cat-body');
+      const icon = document.getElementById('cat-toggle-icon');
+      if (body.style.display === 'none') {
+        body.style.display = 'block';
+        icon.textContent = '▲';
+      } else {
+        body.style.display = 'none';
+        icon.textContent = '▼';
+      }
+    }
+
+    async function loadCategories() {
+      try {
+        const { data, error } = await window.supabaseClient
+          .from('service_categories')
+          .select('*')
+          .order('sort_order', { ascending: true });
+        if (error) throw error;
+        if (data && data.length > 0) {
+          allCategories = data;
+          CATEGORY_LABELS = {};
+          data.forEach(c => { CATEGORY_LABELS[c.slug] = c.label; });
+          populateCategorySelect();
+          renderCatTable();
+        } else {
+          renderCatTable();
+        }
+      } catch (err) {
+        console.warn('Categories table not found, using defaults:', err.message);
+        document.getElementById('cat-table').innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:1rem;">Table non trouvée. Exécutez <code>service_categories.sql</code>.</td></tr>';
+      }
+    }
+
+    function populateCategorySelect() {
+      const select = document.getElementById('svc-category');
+      select.innerHTML = '';
+      Object.entries(CATEGORY_LABELS).forEach(([slug, label]) => {
+        const opt = document.createElement('option');
+        opt.value = slug;
+        opt.textContent = label;
+        select.appendChild(opt);
+      });
+    }
+
+    function renderCatTable() {
+      const catTbody = document.getElementById('cat-table');
+      if (allCategories.length === 0) {
+        catTbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:1rem;">Aucune catégorie.</td></tr>';
+        return;
+      }
+      catTbody.innerHTML = allCategories.map(c => `
+        <tr>
+          <td><code>${esc(c.slug)}</code></td>
+          <td>${esc(c.label)}</td>
+          <td>${c.sort_order}</td>
+          <td><span class="status-badge ${c.is_active ? 'completed' : 'cancelled'}">${c.is_active ? 'Actif' : 'Inactif'}</span></td>
+          <td>
+            <div class="action-btns">
+              <button class="btn btn-secondary btn-sm btn-icon" title="Toggle" onclick="toggleCategory('${c.id}', ${!c.is_active})">${c.is_active ? '⏸' : '▶'}</button>
+              <button class="btn btn-danger btn-sm btn-icon" title="Supprimer" onclick="deleteCategory('${c.id}')">✕</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function addCategory() {
+      const slug = document.getElementById('cat-slug').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+      const label = document.getElementById('cat-label').value.trim();
+      const order = parseInt(document.getElementById('cat-order').value) || 0;
+      if (!slug || !label) { alert('Slug et libellé requis'); return; }
+      try {
+        const { error } = await window.supabaseClient
+          .from('service_categories').insert({ slug, label, sort_order: order });
+        if (error) throw error;
+        document.getElementById('cat-slug').value = '';
+        document.getElementById('cat-label').value = '';
+        document.getElementById('cat-order').value = '0';
+        await loadCategories();
+        window.adminCore?.showToast('Catégorie ajoutée');
+      } catch (err) {
+        alert('Erreur: ' + (err.message || 'Impossible d\'ajouter'));
+      }
+    }
+
+    async function toggleCategory(id, newState) {
+      try {
+        const { error } = await window.supabaseClient
+          .from('service_categories').update({ is_active: newState }).eq('id', id);
+        if (error) throw error;
+        await loadCategories();
+      } catch (err) { alert('Erreur: ' + err.message); }
+    }
+
+    async function deleteCategory(id) {
+      if (!confirm('Supprimer cette catégorie ?')) return;
+      try {
+        const { error } = await window.supabaseClient
+          .from('service_categories').delete().eq('id', id);
+        if (error) throw error;
+        await loadCategories();
+        window.adminCore?.showToast('Catégorie supprimée');
+      } catch (err) { alert('Erreur: ' + err.message); }
+    }
+
+    // ── CRUD ──
+    async function loadServices() {
+      try {
+        const { data, error } = await window.supabaseClient
+          .from('services')
+          .select('*')
+          .order('sort_order', { ascending: true });
+
+        if (error) throw error;
+        allServices = data || [];
+        renderTable();
+        updateStats();
+      } catch (err) {
+        console.error('Error loading services:', err);
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Erreur de chargement</td></tr>';
+      }
+    }
+
+    function updateStats() {
+      document.getElementById('stat-total').textContent = allServices.length;
+      document.getElementById('stat-active').textContent = allServices.filter(s => s.is_active).length;
+      const cats = new Set(allServices.map(s => s.category));
+      document.getElementById('stat-categories').textContent = cats.size;
+    }
+
+    function renderTable() {
+      if (allServices.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted" style="padding:2rem;">Aucun service. Cliquez « + Ajouter un rituel » pour commencer.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = allServices.map(s => `
+        <tr>
+          <td class="text-muted">${s.sort_order}</td>
+          <td>
+            <div style="font-weight:600;">${esc(s.name)}</div>
+            ${s.description ? `<div class="text-muted" style="font-size:.8rem;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(s.description)}</div>` : ''}
+          </td>
+          <td><span class="status-badge confirmed">${CATEGORY_LABELS[s.category] || s.category}</span></td>
+          <td>${esc(s.duration)}</td>
+          <td class="text-accent">$${Number(s.price_usd).toFixed(0)}</td>
+          <td>${Number(s.price_htg).toLocaleString()} HTG</td>
+          <td>
+            <span class="status-badge ${s.is_active ? 'completed' : 'cancelled'}">
+              ${s.is_active ? 'Actif' : 'Inactif'}
+            </span>
+          </td>
+          <td>${s.is_featured ? '<span class="text-accent">★</span>' : '—'}</td>
+          <td>
+            <div class="action-btns">
+              <button class="btn btn-secondary btn-sm btn-icon" title="Modifier" onclick="openModal('${s.id}')">✎</button>
+              <button class="btn btn-danger btn-sm btn-icon" title="Supprimer" onclick="openDelete('${s.id}')">✕</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // ── Modal ──
+    function openModal(id) {
+      editingId = id || null;
+      document.getElementById('modal-title').textContent = id ? 'Modifier le rituel' : 'Ajouter un rituel';
+
+      if (id) {
+        const s = allServices.find(x => x.id === id);
+        if (!s) return;
+        document.getElementById('svc-id').value = s.id;
+        document.getElementById('svc-name').value = s.name;
+        document.getElementById('svc-category').value = s.category;
+        document.getElementById('svc-duration').value = s.duration;
+        document.getElementById('svc-sort').value = s.sort_order;
+        document.getElementById('svc-price-usd').value = s.price_usd;
+        document.getElementById('svc-price-htg').value = s.price_htg;
+        document.getElementById('svc-description').value = s.description || '';
+        document.getElementById('svc-active').checked = s.is_active;
+        document.getElementById('svc-featured').checked = s.is_featured;
+      } else {
+        document.getElementById('service-form').reset();
+        document.getElementById('svc-active').checked = true;
+        document.getElementById('svc-sort').value = allServices.length + 1;
+      }
+
+      modal.classList.add('active');
+    }
+
+    function closeModal() {
+      modal.classList.remove('active');
+      editingId = null;
+    }
+
+    async function handleSave(e) {
+      e.preventDefault();
+      const payload = {
+        name: document.getElementById('svc-name').value.trim(),
+        category: document.getElementById('svc-category').value,
+        duration: document.getElementById('svc-duration').value.trim(),
+        sort_order: parseInt(document.getElementById('svc-sort').value) || 0,
+        price_usd: parseFloat(document.getElementById('svc-price-usd').value) || 0,
+        price_htg: parseFloat(document.getElementById('svc-price-htg').value) || 0,
+        description: document.getElementById('svc-description').value.trim(),
+        is_active: document.getElementById('svc-active').checked,
+        is_featured: document.getElementById('svc-featured').checked,
+      };
+
+      try {
+        if (editingId) {
+          const { error } = await window.supabaseClient
+            .from('services').update(payload).eq('id', editingId);
+          if (error) throw error;
+        } else {
+          const { error } = await window.supabaseClient
+            .from('services').insert(payload);
+          if (error) throw error;
+        }
+        closeModal();
+        await loadServices();
+      } catch (err) {
+        console.error('Save error:', err);
+        alert('Erreur : ' + (err.message || 'Impossible de sauvegarder'));
+      }
+    }
+
+    // ── Delete ──
+    function openDelete(id) {
+      deletingId = id;
+      const s = allServices.find(x => x.id === id);
+      document.getElementById('delete-name').textContent = s?.name || '';
+      deleteModal.classList.add('active');
+    }
+
+    function closeDelete() {
+      deleteModal.classList.remove('active');
+      deletingId = null;
+    }
+
+    async function confirmDelete() {
+      if (!deletingId) return;
+      try {
+        const { error } = await window.supabaseClient
+          .from('services').delete().eq('id', deletingId);
+        if (error) throw error;
+        closeDelete();
+        await loadServices();
+      } catch (err) {
+        console.error('Delete error:', err);
+        alert('Erreur : ' + (err.message || 'Impossible de supprimer'));
+      }
+    }
+
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = str || '';
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

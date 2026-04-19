@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mes Dossiers · DALIGHT Head Spa Japonais</title>
+    <link rel="icon" href="../assets/images/logodaligth.jpg" type="image/jpeg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/responsive.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
+    <script type="module" src="../js/main.js"></script>
+    <script type="module" src="../js/chat-widget.js" defer></script>
+    <script type="module" src="../js/orders.js" defer></script>
+    <script type="module">
+      import { initChatWidget } from '../js/chat-widget.js';
+      document.addEventListener('DOMContentLoaded', () => {
+        if (window.lucide) {
+          lucide.createIcons();
+        }
+        initChatWidget();
+      });
+    </script>
+    <style>
+      /* ── Orders page specific styles ── */
+      .orders-header {
+        text-align: center;
+        padding: 2.5rem 1rem 1.5rem;
+      }
+      .orders-header h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(1.6rem, 4vw, 2.2rem);
+        margin-bottom: .5rem;
+      }
+      .orders-header p {
+        color: #7a7068;
+        max-width: 520px;
+        margin: 0 auto;
+      }
+
+      /* Stats strip */
+      .orders-stats {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        flex-wrap: wrap;
+        margin: 1.5rem auto 2rem;
+        max-width: 500px;
+      }
+      .orders-stats li {
+        text-align: center;
+        list-style: none;
+      }
+      .orders-stats strong {
+        display: block;
+        font-size: 1.35rem;
+        color: #4A3728;
+      }
+      .orders-stats span {
+        font-size: .8rem;
+        color: #9a8f86;
+      }
+
+      /* Empty state */
+      .orders-empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        max-width: 420px;
+        margin: 0 auto;
+      }
+      .orders-empty-state .empty-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1.2rem;
+        background: rgba(212,175,55,.12);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #D4AF37;
+      }
+      .orders-empty-state h3 {
+        margin-bottom: .5rem;
+      }
+      .orders-empty-state p {
+        color: #7a7068;
+        margin-bottom: 1.5rem;
+      }
+
+      /* Reservation cards list */
+      .orders-list {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 0 1rem 3rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .reservation-card {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 2px 12px rgba(74,55,40,.07);
+        padding: 1.25rem 1.5rem;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: .75rem;
+        align-items: start;
+        transition: box-shadow .2s;
+      }
+      .reservation-card:hover {
+        box-shadow: 0 4px 20px rgba(74,55,40,.13);
+      }
+      .rc-service {
+        font-weight: 600;
+        font-size: 1.05rem;
+        color: #4A3728;
+        margin-bottom: .25rem;
+      }
+      .rc-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem .75rem;
+        font-size: .85rem;
+        color: #7a7068;
+      }
+      .rc-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+      }
+      .rc-notes {
+        grid-column: 1 / -1;
+        font-size: .85rem;
+        color: #9a8f86;
+        background: #faf8f6;
+        padding: .6rem .8rem;
+        border-radius: 8px;
+        margin-top: .25rem;
+      }
+      .rc-status {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .35rem .85rem;
+        border-radius: 20px;
+        font-size: .78rem;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .rc-status.pending {
+        background: #fff7e0;
+        color: #b8860b;
+      }
+      .rc-status.confirmed {
+        background: #e6f9ee;
+        color: #15803d;
+      }
+      .rc-status.completed {
+        background: #e8f0fe;
+        color: #1d4ed8;
+      }
+      .rc-status.cancelled {
+        background: #fee;
+        color: #b91c1c;
+      }
+
+      /* Filter tabs */
+      .orders-filters {
+        display: flex;
+        gap: .5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        max-width: 720px;
+        padding: 0 1rem;
+      }
+      .orders-filters button {
+        padding: .5rem 1.1rem;
+        border-radius: 999px;
+        border: 1px solid rgba(74,55,40,.18);
+        background: #fff;
+        color: #7a7068;
+        font-weight: 600;
+        font-size: .82rem;
+        cursor: pointer;
+        transition: all .2s;
+      }
+      .orders-filters button:hover {
+        background: rgba(212,175,55,.1);
+        border-color: rgba(212,175,55,.4);
+      }
+      .orders-filters button.active {
+        background: #4A3728;
+        color: #fff;
+        border-color: #4A3728;
+      }
+
+      /* Assistant banner */
+      .orders-assistant-note {
+        max-width: 720px;
+        margin: 0 auto 1.5rem;
+        padding: .85rem 1.2rem;
+        border-radius: 12px;
+        background: rgba(212,175,55,.08);
+        border: 1px solid rgba(212,175,55,.2);
+        text-align: center;
+        font-size: .88rem;
+        color: #6B4F3B;
+      }
+      .orders-assistant-note strong { color: #4A3728; }
+
+      @media (max-width: 600px) {
+        .reservation-card {
+          grid-template-columns: 1fr;
+          padding: 1rem 1.1rem;
+        }
+        .rc-status {
+          justify-self: start;
+        }
+        .orders-stats {
+          gap: 1.2rem;
+        }
+        .orders-filters {
+          gap: .4rem;
+        }
+        .orders-filters button {
+          padding: .4rem .85rem;
+          font-size: .78rem;
+        }
+      }
+    </style>
+  </head>
+  <body data-page="orders">
+    <header class="site-header internal">
+      <nav class="top-nav">
+        <a class="brand" href="../index.html">
+          <img class="brand-logo" src="../assets/images/logodaligth.jpg" alt="DALIGHT Head Spa Japonais" />
+          <div>
+            <strong>DALIGHT</strong>
+            <small>Head Spa Japonais</small>
+          </div>
+        </a>
+        <button class="nav-toggle" aria-label="Ouvrir la navigation">
+          <span></span>
+          <span></span>
+        </button>
+        <div class="nav-links">
+          <a href="../index.html">Accueil</a>
+          <a href="./services.html">Services</a>
+          <a href="./shop.html">Boutique</a>
+          <a href="./reservation.html">Réservation</a>
+          <a href="./orders.html" class="active">Dossiers</a>
+          <a href="./admin.html" class="admin-link">Admin</a>
+        </div>
+        <div class="nav-cta">
+          <button class="btn ghost" id="logout-btn" type="button">Se déconnecter</button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="page-shell fade-in">
+      <!-- Header -->
+      <div class="orders-header reveal-on-scroll">
+        <p class="kicker">Mes Dossiers</p>
+        <h1>Vos réservations &amp; commandes</h1>
+        <p>Suivez l'état de vos réservations. Vous recevez un email à chaque mise à jour.</p>
+        <ul class="orders-stats">
+          <li>
+            <strong id="orders-count">0</strong>
+            <span>Réservations</span>
+          </li>
+          <li>
+            <strong id="orders-next">—</strong>
+            <span>Prochain RDV</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Filter tabs -->
+      <div class="orders-filters" id="orders-filters" hidden>
+        <button class="active" data-filter="ALL">Tous</button>
+        <button data-filter="PENDING">En attente</button>
+        <button data-filter="CONFIRMED">Confirmé</button>
+        <button data-filter="COMPLETED">Terminé</button>
+        <button data-filter="CANCELLED">Annulé</button>
+      </div>
+
+      <!-- Assistant note -->
+      <div class="orders-assistant-note" id="orders-assistant-note" hidden>
+        <strong>Besoin d'aide ?</strong> Écrivez à l'<strong>Assistant DALIGHT</strong> via la bulle en bas à droite — nous répondons rapidement.
+      </div>
+
+      <!-- Empty state -->
+      <section id="orders-empty" class="orders-empty-state" hidden>
+        <div class="empty-icon">
+          <i data-lucide="calendar-x" style="width:28px;height:28px;"></i>
+        </div>
+        <h3>Aucune réservation</h3>
+        <p>Réservez votre premier rituel DALIGHT et retrouvez-le ici.</p>
+        <a class="btn" href="./reservation.html">Réserver maintenant</a>
+      </section>
+
+      <!-- Reservations list -->
+      <div id="orders-list" class="orders-list" hidden>
+        <!-- Cards injected by orders.js -->
+      </div>
+    </main>
+
+    <nav class="mobile-nav">
+      <a href="../index.html" data-page="home">
+        <i data-lucide="home"></i>
+      </a>
+      <a href="./reservation.html" data-page="reservation">
+        <i data-lucide="calendar"></i>
+      </a>
+      <a href="./orders.html" class="active" data-page="orders">
+        <i data-lucide="clipboard-list"></i>
+      </a>
+      <a href="./shop.html" data-page="shop">
+        <i data-lucide="shopping-bag"></i>
+      </a>
+    </nav>
+
+    <!-- Chat Widget -->
+    <div class="chat-widget" id="chat-widget">
+      <button class="chat-bubble" id="chat-bubble">
+        <i data-lucide="message-circle"></i>
+      </button>
+      <div class="chat-window" id="chat-window" style="display:none;">
+        <div class="chat-header">
+          <h4>Assistant DALIGHT</h4>
+          <span class="chat-status">En ligne</span>
+          <button class="chat-close" id="chat-close">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area">
+          <input type="text" id="chat-input" placeholder="Écrivez votre message...">
+          <button id="chat-send">
+            <i data-lucide="send"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout - DALIGHT</title>
+  <link rel="icon" href="../assets/images/logodaligth.jpg" type="image/jpeg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module" src="../js/main.js"></script>
+  <script type="module" src="../js/checkout.js"></script>
+  <style>
+    .checkout-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 2rem;
+    }
+    
+    .checkout-form {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .form-section {
+      margin-bottom: 2rem;
+      padding-bottom: 2rem;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .form-section h2 {
+      font-size: 1.3rem;
+      margin-bottom: 1.5rem;
+      color: #1f2937;
+    }
+    
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #374151;
+    }
+    
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    
+    .payment-methods {
+      display: grid;
+      gap: 1rem;
+    }
+    
+    .payment-method {
+      padding: 1.5rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .payment-method:hover {
+      border-color: #667eea;
+    }
+    
+    .payment-method.selected {
+      border-color: #059669;
+      background: #f0fdf4;
+    }
+    
+    .payment-method h3 {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .payment-method p {
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+    
+    .order-summary {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      height: fit-content;
+      position: sticky;
+      top: 2rem;
+    }
+    
+    .order-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 1rem 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .btn-place-order {
+      width: 100%;
+      padding: 1rem;
+      background: #059669;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+    
+    .btn-place-order:hover {
+      background: #047857;
+    }
+    
+    .btn-place-order:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    
+    @media (max-width: 968px) {
+      .checkout-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body data-page="checkout">
+  <header class="site-header internal">
+    <nav class="top-nav">
+      <a class="brand" href="../index.html">
+        <img class="brand-logo" src="../assets/images/logodaligth.jpg" alt="DALIGHT" />
+        <div>
+          <strong>DALIGHT</strong>
+          <small>Head Spa Japonais</small>
+        </div>
+      </a>
+    </nav>
+  </header>
+
+  <main class="page-shell fade-in">
+    <h1 style="text-align: center; margin: 2rem 0;">Finaliser la Commande</h1>
+    
+    <div class="checkout-container">
+      <div class="checkout-form">
+        <!-- Customer Information -->
+        <div class="form-section">
+          <h2>Informations Client</h2>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="customer-name">Nom complet *</label>
+              <input type="text" id="customer-name" required>
+            </div>
+            <div class="form-group">
+              <label for="customer-email">Email *</label>
+              <input type="email" id="customer-email" required>
+            </div>
+            <div class="form-group">
+              <label for="customer-phone">Téléphone *</label>
+              <input type="tel" id="customer-phone" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="customer-address">Adresse de livraison *</label>
+            <textarea id="customer-address" rows="3" required placeholder="Rue, Ville, Code postal"></textarea>
+          </div>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="form-section">
+          <h2>Mode de Paiement</h2>
+          <div class="payment-methods">
+            <div class="payment-method" onclick="selectPayment('moncash')">
+              <h3>📱 MonCash</h3>
+              <p>Paiement mobile via MonCash</p>
+            </div>
+            <div class="payment-method" onclick="selectPayment('natcash')">
+              <h3>📱 NatCash</h3>
+              <p>Paiement mobile via NatCash</p>
+            </div>
+            <div class="payment-method" onclick="selectPayment('cash')">
+              <h3>💵 Cash à la livraison</h3>
+              <p>Payez en espèces lors de la livraison</p>
+            </div>
+            <div class="payment-method" onclick="selectPayment('bank')">
+              <h3>🏦 Virement bancaire</h3>
+              <p>Transfert direct sur notre compte bancaire</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Notes -->
+        <div class="form-section" style="border-bottom: none;">
+          <h2>Notes de commande (optionnel)</h2>
+          <textarea id="order-notes" rows="3" placeholder="Instructions spéciales pour la livraison..."></textarea>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="order-summary">
+        <h2 style="margin-bottom: 1.5rem;">Résumé de la Commande</h2>
+        <div id="order-items">
+          <!-- Order items will be rendered here -->
+        </div>
+        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #e5e7eb;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span>Sous-total</span>
+            <span id="subtotal">0 HTG</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span>Taxe (0%)</span>
+            <span>0 HTG</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: 700; color: #059669; margin-top: 1rem; padding-top: 1rem; border-top: 2px solid #e5e7eb;">
+            <span>Total</span>
+            <span id="total">0 HTG</span>
+          </div>
+        </div>
+        <button id="place-order-btn" class="btn-place-order" disabled>
+          Confirmer la commande
+        </button>
+        <a href="./cart.html" style="display: block; text-align: center; margin-top: 1rem; color: #6b7280;">
+          ← Retour au panier
+        </a>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

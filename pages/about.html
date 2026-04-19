@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>À propos · DALIGHT Head Spa Japonais</title>
+    <link rel="icon" href="../assets/images/logodaligth.jpg" type="image/jpeg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/responsive.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
+    <script type="module" src="../js/main.js"></script>
+    <script type="module" src="../js/chat-widget.js" defer></script>
+  </head>
+  <body data-page="about">
+    <header class="site-header internal">
+      <nav class="top-nav">
+        <a class="brand" href="../index.html">
+          <img class="brand-logo" src="../assets/images/logodaligth.jpg" alt="DALIGHT Head Spa Japonais" />
+          <div>
+            <strong>DALIGHT</strong>
+            <small>Head Spa Japonais</small>
+          </div>
+        </a>
+        <button class="nav-toggle" aria-label="Ouvrir la navigation">
+          <span></span>
+          <span></span>
+        </button>
+        <div class="nav-links">
+          <a href="../index.html">Accueil</a>
+          <a href="./about.html" class="active">À propos</a>
+          <a href="./services.html">Services</a>
+          <a href="./shop.html">Boutique</a>
+          <a href="./reservation.html">Réservation</a>
+          <a href="./orders.html">Dossiers</a>
+          <a href="../admin/dashboard.html" class="admin-link">Admin</a>
+        </div>
+        <div class="nav-cta">
+          <a class="btn" href="./reservation.html">Réserver</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="page-shell fade-in">
+      <!-- Section PDG -->
+      <section class="section about-hero reveal-on-scroll">
+        <div class="section-heading">
+          <p class="kicker">Notre Signature</p>
+          <h1>La Vision DALIGHT : L'Art du Head Spa Japonais</h1>
+        </div>
+        <div class="about-ceo-grid">
+          <div class="ceo-image-container">
+            <img 
+              src="../assets/images/PDG.jpg" 
+              alt="Portrait du fondateur de DALIGHT Head Spa" 
+              class="ceo-portrait"
+              onerror="this.src='../assets/images/logodaligth.jpg'; this.alt='DALIGHT Head Spa Logo';"
+            />
+          </div>
+          <div class="ceo-bio">
+            <h2>L'Excellence du Head Spa</h2>
+            <p class="ceo-title">Rituels &amp; Bien-être Ancestral</p>
+            <p>
+              Né d'une passion pour les rituels de soins japonais et le bien-être holistique, 
+              DALIGHT Head Spa a été fondé avec une mission d'exception : offrir une expérience 
+              sensorielle unique qui transcende le simple soin capillaire.
+            </p>
+            <p>
+              Nos protocoles sont inspirés des traditions ancestrales japonaises, combinant 
+              massages crâniens précis, soins profonds du cuir chevelu et relaxation sensorielle 
+              pour apaiser l'esprit tout en sublimant la beauté naturelle de vos cheveux.
+            </p>
+            <p>
+              <em>"Chaque rituel est une cérémonie dédiée à votre sérénité. Nous ne soignons pas 
+              seulement vos cheveux, nous apaisons votre âme."</em>
+            </p>
+            <div class="ceo-credentials">
+              <span class="credential-badge">Head Spa Specialist</span>
+              <span class="credential-badge">Techniques Ancestrales</span>
+              <span class="credential-badge">Produits Premium</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section Entreprise -->
+      <section class="section tinted reveal-on-scroll">
+        <div class="section-heading">
+          <p class="kicker">Notre Héritage</p>
+          <h2>DALIGHT Head Spa — Un sanctuaire zen depuis 2022</h2>
+        </div>
+        <div class="about-story">
+          <p>
+            Fondé sur l'harmonie entre le corps et l'esprit, DALIGHT s'est imposé comme la 
+            référence du Head Spa Japonais en Haïti. Notre approche holistique transforme 
+            chaque soin en un rituel de régénération profonde.
+          </p>
+          <p>
+            Nous croyons que la détente commence par le haut. C'est pourquoi nous avons créé 
+            un espace unique à Delmas 65, où chaque détail est pensé pour votre tranquillité : 
+            de la lumière tamisée aux essences florales délicates.
+          </p>
+        </div>
+      </section>
+
+      <!-- Section Mission & Valeurs -->
+      <section class="section reveal-on-scroll">
+        <div class="section-heading">
+          <p class="kicker">Ce qui nous anime</p>
+          <h2>Notre mission et nos valeurs</h2>
+        </div>
+        <div class="grid three">
+          <article class="card feature">
+            <h3>Excellence</h3>
+            <p>
+              Chaque rituel est exécuté avec précision et attention aux détails. Nous utilisons 
+              des produits capillaires bio premium et des techniques éprouvées pour garantir des 
+              résultats exceptionnels.
+            </p>
+          </article>
+          <article class="card feature">
+            <h3>Accessibilité</h3>
+            <p>
+              Le bien-être ne devrait pas être un privilège. Nous proposons des tarifs adaptés 
+              et un service à domicile pour que chacun puisse bénéficier de nos soins.
+            </p>
+          </article>
+          <article class="card feature">
+            <h3>Personnalisation</h3>
+            <p>
+              Chaque client est unique. Nous adaptons nos techniques et nos protocoles selon 
+              vos besoins spécifiques, qu'il s'agisse de détente, de soulagement musculaire 
+              ou de drainage.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <!-- Section Nos Spécialités -->
+      <section class="section tinted reveal-on-scroll">
+        <div class="section-heading">
+          <p class="kicker">Notre expertise</p>
+          <h2>Experts en Soins Capillaires & Relaxation</h2>
+        </div>
+        <div class="grid two">
+          <article class="card">
+            <h3>Rituels de Head Spa</h3>
+            <ul class="about-list">
+              <li>Head Spa Signature — L'indispensable</li>
+              <li>Soin Vitalité Cuir Chevelu — Puritanisme</li>
+              <li>Rituel Detox Capillaire — Fraîcheur</li>
+              <li>Massage Crânien Zen — Lâcher-prise</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Soins Holistiques</h3>
+            <ul class="about-list">
+              <li>Aromathérapie Sensorielle — Équilibre</li>
+              <li>Vapeur Botanique — Douceur</li>
+              <li>Massage Épaules &amp; Cervicales — Détente</li>
+              <li>Soin Éclat Cheveux — Brillance</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <!-- Section Équipe -->
+      <section class="section reveal-on-scroll">
+        <div class="section-heading">
+          <p class="kicker">Notre équipe</p>
+          <h2>Des praticiens experts à votre service</h2>
+        </div>
+        <div class="about-team-info">
+          <p>
+            Notre équipe est composée de massothérapeutes professionnels, formés aux techniques 
+            les plus avancées et passionnés par l'art du bien-être. Chaque membre de l'équipe 
+            partage les valeurs d'excellence et de service personnalisé qui font la réputation 
+             le prestige de DALIGHT Head Spa Japonais.
+          </p>
+          <div class="team-stats">
+            <article>
+              <strong>5+</strong>
+              <span>Spécialistes certifiés</span>
+            </article>
+            <article>
+              <strong>3 ans</strong>
+              <span>D'expérience cumulée</span>
+            </article>
+            <article>
+              <strong>98%</strong>
+              <span>Satisfaction client</span>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section Contact -->
+      <section class="section tinted reveal-on-scroll">
+        <div class="contact-card">
+          <div>
+            <p class="kicker">Contactez-nous</p>
+            <h2>Prêt à vivre l'expérience DALIGHT ?</h2>
+            <p>
+              Réservez votre rituel ou posez vos questions à l'Assistant DALIGHT.
+            </p>
+          </div>
+          <div class="contact-details">
+            <p><strong>Delmas 65</strong> · Faustin Premier Durandise #10</p>
+            <p>Port-au-Prince, Haïti</p>
+            <p>Téléphone : <a href="tel:+50948481225">+509 4848-1225</a></p>
+            <p>WhatsApp : <a href="https://wa.me/50948481225">+509 48 48 12 25</a></p>
+            <p>Email : <a href="mailto:contact@dalight.com">contact@dalight.com</a></p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>© <span id="year"></span> DALIGHT Head Spa. Tous droits réservés.</p>
+      <div class="footer-links">
+        <a href="./login.html">Espace client</a>
+        <a href="./services.html">Nos Rituels</a>
+        <a href="mailto:contact@dalight.com">contact@dalight.com</a>
+      </div>
+    </footer>
+
+    <nav class="mobile-nav">
+      <a href="../index.html" data-page="home">
+        <i data-lucide="home"></i>
+      </a>
+      <a href="./services.html" data-page="services">
+        <i data-lucide="sparkles"></i>
+      </a>
+      <a href="./reservation.html" data-page="reservation">
+        <i data-lucide="calendar"></i>
+      </a>
+      <a href="./shop.html" data-page="shop">
+        <i data-lucide="shopping-bag"></i>
+      </a>
+    </nav>
+
+    <!-- Chat Widget -->
+    <div class="chat-widget" id="chat-widget">
+      <button class="chat-bubble" id="chat-bubble">
+        <i data-lucide="message-circle"></i>
+      </button>
+      <div class="chat-window" id="chat-window" style="display:none;">
+        <div class="chat-header">
+          <h4>Assistant DALIGHT</h4>
+          <span class="chat-status">En ligne</span>
+          <button class="chat-close" id="chat-close">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area">
+          <input type="text" id="chat-input" placeholder="Écrivez votre message...">
+          <button id="chat-send">
+            <i data-lucide="send"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="../js/main.js"></script>
+    <script type="module">
+      import { initChatWidget } from '../js/chat-widget.js';
+      document.addEventListener('DOMContentLoaded', () => {
+        if (window.lucide) {
+          lucide.createIcons();
+        }
+        initChatWidget();
+      });
+    </script>
+  </body>
+</html>
