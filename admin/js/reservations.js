@@ -249,8 +249,19 @@ window.openDetailModal = function(id) {
   `;
   
   // Footer actions based on status
+  const emailButtonsHtml = `
+    <div style="display:flex;gap:0.4rem;flex-wrap:wrap;width:100%;margin-bottom:0.75rem;padding-bottom:0.75rem;border-bottom:1px solid rgba(255,255,255,0.08);">
+      <span style="font-size:0.78rem;color:rgba(255,255,255,0.45);width:100%;margin-bottom:0.25rem;">📧 Envoyer un email manuel (ouvre Gmail/votre client mail)</span>
+      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${reservation.id}','confirmation')">✓ Confirmation</button>
+      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${reservation.id}','cancellation')">✕ Annulation</button>
+      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${reservation.id}','reminder')">⏰ Rappel</button>
+      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${reservation.id}','completion')">🎉 Terminé/Merci</button>
+      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${reservation.id}','custom')">✏️ Vide (écrire)</button>
+    </div>
+  `;
+
   let actions = `<button class="btn btn-secondary" onclick="closeModal()">Fermer</button>`;
-  
+
   if (reservation.status === 'PENDING') {
     actions = `
       <button class="btn btn-danger" onclick="updateStatus('${reservation.id}', 'CANCELLED'); closeModal();">Annuler</button>
@@ -262,8 +273,10 @@ window.openDetailModal = function(id) {
       <button class="btn btn-primary" onclick="updateStatus('${reservation.id}', 'COMPLETED'); closeModal();">Marquer terminé</button>
     `;
   }
-  
-  footer.innerHTML = actions;
+
+  footer.innerHTML = emailButtonsHtml + '<div style="display:flex;gap:0.5rem;justify-content:flex-end;width:100%;">' + actions + '</div>';
+  footer.style.flexDirection = 'column';
+  footer.style.alignItems = 'stretch';
   modal.classList.add('active');
 };
 
@@ -271,6 +284,111 @@ window.closeModal = function() {
   const modal = document.getElementById('detail-modal');
   modal.classList.remove('active');
   currentReservation = null;
+};
+
+// ============================================
+// MANUAL EMAIL TEMPLATES (mailto:)
+// ============================================
+window.sendEmailTemplate = function(reservationId, templateKey) {
+  const r = reservations.find(x => x.id === reservationId) || currentReservation;
+  if (!r) return alert('Réservation introuvable');
+  if (!r.user_email) return alert('Ce client n\'a pas d\'email enregistré.');
+
+  const name     = r.user_name     || 'Cher(e) client(e)';
+  const service  = r.service       || 'notre service';
+  const date     = r.date ? new Date(r.date).toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) : '';
+  const time     = r.time          || '';
+  const location = r.location      || 'notre spa';
+  const phone    = '+509 4747-7221';
+
+  const templates = {
+    confirmation: {
+      subject: `✓ Confirmation de votre réservation - DALIGHT Spa`,
+      body:
+`Bonjour ${name},
+
+Nous avons le plaisir de vous confirmer votre réservation chez DALIGHT Spa :
+
+• Service  : ${service}
+• Date     : ${date}
+• Heure    : ${time}
+• Lieu     : ${location}
+
+Nous avons hâte de vous accueillir ! En cas de question ou d'empêchement, merci de nous prévenir au moins 24h à l'avance.
+
+📞 ${phone}
+📍 Delmas 65, Faustin Premier Durandise #10
+
+À très bientôt,
+L'équipe DALIGHT`
+    },
+    cancellation: {
+      subject: `Annulation de votre réservation - DALIGHT Spa`,
+      body:
+`Bonjour ${name},
+
+Nous vous confirmons l'annulation de votre réservation :
+
+• Service : ${service}
+• Date    : ${date}
+• Heure   : ${time}
+
+Nous sommes désolés pour tout désagrément. N'hésitez pas à nous contacter pour planifier une nouvelle réservation à votre convenance.
+
+📞 ${phone}
+
+Cordialement,
+L'équipe DALIGHT`
+    },
+    reminder: {
+      subject: `⏰ Rappel de votre rendez-vous - DALIGHT Spa`,
+      body:
+`Bonjour ${name},
+
+Petit rappel amical : vous avez rendez-vous chez DALIGHT Spa demain !
+
+• Service : ${service}
+• Date    : ${date}
+• Heure   : ${time}
+• Lieu    : ${location}
+
+Nous vous attendons avec impatience. Merci d'arriver 5 à 10 minutes avant l'heure prévue.
+
+📞 Pour toute modification : ${phone}
+📍 Delmas 65, Faustin Premier Durandise #10
+
+À très vite,
+L'équipe DALIGHT`
+    },
+    completion: {
+      subject: `🎉 Merci pour votre visite - DALIGHT Spa`,
+      body:
+`Bonjour ${name},
+
+Merci d'avoir choisi DALIGHT Spa pour votre ${service} ! Nous espérons que vous avez apprécié ce moment de détente et de bien-être.
+
+Votre avis compte énormément pour nous. N'hésitez pas à nous laisser un commentaire sur nos réseaux sociaux :
+• Instagram : @dalightbeauty
+• TikTok    : @dalightbeauty
+
+Nous serions ravis de vous revoir très bientôt pour un nouveau rituel.
+
+À bientôt,
+L'équipe DALIGHT
+📞 ${phone}`
+    },
+    custom: {
+      subject: `DALIGHT Spa - ${service}`,
+      body:
+`Bonjour ${name},
+
+`
+    },
+  };
+
+  const t = templates[templateKey] || templates.custom;
+  const mailto = `mailto:${encodeURIComponent(r.user_email)}?subject=${encodeURIComponent(t.subject)}&body=${encodeURIComponent(t.body)}`;
+  window.location.href = mailto;
 };
 
 // Close modal on overlay click

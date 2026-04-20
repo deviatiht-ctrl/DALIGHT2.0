@@ -701,9 +701,154 @@ async function initAdminCore() {
   initSidebar();
   initLogout();
   updatePendingBadge();
+  initRealtimeNotifications();
   
   return session;
 }
+
+// ============================================
+// REALTIME NOTIFICATIONS (SOUND + BROWSER POPUP)
+// ============================================
+
+/**
+ * Play a short "ding" notification sound generated via WebAudio
+ * (no external file needed so it works offline and cross-browser).
+ */
+function playNotificationSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const playTone = (freq, startTime, duration) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gain.gain.linearRampToValueAtTime(0.35, ctx.currentTime + startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + duration);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + startTime);
+      osc.stop(ctx.currentTime + startTime + duration);
+    };
+    // two-tone bell: C6 → E6
+    playTone(1046.5, 0,    0.25);
+    playTone(1318.5, 0.18, 0.35);
+  } catch (e) {
+    console.warn('Sound notification failed:', e);
+  }
+}
+
+/**
+ * Show a browser/OS notification. On mobile with PWA installed or
+ * in a browser with permission, this appears as a real push-style
+ * notification that can make the phone vibrate/ring.
+ */
+function showBrowserNotification(title, body, onClick) {
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+  try {
+    const n = new Notification(title, {
+      body,
+      icon: '../assets/images/logodaligth.jpg',
+      badge: '../assets/images/logodaligth.jpg',
+      tag: 'dalight-admin-' + Date.now(),
+      vibrate: [200, 100, 200, 100, 200],
+      requireInteraction: false,
+      silent: false
+    });
+    n.onclick = () => { window.focus(); if (onClick) onClick(); n.close(); };
+  } catch (e) {
+    console.warn('Browser notification failed:', e);
+  }
+}
+
+/**
+ * Ask user for notification permission once and cache the result.
+ * Returns a promise resolving to the permission state.
+ */
+async function ensureNotificationPermission() {
+  if (!('Notification' in window)) return 'unsupported';
+  if (Notification.permission === 'granted') return 'granted';
+  if (Notification.permission === 'denied') return 'denied';
+  try {
+    const p = await Notification.requestPermission();
+    return p;
+  } catch { return 'denied'; }
+}
+
+/**
+ * Show an in-page toast card for the notification so the admin sees
+ * something even if browser notifications are blocked.
+ */
+function showInPageNotificationCard(title, body, href) {
+  let host = document.getElementById('admin-notif-host');
+  if (!host) {
+    host = document.createElement('div');
+    host.id = 'admin-notif-host';
+    host.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:10000;display:flex;flex-direction:column;gap:0.5rem;max-width:340px;';
+    document.body.appendChild(host);
+  }
+  const card = document.createElement('div');
+  card.style.cssText = 'background:linear-gradient(135deg,#d4af37,#b8941f);color:#1a1a1a;padding:0.9rem 1rem;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.4);cursor:pointer;animation:slideInRight 0.3s ease;font-size:0.88rem;';
+  card.innerHTML = `<div style="font-weight:700;margin-bottom:0.25rem;">${title}</div><div style="font-size:0.82rem;opacity:0.85;">${body}</div>`;
+  card.onclick = () => { if (href) window.location.href = href; card.remove(); };
+  host.appendChild(card);
+  setTimeout(() => card.remove(), 8000);
+}
+
+/**
+ * Subscribe to Supabase Realtime on `reservations` and `messages` tables.
+ * On every INSERT, play sound + show browser notification + in-page card.
+ */
+function initRealtimeNotifications() {
+  // Request permission (non-blocking)
+  ensureNotificationPermission().then(p => {
+    console.log('📳 Notification permission:', p);
+  });
+
+  // Reservations channel
+  supabaseClient
+    .channel('admin-reservations')
+    .on('postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'reservations' },
+      (payload) => {
+        const r = payload.new || {};
+        const title = '📅 Nouvelle réservation !';
+        const body = `${r.user_name || r.user_email || 'Client'} — ${r.service || 'service'}`;
+        playNotificationSound();
+        showBrowserNotification(title, body, () => {
+          window.location.href = 'reservations.html';
+        });
+        showInPageNotificationCard(title, body, 'reservations.html');
+        updatePendingBadge();
+      })
+    .subscribe();
+
+  // Messages channel (if table exists)
+  supabaseClient
+    .channel('admin-messages')
+    .on('postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'messages' },
+      (payload) => {
+        const m = payload.new || {};
+        const title = '💬 Nouveau message';
+        const body = `${m.name || m.email || 'Anonyme'}: ${(m.message || '').slice(0, 60)}`;
+        playNotificationSound();
+        showBrowserNotification(title, body, () => {
+          window.location.href = 'messages.html';
+        });
+        showInPageNotificationCard(title, body, 'messages.html');
+      })
+    .subscribe();
+}
+
+// CSS for notification card animation
+(function injectNotifCSS() {
+  if (document.getElementById('dalight-notif-css')) return;
+  const style = document.createElement('style');
+  style.id = 'dalight-notif-css';
+  style.textContent = `@keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`;
+  document.head.appendChild(style);
+})();
 
 // Export functions
 window.adminCore = {

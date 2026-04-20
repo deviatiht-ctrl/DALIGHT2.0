@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formations - DALIGHT Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .toggle-switch{position:relative;width:44px;height:24px;display:inline-block;vertical-align:middle}
+    .toggle-switch input{opacity:0;width:0;height:0}
+    .toggle-slider{position:absolute;inset:0;background:rgba(255,255,255,.12);border-radius:24px;cursor:pointer;transition:.25s}
+    .toggle-slider::before{content:'';position:absolute;left:3px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.25s}
+    .toggle-switch input:checked+.toggle-slider{background:var(--admin-success)}
+    .toggle-switch input:checked+.toggle-slider::before{transform:translateX(20px)}
+
+    .features-list { display:flex; flex-direction:column; gap:0.4rem; margin-top:0.5rem; }
+    .feature-row { display:flex; gap:0.5rem; align-items:center; }
+    .feature-row input { flex:1; }
+    .feature-row button { background:rgba(255,255,255,0.08); border:none; color:rgba(255,255,255,0.5); border-radius:6px; padding:0.35rem 0.6rem; cursor:pointer; font-size:1rem; line-height:1; }
+    .feature-row button:hover { color:#ef4444; }
+    .add-feature-btn { margin-top:0.4rem; background:rgba(255,255,255,0.06); border:1px dashed rgba(255,255,255,0.2); color:rgba(255,255,255,0.6); border-radius:8px; padding:0.4rem 0.8rem; cursor:pointer; font-size:0.82rem; width:100%; }
+    .add-feature-btn:hover { background:rgba(255,255,255,0.1); }
+
+    .formation-row-icon { width:32px; height:32px; border-radius:8px; background:rgba(245,158,11,0.15); display:flex; align-items:center; justify-content:center; color:#f59e0b; font-size:1rem; flex-shrink:0; }
+    .badge-active { background:rgba(16,185,129,0.15); color:#10b981; padding:0.2rem 0.6rem; border-radius:50px; font-size:0.75rem; font-weight:600; }
+    .badge-inactive { background:rgba(239,68,68,0.12); color:#ef4444; padding:0.2rem 0.6rem; border-radius:50px; font-size:0.75rem; font-weight:600; }
+    .price-tag { font-size:0.82rem; color:#f59e0b; font-weight:600; }
+    .duration-tag { font-size:0.78rem; color:rgba(255,255,255,0.45); }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="admin-sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="sidebar-logo">
+        <img src="../assets/images/logodaligth.jpg" alt="DALIGHT" onerror="this.style.display='none'">
+        <div class="sidebar-logo-text">DALIGHT<span>Administration</span></div>
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Principal</div>
+        <a href="dashboard.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+        <a href="reservations.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Réservations
+          <span class="badge" id="pending-count">0</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Contenu</div>
+        <a href="posts.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          Posts &amp; Vidéos
+        </a>
+        <a href="services.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          Rituels
+        </a>
+        <a href="formations.html" class="nav-item active">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
+          Formations
+        </a>
+        <a href="products.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          Produits
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Utilisateurs</div>
+        <a href="clients.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          Clients
+        </a>
+        <a href="emails.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          Templates Email
+        </a>
+        <a href="messages.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          Messages
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Système</div>
+        <a href="settings.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Paramètres
+        </a>
+        <a href="../index.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          Voir le site
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="user-avatar">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="user-name">Admin</div>
+          <div class="sidebar-user-role">Administrateur</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="admin-main">
+    <header class="admin-header">
+      <div class="header-left">
+        <button class="mobile-menu-btn" id="mobile-menu-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <h1 class="page-title">Formations</h1>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-primary" id="add-btn">+ Nouvelle formation</button>
+        <button class="header-btn" id="logout-btn" title="Déconnexion">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="admin-content">
+      <!-- Stats -->
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);max-width:600px;">
+        <div class="glass-card stat-card">
+          <div class="stat-icon gold">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-total">—</div>
+            <div class="stat-label">Total</div>
+          </div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-icon green">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-active">—</div>
+            <div class="stat-label">Actives</div>
+          </div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-icon red">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-inactive">—</div>
+            <div class="stat-label">Masquées</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="glass-card" style="margin-top:1.5rem;">
+        <div class="table-header" style="display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.08);">
+          <span style="font-weight:600;font-size:0.9rem;">Liste des formations</span>
+          <span id="table-count" style="font-size:0.8rem;color:rgba(255,255,255,0.4);"></span>
+        </div>
+        <div id="formations-table-wrap" style="overflow-x:auto;">
+          <table class="admin-table" id="formations-table">
+            <thead>
+              <tr>
+                <th>Formation</th>
+                <th>Prix</th>
+                <th>Durée</th>
+                <th>Ordre</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="formations-tbody">
+              <tr><td colspan="6" style="text-align:center;padding:2rem;color:rgba(255,255,255,0.3);">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ── Modal Add/Edit ── -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" style="max-width:600px;width:95%;max-height:90vh;overflow-y:auto;">
+      <div class="modal-header">
+        <h3 id="modal-title">Nouvelle formation</h3>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="f-id">
+
+        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+          <div class="form-group">
+            <label>Nom *</label>
+            <input type="text" id="f-name" class="form-input" placeholder="Ex: Massothérapie" required>
+          </div>
+          <div class="form-group">
+            <label>Sous-titre</label>
+            <input type="text" id="f-subtitle" class="form-input" placeholder="Formation pratique">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="f-desc" class="form-input" rows="2" placeholder="Courte description de la formation..."></textarea>
+        </div>
+
+        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+          <div class="form-group">
+            <label>Prix</label>
+            <input type="text" id="f-price" class="form-input" placeholder="Ex: 15 000 Gdes">
+          </div>
+          <div class="form-group">
+            <label>Durée</label>
+            <input type="text" id="f-duration" class="form-input" placeholder="Ex: 3 jours">
+          </div>
+        </div>
+
+        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+          <div class="form-group">
+            <label>Icône Lucide</label>
+            <input type="text" id="f-icon" class="form-input" placeholder="graduation-cap">
+          </div>
+          <div class="form-group">
+            <label>Ordre d'affichage</label>
+            <input type="number" id="f-order" class="form-input" value="0" min="0">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Message WhatsApp pré-rempli</label>
+          <input type="text" id="f-wa" class="form-input" placeholder="Bonjour, je veux m'inscrire à...">
+        </div>
+
+        <div class="form-group">
+          <label>Points inclus dans la formation</label>
+          <div class="features-list" id="features-list"></div>
+          <button type="button" class="add-feature-btn" id="add-feature-btn">+ Ajouter un point</button>
+        </div>
+
+        <div class="form-group" style="display:flex;align-items:center;gap:0.75rem;margin-top:0.5rem;">
+          <label class="toggle-switch">
+            <input type="checkbox" id="f-active" checked>
+            <span class="toggle-slider"></span>
+          </label>
+          <span style="font-size:0.88rem;">Formation active (visible sur le site)</span>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex;gap:0.75rem;justify-content:flex-end;padding:1rem 1.25rem;border-top:1px solid rgba(255,255,255,0.08);">
+        <button class="btn btn-secondary" id="cancel-btn">Annuler</button>
+        <button class="btn btn-primary" id="save-btn">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Delete confirm ── -->
+  <div class="modal-overlay" id="delete-overlay">
+    <div class="modal" style="max-width:400px;width:95%;">
+      <div class="modal-header">
+        <h3>Supprimer la formation</h3>
+        <button class="modal-close" id="delete-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Voulez-vous vraiment supprimer <strong id="delete-name"></strong> ? Cette action est irréversible.</p>
+      </div>
+      <div class="modal-footer" style="display:flex;gap:0.75rem;justify-content:flex-end;padding:1rem 1.25rem;border-top:1px solid rgba(255,255,255,0.08);">
+        <button class="btn btn-secondary" id="delete-cancel">Annuler</button>
+        <button class="btn btn-danger" id="delete-confirm">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL  = 'https://rbwoiejztrkghfkpxquo.supabase.co';
+    const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let allFormations = [];
+    let deleteTargetId = null;
+
+    /* ── Auth guard ── */
+    async function checkAuth() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = '../pages/login.html'; return false; }
+      const meta = session.user.user_metadata || {};
+      document.getElementById('user-name').textContent = meta.full_name || session.user.email || 'Admin';
+      document.getElementById('user-avatar').textContent = (meta.full_name || session.user.email || 'A')[0].toUpperCase();
+      return true;
+    }
+
+    /* ── Load ── */
+    async function loadFormations() {
+      const tbody = document.getElementById('formations-tbody');
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:rgba(255,255,255,0.3);">Chargement...</td></tr>';
+
+      const { data, error } = await sb.from('formations').select('*').order('order_index', { ascending: true });
+      if (error) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:#ef4444;">${error.message}</td></tr>`;
+        return;
+      }
+
+      allFormations = data || [];
+      renderTable();
+      renderStats();
+    }
+
+    function renderStats() {
+      const total    = allFormations.length;
+      const active   = allFormations.filter(f => f.is_active).length;
+      document.getElementById('stat-total').textContent   = total;
+      document.getElementById('stat-active').textContent  = active;
+      document.getElementById('stat-inactive').textContent = total - active;
+      document.getElementById('table-count').textContent  = `${total} formation(s)`;
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('formations-tbody');
+      if (!allFormations.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2.5rem;color:rgba(255,255,255,0.3);">Aucune formation. Cliquez sur « + Nouvelle formation ».</td></tr>';
+        return;
+      }
+      tbody.innerHTML = allFormations.map(f => `
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+              <div class="formation-row-icon">🎓</div>
+              <div>
+                <div style="font-weight:600;font-size:0.88rem;">${esc(f.name)}</div>
+                <div style="font-size:0.76rem;color:rgba(255,255,255,0.4);">${esc(f.subtitle||'')}</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="price-tag">${esc(f.price||'—')}</span></td>
+          <td><span class="duration-tag">${esc(f.duration||'—')}</span></td>
+          <td style="text-align:center;">${f.order_index ?? 0}</td>
+          <td>
+            <label class="toggle-switch">
+              <input type="checkbox" ${f.is_active ? 'checked' : ''} onchange="toggleActive('${f.id}', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </td>
+          <td>
+            <div style="display:flex;gap:0.4rem;">
+              <button class="btn btn-secondary" style="padding:0.3rem 0.6rem;font-size:0.78rem;" onclick="openEdit('${f.id}')">Éditer</button>
+              <button class="btn btn-danger"    style="padding:0.3rem 0.6rem;font-size:0.78rem;" onclick="openDelete('${f.id}','${esc(f.name)}')">Suppr.</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function esc(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    /* ── Toggle active ── */
+    async function toggleActive(id, val) {
+      await sb.from('formations').update({ is_active: val, updated_at: new Date().toISOString() }).eq('id', id);
+      const f = allFormations.find(x => x.id === id);
+      if (f) f.is_active = val;
+      renderStats();
+    }
+
+    /* ── Features helper ── */
+    function buildFeatureRow(val='') {
+      const row = document.createElement('div');
+      row.className = 'feature-row';
+      row.innerHTML = `<input type="text" class="form-input feature-input" value="${esc(val)}" placeholder="Ex: Massage suédois & drainant">
+        <button type="button" onclick="this.parentElement.remove()">✕</button>`;
+      return row;
+    }
+
+    document.getElementById('add-feature-btn').addEventListener('click', () => {
+      document.getElementById('features-list').appendChild(buildFeatureRow());
+    });
+
+    /* ── Open Add ── */
+    function openAdd() {
+      document.getElementById('f-id').value       = '';
+      document.getElementById('f-name').value     = '';
+      document.getElementById('f-subtitle').value = '';
+      document.getElementById('f-desc').value     = '';
+      document.getElementById('f-price').value    = '';
+      document.getElementById('f-duration').value = '';
+      document.getElementById('f-icon').value     = 'graduation-cap';
+      document.getElementById('f-order').value    = allFormations.length + 1;
+      document.getElementById('f-wa').value       = '';
+      document.getElementById('f-active').checked = true;
+      document.getElementById('features-list').innerHTML = '';
+      document.getElementById('modal-title').textContent = 'Nouvelle formation';
+      document.getElementById('modal-overlay').classList.add('active');
+    }
+
+    /* ── Open Edit ── */
+    function openEdit(id) {
+      const f = allFormations.find(x => x.id === id);
+      if (!f) return;
+      document.getElementById('f-id').value       = f.id;
+      document.getElementById('f-name').value     = f.name || '';
+      document.getElementById('f-subtitle').value = f.subtitle || '';
+      document.getElementById('f-desc').value     = f.description || '';
+      document.getElementById('f-price').value    = f.price || '';
+      document.getElementById('f-duration').value = f.duration || '';
+      document.getElementById('f-icon').value     = f.icon || 'graduation-cap';
+      document.getElementById('f-order').value    = f.order_index ?? 0;
+      document.getElementById('f-wa').value       = f.wa_message || '';
+      document.getElementById('f-active').checked = !!f.is_active;
+      const list = document.getElementById('features-list');
+      list.innerHTML = '';
+      (f.features || []).forEach(feat => list.appendChild(buildFeatureRow(feat)));
+      document.getElementById('modal-title').textContent = 'Modifier la formation';
+      document.getElementById('modal-overlay').classList.add('active');
+    }
+
+    /* ── Save ── */
+    document.getElementById('save-btn').addEventListener('click', async () => {
+      const name = document.getElementById('f-name').value.trim();
+      if (!name) { alert('Le nom est requis.'); return; }
+
+      const features = [...document.querySelectorAll('.feature-input')]
+        .map(i => i.value.trim()).filter(Boolean);
+
+      const payload = {
+        name,
+        subtitle:    document.getElementById('f-subtitle').value.trim() || 'Formation pratique',
+        description: document.getElementById('f-desc').value.trim(),
+        price:       document.getElementById('f-price').value.trim(),
+        duration:    document.getElementById('f-duration').value.trim(),
+        icon:        document.getElementById('f-icon').value.trim() || 'graduation-cap',
+        order_index: parseInt(document.getElementById('f-order').value) || 0,
+        wa_message:  document.getElementById('f-wa').value.trim(),
+        is_active:   document.getElementById('f-active').checked,
+        features,
+        updated_at:  new Date().toISOString(),
+      };
+
+      const btn = document.getElementById('save-btn');
+      btn.disabled = true; btn.textContent = 'Enregistrement...';
+
+      const id = document.getElementById('f-id').value;
+      let error;
+      if (id) {
+        ({ error } = await sb.from('formations').update(payload).eq('id', id));
+      } else {
+        payload.created_at = new Date().toISOString();
+        ({ error } = await sb.from('formations').insert(payload));
+      }
+
+      btn.disabled = false; btn.textContent = 'Enregistrer';
+      if (error) { alert('Erreur : ' + error.message); return; }
+
+      document.getElementById('modal-overlay').classList.remove('active');
+      loadFormations();
+    });
+
+    /* ── Delete ── */
+    function openDelete(id, name) {
+      deleteTargetId = id;
+      document.getElementById('delete-name').textContent = name;
+      document.getElementById('delete-overlay').classList.add('active');
+    }
+
+    document.getElementById('delete-confirm').addEventListener('click', async () => {
+      if (!deleteTargetId) return;
+      const { error } = await sb.from('formations').delete().eq('id', deleteTargetId);
+      deleteTargetId = null;
+      document.getElementById('delete-overlay').classList.remove('active');
+      if (error) { alert('Erreur : ' + error.message); return; }
+      loadFormations();
+    });
+
+    /* ── Close modals ── */
+    ['modal-close','cancel-btn'].forEach(id => {
+      document.getElementById(id).addEventListener('click', () => {
+        document.getElementById('modal-overlay').classList.remove('active');
+      });
+    });
+    ['delete-close','delete-cancel'].forEach(id => {
+      document.getElementById(id).addEventListener('click', () => {
+        document.getElementById('delete-overlay').classList.remove('active');
+      });
+    });
+
+    document.getElementById('add-btn').addEventListener('click', openAdd);
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await sb.auth.signOut(); window.location.href = '../pages/login.html';
+    });
+    document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('open');
+    });
+
+    /* ── Init ── */
+    checkAuth().then(ok => { if (ok) loadFormations(); });
+  </script>
+</body>
+</html>

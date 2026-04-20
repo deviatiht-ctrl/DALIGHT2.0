@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Soins &amp; Bien-Être — DALIGHT Spa</title>
+    <link rel="icon" href="../assets/images/logodaligth.jpg" type="image/jpeg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/responsive.css" />
+    <style>
+      /* ─── Soins Page Specific Styles ─── */
+      .soins-hero {
+        background: linear-gradient(140deg, var(--marron-900) 0%, #2a1508 60%, var(--marron-700) 100%);
+        padding: 4.5rem 2rem 3.5rem;
+        text-align: center;
+        color: var(--white);
+        position: relative;
+        overflow: hidden;
+      }
+      .soins-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at 70% 50%, rgba(212,175,55,0.08) 0%, transparent 65%);
+        pointer-events: none;
+      }
+      .soins-hero .kicker { color: var(--gold-500); font-size: 0.8rem; letter-spacing: 0.18em; margin-bottom: 0.6rem; }
+      .soins-hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); color: var(--white); margin-bottom: 0.85rem; line-height: 1.15; }
+      .soins-hero p { color: rgba(255,255,255,0.7); max-width: 580px; margin: 0 auto 2rem; font-size: 0.95rem; line-height: 1.7; }
+      .soins-hero .hero-badge {
+        display: inline-flex; align-items: center; gap: 0.5rem;
+        background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.35);
+        border-radius: 50px; padding: 0.4rem 1rem; font-size: 0.78rem; color: var(--gold-500);
+      }
+
+      /* ─── Section Divider ─── */
+      .soins-section { padding: 4rem 0; }
+      .soins-section.tinted { background: var(--cream-50); }
+      .soins-section.dark {
+        background: linear-gradient(135deg, var(--marron-900), #2a1508);
+        color: var(--white);
+      }
+      .soins-section.dark .section-heading h2 { color: var(--white); }
+      .soins-section.dark .section-heading p { color: rgba(255,255,255,0.65); }
+      .soins-section.dark .kicker { color: var(--gold-500); }
+
+      /* ─── Global centering ─── */
+      .soins-section .section-heading,
+      .soins-section .section-heading h2,
+      .soins-section .section-heading p { text-align: center; }
+      .soins-section .section-heading { display: flex; flex-direction: column; align-items: center; }
+
+      .hair-type-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 340px));
+        justify-content: center;
+      }
+      .packages-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 360px));
+        justify-content: center;
+      }
+      .special-price-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 220px));
+        justify-content: center;
+      }
+      .reglement-grid {
+        grid-template-columns: repeat(auto-fill, minmax(210px, 250px));
+        justify-content: center;
+      }
+      .wood-seances-grid {
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .inclus-strip { text-align: center; }
+      .inclus-strip .extra-tags { justify-content: center; }
+      .resa-note { display: flex; margin: 1rem auto 0; width: fit-content; }
+      .dark-note { text-align: center; max-width: 600px; margin-left: auto; margin-right: auto; }
+      .wood-inclus { justify-content: center; }
+      .soins-cta { text-align: center; }
+      .btn-group { justify-content: center; }
+
+      /* ─── Service Category Badge ─── */
+      .svc-category-badge {
+        display: inline-flex; align-items: center; gap: 0.5rem;
+        background: rgba(212,175,55,0.12); border: 1px solid rgba(212,175,55,0.3);
+        border-radius: 50px; padding: 0.35rem 1rem 0.35rem 0.5rem;
+        font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em;
+        text-transform: uppercase; color: var(--gold-500); margin-bottom: 0.75rem;
+      }
+      .svc-category-badge i { width: 16px; height: 16px; }
+
+      /* ─── Hair Type Pricing Table ─── */
+      .hair-type-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+      }
+      .hair-type-card {
+        background: var(--white);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+        box-shadow: 0 6px 24px rgba(74,55,40,0.08);
+        border: 1px solid rgba(107,79,59,0.1);
+      }
+      .hair-type-card__header {
+        background: linear-gradient(135deg, var(--marron-900), var(--marron-700));
+        padding: 1.5rem 1.5rem 1.25rem;
+        display: flex; flex-direction: column; align-items: center;
+        justify-content: center; text-align: center; gap: 0.65rem;
+      }
+      .hair-type-card__header > div { text-align: center; }
+      .hair-type-card__header h3 { color: var(--white); font-size: 1.1rem; margin: 0; text-align: center; }
+      .hair-type-card__header small { color: rgba(255,255,255,0.55); font-size: 0.78rem; text-align: center; display: block; }
+      .hair-type-card__body { text-align: center; }
+      .hair-type-card__body ul { display: inline-block; text-align: left; margin: 0 auto; }
+
+      /* Ensure all soins grids center their cards */
+      .hair-type-grid, .packages-grid, .wood-pkg-grid, .special-prices-grid {
+        justify-content: center;
+        justify-items: center;
+      }
+      .hair-type-card, .package-card, .wood-card, .special-price-card {
+        width: 100%;
+        max-width: 360px;
+      }
+      .hair-type-icon {
+        width: 42px; height: 42px; border-radius: var(--radius-md);
+        background: rgba(212,175,55,0.2); display: flex; align-items: center;
+        justify-content: center; color: var(--gold-500); flex-shrink: 0;
+      }
+      .price-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 0.7rem 1.5rem; border-bottom: 1px solid rgba(107,79,59,0.07);
+      }
+      .price-row:last-child { border-bottom: none; }
+      .price-row span { font-size: 0.88rem; color: rgba(74,55,40,0.75); }
+      .price-row strong { font-size: 0.92rem; color: var(--marron-900); }
+      .price-row.highlight { background: rgba(212,175,55,0.06); }
+      .price-row.highlight strong { color: var(--gold-500); }
+
+      /* ─── Inclus Strip ─── */
+      .inclus-strip {
+        background: rgba(212,175,55,0.08);
+        border: 1px solid rgba(212,175,55,0.2);
+        border-radius: var(--radius-lg);
+        padding: 1.25rem 1.5rem;
+        margin-top: 1.75rem;
+      }
+      .inclus-strip h4 {
+        font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.12em;
+        color: var(--gold-500); margin-bottom: 0.6rem;
+      }
+      .inclus-strip p { font-size: 0.86rem; color: rgba(74,55,40,0.78); margin: 0 0 0.5rem; }
+      .inclus-strip .extra-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; }
+      .inclus-strip .tag-item {
+        font-size: 0.74rem; padding: 0.25rem 0.65rem;
+        background: var(--white); border: 1px solid rgba(107,79,59,0.15);
+        border-radius: 50px; color: rgba(74,55,40,0.7);
+      }
+      .resa-note {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        font-size: 0.82rem; font-weight: 600; color: var(--marron-700);
+        background: rgba(107,79,59,0.07); border-radius: 50px; padding: 0.35rem 0.85rem;
+        margin-top: 1rem;
+      }
+
+      /* ─── Prix Spéciaux ─── */
+      .special-price-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+      .special-price-card {
+        background: rgba(255,255,255,0.07);
+        border: 1px solid rgba(255,255,255,0.13);
+        border-radius: var(--radius-xl);
+        padding: 1.5rem 1.25rem;
+        text-align: center;
+        transition: all var(--transition);
+      }
+      .special-price-card:hover {
+        background: rgba(212,175,55,0.12);
+        border-color: rgba(212,175,55,0.35);
+      }
+      .special-price-card .price-amount {
+        font-size: 1.6rem; font-weight: 700; color: var(--gold-500);
+        font-family: var(--font-serif); display: block; margin-bottom: 0.25rem;
+      }
+      .special-price-card .price-label {
+        font-size: 0.82rem; color: rgba(255,255,255,0.6);
+      }
+      .special-price-card .price-type {
+        font-size: 0.88rem; font-weight: 600; color: var(--white);
+        margin-bottom: 0.6rem; display: block;
+      }
+      .dark-note {
+        background: rgba(255,255,255,0.06);
+        border-left: 3px solid var(--gold-500);
+        border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        padding: 0.85rem 1.25rem;
+        font-size: 0.84rem; color: rgba(255,255,255,0.7);
+        margin-top: 1.5rem; line-height: 1.7;
+      }
+      .dark-note strong { color: var(--white); }
+
+      /* ─── Packages ─── */
+      .packages-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+      }
+      .package-card {
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+        box-shadow: var(--shadow-card);
+        transition: transform var(--transition), box-shadow var(--transition);
+      }
+      .package-card:hover { transform: translateY(-5px); }
+      .package-card.silver { border: 2px solid #c0c0c0; }
+      .package-card.gold { border: 2px solid var(--gold-500); }
+      .package-card__header {
+        padding: 1.5rem;
+        text-align: center;
+      }
+      .package-card.silver .package-card__header { background: linear-gradient(135deg, #3d3d3d, #5a5a5a); }
+      .package-card.gold .package-card__header { background: linear-gradient(135deg, var(--marron-900), #4a2c10); }
+      .package-badge {
+        display: inline-block; font-size: 0.7rem; font-weight: 700;
+        letter-spacing: 0.15em; text-transform: uppercase;
+        padding: 0.25rem 0.75rem; border-radius: 50px; margin-bottom: 0.6rem;
+      }
+      .silver .package-badge { background: rgba(192,192,192,0.25); color: #e0e0e0; }
+      .gold .package-badge { background: rgba(212,175,55,0.25); color: var(--gold-500); }
+      .package-card__header h3 { color: var(--white); font-size: 1.2rem; margin: 0 0 0.25rem; }
+      .package-price {
+        font-size: 2rem; font-weight: 700; font-family: var(--font-serif);
+        display: block; margin: 0.5rem 0 0.2rem;
+      }
+      .silver .package-price { color: #d4d4d4; }
+      .gold .package-price { color: var(--gold-500); }
+      .package-subtitle { font-size: 0.78rem; color: rgba(255,255,255,0.55); }
+      .package-card__body { background: var(--white); padding: 1.5rem; }
+      .package-card__body ul { list-style: none; padding: 0; margin: 0; }
+      .package-card__body ul li {
+        display: flex; align-items: flex-start; gap: 0.6rem;
+        font-size: 0.87rem; color: rgba(74,55,40,0.8);
+        padding: 0.45rem 0; border-bottom: 1px solid rgba(107,79,59,0.07);
+      }
+      .package-card__body ul li:last-child { border-bottom: none; }
+      .package-card__body ul li::before {
+        content: '✦'; font-size: 0.6rem; color: var(--gold-500);
+        margin-top: 0.2rem; flex-shrink: 0;
+      }
+      .package-card__footer { background: var(--white); padding: 0 1.5rem 1.5rem; }
+
+      /* ─── Package Length Table ─── */
+      .pkg-length-table {
+        margin-top: 1rem;
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        border: 1px solid rgba(107,79,59,0.12);
+      }
+      .pkg-length-title {
+        font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.1em; color: rgba(74,55,40,0.5);
+        background: rgba(107,79,59,0.04);
+        padding: 0.4rem 0.85rem; margin: 0;
+      }
+      .pkg-length-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 0.55rem 0.85rem;
+        font-size: 0.83rem;
+        border-top: 1px solid rgba(107,79,59,0.08);
+      }
+      .pkg-length-row span { color: rgba(74,55,40,0.7); }
+      .pkg-length-row.included strong { color: #2a9d5c; }
+      .pkg-length-row.extra strong { color: var(--marron-700); }
+      .pkg-length-row.extra.gold strong { color: #b8860b; }
+
+      /* ─── Règlement ─── */
+      .reglement-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+      .reglement-item {
+        display: flex; align-items: flex-start; gap: 0.75rem;
+        background: var(--white); border-radius: var(--radius-lg);
+        padding: 1rem 1.1rem;
+        box-shadow: 0 3px 10px rgba(74,55,40,0.06);
+      }
+      .reglement-icon {
+        width: 32px; height: 32px; border-radius: var(--radius-md);
+        background: rgba(212,175,55,0.12); display: flex; align-items: center;
+        justify-content: center; color: var(--gold-500); flex-shrink: 0;
+      }
+      .reglement-item p { font-size: 0.84rem; color: rgba(74,55,40,0.8); margin: 0; line-height: 1.5; }
+
+      /* ─── Wood Thérapie ─── */
+      .wood-seances-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+      .wood-card {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: var(--radius-xl);
+        padding: 1.5rem 1rem;
+        text-align: center;
+        transition: all var(--transition);
+      }
+      .wood-card:hover {
+        background: rgba(212,175,55,0.12);
+        border-color: rgba(212,175,55,0.4);
+        transform: translateY(-3px);
+      }
+      .wood-card .seances-count {
+        font-size: 2rem; font-weight: 700; font-family: var(--font-serif);
+        color: var(--gold-500); display: block;
+      }
+      .wood-card .seances-label { font-size: 0.75rem; color: rgba(255,255,255,0.5); display: block; margin-bottom: 0.75rem; }
+      .wood-card .wood-price { font-size: 1.1rem; font-weight: 700; color: var(--white); }
+      .wood-inclus {
+        display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;
+        margin-top: 1.75rem; padding-top: 1.5rem;
+        border-top: 1px solid rgba(255,255,255,0.1);
+      }
+      .wood-inclus-item {
+        display: flex; align-items: center; gap: 0.5rem;
+        font-size: 0.85rem; color: rgba(255,255,255,0.75);
+      }
+      .wood-inclus-item i { width: 18px; height: 18px; color: var(--gold-500); }
+
+      /* ─── CTA Banner ─── */
+      .soins-cta {
+        background: linear-gradient(135deg, var(--marron-900), #3d1e08);
+        border-radius: var(--radius-xl);
+        padding: 3rem 2rem;
+        text-align: center;
+        color: var(--white);
+        margin-top: 3rem;
+      }
+      .soins-cta h2 { color: var(--white); font-size: clamp(1.4rem, 3vw, 2rem); margin-bottom: 0.6rem; }
+      .soins-cta p { color: rgba(255,255,255,0.65); margin-bottom: 1.75rem; font-size: 0.93rem; }
+      .soins-cta .btn-group { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+      /* ─── Responsive ─── */
+      @media (max-width: 640px) {
+        .wood-seances-grid { grid-template-columns: 1fr; }
+        .hair-type-grid { grid-template-columns: 1fr; }
+        .packages-grid { grid-template-columns: 1fr; }
+        .special-price-grid { grid-template-columns: 1fr 1fr; }
+      }
+    </style>
+  </head>
+  <body data-page="soins">
+    <header class="site-header">
+      <nav class="top-nav">
+        <a class="brand" href="../index.html">
+          <img class="brand-logo" src="../assets/images/logodaligth.jpg" alt="DALIGHT" />
+          <div>
+            <strong>DALIGHT</strong>
+            <small>L'Art du Bien-Être</small>
+          </div>
+        </a>
+        <button class="nav-toggle" aria-label="Ouvrir la navigation">
+          <span></span>
+          <span></span>
+        </button>
+        <div class="nav-links">
+          <a href="../index.html">Accueil</a>
+          <a href="./services.html">Tous les services</a>
+          <a href="./shop.html">Boutique</a>
+          <a href="./reservation.html">Réservation</a>
+          <a href="./formation.html">School</a>
+          <a href="../admin/dashboard.html" class="admin-link">Admin</a>
+        </div>
+        <div class="nav-cta">
+          <a class="btn" href="./reservation.html">Réserver maintenant</a>
+        </div>
+      </nav>
+
+      <!-- Hero -->
+      <div class="soins-hero">
+        <p class="kicker">Soins &amp; Bien-Être</p>
+        <h1>Nos Soins &amp; Rituels</h1>
+        <p>Head Spa, massages thérapeutiques, abonnements mensuels — découvrez chaque prestation avec ses tarifs exacts et ce qui est inclus.</p>
+        <span class="hero-badge">
+          <i data-lucide="map-pin" style="width:14px;height:14px;"></i>
+          Delmas 65 · Spa &amp; À domicile
+        </span>
+      </div>
+    </header>
+
+    <main>
+
+      <!-- ═══════════════════════════════════════════
+           1. HEAD SPA — TARIFS PAR TYPE DE CHEVEUX
+      ═══════════════════════════════════════════ -->
+      <section class="soins-section container">
+        <div class="section-heading">
+          <div class="svc-category-badge"><i data-lucide="droplets"></i> Head Spa</div>
+          <h2>Tarifs Head Spa par type de cheveux</h2>
+          <p>Chaque séance inclut : diagnostic capillaire, soin personnalisé, massage crânien à la nuque, coiffure protectrice simple, séchage &amp; Rollo Set.</p>
+        </div>
+
+        <div class="hair-type-grid">
+
+          <!-- Naturels -->
+          <div class="hair-type-card">
+            <div class="hair-type-card__header">
+              <div class="hair-type-icon"><i data-lucide="wind"></i></div>
+              <div>
+                <h3>Cheveux Naturels</h3>
+                <small>Tarif selon longueur</small>
+              </div>
+            </div>
+            <div class="price-row"><span>Extra Court</span><strong>3 000 Gdes</strong></div>
+            <div class="price-row"><span>Court</span><strong>4 000 Gdes</strong></div>
+            <div class="price-row"><span>Médium</span><strong>5 000 Gdes</strong></div>
+            <div class="price-row highlight"><span>Large</span><strong>6 000 Gdes</strong></div>
+            <div class="price-row highlight"><span>Extra Large</span><strong>7 500 Gdes</strong></div>
+          </div>
+
+          <!-- Défrisés -->
+          <div class="hair-type-card">
+            <div class="hair-type-card__header">
+              <div class="hair-type-icon"><i data-lucide="sparkles"></i></div>
+              <div>
+                <h3>Cheveux Défrisés</h3>
+                <small>Tarif selon longueur</small>
+              </div>
+            </div>
+            <div class="price-row"><span>Extra Court</span><strong>4 000 Gdes</strong></div>
+            <div class="price-row"><span>Court</span><strong>5 000 Gdes</strong></div>
+            <div class="price-row"><span>Médium</span><strong>6 000 Gdes</strong></div>
+            <div class="price-row highlight"><span>Large</span><strong>7 000 Gdes</strong></div>
+            <div class="price-row highlight"><span>Extra Large</span><strong>8 500 Gdes</strong></div>
+          </div>
+
+          <!-- Dreadlocks -->
+          <div class="hair-type-card">
+            <div class="hair-type-card__header">
+              <div class="hair-type-icon"><i data-lucide="zap"></i></div>
+              <div>
+                <h3>Dreadlocks</h3>
+                <small>Tarif selon longueur</small>
+              </div>
+            </div>
+            <div class="price-row"><span>Extra Court</span><strong>4 500 Gdes</strong></div>
+            <div class="price-row"><span>Court</span><strong>6 000 Gdes</strong></div>
+            <div class="price-row"><span>Médium</span><strong>7 000 Gdes</strong></div>
+            <div class="price-row highlight"><span>Large</span><strong>8 000 Gdes</strong></div>
+            <div class="price-row highlight"><span>Extra Large</span><strong>9 000 Gdes</strong></div>
+          </div>
+
+        </div>
+
+        <div class="inclus-strip">
+          <h4>✦ Inclus dans chaque séance Head Spa</h4>
+          <p>Diagnostic capillaire · Soin personnalisé · Massage crânien à la nuque · Coiffure protectrice simple · Séchage · Rollo Set</p>
+          <p style="margin-top:0.4rem;"><strong>Finitions supplémentaires disponibles :</strong></p>
+          <div class="extra-tags">
+            <span class="tag-item">Flat Twist Out</span>
+            <span class="tag-item">Nattes Collées</span>
+            <span class="tag-item">Fingers Coils</span>
+            <span class="tag-item">Wash &amp; Go</span>
+            <span class="tag-item">Flexi Rods</span>
+            <span class="tag-item">Braids</span>
+            <span class="tag-item">Twist Out</span>
+            <span class="tag-item">Dreadlocks Styling</span>
+          </div>
+        </div>
+        <span class="resa-note"><i data-lucide="alert-circle" style="width:15px;height:15px;"></i> Réservation obligatoire : 1 000 Gdes</span>
+      </section>
+
+      <!-- ═══════════════════════════════════════════
+           2. HEAD SPA — PRIX SPÉCIAUX
+      ═══════════════════════════════════════════ -->
+      <section class="soins-section dark">
+        <div class="container">
+          <div class="section-heading">
+            <div class="svc-category-badge"><i data-lucide="star"></i> Prix Spéciaux</div>
+            <h2>Head Spa · Prix Spéciaux</h2>
+            <p>Tarifs simplifiés pour les premiers soins ou demandes urgentes.</p>
+          </div>
+
+          <div class="special-price-grid">
+            <div class="special-price-card">
+              <span class="price-type">Cheveux Naturels</span>
+              <span class="price-amount">3 000</span>
+              <span class="price-label">Gourdes · par séance</span>
+            </div>
+            <div class="special-price-card">
+              <span class="price-type">Dread Locs</span>
+              <span class="price-amount">4 000</span>
+              <span class="price-label">Gourdes · par séance</span>
+            </div>
+            <div class="special-price-card">
+              <span class="price-type">Permanente</span>
+              <span class="price-amount">4 000</span>
+              <span class="price-label">Gourdes · par séance</span>
+            </div>
+          </div>
+
+          <div class="dark-note">
+            <strong>N.B.</strong> Longueur Extra Court &amp; Court · Coiffure protectrice simple incluse ·
+            <strong>Réservation obligatoire : 1 000 Gdes</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════
+           3. ABONNEMENTS MENSUELS
+      ═══════════════════════════════════════════ -->
+      <section class="soins-section tinted container">
+        <div class="section-heading">
+          <div class="svc-category-badge"><i data-lucide="calendar-range"></i> Abonnements</div>
+          <h2>Service d'Abonnement Head Spa</h2>
+          <p>4 séances par mois · 1 fois par semaine · Paiement mensuel à l'avance</p>
+        </div>
+
+        <div class="packages-grid">
+
+          <!-- Silver -->
+          <div class="package-card silver">
+            <div class="package-card__header">
+              <span class="package-badge">Basic Silver</span>
+              <h3>Silver Package</h3>
+              <span class="package-price">15 000</span>
+              <span class="package-subtitle">Gourdes · 4 séances / mois</span>
+            </div>
+            <div class="package-card__body">
+              <ul>
+                <li>Diagnostic cuir chevelu</li>
+                <li>Lavage adapté selon cuir chevelu</li>
+                <li>Massage crânien à la nuque</li>
+                <li>Masque capillaires</li>
+                <li>Traitement adapté</li>
+                <li>Coiffure protectrice simple</li>
+              </ul>
+              <div class="pkg-length-table">
+                <p class="pkg-length-title">Tarif selon longueur de cheveux</p>
+                <div class="pkg-length-row included">
+                  <span>Extra Court &amp; Court</span>
+                  <strong>Inclus</strong>
+                </div>
+                <div class="pkg-length-row extra">
+                  <span>Médium · Large · Extra Large</span>
+                  <strong>+ 5 000 Gdes</strong>
+                </div>
+              </div>
+            </div>
+            <div class="package-card__footer">
+              <a class="btn secondary" style="width:100%;text-align:center;" href="./reservation.html">Choisir ce forfait</a>
+            </div>
+          </div>
+
+          <!-- Gold -->
+          <div class="package-card gold">
+            <div class="package-card__header">
+              <span class="package-badge">✦ Golden Luxury</span>
+              <h3>Golden Luxury Package</h3>
+              <span class="package-price">20 000</span>
+              <span class="package-subtitle">Gourdes · 4 séances / mois</span>
+            </div>
+            <div class="package-card__body">
+              <ul>
+                <li>Diagnostic cuir chevelu</li>
+                <li>Lavage traitant profond selon cuir chevelu</li>
+                <li>Massage crânien à la nuque</li>
+                <li>Masque capillaires</li>
+                <li>Traitement adapté</li>
+                <li>Fusion de plantes naturels</li>
+                <li>Coiffure pour une semaine</li>
+              </ul>
+              <div class="pkg-length-table">
+                <p class="pkg-length-title">Tarif selon longueur de cheveux</p>
+                <div class="pkg-length-row included">
+                  <span>Extra Court &amp; Court</span>
+                  <strong>Inclus</strong>
+                </div>
+                <div class="pkg-length-row extra gold">
+                  <span>Médium · Large · Extra Large</span>
+                  <strong>+ 7 000 Gdes</strong>
+                </div>
+              </div>
+            </div>
+            <div class="package-card__footer">
+              <a class="btn" style="width:100%;text-align:center;" href="./reservation.html">Choisir ce forfait</a>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Règlement -->
+        <div style="margin-top:2.5rem;">
+          <h3 style="font-size:1rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--marron-700);margin-bottom:1rem;">Règlement abonnement</h3>
+          <div class="reglement-grid">
+            <div class="reglement-item">
+              <div class="reglement-icon"><i data-lucide="calendar-check" style="width:16px;height:16px;"></i></div>
+              <p>Abonnement valable <strong>30 jours</strong></p>
+            </div>
+            <div class="reglement-item">
+              <div class="reglement-icon"><i data-lucide="credit-card" style="width:16px;height:16px;"></i></div>
+              <p>Paiement à <strong>l'avance obligatoire</strong></p>
+            </div>
+            <div class="reglement-item">
+              <div class="reglement-icon"><i data-lucide="x-circle" style="width:16px;height:16px;"></i></div>
+              <p>Sessions non utilisées = <strong>perdues</strong></p>
+            </div>
+            <div class="reglement-item">
+              <div class="reglement-icon"><i data-lucide="clock" style="width:16px;height:16px;"></i></div>
+              <p>Retard = <strong>temps réduit</strong></p>
+            </div>
+            <div class="reglement-item">
+              <div class="reglement-icon"><i data-lucide="bell-off" style="width:16px;height:16px;"></i></div>
+              <p>Annulation <strong>24h avant</strong> requise</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════
+           4. WOOD THÉRAPIE
+      ═══════════════════════════════════════════ -->
+      <section class="soins-section dark">
+        <div class="container">
+          <div class="section-heading">
+            <div class="svc-category-badge"><i data-lucide="activity"></i> Massages</div>
+            <h2>Wood Thérapie · Special Body Summer</h2>
+            <p>Technique de sculpture corporelle utilisant des outils en bois pour remodeler la silhouette, drainer et raffermir.</p>
+          </div>
+
+          <div class="wood-seances-grid">
+            <div class="wood-card">
+              <span class="seances-count">4</span>
+              <span class="seances-label">séances</span>
+              <span class="wood-price">12 000 Gdes</span>
+            </div>
+            <div class="wood-card" style="border-color:rgba(212,175,55,0.3);background:rgba(212,175,55,0.08);">
+              <span class="seances-count">6</span>
+              <span class="seances-label">séances</span>
+              <span class="wood-price">16 000 Gdes</span>
+            </div>
+            <div class="wood-card">
+              <span class="seances-count">10</span>
+              <span class="seances-label">séances</span>
+              <span class="wood-price">25 000 Gdes</span>
+            </div>
+          </div>
+
+          <div class="wood-inclus">
+            <div class="wood-inclus-item"><i data-lucide="clipboard-check"></i> Évaluation corporelle</div>
+            <div class="wood-inclus-item"><i data-lucide="leaf"></i> Thé Minceur offert</div>
+            <div class="wood-inclus-item"><i data-lucide="utensils"></i> Plan Alimentaire personnalisé</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════
+           5. CTA FINAL
+      ═══════════════════════════════════════════ -->
+      <section class="container" style="padding-bottom: 5rem;">
+        <div class="soins-cta">
+          <p class="kicker" style="color:var(--gold-500);">Prêt(e) à commencer ?</p>
+          <h2>Réservez votre rituel DALIGHT</h2>
+          <p>Disponible au spa à Delmas 65 ou à domicile. Répondons sous 24h.</p>
+          <div class="btn-group">
+            <a class="btn" href="./reservation.html">Réserver maintenant</a>
+            
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="site-footer">
+      <p>© <span id="year"></span> DALIGHT. Tous droits réservés.</p>
+      <div class="footer-links">
+        <a href="../pages/login.html">Espace client</a>
+        <a href="../pages/services.html">Tous les services</a>
+        <a href="mailto:dalightbeauty15mai@gmail.com">dalightbeauty15mai@gmail.com</a>
+      </div>
+    </footer>
+
+    <nav class="mobile-nav">
+      <a href="../index.html" data-page="home"><i data-lucide="home"></i></a>
+      <a href="./soins.html" data-page="soins" class="active"><i data-lucide="sparkles"></i></a>
+      <a href="./shop.html" data-page="shop"><i data-lucide="shopping-bag"></i></a>
+      <a href="./reservation.html" data-page="reservation"><i data-lucide="calendar"></i></a>
+    </nav>
+
+    <script type="module" src="../js/main.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        if (window.lucide) lucide.createIcons();
+        document.getElementById('year').textContent = new Date().getFullYear();
+      });
+    </script>
+  </body>
+</html>

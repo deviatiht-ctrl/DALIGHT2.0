@@ -1,4 +1,4 @@
-import { formatDate, formatTime, getSupabase, isAdminSession } from './main.js';
+﻿import { formatDate, formatTime, getSupabase, isAdminSession } from './main.js';
 
 const supabase = getSupabase();
 
@@ -30,11 +30,11 @@ Votre réservation pour ${reservation.service} le ${formatDate(reservation.date)
 Merci de prévoir votre pièce d'identité et d'arriver 10 minutes en avance pour profiter du lounge hydratation.
 
 À très bientôt,
-DALIGHT Head Spa Japonais
+DALIGHT
 `.trim(),
   },
   COMPLETED: {
-    subject: () => 'Merci pour votre rituel DALIGHT Head Spa Japonais',
+    subject: () => 'Merci pour votre rituel DALIGHT',
     body: (reservation) => `
 Bonjour ${reservation.user_name || ''},
 
@@ -43,7 +43,7 @@ Nous espérons que votre séance de ${reservation.service} du ${formatDate(reser
 Partagez-nous vos impressions ou vos besoins pour la prochaine visite et nous ajusterons votre protocole.
 
 Bien chaleureusement,
-DALIGHT Head Spa Japonais
+DALIGHT
 `.trim(),
   },
   CANCELLED: {
@@ -53,9 +53,9 @@ Bonjour ${reservation.user_name || ''},
 
 Votre réservation pour ${reservation.service} prévue le ${formatDate(reservation.date)} à ${formatTime(reservation.time)} a été annulée.
 
-Pour reprogrammer ou obtenir de l’aide, écrivez-nous au 4848-1225 ou via contact@dalight.com.
+Pour reprogrammer ou obtenir de l’aide, écrivez-nous au 4747-7221 ou via dalightbeauty15mai@gmail.com.
 
-L’équipe DALIGHT Head Spa Japonais
+L’équipe DALIGHT
 `.trim(),
   },
 };

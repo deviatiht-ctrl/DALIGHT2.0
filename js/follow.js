@@ -1,4 +1,4 @@
-import { getSupabase } from '../js/main.js';
+﻿import { getSupabase } from '../js/main.js';
 import { sendFollowEmail } from './email-service.js';
 
 const supabase = getSupabase();
@@ -298,7 +298,7 @@ function shareVideo(videoUrl, caption = '') {
   if (!videoUrl) return;
   const shareData = {
     title: 'Capsule DALIGHT Head Spa',
-    text: caption || 'Découvrez ce rituel DALIGHT Head Spa Japonais',
+    text: caption || 'Découvrez ce rituel DALIGHT',
     url: videoUrl,
   };
   if (navigator.share) {

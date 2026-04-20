@@ -193,6 +193,68 @@ function setMinimumDate() {
   dateField.min = today.toISOString().split('T')[0];
 }
 
+const ALL_SLOTS = [
+  '09:00', '10:00', '11:00', '12:00',
+  '13:00', '14:00', '15:00', '16:00',
+  '17:00', '18:00',
+];
+
+function renderTimeSlots(bookedTimes = []) {
+  const timeSelect = document.getElementById('time');
+  const hint = document.getElementById('time-hint');
+  if (!timeSelect) return;
+
+  const booked = bookedTimes.map(t => (t || '').slice(0, 5));
+  timeSelect.innerHTML = '<option value="">-- Choisir un créneau --</option>';
+
+  ALL_SLOTS.forEach(slot => {
+    const isBooked = booked.includes(slot);
+    const opt = document.createElement('option');
+    opt.value = slot;
+    opt.textContent = isBooked ? `${slot} — Indisponible` : slot;
+    opt.disabled = isBooked;
+    if (isBooked) opt.style.color = '#aaa';
+    timeSelect.appendChild(opt);
+  });
+
+  if (hint) hint.textContent = `${booked.length} créneau(x) déjà réservé(s) ce jour.`;
+}
+
+async function loadBookedSlots(date) {
+  const timeSelect = document.getElementById('time');
+  if (!timeSelect) return;
+
+  timeSelect.innerHTML = '<option value="">Chargement...</option>';
+  timeSelect.disabled = true;
+
+  try {
+    const { data, error } = await supabase
+      .from('reservations')
+      .select('time')
+      .eq('date', date)
+      .not('status', 'eq', 'CANCELLED');
+
+    if (error) throw error;
+    const bookedTimes = (data || []).map(r => r.time);
+    renderTimeSlots(bookedTimes);
+  } catch (e) {
+    console.warn('Could not load booked slots:', e.message);
+    renderTimeSlots([]);
+  } finally {
+    timeSelect.disabled = false;
+  }
+}
+
+function initDateListener() {
+  const dateField = document.getElementById('date');
+  if (!dateField) return;
+  dateField.addEventListener('change', async () => {
+    if (!dateField.value) return;
+    await waitForSupabase();
+    await loadBookedSlots(dateField.value);
+  });
+}
+
 async function handleSubmit(event) {
   event.preventDefault();
   
@@ -304,6 +366,7 @@ function initReservationPage() {
   if (!reservationForm) return;
   createOptionsForServices(serviceSelect);
   setMinimumDate();
+  initDateListener();
   reservationForm.addEventListener('submit', handleSubmit);
 }
 
