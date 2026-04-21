@@ -194,9 +194,8 @@ function setMinimumDate() {
 }
 
 const ALL_SLOTS = [
-  '09:00', '10:00', '11:00', '12:00',
+  '08:00', '09:00', '10:00', '11:00', '12:00',
   '13:00', '14:00', '15:00', '16:00',
-  '17:00', '18:00',
 ];
 
 function renderTimeSlots(bookedTimes = []) {
@@ -281,12 +280,26 @@ async function handleSubmit(event) {
     notes: formData.get('notes')?.trim() || '',
     date: formData.get('date'),
     time: formData.get('time'),
-    payTiming: formData.get('pay_timing') || 'onsite',
     paymentMethod: formData.get('payment_method') || null,
   };
 
+  // Get the proof file
+  const proofFile = document.getElementById('payment-proof')?.files[0];
+
   if (!payload.service || !payload.date || !payload.time || !payload.idType || !payload.idNumber) {
-    setMessage('error', 'Please complete all fields.');
+    setMessage('error', 'Veuillez remplir tous les champs obligatoires.');
+    submitBtn.disabled = false;
+    return;
+  }
+
+  if (!payload.paymentMethod) {
+    setMessage('error', 'Veuillez choisir une méthode de paiement.');
+    submitBtn.disabled = false;
+    return;
+  }
+
+  if (!proofFile) {
+    setMessage('error', 'Veuillez uploader une preuve de paiement (screenshot).');
     submitBtn.disabled = false;
     return;
   }
@@ -306,6 +319,27 @@ async function handleSubmit(event) {
       return;
     }
 
+    // Upload payment proof to Supabase Storage
+    let paymentProofUrl = null;
+    const fileExt = proofFile.name.split('.').pop();
+    const fileName = `${session.user.id}_${Date.now()}.${fileExt}`;
+    const filePath = `proofs/${fileName}`;
+
+    showPopup('Upload de la preuve de paiement...');
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('payment-proofs')
+      .upload(filePath, proofFile, { cacheControl: '3600', upsert: false });
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      throw new Error('Échec de l\'upload de la preuve de paiement. Réessayez.');
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage.from('payment-proofs').getPublicUrl(filePath);
+    paymentProofUrl = urlData?.publicUrl || null;
+
+    showPopup('Envoi de votre réservation...');
     const { error } = await supabase.from('reservations').insert({
       user_id: session.user.id,
       user_email: session.user.email,
@@ -317,8 +351,8 @@ async function handleSubmit(event) {
       date: payload.date,
       time: payload.time,
       status: 'PENDING',
-      pay_timing: payload.payTiming,
       payment_method: payload.paymentMethod,
+      payment_proof_url: paymentProofUrl,
     });
 
     if (error) {

@@ -106,7 +106,7 @@ function renderReservations() {
   if (filtered.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" class="text-center text-muted" style="padding: 3rem;">
+        <td colspan="7" class="text-center text-muted" style="padding: 3rem;">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="48" height="48" style="margin-bottom: 1rem; opacity: 0.5;">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
           </svg>
@@ -137,6 +137,12 @@ function renderReservations() {
         <div class="text-muted" style="font-size: 0.8rem;">${formatTime(r.time)}</div>
       </td>
       <td>${r.location === 'Spa' ? '🏠 Au Spa' : '🚗 À domicile'}</td>
+      <td>
+        <div style="font-size:0.8rem;">
+          ${r.payment_method ? ({'moncash':'📱 MonCash','natcash':'📱 NatCash','bank':'🏦 Banque'}[r.payment_method] || r.payment_method) : '<span class="text-muted">—</span>'}
+        </div>
+        ${r.payment_proof_url ? '<span style="color:#22c55e;font-size:0.75rem;">✓ Preuve</span>' : '<span style="color:#dc3545;font-size:0.75rem;">✕ Pas de preuve</span>'}
+      </td>
       <td>${getStatusBadge(r.status)}</td>
       <td>
         <div class="d-flex gap-1">
@@ -185,6 +191,30 @@ window.openDetailModal = function(id) {
   const modal = document.getElementById('detail-modal');
   const content = document.getElementById('modal-content');
   const footer = document.getElementById('modal-footer');
+
+  // Payment method label
+  const payMethodLabels = { moncash: '📱 MonCash', natcash: '📱 NatCash', bank: '🏦 Compte Bancaire' };
+  const payMethodLabel = payMethodLabels[reservation.payment_method] || reservation.payment_method || 'Non spécifié';
+
+  // Payment proof image
+  const proofHtml = reservation.payment_proof_url
+    ? `<div>
+         <div class="text-muted mb-1">📸 Preuve de paiement</div>
+         <div style="background:var(--admin-card);padding:0.75rem;border-radius:8px;text-align:center;">
+           <img src="${reservation.payment_proof_url}" alt="Preuve de paiement" 
+                style="max-width:100%;max-height:280px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);" 
+                onclick="window.open('${reservation.payment_proof_url}','_blank')">
+           <div style="margin-top:0.5rem;">
+             <a href="${reservation.payment_proof_url}" target="_blank" class="btn btn-secondary btn-sm" style="font-size:0.75rem;">🔍 Voir en grand</a>
+           </div>
+         </div>
+       </div>`
+    : `<div>
+         <div class="text-muted mb-1">📸 Preuve de paiement</div>
+         <div style="background:rgba(220,53,69,0.1);padding:0.75rem;border-radius:8px;color:#dc3545;font-size:0.85rem;">
+           ⚠️ Aucune preuve de paiement uploadée
+         </div>
+       </div>`;
   
   content.innerHTML = `
     <div style="display: grid; gap: 1rem;">
@@ -217,9 +247,15 @@ window.openDetailModal = function(id) {
         <div style="font-weight: 500;">${reservation.service}</div>
       </div>
       
-      <div>
-        <div class="text-muted mb-1">Lieu</div>
-        <div style="font-weight: 500;">${reservation.location === 'Spa' ? 'DALIGHT — Delmas 65' : 'Service à domicile'}</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div>
+          <div class="text-muted mb-1">Lieu</div>
+          <div style="font-weight: 500;">${reservation.location === 'Spa' ? '🏠 DALIGHT — Delmas 65' : '🚗 Service à domicile'}</div>
+        </div>
+        <div>
+          <div class="text-muted mb-1">💳 Méthode de paiement</div>
+          <div style="font-weight: 500;">${payMethodLabel}</div>
+        </div>
       </div>
       
       ${reservation.id_type ? `
@@ -234,6 +270,8 @@ window.openDetailModal = function(id) {
           </div>
         </div>
       ` : ''}
+
+      ${proofHtml}
       
       ${reservation.notes ? `
         <div>
@@ -248,15 +286,15 @@ window.openDetailModal = function(id) {
     </div>
   `;
   
-  // Footer actions based on status
+  // Footer: email buttons + action buttons
   const emailButtonsHtml = `
     <div style="display:flex;gap:0.4rem;flex-wrap:wrap;width:100%;margin-bottom:0.75rem;padding-bottom:0.75rem;border-bottom:1px solid rgba(255,255,255,0.08);">
-      <span style="font-size:0.78rem;color:rgba(255,255,255,0.45);width:100%;margin-bottom:0.25rem;">📧 Envoyer un email manuel (ouvre Gmail/votre client mail)</span>
+      <span style="font-size:0.78rem;color:rgba(255,255,255,0.45);width:100%;margin-bottom:0.25rem;">📧 Envoyer un email manuel</span>
       <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${reservation.id}','confirmation')">✓ Confirmation</button>
       <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${reservation.id}','cancellation')">✕ Annulation</button>
       <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${reservation.id}','reminder')">⏰ Rappel</button>
-      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${reservation.id}','completion')">🎉 Terminé/Merci</button>
-      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${reservation.id}','custom')">✏️ Vide (écrire)</button>
+      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${reservation.id}','completion')">🎉 Terminé</button>
+      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${reservation.id}','custom')">✏️ Vide</button>
     </div>
   `;
 
@@ -265,7 +303,7 @@ window.openDetailModal = function(id) {
   if (reservation.status === 'PENDING') {
     actions = `
       <button class="btn btn-danger" onclick="updateStatus('${reservation.id}', 'CANCELLED'); closeModal();">Annuler</button>
-      <button class="btn btn-primary" onclick="updateStatus('${reservation.id}', 'CONFIRMED'); closeModal();">Confirmer</button>
+      <button class="btn btn-primary" onclick="updateStatus('${reservation.id}', 'CONFIRMED'); closeModal();">✓ Confirmer la réservation</button>
     `;
   } else if (reservation.status === 'CONFIRMED') {
     actions = `
@@ -290,7 +328,7 @@ window.closeModal = function() {
 // MANUAL EMAIL TEMPLATES (mailto:)
 // ============================================
 window.sendEmailTemplate = function(reservationId, templateKey) {
-  const r = reservations.find(x => x.id === reservationId) || currentReservation;
+  const r = allReservations.find(x => x.id === reservationId) || currentReservation;
   if (!r) return alert('Réservation introuvable');
   if (!r.user_email) return alert('Ce client n\'a pas d\'email enregistré.');
 

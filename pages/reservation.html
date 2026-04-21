@@ -28,19 +28,159 @@
     </script>
     <script type="module" src="../js/reservation.js"></script>
     <script>
+      // ============================================
+      // PAYMENT ACCOUNTS CONFIG
+      // ============================================
+      const PAYMENT_ACCOUNTS = {
+        moncash: {
+          label: 'MonCash',
+          icon: '📱',
+          name: 'DALIGHT SPA',
+          number: '+509 48 48 12 25',
+          instructions: 'Envoyez le montant via MonCash au numéro ci-dessus, puis uploadez la capture d\'écran de confirmation.'
+        },
+        natcash: {
+          label: 'NatCash',
+          icon: '📱',
+          name: 'DALIGHT SPA',
+          number: '+509 47 47 72 21',
+          instructions: 'Envoyez le montant via NatCash au numéro ci-dessus, puis uploadez la capture d\'écran de confirmation.'
+        },
+        bank: {
+          label: 'Compte Bancaire',
+          icon: '🏦',
+          name: 'DALIGHT SPA',
+          number: 'BUH — Compte #XXXXXXXX',
+          instructions: 'Effectuez un virement au compte ci-dessus, puis uploadez la capture d\'écran ou le reçu de la transaction.'
+        }
+      };
+
+      // ============================================
+      // CONDITIONS TEXT
+      // ============================================
+      const CONDITIONS_TEXT = `
+        <h4>📋 Conditions générales de réservation</h4>
+        <ul>
+          <li><strong>Acompte obligatoire :</strong> Un acompte de <strong>30%</strong> du montant total est requis pour confirmer toute réservation. Sans preuve de paiement, la réservation ne sera pas traitée.</li>
+          <li><strong>Solde restant :</strong> Le solde de 70% est à régler au spa le jour du rendez-vous.</li>
+          <li><strong>Preuve de paiement :</strong> Vous devez fournir une capture d'écran (screenshot) de votre transaction MonCash, NatCash ou virement bancaire.</li>
+          <li><strong>Confirmation :</strong> Votre réservation sera confirmée par e-mail une fois le paiement vérifié par notre équipe.</li>
+        </ul>
+        <h4>❌ Politique d'annulation</h4>
+        <ul>
+          <li><strong>Annulation gratuite :</strong> Jusqu'à <strong>48 heures</strong> avant le rendez-vous. L'acompte sera intégralement remboursé.</li>
+          <li><strong>Annulation tardive (24h-48h) :</strong> <strong>50%</strong> de l'acompte sera retenu comme frais d'annulation.</li>
+          <li><strong>Annulation le jour même ou no-show :</strong> L'acompte est <strong>non remboursable</strong>.</li>
+          <li><strong>Retard :</strong> Un retard de plus de <strong>15 minutes</strong> peut entraîner l'annulation automatique du rendez-vous sans remboursement.</li>
+        </ul>
+        <h4>📌 Autres conditions</h4>
+        <ul>
+          <li>Les horaires de réservation sont de <strong>8h00 à 16h00</strong>, du lundi au samedi.</li>
+          <li>Toute modification doit être demandée au moins <strong>24 heures</strong> à l'avance via WhatsApp ou e-mail.</li>
+          <li>DALIGHT se réserve le droit de refuser un service en cas de non-respect des conditions.</li>
+          <li>En cas de force majeure de notre part, la réservation sera reportée ou remboursée intégralement.</li>
+        </ul>
+      `;
+
+      // ============================================
+      // INIT PAYMENT & CONDITIONS UI
+      // ============================================
       document.addEventListener('DOMContentLoaded', () => {
-        const timingInputs = document.querySelectorAll('input[name="pay_timing"]');
-        const methodGroup = document.getElementById('payment-method-group');
-        const depositInfo = document.getElementById('deposit-info');
-        timingInputs.forEach(input => {
+        const methodInputs = document.querySelectorAll('input[name="payment_method"]');
+        const accountInfo = document.getElementById('payment-account-info');
+        const proofGroup = document.getElementById('proof-upload-group');
+        const fileInput = document.getElementById('payment-proof');
+        const uploadZone = document.getElementById('upload-zone');
+        const placeholder = document.getElementById('upload-placeholder');
+        const preview = document.getElementById('upload-preview');
+        const previewImg = document.getElementById('preview-img');
+        const removeBtn = document.getElementById('remove-proof');
+
+        // Payment method selection → show account info + upload
+        methodInputs.forEach(input => {
           input.addEventListener('change', () => {
-            const isOnline = input.value === 'online';
-            methodGroup.style.display = isOnline ? 'flex' : 'none';
-            depositInfo.style.display = isOnline ? 'flex' : 'none';
-            if (!isOnline) {
-              document.querySelectorAll('input[name="payment_method"]').forEach(m => m.checked = false);
-            }
+            const acct = PAYMENT_ACCOUNTS[input.value];
+            if (!acct) return;
+            accountInfo.innerHTML = `
+              <div class="account-info-card">
+                <span class="account-icon">${acct.icon}</span>
+                <div>
+                  <strong>${acct.label}</strong>
+                  <div class="account-detail"><span>Nom :</span> <strong>${acct.name}</strong></div>
+                  <div class="account-detail"><span>Numéro :</span> <strong>${acct.number}</strong></div>
+                  <p class="account-instructions">${acct.instructions}</p>
+                </div>
+              </div>
+            `;
+            accountInfo.style.display = 'block';
+            proofGroup.style.display = 'block';
+            if (window.lucide) lucide.createIcons();
           });
+        });
+
+        // Upload zone click
+        uploadZone?.addEventListener('click', (e) => {
+          if (e.target.closest('.upload-remove')) return;
+          fileInput?.click();
+        });
+
+        // Drag & drop
+        uploadZone?.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+        uploadZone?.addEventListener('dragleave', () => { uploadZone.classList.remove('drag-over'); });
+        uploadZone?.addEventListener('drop', (e) => {
+          e.preventDefault();
+          uploadZone.classList.remove('drag-over');
+          if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            handleFilePreview(e.dataTransfer.files[0]);
+          }
+        });
+
+        // File input change
+        fileInput?.addEventListener('change', () => {
+          if (fileInput.files[0]) handleFilePreview(fileInput.files[0]);
+        });
+
+        // Remove proof
+        removeBtn?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          fileInput.value = '';
+          preview.style.display = 'none';
+          placeholder.style.display = 'flex';
+        });
+
+        function handleFilePreview(file) {
+          if (file.size > 5 * 1024 * 1024) {
+            alert('Fichye a twò gwo. Maksimòm 5 MB.');
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            previewImg.src = e.target.result;
+            preview.style.display = 'flex';
+            placeholder.style.display = 'none';
+          };
+          reader.readAsDataURL(file);
+        }
+
+        // Conditions modal
+        const showBtn = document.getElementById('show-conditions');
+        const closeBtn = document.getElementById('close-conditions');
+        const acceptBtn = document.getElementById('accept-and-close');
+        const modal = document.getElementById('conditions-modal');
+        const body = document.getElementById('conditions-body');
+        const checkbox = document.getElementById('accept-conditions');
+
+        if (body) body.innerHTML = CONDITIONS_TEXT;
+
+        showBtn?.addEventListener('click', () => { modal.style.display = 'flex'; });
+        closeBtn?.addEventListener('click', () => { modal.style.display = 'none'; });
+        acceptBtn?.addEventListener('click', () => {
+          checkbox.checked = true;
+          modal.style.display = 'none';
+        });
+        modal?.addEventListener('click', (e) => {
+          if (e.target === modal) modal.style.display = 'none';
         });
       });
     </script>
@@ -168,62 +308,86 @@
             ></textarea>
           </div>
 
-          <!-- Payment section -->
+          <!-- Payment section — Mandatory -->
           <div class="payment-section">
-            <p class="kicker" style="margin-bottom:0.75rem;">Paiement</p>
+            <p class="kicker" style="margin-bottom:0.75rem;">Paiement (obligatoire)</p>
 
-            <div class="input-group">
-              <label>Quand souhaitez-vous payer ?</label>
-              <div class="pay-timing-group">
-                <label class="pay-option">
-                  <input type="radio" name="pay_timing" value="online" id="pay-online" required>
-                  <span class="pay-option__card">
-                    <strong>💳 Payer maintenant</strong>
-                    <small>Acompte requis pour confirmer</small>
-                  </span>
-                </label>
-                <label class="pay-option">
-                  <input type="radio" name="pay_timing" value="onsite">
-                  <span class="pay-option__card">
-                    <strong>🏠 Payer au spa</strong>
-                    <small>Régler à votre arrivée</small>
-                  </span>
-                </label>
+            <div class="deposit-banner" style="display:flex;">
+              <span>💰</span>
+              <div>
+                <strong>Acompte de 30% requis pour confirmer</strong>
+                <small>Le reste sera réglé au spa le jour du rendez-vous. Sans preuve de paiement, la réservation ne sera pas traitée.</small>
               </div>
             </div>
 
-            <div class="input-group" id="payment-method-group" style="display:none;">
-              <label>Méthode de paiement</label>
-              <div class="pay-methods">
+            <div class="input-group" style="margin-top:1rem;">
+              <label>Choisissez votre méthode de paiement</label>
+              <div class="pay-methods" id="payment-methods">
+                <label class="pay-method-option">
+                  <input type="radio" name="payment_method" value="moncash" required>
+                  <span>
+                    <img src="../assets/images/moncash.png" alt="MonCash" onerror="this.textContent='📱'">
+                    <strong>MonCash</strong>
+                  </span>
+                </label>
                 <label class="pay-method-option">
                   <input type="radio" name="payment_method" value="natcash">
                   <span>
-                    <img src="../assets/images/natcash.png" alt="NatCash" onerror="this.style.display='none'">
+                    <img src="../assets/images/natcash.png" alt="NatCash" onerror="this.textContent='📱'">
                     <strong>NatCash</strong>
                   </span>
                 </label>
                 <label class="pay-method-option">
-                  <input type="radio" name="payment_method" value="mocash">
+                  <input type="radio" name="payment_method" value="bank">
                   <span>
-                    <img src="../assets/images/mocash.png" alt="MoCash" onerror="this.style.display='none'">
-                    <strong>MoCash</strong>
-                  </span>
-                </label>
-                <label class="pay-method-option">
-                  <input type="radio" name="payment_method" value="card">
-                  <span>
-                    <i data-lucide="credit-card" style="width:20px;height:20px;"></i>
-                    <strong>Carte Bancaire</strong>
+                    <i data-lucide="landmark" style="width:20px;height:20px;"></i>
+                    <strong>Compte Bancaire</strong>
                   </span>
                 </label>
               </div>
             </div>
 
-            <div id="deposit-info" class="deposit-banner" style="display:none;">
-              <span>💰</span>
-              <div>
-                <strong>Acompte de 30% requis</strong>
-                <small>Le reste sera réglé au spa. Votre réservation sera confirmée après paiement.</small>
+            <!-- Account info displayed after selecting method -->
+            <div id="payment-account-info" class="payment-account-box" style="display:none;"></div>
+
+            <!-- Screenshot upload -->
+            <div class="input-group" id="proof-upload-group" style="display:none;margin-top:1rem;">
+              <label for="payment-proof">� Preuve de paiement (screenshot obligatoire)</label>
+              <div class="upload-zone" id="upload-zone">
+                <input type="file" id="payment-proof" name="payment_proof" accept="image/*" style="display:none;">
+                <div class="upload-placeholder" id="upload-placeholder">
+                  <i data-lucide="upload-cloud" style="width:32px;height:32px;color:rgba(74,55,40,0.4);"></i>
+                  <p>Cliquez ou glissez votre screenshot ici</p>
+                  <small>PNG, JPG — Max 5 MB</small>
+                </div>
+                <div class="upload-preview" id="upload-preview" style="display:none;">
+                  <img id="preview-img" alt="Preuve de paiement">
+                  <button type="button" class="upload-remove" id="remove-proof">✕ Changer</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Conditions -->
+          <div class="conditions-section" style="margin-top:1.5rem;">
+            <label class="condition-check">
+              <input type="checkbox" id="accept-conditions" required>
+              <span>J'accepte les <button type="button" class="link-btn" id="show-conditions">conditions de réservation et d'annulation</button></span>
+            </label>
+          </div>
+
+          <!-- Conditions Modal -->
+          <div class="conditions-modal-overlay" id="conditions-modal" style="display:none;">
+            <div class="conditions-modal">
+              <div class="conditions-modal__header">
+                <h3>Conditions de réservation & d'annulation</h3>
+                <button type="button" class="conditions-close" id="close-conditions">✕</button>
+              </div>
+              <div class="conditions-modal__body" id="conditions-body">
+                <!-- Filled by JS -->
+              </div>
+              <div class="conditions-modal__footer">
+                <button type="button" class="btn" id="accept-and-close">J'ai lu et j'accepte</button>
               </div>
             </div>
           </div>

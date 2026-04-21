@@ -107,7 +107,7 @@
     }
   </style>
 </head>
-<body>
+<body data-page="order-confirmation">
   <header class="site-header internal">
     <nav class="top-nav">
       <a class="brand" href="../index.html">
@@ -117,6 +117,20 @@
           <small>L'Art du Bien-Être</small>
         </div>
       </a>
+      <button class="nav-toggle" aria-label="Ouvrir la navigation">
+        <span></span>
+        <span></span>
+      </button>
+      <div class="nav-links">
+        <a href="../index.html">Accueil</a>
+        <a href="./services.html">Services</a>
+        <a href="./shop.html">Boutique</a>
+        <a href="./reservation.html">Réservation</a>
+        <a href="./orders.html">Dossiers</a>
+      </div>
+      <div class="nav-cta">
+        <a class="btn ghost" href="./shop.html">Boutique</a>
+      </div>
     </nav>
   </header>
 
@@ -164,7 +178,7 @@
         <div style="margin-top: 2rem; padding: 1.5rem; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
           <h3 style="margin-bottom: 0.5rem;">📋 Prochaines étapes:</h3>
           <ul style="margin-left: 1.5rem; color: #92400e;">
-            <li>Vous recevrez un email de confirmation shortly</li>
+            <li>Vous recevrez un email de confirmation sous peu</li>
             <li>Notre équipe vérifiera votre commande</li>
             <li>Nous vous contacterons pour confirmer la livraison</li>
           </ul>
@@ -189,17 +203,35 @@
     </div>
   </footer>
 
+  <nav class="mobile-nav">
+    <a href="../index.html" data-page="home">
+      <i data-lucide="home"></i>
+    </a>
+    <a href="./services.html" data-page="services">
+      <i data-lucide="sparkles"></i>
+    </a>
+    <a href="./reservation.html" data-page="reservation">
+      <i data-lucide="calendar"></i>
+    </a>
+    <a href="./orders.html" data-page="orders">
+      <i data-lucide="clipboard-list"></i>
+    </a>
+  </nav>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script type="module" src="../js/main.js"></script>
   <script>
-    // Get order number from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const orderNumber = urlParams.get('order');
-    
-    if (orderNumber) {
-      document.getElementById('order-number').textContent = orderNumber;
-    }
-    
-    // TODO: Fetch order details from Supabase
-    // For now, display placeholder data
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) lucide.createIcons();
+
+      // Get order number from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const orderNumber = urlParams.get('order');
+      
+      if (orderNumber) {
+        document.getElementById('order-number').textContent = orderNumber;
+      }
+    });
   </script>
 </body>
 </html>

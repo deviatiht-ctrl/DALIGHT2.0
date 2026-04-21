@@ -2923,6 +2923,236 @@ td {
   }
 }
 
+/* ── Payment Account Info Box ── */
+.payment-account-box {
+  margin-top: 1rem;
+}
+
+.account-info-card {
+  display: flex;
+  gap: 1rem;
+  background: linear-gradient(135deg, rgba(212,175,55,0.08), rgba(74,55,40,0.06));
+  border: 1px solid rgba(212,175,55,0.25);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+}
+
+.account-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.account-info-card strong {
+  font-size: 1rem;
+  color: var(--marron-900);
+}
+
+.account-detail {
+  margin-top: 0.3rem;
+  font-size: 0.88rem;
+  color: var(--marron-700);
+}
+
+.account-detail strong {
+  color: var(--marron-900);
+  font-size: 0.88rem;
+  user-select: all;
+}
+
+.account-instructions {
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  color: rgba(74,55,40,0.6);
+  line-height: 1.5;
+}
+
+/* ── Upload Zone ── */
+.upload-zone {
+  border: 2px dashed rgba(74,55,40,0.2);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  background: rgba(248,245,240,0.5);
+}
+
+.upload-zone:hover,
+.upload-zone.drag-over {
+  border-color: var(--gold-500);
+  background: rgba(212,175,55,0.05);
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.upload-placeholder p {
+  font-size: 0.9rem;
+  color: var(--marron-700);
+  font-weight: 500;
+}
+
+.upload-placeholder small {
+  font-size: 0.75rem;
+  color: rgba(74,55,40,0.4);
+}
+
+.upload-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.upload-preview img {
+  max-height: 180px;
+  max-width: 100%;
+  border-radius: var(--radius-md);
+  object-fit: contain;
+  border: 1px solid rgba(74,55,40,0.1);
+}
+
+.upload-remove {
+  background: none;
+  border: 1px solid rgba(74,55,40,0.2);
+  border-radius: var(--radius-pill);
+  padding: 0.4rem 1rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: var(--marron-700);
+  transition: all 0.2s;
+}
+
+.upload-remove:hover {
+  border-color: #c0392b;
+  color: #c0392b;
+}
+
+/* ── Conditions ── */
+.conditions-section {
+  border-top: 1px solid rgba(74,55,40,0.1);
+  padding-top: 1rem;
+}
+
+.condition-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  cursor: pointer;
+  font-size: 0.88rem;
+  color: var(--marron-700);
+  line-height: 1.5;
+}
+
+.condition-check input[type="checkbox"] {
+  margin-top: 0.2rem;
+  accent-color: var(--gold-500);
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--gold-500);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: inherit;
+  padding: 0;
+}
+
+.link-btn:hover {
+  color: var(--marron-900);
+}
+
+/* Conditions Modal */
+.conditions-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.conditions-modal {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  max-width: 600px;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.2);
+}
+
+.conditions-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(74,55,40,0.1);
+}
+
+.conditions-modal__header h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--marron-900);
+}
+
+.conditions-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--marron-700);
+  padding: 0.25rem;
+  line-height: 1;
+}
+
+.conditions-modal__body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: var(--marron-700);
+}
+
+.conditions-modal__body h4 {
+  margin: 1.25rem 0 0.75rem;
+  font-size: 0.95rem;
+  color: var(--marron-900);
+}
+
+.conditions-modal__body h4:first-child {
+  margin-top: 0;
+}
+
+.conditions-modal__body ul {
+  padding-left: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.conditions-modal__body li {
+  margin-bottom: 0.5rem;
+}
+
+.conditions-modal__footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(74,55,40,0.1);
+  text-align: center;
+}
+
 @media (min-width: 2200px) {
   .page-shell,
   .section {
