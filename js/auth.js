@@ -75,7 +75,7 @@ async function handleLogin(event) {
       
       if (session) {
         console.log('✅ Session verified, redirecting to reservation');
-        window.location.href = './reservation.html';
+        window.location.href = './services.html';
       } else {
         console.error('❌ Session not found after login');
         setMessage(loginMessage, 'error', 'Erè: Session pa kreye. Eseye ankò.');

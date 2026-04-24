@@ -19,10 +19,16 @@
     padding: 1rem 1.5rem;
   }
 
-  .nav-links,
-  .nav-cta {
+  .nav-links {
     display: none;
     width: 100%;
+  }
+
+  .nav-cta {
+    display: flex;
+    justify-content: center;
+    width: auto;
+    margin-top: 0.5rem;
   }
 
   .nav-toggle {
@@ -491,6 +497,7 @@
       rgba(26, 20, 16, 0.75) 100%
     );
     z-index: 2;
+    pointer-events: none;
   }
 
   #hero-particles {
@@ -500,6 +507,87 @@
     height: 100%;
     z-index: 3;
     pointer-events: none;
+  }
+
+  /* ── Sound Toggle Button ── */
+  .video-sound-toggle {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+
+  .video-sound-toggle:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+
+  .video-sound-toggle:active {
+    transform: scale(0.95);
+  }
+
+  .video-sound-toggle svg,
+  .video-sound-toggle i {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* ── Clickable video area hint ── */
+  .hero-video-container {
+    cursor: pointer;
+  }
+
+  .hero-video-container::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    width: 80px;
+    height: 80px;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    border-radius: 50%;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    z-index: 15;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='11 5 6 9 2 9 2 15 6 15 11 19 11 5'%3E%3C/polygon%3E%3Cpath d='M15.54 8.46a5 5 0 0 1 0 7.07'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+
+  .hero-video-container:hover::after {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  /* Hide hint when video is playing with sound */
+  .hero-video-container:has(video:not([muted]))::after {
+    display: none;
+  }
+
+  /* Sound indicator animation */
+  .sound-indicator {
+    animation: soundIndicatorFade 0.3s ease;
+  }
+
+  @keyframes soundIndicatorFade {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   }
 
   /* ── Text overlay ── */
@@ -512,6 +600,13 @@
     justify-content: center;
     padding: 5rem 1.5rem 4rem;
     text-align: center;
+    pointer-events: none;
+  }
+
+  /* Re-enable pointer events for interactive elements inside */
+  .hero-video-content a,
+  .hero-video-content button {
+    pointer-events: auto;
   }
 
   .immersive-text-container {
@@ -670,6 +765,7 @@
     background: transparent !important;
     border: none !important;
     padding: 0 !important;
+    margin: 0 auto !important;
   }
 
   body[data-page="home"] .site-header .brand strong,

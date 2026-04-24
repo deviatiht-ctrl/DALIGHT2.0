@@ -112,6 +112,17 @@ function initLogout() {
 // ============================================
 
 function formatDate(dateStr) {
+  if (!dateStr) return '';
+  // Prevent timezone shift for DATE strings like "2026-04-24"
+  if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  }
+
   const date = new Date(dateStr);
   return date.toLocaleDateString('fr-FR', {
     day: '2-digit',
@@ -482,7 +493,7 @@ async function sendStatusUpdateEmail(reservation, newStatus) {
     const config = statusConfig[newStatus] || statusConfig['CONFIRMED'];
     const logoUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/assets/images/logodaligth.jpg';
     subject = statusSubjects[newStatus] || 'Mise à jour de votre réservation - DALIGHT Head Spa';
-    html = buildStatusUpdateEmailHTML(reservation, config, logoUrl);
+    html = buildStatusUpdateEmailHTML(reservation, config, logoUrl, newStatus);
   }
 
   try {
@@ -546,7 +557,7 @@ async function sendOrderEmail(order, isAdmin = false) {
   }
 }
 
-function buildStatusUpdateEmailHTML(data, config, logoUrl) {
+function buildStatusUpdateEmailHTML(data, config, logoUrl, newStatus) {
   const formattedDate = new Date(data.date).toLocaleDateString('fr-FR', {
     weekday: 'long',
     year: 'numeric',
@@ -628,7 +639,7 @@ function buildStatusUpdateEmailHTML(data, config, logoUrl) {
               ` : ''}
             </div>
 
-            ${data.status === 'CONFIRMED' ? `
+            ${newStatus === 'CONFIRMED' ? `
             <div class="info-box">
               <strong>ℹ️ Informations importantes:</strong>
               <ul style="margin: 10px 0 0 0; color: #666; padding-left: 20px;">
@@ -639,15 +650,15 @@ function buildStatusUpdateEmailHTML(data, config, logoUrl) {
             </div>
             ` : ''}
 
-            ${data.status === 'CANCELLED' ? `
+            ${newStatus === 'CANCELLED' ? `
             <div class="info-box">
               <strong>💡 Faire une nouvelle réservation:</strong>
               <p style="margin: 10px 0 0 0; color: #666;">Vous pouvez facilement faire une nouvelle réservation en visitant notre site web.</p>
-              <a href="https://dalight-headspa.com/pages/reservation.html" class="cta-button">Réserver Maintenant</a>
+              <a href="https://dalight-headspa.com/pages/services.html" class="cta-button">Réserver Maintenant</a>
             </div>
             ` : ''}
 
-            ${data.status === 'COMPLETED' ? `
+            ${newStatus === 'COMPLETED' ? `
             <div class="info-box">
               <strong>⭐ Votre avis compte pour nous!</strong>
               <p style="margin: 10px 0 0 0; color: #666;">Nous serions ravis de connaître votre expérience. N'hésitez pas à nous laisser un avis ou à nous recommander à vos proches.</p>

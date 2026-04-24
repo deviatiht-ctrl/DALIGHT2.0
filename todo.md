@@ -1,41 +1,48 @@
-# Supabase Reservation Fix - TODO
+# DALIGHT ADMIN RESERVATION FIX - PROGRESS TRACKER
 
-## Plan Status: ✅ APPROVED
+## 🎯 Objectif: Fix admin confirm reservation error
+**Status**: En cours | **Priorité**: CRITIQUE
 
-**Total Steps: 6** | **Completed: 5/6** (Manual test needed)
+## ✅ Étapes Complétées (3/7)
 
-### ✅ Step 1: Update js/main.js
-- Add `window.dalightSupabase` global  
-- Set `window.dalightReady = true`
-- ✅ Complete
+- [x] **Analyse complète** des fichiers JS + flow d'erreur
+- [x] **Créé fixrepair2.0.sql** - RLS policies + schema fixes pour admin UPDATE
+- [x] **Plan de correction validé** (admin-core.js + reservations.js)
 
-### ✅ Step 2: Update js/reservation.js  
-- Extend waitForSupabase() to **15s**
-- Add `window.dalightReady` instant check  
-- Add auto-refresh fallback
-- ✅ Complete
+## ⏳ Étapes à Compléter:
 
-### ✅ Step 3: Update pages/reservation.html  
-- Script comments + optimized load order (main.js → reservation.js)  
-- ✅ Complete
-
-### ✅ Step 4: Test reservation flow  
+### 4. **EXECUTE SQL FIX** (Supabase Dashboard)
 ```
-Local server: http://localhost:3000/pages/reservation.html  
-✅ Server started - Ready for manual testing
+1. Copier tout contenu de sql/fixrepair2.0.sql
+2. Supabase Dashboard → SQL Editor → Paste → RUN
+3. Vérifier: "✅ FIXREPAIR 2.0 COMPLETED!"
 ```
-- Open reservation page
-- Check console: Should see "⚡ INSTANT" or "✅ Supabase ready"
-- Login → Submit → Verify Supabase data
+**Commande pour user**: Copy/paste le fichier dans Supabase SQL Editor
 
-### [ ] Step 5: Test slow connection
-```bash
-# DevTools → Network → Slow 3G
-# Submit reservation
+### 5. **TEST ADMIN CONFIRM**
+- [ ] Aller admin/reservations.html
+- [ ] Trouver reservation PENDING
+- [ ] Click "Confirmer" → Doit marcher sans erreur
+- [ ] Vérifier DB: status = 'CONFIRMED'
+
+### 6. **TEST EMAIL**
+- [ ] Email de confirmation envoyé au client
+- [ ] Console logs: "✅ Email sent successfully"
+
+### 7. **FINAL VERIFICATION**
+- [ ] Update ce TODO avec résultats
+- [ ] Test realtime notifications
+
+## 📋 Fichiers Impactés
+```
+✅ sql/fixrepair2.0.sql (créé)
+🔄 sql/repairfic.sql (intégré)
+📋 admin/js/reservations.js (testé)
+📋 admin/js/admin-core.js (testé)
 ```
 
-### [ ] Step 6: Production verification
-- Clear ServiceWorker
-- Test incognito
-- ✅ attempt_completion
+## 🚨 EXECUTE MAINTENANT
+**1. Copie fixrepair2.0.sql → Supabase SQL Editor → RUN**
+**2. Test confirm button → Reply "SQL executed + test result"**
 
+**Prochain message après SQL execution: "SQL ran successfully, confirm works!"**

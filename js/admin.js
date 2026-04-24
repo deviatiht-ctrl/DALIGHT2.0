@@ -1,4 +1,4 @@
-﻿import { formatDate, formatTime, getSupabase, isAdminSession } from './main.js';
+import { formatDate, formatTime, getSupabase, isAdminSession } from './main.js';
 
 const supabase = getSupabase();
 

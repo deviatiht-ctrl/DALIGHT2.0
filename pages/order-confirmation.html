@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -125,7 +125,7 @@
         <a href="../index.html">Accueil</a>
         <a href="./services.html">Services</a>
         <a href="./shop.html">Boutique</a>
-        <a href="./reservation.html">Réservation</a>
+        <a href="./services.html">Réservation</a>
         <a href="./orders.html">Dossiers</a>
       </div>
       <div class="nav-cta">
@@ -210,7 +210,7 @@
     <a href="./services.html" data-page="services">
       <i data-lucide="sparkles"></i>
     </a>
-    <a href="./reservation.html" data-page="reservation">
+    <a href="./services.html" data-page="reservation">
       <i data-lucide="calendar"></i>
     </a>
     <a href="./orders.html" data-page="orders">
@@ -224,12 +224,83 @@
     document.addEventListener('DOMContentLoaded', () => {
       if (window.lucide) lucide.createIcons();
 
-      // Get order number from URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const orderNumber = urlParams.get('order');
+      // Load reservation data from localStorage
+      const lastReservation = localStorage.getItem('dalight:lastReservation');
       
-      if (orderNumber) {
-        document.getElementById('order-number').textContent = orderNumber;
+      if (lastReservation) {
+        try {
+          const data = JSON.parse(lastReservation);
+          
+          // Update order number
+          if (data.reservationNumber) {
+            document.getElementById('order-number').textContent = data.reservationNumber;
+          }
+          
+          // Update payment method
+          if (data.paymentMethod) {
+            const methods = {
+              'moncash': 'MonCash',
+              'natcash': 'NatCash',
+              'bank': 'Virement Bancaire'
+            };
+            document.getElementById('payment-method').textContent = methods[data.paymentMethod] || data.paymentMethod;
+          }
+          
+          // Update email
+          if (data.email) {
+            document.getElementById('customer-email').textContent = data.email;
+          }
+          
+          // Update address (if available)
+          if (data.address) {
+            document.getElementById('customer-address').textContent = data.address;
+          } else {
+            document.getElementById('customer-address').textContent = 'À confirmer';
+          }
+          
+          // Add reservation details if they don't exist
+          addReservationDetails(data);
+          
+        } catch (e) {
+          console.error('Error parsing reservation data:', e);
+        }
+      }
+      
+      function addReservationDetails(data) {
+        const infoGrid = document.querySelector('.info-grid');
+        if (!infoGrid) return;
+        
+        // Create new info items
+        const details = [];
+        
+        if (data.date) {
+          const dateStr = new Date(data.date).toLocaleDateString('fr-FR');
+          details.push({ label: 'Date', value: dateStr });
+        }
+        
+        if (data.time) {
+          details.push({ label: 'Heure', value: data.time });
+        }
+        
+        if (data.services && data.services.length > 0) {
+          const serviceNames = data.services.map(s => s.name).join(', ');
+          details.push({ label: 'Service(s)', value: serviceNames });
+        }
+        
+        if (data.firstName && data.lastName) {
+          details.push({ label: 'Client', value: `${data.firstName} ${data.lastName}` });
+        }
+        
+        // Insert new items after the existing ones
+        details.forEach(detail => {
+          const item = document.createElement('div');
+          item.className = 'info-item';
+          item.innerHTML = `
+            <h3>${detail.label}</h3>
+            <p>${detail.value}</p>
+          `;
+          infoGrid.appendChild(item);
+        });
       }
     });
   </script>

@@ -86,7 +86,7 @@ const STORAGE_KEYS = {
 
 const pageId = document.body?.dataset?.page ?? '';
 const isInsidePagesDir = window.location.pathname.includes('/pages/');
-const reservationPath = isInsidePagesDir ? './reservation.html' : './pages/reservation.html';
+const reservationPath = isInsidePagesDir ? './services.html' : './pages/services.html';
 const loginPath = isInsidePagesDir ? './login.html' : './pages/login.html';
 const protectedPages = new Set(['reservation', 'payment', 'orders', 'admin']);
 
@@ -211,6 +211,7 @@ async function initSupabase() {
     // 🔧 GLOBAL READY SIGNALS - FIX RESERVATION TIMING ISSUE
     window.dalightSupabase = supabaseClient;
     window.dalightReady = true;
+    window.dalightServices = servicesCatalog;
     console.log('✅ Supabase client initialized successfully');
     console.log('🌍 Global signals set: window.dalightSupabase & window.dalightReady=true');
     
@@ -413,9 +414,16 @@ function isAdminEmail(email = '') {
 }
 
 function applySessionRole(session) {
-  if (session && isAdminEmail(session.user?.email || '')) {
-    document.body.classList.add('is-admin');
+  const logoutBtn = document.getElementById('logout-btn');
+  if (session) {
+    if (logoutBtn) logoutBtn.style.display = 'block';
+    if (isAdminEmail(session.user?.email || '')) {
+      document.body.classList.add('is-admin');
+    } else {
+      document.body.classList.remove('is-admin');
+    }
   } else {
+    if (logoutBtn) logoutBtn.style.display = 'none';
     document.body.classList.remove('is-admin');
   }
 }
@@ -458,6 +466,18 @@ export function getConfig() {
 export { servicesCatalog };
 
 export function formatDate(date) {
+  if (!date) return '';
+  // Prevent timezone shift for DATE columns like "2026-04-24"
+  // by parsing as local date instead of UTC midnight.
+  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const [y, m, d] = date.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  }
+
   return new Date(date).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -487,3 +507,4 @@ export function isAdminSession(session) {
 }
 
 watchLogout();
+

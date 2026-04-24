@@ -22,6 +22,22 @@ BEGIN
     ALTER TABLE reservations ADD COLUMN payment_proof_url TEXT;
   END IF;
 
+  -- deposit_amount: fixed 1000 HTG deposit
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'reservations' AND column_name = 'deposit_amount'
+  ) THEN
+    ALTER TABLE reservations ADD COLUMN deposit_amount INTEGER DEFAULT 1000;
+  END IF;
+
+  -- phone: client phone number
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'reservations' AND column_name = 'phone'
+  ) THEN
+    ALTER TABLE reservations ADD COLUMN phone TEXT;
+  END IF;
+
   -- Remove pay_timing column if it exists (no longer needed)
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
@@ -46,17 +62,21 @@ ON CONFLICT (id) DO UPDATE SET
   allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 -- 3. Storage policies: allow authenticated users to upload proofs
-CREATE POLICY IF NOT EXISTS "Authenticated users can upload payment proofs"
+-- (Drop then create to avoid duplicates)
+DROP POLICY IF EXISTS "Authenticated users can upload payment proofs" ON storage.objects;
+CREATE POLICY "Authenticated users can upload payment proofs"
   ON storage.objects FOR INSERT
   TO authenticated
   WITH CHECK (bucket_id = 'payment-proofs');
 
-CREATE POLICY IF NOT EXISTS "Anyone can view payment proofs"
+DROP POLICY IF EXISTS "Anyone can view payment proofs" ON storage.objects;
+CREATE POLICY "Anyone can view payment proofs"
   ON storage.objects FOR SELECT
   TO public
   USING (bucket_id = 'payment-proofs');
 
-CREATE POLICY IF NOT EXISTS "Admins can delete payment proofs"
+DROP POLICY IF EXISTS "Admins can delete payment proofs" ON storage.objects;
+CREATE POLICY "Admins can delete payment proofs"
   ON storage.objects FOR DELETE
   TO authenticated
   USING (bucket_id = 'payment-proofs');

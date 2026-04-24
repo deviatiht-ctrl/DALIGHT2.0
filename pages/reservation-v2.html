@@ -1,0 +1,2172 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Réserver — DALIGHT</title>
+    <link rel="icon" href="../assets/images/logodaligth.jpg" type="image/jpeg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/responsive.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
+    <script type="module" src="../js/main.js"></script>
+    <style>
+      /* ── Reservation Steps System ── */
+      .reservation-steps-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+        min-height: calc(100vh - 200px);
+      }
+
+      /* Cart Summary Box */
+      .cart-summary-box {
+        background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.05));
+        border: 1px solid rgba(212,175,55,0.3);
+        border-radius: var(--radius-lg);
+        padding: 1.25rem;
+      }
+
+      .cart-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(74,55,40,0.08);
+      }
+
+      .cart-item-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .btn-remove-service {
+        border: 1px solid rgba(220, 38, 38, 0.25);
+        background: #fff5f5;
+        color: #b91c1c;
+        border-radius: 8px;
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .btn-remove-service:hover {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .cart-item:last-child {
+        border-bottom: none;
+      }
+
+      .cart-item-info {
+        flex: 1;
+      }
+
+      .cart-item-name {
+        font-weight: 600;
+        color: var(--marron-900);
+        margin-bottom: 0.25rem;
+      }
+
+      .cart-item-desc {
+        font-size: 0.8rem;
+        color: var(--marron-600);
+      }
+
+      .cart-item-price {
+        font-weight: 700;
+        color: var(--gold-600);
+        font-size: 1.1rem;
+      }
+
+      .steps-progress {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        position: relative;
+      }
+
+      .steps-progress::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: rgba(74,55,40,0.1);
+        z-index: 0;
+      }
+
+      .step-indicator {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        position: relative;
+        z-index: 1;
+        background: var(--white);
+        padding: 0 0.5rem;
+      }
+
+      .step-dot {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(74,55,40,0.1);
+        color: var(--marron-600);
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+      }
+
+      .step-indicator.active .step-dot {
+        background: linear-gradient(135deg, var(--gold-500), var(--gold-600));
+        color: white;
+        box-shadow: 0 4px 12px rgba(212,175,55,0.3);
+      }
+
+      .step-indicator.completed .step-dot {
+        background: #22c55e;
+        color: white;
+      }
+
+      .step-indicator.completed .step-dot i {
+        width: 18px;
+        height: 18px;
+      }
+
+      .step-label {
+        font-size: 0.75rem;
+        color: var(--marron-600);
+        font-weight: 500;
+        text-align: center;
+        white-space: nowrap;
+      }
+
+      .step-indicator.active .step-label {
+        color: var(--marron-900);
+        font-weight: 600;
+      }
+
+      /* Step Panels */
+      .step-panel {
+        display: none;
+        animation: fadeIn 0.4s ease;
+      }
+
+      .step-panel.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .step-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(74,55,40,0.08);
+        border: 1px solid rgba(74,55,40,0.08);
+      }
+
+      .step-title {
+        font-size: 1.5rem;
+        color: var(--marron-900);
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+      }
+
+      .step-subtitle {
+        color: var(--marron-600);
+        margin-bottom: 2rem;
+      }
+
+      /* Navigation Buttons */
+      .step-nav {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2rem;
+        gap: 1rem;
+      }
+
+      .step-nav button {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.875rem 1.5rem;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .btn-prev {
+        background: transparent;
+        border: 1px solid rgba(74,55,40,0.2);
+        color: var(--marron-700);
+      }
+
+      .btn-prev:hover {
+        border-color: var(--marron-900);
+        color: var(--marron-900);
+      }
+
+      .btn-next, .btn-submit {
+        background: var(--marron-900);
+        border: none;
+        color: white !important;
+        margin-left: auto;
+        padding: 1rem 2rem;
+        border-radius: var(--radius-md);
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .btn-next:hover, .btn-submit:hover {
+        background: var(--marron-800);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(74,55,40,0.2);
+      }
+
+      /* Calendar Styles - Compact & Clear */
+      .calendar-container {
+        background: rgba(248,245,240,0.5);
+        border-radius: var(--radius-md);
+        padding: 1rem;
+      }
+
+      .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 0 0.5rem;
+      }
+
+      .calendar-header h4 {
+        font-size: 1.2rem;
+        color: var(--marron-900);
+        margin: 0;
+        font-weight: 600;
+      }
+
+      .calendar-header button {
+        background: white;
+        border: 1px solid rgba(74,55,40,0.15);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        cursor: pointer;
+        color: var(--marron-700);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+      }
+
+      .calendar-header button:hover {
+        background: var(--gold-500);
+        color: white;
+        border-color: var(--gold-500);
+      }
+
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.35rem;
+      }
+
+      .calendar-day-label {
+        text-align: center;
+        font-size: 0.7rem;
+        color: var(--marron-500);
+        font-weight: 600;
+        padding: 0.4rem 0;
+        text-transform: uppercase;
+      }
+
+      .calendar-day {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        border: 2px solid transparent;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+        color: var(--marron-700);
+        font-weight: 500;
+        min-height: 40px;
+      }
+
+      .calendar-day:hover:not(.disabled):not(.selected) {
+        border-color: var(--gold-500);
+        background: rgba(212,175,55,0.08);
+        transform: scale(1.05);
+      }
+
+      .calendar-day.selected {
+        background: var(--marron-900) !important;
+        color: white !important;
+        border-color: var(--marron-900);
+        box-shadow: 0 4px 12px rgba(74,55,40,0.2);
+        font-weight: 700;
+      }
+
+      .calendar-day.disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        background: rgba(74,55,40,0.03);
+        text-decoration: line-through;
+      }
+
+      .calendar-day.today {
+        border: 2px solid var(--gold-500);
+        font-weight: 700;
+      }
+
+      /* Time Slots */
+      .time-slots-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 0.75rem;
+        margin-top: 1rem;
+      }
+
+      .time-slot {
+        padding: 0.75rem 1rem;
+        background: white;
+        border: 1px solid rgba(74,55,40,0.15);
+        border-radius: var(--radius-md);
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+        color: var(--marron-700);
+      }
+
+      .time-slot:hover:not(.disabled):not(.selected) {
+        border-color: var(--gold-500);
+        background: rgba(212,175,55,0.05);
+      }
+
+      .time-slot.selected {
+        background: var(--marron-900);
+        color: white !important;
+        border-color: var(--marron-900);
+        font-weight: 700;
+      }
+
+      .time-slot.disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        text-decoration: line-through;
+      }
+
+      /* Form Styles */
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .form-group.full-width {
+        grid-column: 1 / -1;
+      }
+
+      .form-group label {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--marron-700);
+      }
+
+      .form-group input,
+      .form-group textarea,
+      .form-group select {
+        padding: 0.875rem 1rem;
+        border: 1px solid rgba(74,55,40,0.15);
+        border-radius: var(--radius-md);
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        background: white;
+      }
+
+      .form-group input:focus,
+      .form-group textarea:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: var(--gold-500);
+        box-shadow: 0 0 0 3px rgba(212,175,55,0.1);
+      }
+
+      /* Summary Card */
+      .summary-card {
+        background: rgba(248,245,240,0.6);
+        border-radius: var(--radius-md);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(74,55,40,0.08);
+      }
+
+      .summary-row:last-child {
+        border-bottom: none;
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--marron-900);
+        margin-top: 0.5rem;
+        padding-top: 1rem;
+        border-top: 2px solid var(--gold-500);
+      }
+
+      .deposit-notice {
+        background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.05));
+        border: 1px solid rgba(212,175,55,0.3);
+        border-radius: var(--radius-md);
+        padding: 1rem;
+        margin: 1.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .deposit-notice i {
+        color: var(--gold-600);
+      }
+
+      /* Payment Methods */
+      .payment-methods {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
+      }
+
+      .payment-method {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: white;
+        border: 2px solid rgba(74,55,40,0.1);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .payment-method:hover {
+        border-color: var(--gold-500);
+      }
+
+      .payment-method.selected {
+        border-color: var(--gold-500);
+        background: rgba(212,175,55,0.05);
+      }
+
+      .payment-method input {
+        display: none;
+      }
+
+      .payment-icon {
+        width: 54px;
+        height: 54px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px; /* carré arrondi, pa rond */
+        background: #fff;
+        border: 1px solid rgba(74,55,40,0.15);
+        overflow: hidden;
+        flex-shrink: 0;
+        padding: 6px;
+      }
+
+      .payment-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+
+      /* Payment Details Panel */
+      .payment-details {
+        display: none;
+        margin-top: 1.5rem;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #fdfaf5 0%, #f7f1e6 100%);
+        border: 2px solid var(--gold-500);
+        border-radius: var(--radius-lg);
+        animation: slideDown 0.3s ease;
+      }
+
+      .payment-details.active {
+        display: block;
+      }
+
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .payment-details h5 {
+        color: var(--gold-600);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .payment-details h5::before {
+        content: '💳';
+      }
+
+      .payment-info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px dashed rgba(74, 55, 40, 0.15);
+      }
+
+      .payment-info-row:last-child {
+        border-bottom: none;
+      }
+
+      .payment-info-label {
+        font-size: 0.85rem;
+        color: var(--marron-600);
+        font-weight: 500;
+      }
+
+      .payment-info-value {
+        font-size: 0.95rem;
+        color: var(--marron-900);
+        font-weight: 600;
+        font-family: 'Courier New', monospace;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        border: 1px solid rgba(74, 55, 40, 0.1);
+      }
+
+      .payment-info-value.highlight {
+        background: rgba(212, 175, 55, 0.15);
+        border-color: var(--gold-500);
+        color: var(--gold-600);
+      }
+
+      .copy-btn {
+        margin-left: 0.5rem;
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+        background: var(--marron-700);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .copy-btn:hover {
+        background: var(--gold-500);
+      }
+
+      .copy-btn.copied {
+        background: #22c55e;
+      }
+
+      .field-error {
+        border-color: #dc2626 !important;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12) !important;
+      }
+
+      .error-text {
+        color: #dc2626;
+        font-size: 0.8rem;
+        margin-top: 0.35rem;
+        font-weight: 500;
+      }
+
+      /* Upload Zone */
+      .upload-zone-v2 {
+        border: 2px dashed rgba(74,55,40,0.2);
+        border-radius: var(--radius-md);
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: rgba(248,245,240,0.3);
+      }
+
+      .upload-zone-v2:hover {
+        border-color: var(--gold-500);
+        background: rgba(212,175,55,0.05);
+      }
+
+      .upload-zone-v2.has-file {
+        border-color: #22c55e;
+        background: rgba(34,197,94,0.05);
+      }
+
+      /* Conditions Checkbox */
+      .conditions-box {
+        background: rgba(248,245,240,0.6);
+        border-radius: var(--radius-md);
+        padding: 1rem;
+        margin: 1rem 0;
+        max-height: 200px;
+        overflow-y: auto;
+        font-size: 0.85rem;
+        color: var(--marron-700);
+      }
+
+      .conditions-box ul {
+        margin: 0;
+        padding-left: 1.25rem;
+      }
+
+      .conditions-box li {
+        margin-bottom: 0.5rem;
+      }
+
+      .checkbox-group {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin-top: 1rem;
+      }
+
+      .checkbox-group input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        accent-color: var(--gold-500);
+        flex-shrink: 0;
+      }
+
+      /* Success Premium Panel */
+      .success-panel {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        animation: fadeInScale 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+
+      @keyframes fadeInScale {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+      }
+
+      .success-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        box-shadow: 0 20px 40px rgba(74,55,40,0.12);
+        padding: 3rem 2rem;
+        border: 1px solid rgba(212,175,55,0.2);
+        max-width: 500px;
+        margin: 0 auto;
+      }
+
+      .success-icon-v2 {
+        width: 80px;
+        height: 80px;
+        background: #22c55e;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        box-shadow: 0 10px 20px rgba(34,197,94,0.3);
+      }
+
+      .success-title-v2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        color: var(--marron-900);
+        margin-bottom: 1rem;
+      }
+
+      .success-text-v2 {
+        color: var(--marron-600);
+        line-height: 1.6;
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+      }
+
+      .email-notice {
+        background: rgba(212,175,55,0.1);
+        padding: 1rem;
+        border-radius: var(--radius-md);
+        border-left: 4px solid var(--gold-500);
+        margin-bottom: 2rem;
+        font-weight: 500;
+        color: var(--marron-800);
+      }
+          flex: 1;
+        }
+
+      .cart-summary-box {
+        padding: 1rem;
+      }
+
+      .cart-item {
+        flex-direction: row;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 0;
+      }
+
+      .cart-item-info {
+        flex: 1;
+      }
+
+      .cart-item-price {
+        font-size: 1rem;
+        white-space: nowrap;
+      }
+
+      .cart-item-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+
+        .cart-item-price {
+          font-size: 1rem;
+        }
+
+      .payment-methods {
+        grid-template-columns: 1fr;
+      }
+
+      .time-slots-container {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+      }
+
+
+        .time-slot {
+          padding: 0.6rem;
+          font-size: 0.8rem;
+        }
+      }
+
+      /* Tablet and large phones */
+      @media (max-width: 768px) {
+        .steps-progress {
+          margin-bottom: 1.5rem;
+          overflow-x: auto;
+          padding-bottom: 0.5rem;
+        }
+
+        .step-dot {
+          width: 32px;
+          height: 32px;
+          font-size: 0.85rem;
+        }
+
+        .step-label {
+          font-size: 0.7rem;
+        }
+
+        .form-grid {
+          grid-template-columns: 1fr;
+          gap: 1.25rem;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+          padding: 1rem;
+          font-size: 16px; /* Prevent zoom on iOS */
+        }
+
+        .step-card {
+          padding: 1.75rem 1.25rem;
+        }
+
+        .step-title {
+          font-size: 1.4rem;
+        }
+
+        .step-subtitle {
+          font-size: 0.9rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .reservation-steps-container {
+          padding: 1rem 0.5rem;
+        }
+
+        .steps-progress {
+          margin-bottom: 1rem;
+        }
+
+        .step-dot {
+          width: 28px;
+          height: 28px;
+          font-size: 0.8rem;
+        }
+
+        .step-label {
+          font-size: 0.65rem;
+          max-width: 50px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .step-card {
+          padding: 1.5rem 1rem;
+        }
+
+        .step-title {
+          font-size: 1.25rem;
+        }
+
+        .time-slots-container {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .calendar-day {
+          font-size: 0.75rem;
+          min-height: 32px;
+        }
+
+        .form-grid {
+          grid-template-columns: 1fr;
+          gap: 1rem;
+        }
+
+        .form-group label {
+          font-size: 0.9rem;
+          font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea {
+          padding: 0.875rem;
+          font-size: 16px;
+        }
+
+        .step-nav {
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
+        .btn-prev, .btn-next, .btn-submit {
+          width: 100%;
+          justify-content: center;
+          padding: 0.875rem 1.5rem;
+        }
+      }
+
+    </style>
+  </head>
+  <body data-page="reservation-v2">
+    <!-- Header -->
+    <header class="site-header internal">
+      <nav class="top-nav">
+        <a class="brand" href="../index.html">
+          <img class="brand-logo" src="../assets/images/logodaligth.jpg" alt="DALIGHT" />
+          <div>
+            <strong>DALIGHT</strong>
+            <small>L'Art du Bien-Être</small>
+          </div>
+        </a>
+        <button class="nav-toggle" aria-label="Ouvrir la navigation">
+          <span></span>
+          <span></span>
+        </button>
+        <div class="nav-links">
+          <a href="../index.html">Accueil</a>
+          <a href="./about.html">À propos</a>
+          <a href="./services.html">Services</a>
+          <a href="./shop.html">Boutique</a>
+          <a href="./services.html">Réservation</a>
+          <a href="./orders.html">Dossiers</a>
+          <a href="./login.html"><i data-lucide="user" style="width:16px;height:16px;"></i> Connexion</a>
+          <a href="../admin/dashboard.html" class="admin-link">Admin</a>
+        </div>
+        <div class="nav-cta">
+          <button class="cart-toggle" id="cart-toggle" aria-label="Panier" style="display: none;">
+            <i data-lucide="shopping-cart"></i>
+          </button>
+          <button class="btn ghost" id="logout-btn" type="button">Se déconnecter</button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="reservation-steps-container">
+      <!-- Progress Bar -->
+      <div class="steps-progress">
+        <div class="step-indicator active" data-step="1">
+          <div class="step-dot">1</div>
+          <span class="step-label">Date</span>
+        </div>
+        <div class="step-indicator" data-step="2">
+          <div class="step-dot">2</div>
+          <span class="step-label">Heure</span>
+        </div>
+        <div class="step-indicator" data-step="3">
+          <div class="step-dot">3</div>
+          <span class="step-label">Infos</span>
+        </div>
+        <div class="step-indicator" data-step="4">
+          <div class="step-dot">4</div>
+          <span class="step-label">Résumé</span>
+        </div>
+        <div class="step-indicator" data-step="5">
+          <div class="step-dot">5</div>
+          <span class="step-label">Paiement</span>
+        </div>
+      </div>
+
+      <!-- Success Message (Hidden by default) -->
+      <div id="success-message" class="success-panel" style="display: none;">
+        <div class="success-card">
+          <div class="success-icon-v2">
+            <i data-lucide="check" style="width: 40px; height: 40px;"></i>
+          </div>
+          <h2 class="success-title-v2">Demande Envoyée !</h2>
+          <p class="success-text-v2">
+            Votre réservation a été enregistrée dans notre système avec succès.
+          </p>
+          <div class="email-notice">
+            📧 Veuillez patienter, vous allez recevoir un <strong>email de confirmation</strong> très prochainement.
+          </div>
+          <div class="success-details" style="text-align: left; background: #fdfcf9; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+            <p style="margin: 0.5rem 0;"><strong>Référence :</strong> <span id="reservation-number">#---</span></p>
+            <p style="margin: 0.5rem 0;"><strong>Date :</strong> <span id="success-date">---</span></p>
+            <p style="margin: 0.5rem 0;"><strong>Heure :</strong> <span id="success-time">---</span></p>
+          </div>
+          <div class="success-actions" style="display: flex; flex-direction: column; gap: 1rem;">
+            <a href="./orders.html" class="btn-submit" style="text-decoration: none;">
+              Voir mes réservations
+            </a>
+            <a href="../index.html" style="color: var(--marron-600); text-decoration: none; font-size: 0.9rem;">
+              Retour à l'accueil
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <form id="reservation-form">
+        <!-- STEP 1: Service & Date -->
+        <div class="step-panel active" data-step="1">
+          <div class="step-card">
+            <h2 class="step-title">Choisissez votre date</h2>
+            <p class="step-subtitle">Votre service est déjà sélectionné. Choisissez simplement la date de votre rendez-vous.</p>
+
+            <!-- Cart Summary - Auto-populated from cart -->
+            <div class="cart-summary-box" id="cart-summary-box" style="margin-bottom: 1.5rem;">
+              <h4 style="margin: 0 0 1rem 0; color: var(--marron-900);">
+                <i data-lucide="shopping-cart" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 0.5rem;"></i>
+                Service sélectionné
+              </h4>
+              <div id="cart-items-list" style="background: rgba(248,245,240,0.6); border-radius: var(--radius-md); padding: 1rem;">
+                <!-- Populated by JS -->
+              </div>
+              <div id="add-service-actions" style="margin-top: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <a href="./services.html" class="btn btn-secondary" style="text-decoration:none;">
+                  Ajouter un service
+                </a>
+                <button type="button" id="clear-services-btn" class="btn btn-secondary">
+                  Supprimer les services
+                </button>
+              </div>
+            </div>
+
+            <!-- Hidden service input -->
+            <input type="hidden" id="service-select" name="service" required>
+
+            <div class="calendar-container">
+              <div class="calendar-header">
+                <button type="button" class="calendar-nav" id="prev-month">
+                  <i data-lucide="chevron-left"></i>
+                </button>
+                <h4 id="current-month">Janvier 2025</h4>
+                <button type="button" class="calendar-nav" id="next-month">
+                  <i data-lucide="chevron-right"></i>
+                </button>
+              </div>
+              <div class="calendar-grid" id="calendar-grid">
+                <!-- Generated by JS -->
+              </div>
+            </div>
+            <input type="hidden" id="selected-date" name="date" required>
+
+            <div class="step-nav">
+              <div></div>
+              <button type="button" class="btn-next" id="btn-step-1-next">
+                Continuer <i data-lucide="arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: Time Selection -->
+        <div class="step-panel" data-step="2">
+          <div class="step-card">
+            <h2 class="step-title">Choisissez votre heure</h2>
+            <p class="step-subtitle">Les créneaux en vert sont disponibles pour le <strong id="selected-date-display">--/--/----</strong></p>
+
+            <div id="time-slots-container" class="time-slots-container">
+              <!-- Generated by JS -->
+            </div>
+            <input type="hidden" id="selected-time" name="time" required>
+
+            <div class="step-nav">
+              <button type="button" class="btn-prev" id="btn-step-2-prev">
+                <i data-lucide="arrow-left"></i> Retour
+              </button>
+              <button type="button" class="btn-next" id="btn-step-2-next">
+                Continuer <i data-lucide="arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: Personal Info -->
+        <div class="step-panel" data-step="3">
+          <div class="step-card">
+            <h2 class="step-title">Vos informations</h2>
+            <p class="step-subtitle">Remplissez vos coordonnées pour la réservation</p>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="first-name">Prénom *</label>
+                <input type="text" id="first-name" name="first_name" required placeholder="Votre prénom">
+              </div>
+              <div class="form-group">
+                <label for="last-name">Nom *</label>
+                <input type="text" id="last-name" name="last_name" required placeholder="Votre nom">
+              </div>
+              <div class="form-group full-width">
+                <label for="email">Email *</label>
+                <input type="email" id="email" name="email" required placeholder="votre@email.com">
+              </div>
+              <div class="form-group full-width">
+                <label for="phone">Téléphone *</label>
+                <input type="tel" id="phone" name="phone" required placeholder="+509 XX XX XXXX">
+              </div>
+              <div class="form-group full-width">
+                <label for="address">Adresse</label>
+                <textarea id="address" name="address" rows="2" placeholder="Votre adresse (optionnel)"></textarea>
+              </div>
+              <div class="form-group full-width">
+                <label for="notes">Notes spéciales</label>
+                <textarea id="notes" name="notes" rows="2" placeholder="Allergies, préférences, etc. (optionnel)"></textarea>
+              </div>
+            </div>
+
+            <div class="step-nav">
+              <button type="button" class="btn-prev" id="btn-step-3-prev">
+                <i data-lucide="arrow-left"></i> Retour
+              </button>
+              <button type="button" class="btn-next" id="btn-step-3-next">
+                Continuer <i data-lucide="arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4: Summary -->
+        <div class="step-panel" data-step="4">
+          <div class="step-card">
+            <h2 class="step-title">Résumé de votre commande</h2>
+            <p class="step-subtitle">Vérifiez les détails avant de confirmer</p>
+
+            <!-- Services from Cart -->
+            <div class="cart-summary-box" style="margin-bottom: 1rem;">
+              <h4 style="margin: 0 0 1rem 0; color: var(--marron-900);">
+                <i data-lucide="shopping-bag" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 0.5rem;"></i>
+                Services réservés
+              </h4>
+              <div id="summary-cart-items" style="background: white; border-radius: var(--radius-md); padding: 1rem;">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+
+            <div class="summary-card">
+              <div class="summary-row">
+                <span><i data-lucide="calendar" style="width: 16px; vertical-align: middle; margin-right: 0.5rem;"></i>Date</span>
+                <strong id="summary-date">-</strong>
+              </div>
+              <div class="summary-row">
+                <span><i data-lucide="clock" style="width: 16px; vertical-align: middle; margin-right: 0.5rem;"></i>Heure</span>
+                <strong id="summary-time">-</strong>
+              </div>
+              <div class="summary-row">
+                <span><i data-lucide="user" style="width: 16px; vertical-align: middle; margin-right: 0.5rem;"></i>Client</span>
+                <strong id="summary-client">-</strong>
+              </div>
+              <div class="summary-row">
+                <span>Total des services</span>
+                <strong id="summary-total">-</strong>
+              </div>
+            </div>
+
+            <div class="deposit-notice">
+              <i data-lucide="wallet"></i>
+              <div>
+                <strong>Acompte de 1 000 HTG requis</strong>
+                <p style="margin: 0; font-size: 0.85rem; color: var(--marron-600);">Le solde sera réglé sur place le jour du rendez-vous.</p>
+              </div>
+            </div>
+
+            <div class="step-nav">
+              <button type="button" class="btn-prev" id="btn-step-4-prev">
+                <i data-lucide="arrow-left"></i> Retour
+              </button>
+              <button type="button" class="btn-next" id="btn-step-4-next">
+                Continuer <i data-lucide="arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 5: Payment -->
+        <div class="step-panel" data-step="5">
+          <div class="step-card">
+            <h2 class="step-title">Conditions et paiement</h2>
+            <p class="step-subtitle">Acceptez les conditions et choisissez votre méthode de paiement</p>
+
+            <div class="conditions-box">
+              <h4 style="margin-top: 0;">📋 Conditions générales</h4>
+              <ul>
+                <li><strong>Acompte obligatoire :</strong> 1 000 HTG requis pour confirmer.</li>
+                <li><strong>Annulation gratuite :</strong> Jusqu'à 48h avant.</li>
+                <li><strong>Annulation tardive (24h-48h) :</strong> 500 HTG retenus.</li>
+                <li><strong>No-show :</strong> Acompte non remboursable.</li>
+                <li><strong>Retard :</strong> Plus de 15min = annulation.</li>
+              </ul>
+            </div>
+
+            <div class="checkbox-group">
+              <input type="checkbox" id="accept-conditions" name="accept_conditions" required>
+              <label for="accept-conditions">J'accepte les conditions générales de réservation *</label>
+            </div>
+
+            <h4 style="margin: 2rem 0 1rem;">Méthode de paiement de l'acompte</h4>
+            <div class="payment-methods">
+              <label class="payment-method" id="payment-method-moncash">
+                <input type="radio" name="payment_method" value="moncash" required>
+                <span class="payment-icon"><img src="../assets/images/moncash.jpg" alt="MonCash"></span>
+                <div>
+                  <strong>MonCash</strong>
+                  <p style="margin: 0; font-size: 0.8rem; color: var(--marron-600);">DANOE ADAM</p>
+                </div>
+              </label>
+              <label class="payment-method" id="payment-method-natcash">
+                <input type="radio" name="payment_method" value="natcash">
+                <span class="payment-icon"><img src="../assets/images/natcash.png" alt="NatCash"></span>
+                <div>
+                  <strong>NatCash</strong>
+                  <p style="margin: 0; font-size: 0.8rem; color: var(--marron-600);">Fabiola Laborde</p>
+                </div>
+              </label>
+              <label class="payment-method">
+                <input type="radio" name="payment_method" value="bank">
+                <span class="payment-icon">🏦</span>
+                <div>
+                  <strong>Virement Bancaire</strong>
+                  <p style="margin: 0; font-size: 0.8rem; color: var(--marron-600);">Compte DALIGHT</p>
+                </div>
+              </label>
+            </div>
+
+            <!-- Payment Details Panel -->
+            <div id="payment-details-panel" class="payment-details">
+              <!-- Moncash Details -->
+              <div id="moncash-details" class="payment-method-details" style="display: none;">
+                <h5>Informations MonCash</h5>
+                <div class="payment-info-row">
+                  <span class="payment-info-label">Nom :</span>
+                  <span class="payment-info-value">DANOE ADAM</span>
+                </div>
+                <div class="payment-info-row">
+                  <span class="payment-info-label">Numéro :</span>
+                  <span class="payment-info-value highlight">+509 47477221</span>
+                </div>
+              </div>
+
+              <!-- Natcash Details -->
+              <div id="natcash-details" class="payment-method-details" style="display: none;">
+                <h5>Informations NatCash</h5>
+                <div class="payment-info-row">
+                  <span class="payment-info-label">Nom :</span>
+                  <span class="payment-info-value">Fabiola Laborde</span>
+                </div>
+                <div class="payment-info-row">
+                  <span class="payment-info-label">Numéro :</span>
+                  <span class="payment-info-value highlight">+509 42965018</span>
+                </div>
+              </div>
+
+              <!-- Bank Details -->
+              <div id="bank-details" class="payment-method-details" style="display: none;">
+                <h5>Informations Virement Bancaire (BNC)</h5>
+                <div class="payment-info-row">
+                  <span class="payment-info-label">Banque :</span>
+                  <span class="payment-info-value">BNC</span>
+                </div>
+                <div class="payment-info-row">
+                  <span class="payment-info-label">Nom du compte :</span>
+                  <span class="payment-info-value">Danoe Adam</span>
+                </div>
+                <div class="payment-info-row">
+                  <span class="payment-info-label">Gourdes (HTG) :</span>
+                  <span class="payment-info-value highlight">3310013350</span>
+                </div>
+                <div class="payment-info-row">
+                  <span class="payment-info-label">Dollars (USD) :</span>
+                  <span class="payment-info-value highlight">3311005245</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group full-width" style="margin-top: 1.5rem;">
+              <label>Preuve de paiement (screenshot) *</label>
+              <div class="upload-zone-v2" id="upload-zone">
+                <input type="file" id="payment-proof" name="payment_proof" accept="image/*" required style="display: none;">
+                <i data-lucide="upload-cloud" style="width: 48px; height: 48px; color: var(--marron-400);"></i>
+                <p>Cliquez pour uploader votre screenshot</p>
+                <small style="color: var(--marron-600);">PNG, JPG - Max 5 MB</small>
+                <div id="file-name" style="margin-top: 0.5rem; font-weight: 500; color: var(--marron-900);"></div>
+              </div>
+            </div>
+
+            <div class="step-nav">
+              <button type="button" class="btn-prev" id="btn-step-5-prev">
+                <i data-lucide="arrow-left"></i> Retour
+              </button>
+              <button type="submit" class="btn-submit" id="btn-submit">
+                <i data-lucide="check-circle"></i> Confirmer la réservation
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+      <div class="container footer-grid">
+        <div class="footer-brand">
+          <img src="../assets/images/logodaligth.jpg" alt="DALIGHT" width="100" />
+          <p>Luxury Head Spa Haïtien.<br />Renaître par la racine.</p>
+        </div>
+        <div class="footer-contact">
+          <h4>Contact</h4>
+          <p>+509 48 48 12 25</p>
+          <p>contact@dalightspa.com</p>
+          <p>Delmas, Haïti</p>
+        </div>
+        <div class="footer-hours">
+          <h4>Horaires</h4>
+          <p>Tous les jours sauf lundi<br />07h00 — 17h00</p>
+        </div>
+      </div>
+      <div class="footer-credit">
+        <span>Conçu avec soin par <a href="https://cvisual.netlify.app/" target="_blank" rel="noopener" class="cvisual-link">Cvisual</a></span>
+      </div>
+</footer>
+
+    <!-- Mobile Nav -->
+    <nav class="mobile-nav">
+      <a href="../index.html" data-page="home">
+        <i data-lucide="home"></i>
+      </a>
+      <a href="../pages/services.html" data-page="services">
+        <i data-lucide="sparkles"></i>
+      </a>
+      <a href="../pages/shop.html" data-page="shop">
+        <i data-lucide="shopping-bag"></i>
+      </a>
+      <a href="./orders.html" data-page="orders">
+        <i data-lucide="folder-check"></i>
+      </a>
+      <a href="./services.html" data-page="reservation" class="active">
+        <i data-lucide="calendar"></i>
+      </a>
+      <a href="./login.html" data-page="login">
+        <i data-lucide="user"></i>
+      </a>
+    </nav>
+
+    <script type="module">
+      import { initChatWidget } from '../js/chat-widget.js';
+      
+      document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+        initChatWidget();
+        initReservationSteps();
+      });
+
+      // ─────────────────────────────────────────────────────────────
+      // RESERVATION STEPS SYSTEM
+      // ─────────────────────────────────────────────────────────────
+      let currentStep = 1;
+      const totalSteps = 5;
+      const formData = {};
+      let cartServices = [];
+
+function loadCartData() {
+        console.log('🛒 loadCartData() started');
+        
+        try {
+          // TRY ALL POSSIBLE KEYS (multi-fallback)
+          const possibleKeys = [
+            'dalight:cartServices',    // v2 saves this
+            'dalight:serviceCart',     // services.html saves this  
+            'dalight:serviceCartLegacy'
+          ];
+          
+          let cartData = null;
+          for (const key of possibleKeys) {
+            const saved = localStorage.getItem(key);
+            if (saved && saved !== '[]') {
+              console.log(`✅ Found cart data in: ${key}`);
+              cartData = JSON.parse(saved);
+              if (cartData && cartData.length > 0) break;
+            }
+          }
+          
+          if (cartData && cartData.length > 0) {
+            cartServices = cartData;
+          } else {
+            console.warn('⚠️ No cart found in localStorage');
+            cartServices = [];
+          }
+          
+          console.log('📦 Final cartServices:', cartServices);
+          
+        } catch (e) {
+          console.error('❌ Cart load error:', e);
+          cartServices = [];
+        }
+
+        // Display cart items
+        const cartList = document.getElementById('cart-items-list');
+        const serviceInput = document.getElementById('service-select');
+        
+        if (cartServices.length > 0 && cartList) {
+          cartList.innerHTML = cartServices.map((item, index) => `
+            <div class="cart-item">
+              <div class="cart-item-info">
+                <div class="cart-item-name">${item.name}</div>
+                <div class="cart-item-desc">${item.duration || '60 min'}</div>
+              </div>
+              <div class="cart-item-actions">
+                <div class="cart-item-price">${Number(item.price_htg || 0).toLocaleString()} HTG</div>
+                <button type="button" class="btn-remove-service" data-remove-index="${index}" title="Supprimer ce service">
+                  <i data-lucide="trash-2" style="width:16px;height:16px;"></i>
+                </button>
+              </div>
+            </div>
+          `).join('');
+          
+          // Set hidden service input
+          if (serviceInput) {
+            serviceInput.value = cartServices.map(s => s.name).join(', ');
+          }
+          
+          lucide.createIcons();
+          cartList.querySelectorAll('.btn-remove-service').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const idx = Number(btn.getAttribute('data-remove-index'));
+              if (Number.isNaN(idx)) return;
+              cartServices.splice(idx, 1);
+
+              localStorage.setItem('dalight:serviceCart', JSON.stringify(cartServices));
+              localStorage.setItem('dalight:cartServices', JSON.stringify(cartServices));
+              localStorage.setItem('dalight:serviceCartLegacy', JSON.stringify(cartServices));
+
+              if (serviceInput) {
+                serviceInput.value = cartServices.map(s => s.name).join(', ');
+              }
+
+              renderCartInAllSections();
+              loadCartData();
+            });
+          });
+          console.log('✅ Cart UI rendered successfully');
+        } else if (cartList) {
+          if (serviceInput) serviceInput.value = '';
+          cartList.innerHTML = `
+            <div class="empty-cart" style="text-align: center; padding: 2rem; color: var(--marron-600);">
+              <i data-lucide="shopping-bag" style="width: 48px; height: 48px; opacity: 0.5;"></i>
+              <p>Aucun service sélectionné</p>
+              <a href="./services.html" class="btn btn-primary" style="margin-top: 1rem;">Aller sélectionner des services</a>
+            </div>
+          `;
+          lucide.createIcons();
+        }
+      }
+
+      function removeServiceAt(index) {
+        if (index < 0 || index >= cartServices.length) return;
+        cartServices.splice(index, 1);
+        localStorage.setItem('dalight:serviceCart', JSON.stringify(cartServices));
+        localStorage.setItem('dalight:cartServices', JSON.stringify(cartServices));
+        localStorage.setItem('dalight:serviceCartLegacy', JSON.stringify(cartServices));
+
+        const serviceInput = document.getElementById('service-select');
+        if (serviceInput) {
+          serviceInput.value = cartServices.map(s => s.name).join(', ');
+        }
+
+        renderCartInAllSections();
+        lucide.createIcons();
+      }
+
+      // Render cart items in all sections
+      function renderCartInAllSections() {
+        const cartItemsList = document.getElementById('cart-items-list');
+        const summaryCartItems = document.getElementById('summary-cart-items');
+        const paymentCartItems = document.getElementById('payment-cart-items');
+        
+        const cartHTML = cartServices.map((item, index) => `
+          <div class="cart-item">
+            <div class="cart-item-info">
+              <div class="cart-item-name">${item.name}</div>
+              <div class="cart-item-desc">${item.duration || '60 min'}</div>
+            </div>
+            <div class="cart-item-actions">
+              <div class="cart-item-price">${Number(item.price_htg || 0).toLocaleString()} HTG</div>
+              <button type="button" class="btn-remove-service" data-remove-index="${index}" title="Supprimer ce service">
+                <i data-lucide="trash-2" style="width:16px;height:16px;"></i>
+              </button>
+            </div>
+          </div>
+        `).join('');
+        
+        // Step 1: cart list
+        if (cartItemsList) {
+          if (cartServices.length === 0) {
+            cartItemsList.innerHTML = `
+              <div class="empty-cart" style="text-align: center; padding: 2rem; color: var(--marron-600);">
+                <i data-lucide="shopping-bag" style="width: 48px; height: 48px; opacity: 0.5;"></i>
+                <p>Aucun service sélectionné</p>
+                <a href="./services.html" class="btn btn-primary" style="margin-top: 1rem;">Choisir un service</a>
+              </div>
+            `;
+            lucide.createIcons();
+          } else {
+            cartItemsList.innerHTML = cartHTML;
+            cartItemsList.querySelectorAll('.btn-remove-service').forEach(btn => {
+              btn.addEventListener('click', () => {
+                const idx = Number(btn.getAttribute('data-remove-index'));
+                removeServiceAt(idx);
+              });
+            });
+            lucide.createIcons();
+          }
+        }
+        
+        // Step 4: summary
+        if (summaryCartItems) {
+          summaryCartItems.innerHTML = cartHTML;
+          summaryCartItems.querySelectorAll('.btn-remove-service').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const idx = Number(btn.getAttribute('data-remove-index'));
+              removeServiceAt(idx);
+            });
+          });
+        }
+        // Step 5: payment
+        if (paymentCartItems) paymentCartItems.innerHTML = cartHTML;
+      }
+
+      function initReservationSteps() {
+        // Load cart data first
+        loadCartData();
+        // Render cart in all sections (step 1, 4, 5)
+        renderCartInAllSections();
+        // Navigation buttons
+        document.getElementById('btn-step-1-next')?.addEventListener('click', () => goToStep(2));
+        document.getElementById('btn-step-2-prev')?.addEventListener('click', () => goToStep(1));
+        document.getElementById('btn-step-2-next')?.addEventListener('click', () => goToStep(3));
+        document.getElementById('btn-step-3-prev')?.addEventListener('click', () => goToStep(2));
+        document.getElementById('btn-step-3-next')?.addEventListener('click', () => goToStep(4));
+        document.getElementById('btn-step-4-prev')?.addEventListener('click', () => goToStep(3));
+        document.getElementById('btn-step-4-next')?.addEventListener('click', () => goToStep(5));
+        document.getElementById('btn-step-5-prev')?.addEventListener('click', () => goToStep(4));
+
+        // Calendar navigation
+        document.getElementById('prev-month')?.addEventListener('click', () => changeMonth(-1));
+        document.getElementById('next-month')?.addEventListener('click', () => changeMonth(1));
+
+        // Upload zone
+        const uploadZone = document.getElementById('upload-zone');
+        const fileInput = document.getElementById('payment-proof');
+        
+        uploadZone?.addEventListener('click', () => fileInput?.click());
+        
+        fileInput?.addEventListener('change', (e) => {
+          if (e.target.files.length > 0) {
+            document.getElementById('file-name').textContent = e.target.files[0].name;
+            uploadZone.classList.add('has-file');
+          }
+        });
+
+        // Payment method selection with details display
+        const paymentDetailsPanel = document.getElementById('payment-details-panel');
+        const moncashDetails = document.getElementById('moncash-details');
+        const natcashDetails = document.getElementById('natcash-details');
+        const bankDetails = document.getElementById('bank-details');
+
+        function hideAllPaymentDetails() {
+          if (moncashDetails) moncashDetails.style.display = 'none';
+          if (natcashDetails) natcashDetails.style.display = 'none';
+          if (bankDetails) bankDetails.style.display = 'none';
+          if (paymentDetailsPanel) paymentDetailsPanel.classList.remove('active');
+        }
+
+        function showPaymentDetails(method) {
+          hideAllPaymentDetails();
+
+          const input = method.querySelector('input');
+          const value = input?.value;
+
+          if (paymentDetailsPanel) {
+            paymentDetailsPanel.classList.add('active');
+          }
+
+          if (value === 'moncash' && moncashDetails) {
+            moncashDetails.style.display = 'block';
+          } else if (value === 'natcash' && natcashDetails) {
+            natcashDetails.style.display = 'block';
+          } else if (value === 'bank' && bankDetails) {
+            bankDetails.style.display = 'block';
+          }
+        }
+
+        document.querySelectorAll('.payment-method').forEach(method => {
+          method.addEventListener('click', () => {
+            document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
+            method.classList.add('selected');
+            method.querySelector('input').checked = true;
+            showPaymentDetails(method);
+          });
+        });
+
+        // Clear services button
+        document.getElementById('clear-services-btn')?.addEventListener('click', () => {
+          if (!confirm('Ou vle retire tout sèvis yo nan réservation sa a?')) return;
+          cartServices = [];
+          localStorage.removeItem('dalight:serviceCart');
+          localStorage.removeItem('dalight:cartServices');
+          localStorage.removeItem('dalight:serviceCartLegacy');
+
+          const serviceInput = document.getElementById('service-select');
+          if (serviceInput) serviceInput.value = '';
+
+          renderCartInAllSections();
+          alert('Tout sèvis yo retire. Chwazi yon nouvo sèvis pou kontinye.');
+        });
+
+        // Initialize calendar
+        initCalendar();
+      }
+
+      function goToStep(step) {
+        // Validate current step before proceeding
+        if (step > currentStep && !validateStep(currentStep)) {
+          return;
+        }
+
+        // Save current step data
+        saveStepData(currentStep);
+
+        // Update UI
+        document.querySelectorAll('.step-panel').forEach(panel => {
+          panel.classList.remove('active');
+        });
+        document.querySelector(`.step-panel[data-step="${step}"]`)?.classList.add('active');
+
+        // Update progress indicators
+        document.querySelectorAll('.step-indicator').forEach(ind => {
+          const indStep = parseInt(ind.dataset.step);
+          ind.classList.remove('active', 'completed');
+          if (indStep === step) {
+            ind.classList.add('active');
+          } else if (indStep < step) {
+            ind.classList.add('completed');
+            ind.querySelector('.step-dot').innerHTML = '<i data-lucide="check"></i>';
+            lucide.createIcons();
+          } else {
+            ind.querySelector('.step-dot').textContent = indStep;
+          }
+        });
+
+        currentStep = step;
+
+        // Special handling for specific steps
+        if (step === 2) {
+          loadTimeSlots();
+        } else if (step === 4) {
+          updateSummary();
+        }
+
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function clearFieldError(fieldId, messageId) {
+        const field = document.getElementById(fieldId);
+        if (field) field.classList.remove('field-error');
+        if (messageId) {
+          const old = document.getElementById(messageId);
+          if (old) old.remove();
+        }
+      }
+
+      function showFieldError(fieldId, message, messageId) {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+        field.classList.add('field-error');
+
+        if (messageId) {
+          let msg = document.getElementById(messageId);
+          if (!msg) {
+            msg = document.createElement('div');
+            msg.id = messageId;
+            msg.className = 'error-text';
+            field.insertAdjacentElement('afterend', msg);
+          }
+          msg.textContent = message;
+        }
+      }
+
+      function formatLocalDateFR(dateStr, withWeekday = false) {
+        if (!dateStr) return '-';
+        if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+          const [y, m, d] = dateStr.split('-').map(Number);
+          return new Date(y, m - 1, d).toLocaleDateString('fr-FR', withWeekday
+            ? { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+            : undefined
+          );
+        }
+        return new Date(dateStr).toLocaleDateString('fr-FR', withWeekday
+          ? { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+          : undefined
+        );
+      }
+
+      function validateStep(step) {
+        switch(step) {
+          case 1:
+            // Must have at least one selected service
+            if (!cartServices || cartServices.length === 0) {
+              alert('Ou dwe chwazi omwen yon sèvis avan ou kontinye. Klike sou "Aller sélectionner des services".');
+              return false;
+            }
+
+            // Service is pre-loaded from cart, only check date
+            const date = document.getElementById('selected-date')?.value;
+            clearFieldError('selected-date', 'date-error');
+            if (!date) {
+              showFieldError('selected-date', 'Tanpri chwazi yon dat.', 'date-error');
+              return false;
+            }
+            // Ensure service value is set from cart
+            if (!document.getElementById('service-select')?.value && cartServices.length > 0) {
+              document.getElementById('service-select').value = cartServices.map(s => s.name).join(', ');
+            }
+            return true;
+          case 2:
+            const time = document.getElementById('selected-time')?.value;
+            clearFieldError('selected-time', 'time-error');
+            if (!time) {
+              showFieldError('selected-time', 'Tanpri chwazi yon lè.', 'time-error');
+              return false;
+            }
+            return true;
+          case 3:
+            const required = ['first-name', 'last-name', 'email', 'phone'];
+            let firstMissing = null;
+            for (const id of required) {
+              clearFieldError(id, `${id}-error`);
+              if (!document.getElementById(id)?.value.trim()) {
+                showFieldError(id, 'Tanpri ranpli chan sa a.', `${id}-error`);
+                if (!firstMissing) firstMissing = id;
+              }
+            }
+            if (firstMissing) {
+              document.getElementById(firstMissing)?.focus();
+              return false;
+            }
+            return true;
+          default:
+            return true;
+        }
+      }
+
+      function saveStepData(step) {
+        switch(step) {
+          case 1:
+            formData.service = document.getElementById('service-select')?.value;
+            formData.date = document.getElementById('selected-date')?.value;
+            break;
+          case 2:
+            formData.time = document.getElementById('selected-time')?.value;
+            break;
+          case 3:
+            formData.firstName = document.getElementById('first-name')?.value;
+            formData.lastName = document.getElementById('last-name')?.value;
+            formData.email = document.getElementById('email')?.value;
+            formData.phone = document.getElementById('phone')?.value;
+            formData.address = document.getElementById('address')?.value;
+            formData.notes = document.getElementById('notes')?.value;
+            break;
+          case 5:
+            formData.paymentMethod = document.querySelector('input[name="payment_method"]:checked')?.value;
+            formData.acceptConditions = document.getElementById('accept-conditions')?.checked;
+            break;
+        }
+      }
+
+      function updateSummary() {
+        document.getElementById('summary-date').textContent = formData.date ? formatLocalDateFR(formData.date) : '-';
+        document.getElementById('summary-time').textContent = formData.time || '-';
+        document.getElementById('summary-client').textContent = formData.firstName && formData.lastName ? 
+          `${formData.firstName} ${formData.lastName}` : '-';
+        
+        // Calculate total from cart
+        let totalText = '1 000 HTG (acompte)';
+        if (cartServices.length > 0) {
+          const total = cartServices.reduce((sum, s) => sum + (Number(s.price_htg) || 0), 0);
+          totalText = `1 000 HTG (acompte sur ${total.toLocaleString()} HTG)`;
+        }
+        document.getElementById('summary-total').textContent = totalText;
+        
+        // Populate cart items in summary
+        const summaryCartItems = document.getElementById('summary-cart-items');
+        if (summaryCartItems && cartServices.length > 0) {
+          summaryCartItems.innerHTML = cartServices.map(item => `
+            <div class="cart-item">
+              <div class="cart-item-info">
+                <div class="cart-item-name">${item.name}</div>
+                <div class="cart-item-desc">${item.duration || '60 min'}</div>
+              </div>
+              <div class="cart-item-price">${Number(item.price_htg || 0).toLocaleString()} HTG</div>
+            </div>
+          `).join('');
+        } else if (summaryCartItems) {
+          summaryCartItems.innerHTML = `<p style="margin:0; color:var(--marron-600); text-align:center;">Aucun service sélectionné</p>`;
+        }
+      }
+
+      // ─────────────────────────────────────────────────────────────
+      // CALENDAR SYSTEM
+      // ─────────────────────────────────────────────────────────────
+      let currentCalendarDate = new Date();
+      let selectedDate = null;
+
+      function initCalendar() {
+        console.log('📅 initCalendar() called');
+        renderCalendar();
+      }
+
+      function renderCalendar() {
+        console.log('📅 renderCalendar() started');
+        const year = currentCalendarDate.getFullYear();
+        const month = currentCalendarDate.getMonth();
+        
+        // Update header
+        const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
+                           'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+        document.getElementById('current-month').textContent = `${monthNames[month]} ${year}`;
+
+        // Generate grid
+        const firstDayOfMonth = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        const grid = document.getElementById('calendar-grid');
+        grid.innerHTML = '';
+
+        // Day labels (starting with Monday)
+        const dayLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+        dayLabels.forEach(day => {
+          const label = document.createElement('div');
+          label.className = 'calendar-day-label';
+          label.textContent = day;
+          grid.appendChild(label);
+        });
+
+        // Calculate offset to start week on Monday (0=Monday, 6=Sunday)
+        // JavaScript getDay(): 0=Sunday, 1=Monday, ..., 6=Saturday
+        let offset = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+        
+        // Empty cells before first day
+        for (let i = 0; i < offset; i++) {
+          const empty = document.createElement('div');
+          grid.appendChild(empty);
+        }
+
+        // Days
+        for (let day = 1; day <= daysInMonth; day++) {
+          const date = new Date(year, month, day);
+          const cell = document.createElement('div');
+          cell.className = 'calendar-day';
+          cell.textContent = day;
+
+          // Check if past date
+          if (date < today) {
+            cell.classList.add('disabled');
+          }
+          
+          // Check if today
+          if (date.toDateString() === today.toDateString()) {
+            cell.classList.add('today');
+          }
+
+          // Check if selected
+          if (selectedDate && date.toDateString() === new Date(selectedDate).toDateString()) {
+            cell.classList.add('selected');
+          }
+
+          // Check if Sunday (closed)
+          if (date.getDay() === 0) {
+            cell.classList.add('disabled');
+          }
+
+          cell.addEventListener('click', () => {
+            if (!cell.classList.contains('disabled')) {
+              selectDate(date);
+            }
+          });
+
+          grid.appendChild(cell);
+        }
+      }
+
+      function changeMonth(delta) {
+        currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+        renderCalendar();
+      }
+
+      function selectDate(date) {
+        selectedDate = date;
+        document.getElementById('selected-date').value = date.toISOString().split('T')[0];
+        document.getElementById('selected-date-display').textContent = date.toLocaleDateString('fr-FR');
+        renderCalendar();
+      }
+
+      // ─────────────────────────────────────────────────────────────
+      // TIME SLOTS SYSTEM
+      // ─────────────────────────────────────────────────────────────
+async function loadTimeSlots() {
+        console.log('🕒 loadTimeSlots() called');
+        const container = document.getElementById('time-slots-container');
+        const date = document.getElementById('selected-date').value;
+        if (!date || !container) return;
+
+        const slots = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
+        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--marron-600);">Vérification des disponibilités...</div>';
+
+        try {
+          let supabaseClient = window.dalightSupabase || window.supabase;
+          if (!supabaseClient && window.supabase?.createClient) {
+            const supabaseUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co';
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA1OTY4MTU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U';
+            supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+          }
+
+          if (!supabaseClient) {
+            console.warn('⚠️ Supabase client not found for time slots, using offline mode');
+            renderOfflineSlots(container, slots);
+            return;
+          }
+
+          // Fetch all bookings for the selected date in ONE call
+          const { data: bookings, error } = await supabaseClient
+            .from('reservations')
+            .select('time')
+            .eq('date', date)
+            .in('status', ['PENDING', 'CONFIRMED']);
+
+          if (error) throw error;
+
+          // Normalize booked times (convert 09:00:00 to 09:00)
+          const bookedTimes = (bookings || []).map(b => b.time.substring(0, 5));
+          console.log('🚫 Booked times for ' + date + ':', bookedTimes);
+
+          container.innerHTML = '';
+          slots.forEach(time => {
+            const slot = document.createElement('div');
+            slot.className = 'time-slot';
+            slot.textContent = time;
+            
+            const isBooked = bookedTimes.includes(time);
+            
+            if (isBooked) {
+              slot.classList.add('disabled');
+              slot.title = 'Déjà réservé';
+            } else {
+              slot.addEventListener('click', () => {
+                document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+                slot.classList.add('selected');
+                document.getElementById('selected-time').value = time;
+                console.log('✅ Selected time:', time);
+              });
+            }
+
+            container.appendChild(slot);
+          });
+
+        } catch (error) {
+          console.error('❌ Error loading time slots:', error);
+          renderOfflineSlots(container, slots);
+        }
+      }
+
+      function renderOfflineSlots(container, slots) {
+        container.innerHTML = '';
+        slots.forEach(time => {
+          const slot = document.createElement('div');
+          slot.className = 'time-slot';
+          slot.textContent = time;
+          slot.addEventListener('click', () => {
+            document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+            slot.classList.add('selected');
+            document.getElementById('selected-time').value = time;
+          });
+          container.appendChild(slot);
+        });
+        const msg = document.createElement('div');
+        msg.style = 'grid-column:1/-1; font-size:0.8rem; color:orange; text-align:center; margin-top:1rem;';
+        msg.textContent = 'Note: Mode hors-ligne actif. La disponibilité sera vérifiée à la validation.';
+        container.appendChild(msg);
+      }
+
+      // ─────────────────────────────────────────────────────────────
+      // FORM SUBMISSION
+      // ─────────────────────────────────────────────────────────────
+      async function handleSubmit(e) {
+        e.preventDefault();
+        console.log('handleSubmit called');
+
+        // Must have at least one selected service before reservation
+        if (!cartServices || cartServices.length === 0) {
+          alert('Ou pa gen sèvis chwazi. Tanpri ale sou paj Services pou chwazi sèvis yo avan konfime reservation an.');
+          window.location.href = './services.html';
+          return;
+        }
+
+        // 0. AUTH VALIDATION
+        let supabaseClient = window.dalightSupabase || window.supabaseClient;
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        
+        if (!session) {
+          alert('Veuillez vous connecter pour confirmer votre réservation.');
+          window.location.href = './login.html';
+          return;
+        }
+
+        // Final validation
+        const acceptConditions = document.getElementById('accept-conditions')?.checked;
+        clearFieldError('accept-conditions', 'conditions-error');
+        if (!acceptConditions) {
+          showFieldError('accept-conditions', 'Tanpri aksepte kondisyon yo.', 'conditions-error');
+          return;
+        }
+
+        const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
+        document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('field-error'));
+        const oldPaymentError = document.getElementById('payment-method-error');
+        if (oldPaymentError) oldPaymentError.remove();
+
+        if (!paymentMethod) {
+          const paymentContainer = document.querySelector('.payment-methods');
+          if (paymentContainer) {
+            paymentContainer.querySelectorAll('.payment-method').forEach(el => el.classList.add('field-error'));
+            const msg = document.createElement('div');
+            msg.id = 'payment-method-error';
+            msg.className = 'error-text';
+            msg.textContent = 'Tanpri chwazi yon metòd peman.';
+            paymentContainer.insertAdjacentElement('afterend', msg);
+          }
+          return;
+        }
+
+        const proofFile = document.getElementById('payment-proof')?.files[0];
+        const uploadZone = document.getElementById('upload-zone');
+        if (uploadZone) uploadZone.classList.remove('field-error');
+        const oldProofError = document.getElementById('proof-error');
+        if (oldProofError) oldProofError.remove();
+
+        if (!proofFile) {
+          if (uploadZone) {
+            uploadZone.classList.add('field-error');
+            const msg = document.createElement('div');
+            msg.id = 'proof-error';
+            msg.className = 'error-text';
+            msg.textContent = 'Tanpri upload prèv peman an.';
+            uploadZone.insertAdjacentElement('afterend', msg);
+          }
+          return;
+        }
+
+        // Disable submit button and show loading
+        const submitBtn = document.getElementById('btn-submit');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Traitement...';
+          submitBtn.style.opacity = '0.8';
+          lucide.createIcons();
+        }
+
+        try {
+          console.log('🚀 Starting reservation submission...');
+          let supabaseClient = window.dalightSupabase || window.supabaseClient;
+          
+          if (!supabaseClient && window.supabase?.createClient) {
+            const supabaseUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co';
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA1OTY4MTU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U';
+            supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+          }
+
+          if (!supabaseClient) throw new Error('Supabase not connected');
+
+          // 1. UPLOAD PAYMENT PROOF
+          let proofUrl = null;
+          if (proofFile) {
+            console.log('📤 Uploading proof...', proofFile.name);
+            const fileExt = proofFile.name.split('.').pop();
+            const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+            const filePath = `proofs/${fileName}`;
+
+            const { data: uploadData, error: uploadError } = await supabaseClient.storage
+              .from('payment-proofs')
+              .upload(filePath, proofFile);
+
+            if (uploadError) {
+              console.error('❌ Upload error:', uploadError);
+              throw new Error('Erreur lors de l\'upload du reçu : ' + uploadError.message);
+            }
+
+            const { data: publicUrlData } = supabaseClient.storage
+              .from('payment-proofs')
+              .getPublicUrl(filePath);
+            
+            proofUrl = publicUrlData.publicUrl;
+            console.log('✅ Proof uploaded:', proofUrl);
+          }
+
+          // 2. GET USER
+          const { data: { user } } = await supabaseClient.auth.getUser();
+          const reservationNumber = 'DL' + Date.now().toString().slice(-8);
+
+          // 3. PREPARE RECORD
+          const reservationRecord = {
+            reservation_number: reservationNumber,
+            user_id: user?.id || null,
+            user_email: formData.email,
+            user_name: (formData.firstName || '') + ' ' + (formData.lastName || ''),
+            phone: formData.phone || null,
+            service: cartServices.map(s => s.name).join(', '),
+            services: cartServices,
+            date: formData.date,
+            time: formData.time,
+            notes: formData.notes || null,
+            payment_method: paymentMethod.value,
+            payment_proof_url: proofUrl,
+            deposit_amount: 1000,
+            location: 'Spa',
+            status: 'PENDING'
+          };
+
+          console.log('💾 Saving to Supabase:', reservationRecord);
+
+          // 4. INSERT INTO DB
+          const { data: insertData, error: insertError } = await supabaseClient
+            .from('reservations')
+            .insert([reservationRecord])
+            .select();
+
+          if (insertError) {
+            console.error('❌ Insert error:', insertError);
+            throw new Error('Erreur base de données : ' + insertError.message);
+          }
+
+          console.log('✅ Reservation saved!', insertData);
+
+          // 5. SUCCESS HANDLING
+          localStorage.removeItem('dalight:serviceCart');
+          localStorage.removeItem('dalight:cartServices');
+
+          // Update success details in the UI
+          document.getElementById('reservation-number').textContent = '#' + reservationNumber;
+          document.getElementById('success-date').textContent = formatLocalDateFR(formData.date, true);
+          document.getElementById('success-time').textContent = formData.time;
+
+          // Hide form and progress bar, show success message
+          document.getElementById('reservation-form').style.display = 'none';
+          document.querySelector('.steps-progress').style.display = 'none';
+          document.getElementById('success-message').style.display = 'block';
+          
+          // Scroll to top to see the message
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          
+          lucide.createIcons();
+          
+        } catch (error) {
+          console.error('❌ Submission failed:', error);
+          alert('Désolé, une erreur est survenue : ' + error.message);
+          
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i data-lucide="check-circle"></i> Réessayer la confirmation';
+            lucide.createIcons();
+          }
+        }
+      }
+
+      // Form submission
+      document.getElementById('reservation-form')?.addEventListener('submit', handleSubmit);
+    </script>
+  </body>
+</html>

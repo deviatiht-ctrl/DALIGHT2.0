@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
@@ -15,8 +15,8 @@
     />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="./css/style.css" />
-    <link rel="stylesheet" href="./css/responsive.css" />
+    <link rel="stylesheet" href="./css/style.css?v=1.0.1" />
+    <link rel="stylesheet" href="./css/responsive.css?v=1.0.1" />
     <!-- Three.js & GSAP for immersive animations -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -26,15 +26,20 @@
     <!-- IMMERSIVE MOBILE VIDEO HERO (full viewport, behind everything) -->
     <div class="hero-video-mobile" id="hero-video-mobile">
       <div class="hero-video-container">
-        <video 
-          src="./assets/video.MOV" 
-          autoplay 
-          muted 
-          loop 
-          playsinline 
+        <video
+          src="./assets/video.mp4"
+          autoplay
+          loop
+          playsinline
           preload="auto"
           id="hero-video"
+          muted="true"
         ></video>
+
+        <button class="video-sound-toggle" id="video-sound-toggle" aria-label="Activer le son">
+          <i data-lucide="volume-x"></i>
+        </button>
+
         <div class="hero-video-overlay"></div>
         <canvas id="hero-particles"></canvas>
       </div>
@@ -51,7 +56,7 @@
           </h1>
           <p class="immersive-subtitle" id="immersive-subtitle">Head Spa · Massages · Formations · Boutique</p>
           <div class="immersive-actions">
-            <a href="./pages/reservation.html" class="btn-immersive primary" id="immersive-cta"><i data-lucide="calendar-check"></i> Réserver maintenant</a>
+            <a href="./pages/services.html" class="btn-immersive primary" id="immersive-cta"><i data-lucide="shopping-cart"></i> Réserver maintenant</a>
             <a href="./pages/services.html" class="btn-immersive secondary"><i data-lucide="sparkles"></i> Nos Services</a>
             <a href="./pages/formation.html" class="btn-immersive secondary"><i data-lucide="graduation-cap"></i> DALIGHT School</a>
             <a href="./pages/shop.html" class="btn-immersive secondary"><i data-lucide="shopping-bag"></i> Boutique</a>
@@ -79,14 +84,15 @@
         </button>
         <div class="nav-links">
           <a href="./index.html" class="active">Accueil</a>
+          <a href="./pages/services.html">Réservation</a>
           <a href="./pages/services.html">Services</a>
           <a href="./pages/shop.html">Boutique</a>
-          <a href="./pages/reservation.html">Réservation</a>
           <a href="./pages/orders.html">Dossiers</a>
+          <a href="./pages/login.html"><i data-lucide="user" style="width:16px;height:16px;"></i> Connexion</a>
           <a href="./admin/dashboard.html" class="admin-link">Admin</a>
         </div>
         <div class="nav-cta">
-          <a class="btn" href="./pages/reservation.html">Réserver</a>
+          <a class="btn" href="./pages/services.html">Réserver</a>
         </div>
       </nav>
       <section class="hero reveal-on-scroll">
@@ -95,6 +101,14 @@
           <h1>Un univers dédié à votre éclat et votre bien-être.</h1>
 
           <div class="hero-service-cards">
+            <a class="hsc-card" href="./pages/services.html">
+              <span class="hsc-icon"><i data-lucide="calendar-check"></i></span>
+              <div class="hsc-text">
+                <strong>Prendre Rendez-vous</strong>
+                <small>Disponible au spa &amp; à domicile · Delmas 65</small>
+              </div>
+              <i data-lucide="chevron-right" class="hsc-arrow"></i>
+            </a>
             <a class="hsc-card" href="./pages/soins.html">
               <span class="hsc-icon"><i data-lucide="sparkles"></i></span>
               <div class="hsc-text">
@@ -116,14 +130,6 @@
               <div class="hsc-text">
                 <strong>Boutique &amp; Produits</strong>
                 <small>Cosmétiques, produits capillaires, accessoires beauté</small>
-              </div>
-              <i data-lucide="chevron-right" class="hsc-arrow"></i>
-            </a>
-            <a class="hsc-card" href="./pages/reservation.html">
-              <span class="hsc-icon"><i data-lucide="calendar-check"></i></span>
-              <div class="hsc-text">
-                <strong>Prendre Rendez-vous</strong>
-                <small>Disponible au spa &amp; à domicile · Delmas 65</small>
               </div>
               <i data-lucide="chevron-right" class="hsc-arrow"></i>
             </a>
@@ -218,7 +224,7 @@
             <p>Faustin Premier Durandise #10, Port-au-Prince, Haïti</p>
             <ul>
               <li>+509 4747-7221</li>
-              <li>Ouvert du lun-sam · 9h — 19h</li>
+              <li>Tous les jours sauf lundi · 7h — 17h</li>
             </ul>
           </article>
         </div>
@@ -325,8 +331,14 @@
       <a href="./pages/shop.html" data-page="shop">
         <i data-lucide="shopping-bag"></i>
       </a>
-      <a href="./pages/reservation.html" data-page="reservation">
+      <a href="./pages/orders.html" data-page="orders">
+        <i data-lucide="folder-check"></i>
+      </a>
+      <a href="./pages/services.html" data-page="reservation">
         <i data-lucide="calendar"></i>
+      </a>
+      <a href="./pages/login.html" data-page="login">
+        <i data-lucide="user"></i>
       </a>
     </nav>
 
@@ -353,8 +365,8 @@
       </div>
     </div>
 
-    <script type="module" src="./js/main.js"></script>
-    <script src="./js/pwa.js"></script>
+    <script type="module" src="./js/main.js?v=1.0.1"></script>
+    <script src="./js/pwa.js?v=1.0.1"></script>
     <script type="module">
       import { initChatWidget } from './js/chat-widget.js';
       document.addEventListener('DOMContentLoaded', () => {
@@ -496,6 +508,112 @@
       if (video) {
         video.addEventListener('loadedmetadata', () => {
           video.play().catch(e => console.log('Video autoplay:', e));
+        });
+      }
+
+      // Sound toggle functionality - click anywhere on video to toggle sound
+      const videoContainer = document.querySelector('.hero-video-container');
+      let soundIndicator = null;
+
+      // Create floating sound indicator
+      function showSoundIndicator(muted) {
+        // Remove existing indicator
+        if (soundIndicator) {
+          soundIndicator.remove();
+          soundIndicator = null;
+        }
+
+        // Create new indicator
+        soundIndicator = document.createElement('div');
+        soundIndicator.className = 'sound-indicator';
+        soundIndicator.innerHTML = muted
+          ? '<i data-lucide="volume-x"></i><span>Son coupé</span>'
+          : '<i data-lucide="volume-2"></i><span>Son activé</span>';
+        soundIndicator.style.cssText = `
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: 20;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(10px);
+          color: #fff;
+          padding: 1rem 1.5rem;
+          border-radius: 50px;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          font-size: 0.9rem;
+          font-weight: 500;
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        `;
+        videoContainer.appendChild(soundIndicator);
+        if (window.lucide) lucide.createIcons();
+
+        // Fade in
+        requestAnimationFrame(() => {
+          soundIndicator.style.opacity = '1';
+        });
+
+        // Fade out and remove after 1.5 seconds
+        setTimeout(() => {
+          if (soundIndicator) {
+            soundIndicator.style.opacity = '0';
+            setTimeout(() => {
+              if (soundIndicator) {
+                soundIndicator.remove();
+                soundIndicator = null;
+              }
+            }, 300);
+          }
+        }, 1500);
+      }
+
+      function toggleSound(unmuteOnly = false) {
+        if (video.muted) {
+          video.muted = false;
+          video.volume = 1;
+          if (video.paused) video.play().catch(e => console.log('Play error:', e));
+          showSoundIndicator(false);
+          if (soundToggle) {
+            soundToggle.innerHTML = '<i data-lucide="volume-2"></i>';
+            soundToggle.setAttribute('aria-label', 'Désactiver le son');
+          }
+          if (window.lucide) lucide.createIcons();
+        } else if (!unmuteOnly) {
+          // Only mute if we are NOT in unmuteOnly mode (i.e., clicking the actual button)
+          video.muted = true;
+          video.volume = 0;
+          showSoundIndicator(true);
+          if (soundToggle) {
+            soundToggle.innerHTML = '<i data-lucide="volume-x"></i>';
+            soundToggle.setAttribute('aria-label', 'Activer le son');
+          }
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      const soundToggle = document.getElementById('video-sound-toggle');
+      
+      if (videoContainer && video) {
+        // Use pointerdown to trigger as soon as the user touches the screen (unintentional unmute)
+        // We only UNMUTE here, we don't mute, so scrolling won't toggle it off.
+        videoContainer.addEventListener('pointerdown', (e) => {
+          if (e.target.closest('a') || e.target.closest('button')) return;
+          if (video.muted) {
+            toggleSound(true); // unmuteOnly = true
+          }
+        }, { passive: true });
+
+        videoContainer.style.cursor = 'pointer';
+      }
+
+      if (soundToggle && video) {
+        soundToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleSound(false); // Normal toggle for the button
         });
       }
     })();

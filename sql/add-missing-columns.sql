@@ -1,18 +1,57 @@
--- ADD MISSING COLUMN TO EXISTING PRODUCTS TABLE
--- Run this ONLY if products table exists but is missing category_id column
+-- ADD ALL MISSING COLUMNS TO RESERVATIONS TABLE
+-- This adds all columns needed for the new reservation system
 
--- ── Add payment columns to reservations ──
+-- ── Add all columns to reservations ──
+
+-- reservation_number: unique identifier like DL12345678
 DO $$
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'reservations' AND column_name = 'pay_timing'
+    WHERE table_name = 'reservations' AND column_name = 'reservation_number'
   ) THEN
-    ALTER TABLE reservations ADD COLUMN pay_timing TEXT DEFAULT 'onsite';
-    RAISE NOTICE 'Added pay_timing to reservations';
+    ALTER TABLE reservations ADD COLUMN reservation_number TEXT UNIQUE;
+    RAISE NOTICE 'Added reservation_number to reservations';
   END IF;
 END $$;
 
+-- user_name: full name of client
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'reservations' AND column_name = 'user_name'
+  ) THEN
+    ALTER TABLE reservations ADD COLUMN user_name TEXT;
+    RAISE NOTICE 'Added user_name to reservations';
+  END IF;
+END $$;
+
+-- phone: client phone number
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'reservations' AND column_name = 'phone'
+  ) THEN
+    ALTER TABLE reservations ADD COLUMN phone TEXT;
+    RAISE NOTICE 'Added phone to reservations';
+  END IF;
+END $$;
+
+-- services: JSON array of cart services
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'reservations' AND column_name = 'services'
+  ) THEN
+    ALTER TABLE reservations ADD COLUMN services JSONB;
+    RAISE NOTICE 'Added services (JSONB) to reservations';
+  END IF;
+END $$;
+
+-- payment_method: moncash, natcash, bank
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -21,6 +60,42 @@ BEGIN
   ) THEN
     ALTER TABLE reservations ADD COLUMN payment_method TEXT;
     RAISE NOTICE 'Added payment_method to reservations';
+  END IF;
+END $$;
+
+-- deposit_amount: fixed 1000 HTG deposit
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'reservations' AND column_name = 'deposit_amount'
+  ) THEN
+    ALTER TABLE reservations ADD COLUMN deposit_amount INTEGER DEFAULT 1000;
+    RAISE NOTICE 'Added deposit_amount to reservations';
+  END IF;
+END $$;
+
+-- payment_proof_url: URL to uploaded screenshot
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'reservations' AND column_name = 'payment_proof_url'
+  ) THEN
+    ALTER TABLE reservations ADD COLUMN payment_proof_url TEXT;
+    RAISE NOTICE 'Added payment_proof_url to reservations';
+  END IF;
+END $$;
+
+-- updated_at: timestamp for last update
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'reservations' AND column_name = 'updated_at'
+  ) THEN
+    ALTER TABLE reservations ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+    RAISE NOTICE 'Added updated_at to reservations';
   END IF;
 END $$;
 

@@ -462,7 +462,11 @@ window.updateStatus = async function(id, status) {
     renderReservations();
     window.adminCore.updatePendingBadge();
   } catch (err) {
-    window.adminCore.showToast('Erreur lors de la mise à jour', 'error');
+    const details = err?.message || err?.details || err?.hint || '';
+    window.adminCore.showToast(
+      details ? `Erreur lors de la mise à jour: ${details}` : 'Erreur lors de la mise à jour',
+      'error'
+    );
   }
 };
 

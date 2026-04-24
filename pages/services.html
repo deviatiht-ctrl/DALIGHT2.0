@@ -1,136 +1,275 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nos Services — DALIGHT</title>
-    <link rel="icon" href="../assets/images/logodaligth.jpg" type="image/jpeg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="../css/style.css" />
-    <link rel="stylesheet" href="../css/responsive.css" />
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
-    <script type="module" src="../js/main.js"></script>
-    <script type="module" src="../js/chat-widget.js" defer></script>
-  </head>
-  <body data-page="services">
-    <header class="site-header internal">
-      <nav class="top-nav">
-        <a class="brand" href="../index.html">
-          <img class="brand-logo" src="../assets/images/logodaligth.jpg" alt="DALIGHT" />
-          <div>
-            <strong>DALIGHT</strong>
-            <small>L'Art du Bien-Être</small>
-          </div>
-        </a>
-        <button class="nav-toggle" aria-label="Ouvrir la navigation">
-          <span></span>
-          <span></span>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nos Services — DALIGHT</title>
+  <link rel="icon" href="../assets/images/logodaligth.jpg" type="image/jpeg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="../css/style.css?v=1.0.1" />
+  <link rel="stylesheet" href="../css/responsive.css?v=1.0.1" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
+  <script type="module" src="../js/main.js"></script>
+  <script type="module" src="../js/chat-widget.js" defer></script>
+</head>
+
+<body data-page="services">
+  <header class="site-header internal">
+    <nav class="top-nav">
+      <a class="brand" href="../index.html">
+        <img class="brand-logo" src="../assets/images/logodaligth.jpg" alt="DALIGHT" />
+        <div>
+          <strong>DALIGHT</strong>
+          <small>L'Art du Bien-Être</small>
+        </div>
+      </a>
+      <button class="nav-toggle" aria-label="Ouvrir la navigation">
+        <span></span>
+        <span></span>
+      </button>
+      <div class="nav-links">
+        <a href="../index.html">Accueil</a>
+        <a href="./about.html">À propos</a>
+        <a href="./services.html" class="active">Services</a>
+        <a href="./shop.html">Boutique</a>
+        <a href="./services.html">Réservation</a>
+        <a href="./orders.html">Dossiers</a>
+        <a href="../admin/dashboard.html" class="admin-link">Admin</a>
+      </div>
+      <div class="nav-cta">
+        <button class="cart-toggle" id="cart-toggle" aria-label="Panier">
+          <i data-lucide="shopping-cart"></i>
+          <span class="cart-badge" id="cart-badge">0</span>
         </button>
-        <div class="nav-links">
-          <a href="../index.html">Accueil</a>
-          <a href="./about.html">À propos</a>
-          <a href="./services.html" class="active">Services</a>
-          <a href="./shop.html">Boutique</a>
-          <a href="./reservation.html">Réservation</a>
-          <a href="./orders.html">Dossiers</a>
-          <a href="../admin/dashboard.html" class="admin-link">Admin</a>
-        </div>
-        <div class="nav-cta">
-          <a class="btn" href="./reservation.html">Réserver</a>
-        </div>
-      </nav>
-    </header>
-
-    <main class="page-shell fade-in">
-      <section>
-        <p class="kicker">Carte des Rituels</p>
-        <h1>L'art de la renaissance par le soin du cuir chevelu.</h1>
-        <p class="page-subtitle">
-          Chaque rituel DALIGHT inclut un diagnostic capillaire, une immersion sensorielle aux huiles précieuses 
-          et un massage crânien profond pour une relaxation absolue.
-        </p>
-        <div class="service-grid" id="services-grid">
-          <!-- Loaded dynamically from Supabase -->
-          <div style="grid-column:1/-1;text-align:center;padding:2rem;color:rgba(74,55,40,.6);">Chargement des rituels…</div>
-        </div>
-      </section>
-
-      <section class="section tinted section-spacing-lg">
-        <div class="section-heading">
-          <p class="kicker">L'Immersion DALIGHT</p>
-          <h2>Célébrations &amp; Bien-être Profond.</h2>
-          <p>Des attentions pensées pour sublimer vos moments précieux et vos cures de revitalisation.</p>
-        </div>
-        <div class="grid two">
-          <article class="card">
-            <header class="service-tier">
-              <h3>Love &amp; Zen Package</h3>
-              <p>Head Spa Signature + bulles + douceur sucrée</p>
-              <span class="price">12 000 HTG · $100</span>
-              <p class="tier-option">Option Bouquet Zen · 14 000 HTG · $115</p>
-            </header>
-            <p>Une parenthèse enchantée dans une atmosphère florale et tamisée pour les amoureux de la sérénité.</p>
-          </article>
-          <article class="card">
-            <header class="service-tier">
-              <h3>Cure Vitalité Intense</h3>
-              <p>Pack 6 rituels · 50 000 HTG · $420</p>
-              <p>Pack 10 rituels · 80 000 HTG · $670</p>
-            </header>
-            <p>Le summum du soin capillaire pour une chevelure transformée et une gestion durable du stress.</p>
-          </article>
-        </div>
-        <p class="note">NB : Les tarifs sont indiqués en HTG (Taxes Inclues). Équivalent USD pour information uniquement.</p>
-      </section>
-
-      <section class="section tinted section-spacing-lg" style="text-align:center;">
-        <p class="kicker">Chaque rituel inclut</p>
-        <div class="inclus-grid">
-          <span>🌿 Vapeur d'herbes</span>
-          <span>🔬 Diagnostic capillaire</span>
-          <span>🍵 Thé à la lavande</span>
-          <span>📋 Plan bien-être</span>
-          <span>💬 WhatsApp dédié</span>
-          <span>🚗 Service à domicile</span>
-        </div>
-        <div class="section-actions" style="margin-top:1.5rem;">
-          <a class="btn" href="./reservation.html">Réserver un rituel</a>
-        </div>
-      </section>
-    </main>
-
-    <footer class="site-footer">
-      <p>© <span id="year"></span> DALIGHT. Tous droits réservés.</p>
-      <div class="footer-links">
-        <a href="./login.html">Espace client</a>
-        <a href="./services.html">Nos Services</a>
-        <a href="mailto:dalightbeauty15mai@gmail.com">dalightbeauty15mai@gmail.com</a>
+        <a class="btn" href="./services.html">Réserver</a>
       </div>
-      <div class="footer-credit">
-        <span>Conçu avec soin par <a href="https://cvisual.netlify.app/" target="_blank" rel="noopener" class="cvisual-link">Cvisual</a></span>
-      </div>
-    </footer>
-
-    <nav class="mobile-nav">
-      <a href="../index.html" data-page="home">
-        <i data-lucide="home"></i>
-      </a>
-      <a href="./services.html" class="active" data-page="services">
-        <i data-lucide="sparkles"></i>
-      </a>
-      <a href="./reservation.html" data-page="reservation">
-        <i data-lucide="calendar"></i>
-      </a>
-      <a href="./shop.html" data-page="shop">
-        <i data-lucide="shopping-bag"></i>
-      </a>
     </nav>
+  </header>
+
+  <main class="page-shell fade-in">
+    <section>
+      <p class="kicker">Carte des Rituels</p>
+      <h1>L'art de la renaissance par le soin du cuir chevelu.</h1>
+      <p class="page-subtitle">
+        Chaque rituel DALIGHT inclut un diagnostic capillaire, une immersion sensorielle aux huiles précieuses
+        et un massage crânien profond pour une relaxation absolue.
+      </p>
+      <!-- Search & Filter -->
+      <div class="services-controls">
+        <div class="search-box">
+          <i data-lucide="search"></i>
+          <input type="text" id="service-search" placeholder="Rechercher un service..." />
+        </div>
+        <div class="filter-buttons">
+          <button class="filter-btn active" data-filter="all">Tous</button>
+          <button class="filter-btn" data-filter="head-spa">Head Spa</button>
+          <button class="filter-btn" data-filter="rituel">Rituels</button>
+          <button class="filter-btn" data-filter="duo">Duo</button>
+          <button class="filter-btn" data-filter="cure">Cures</button>
+        </div>
+      </div>
+
+      <div class="service-grid" id="services-grid">
+        <!-- Loaded dynamically from Supabase -->
+        <div style="grid-column:1/-1;text-align:center;padding:2rem;color:rgba(74,55,40,.6);">Chargement des rituels…
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+           ABONNEMENTS MENSUELS
+      ═══════════════════════════════════════════ -->
+    <section class="section tinted section-spacing-lg">
+      <div class="section-heading">
+        <div class="svc-category-badge"><i data-lucide="calendar-range"></i> Abonnements</div>
+        <h2>Service d'Abonnement Head Spa</h2>
+        <p>4 séances par mois · 1 fois par semaine · Paiement mensuel à l'avance</p>
+      </div>
+
+      <div class="packages-grid">
+
+        <!-- Silver -->
+        <div class="package-card silver">
+          <div class="package-card__header">
+            <span class="package-badge">Basic Silver</span>
+            <h3>Silver Package</h3>
+            <span class="package-price">15 000</span>
+            <span class="package-subtitle">Gourdes · 4 séances / mois</span>
+          </div>
+          <div class="package-card__body">
+            <ul>
+              <li>Diagnostic cuir chevelu</li>
+              <li>Lavage adapté selon cuir chevelu</li>
+              <li>Massage crânien à la nuque</li>
+              <li>Masque capillaires</li>
+              <li>Traitement adapté</li>
+              <li>Coiffure protectrice simple</li>
+            </ul>
+            <div class="pkg-length-table">
+              <p class="pkg-length-title">Tarif selon longueur de cheveux</p>
+              <div class="pkg-length-row included">
+                <span>Extra Court &amp; Court</span>
+                <strong>Inclus</strong>
+              </div>
+              <div class="pkg-length-row extra">
+                <span>Médium · Large · Extra Large</span>
+                <strong>+ 5 000 Gdes</strong>
+              </div>
+            </div>
+          </div>
+          <div class="package-card__footer">
+            <button class="btn secondary add-to-cart-package" style="width:100%;text-align:center;"
+              data-package="Silver Package" data-price="15000" data-price-usd="125">
+              <i data-lucide="plus"></i> Ajouter au panier
+            </button>
+          </div>
+        </div>
+
+        <!-- Gold -->
+        <div class="package-card gold">
+          <div class="package-card__header">
+            <span class="package-badge">✦ Golden Luxury</span>
+            <h3>Golden Luxury Package</h3>
+            <span class="package-price">20 000</span>
+            <span class="package-subtitle">Gourdes · 4 séances / mois</span>
+          </div>
+          <div class="package-card__body">
+            <ul>
+              <li>Diagnostic cuir chevelu</li>
+              <li>Lavage traitant profond selon cuir chevelu</li>
+              <li>Massage crânien à la nuque</li>
+              <li>Masque capillaires</li>
+              <li>Traitement adapté</li>
+              <li>Fusion de plantes naturels</li>
+              <li>Coiffure pour une semaine</li>
+            </ul>
+            <div class="pkg-length-table">
+              <p class="pkg-length-title">Tarif selon longueur de cheveux</p>
+              <div class="pkg-length-row included">
+                <span>Extra Court &amp; Court</span>
+                <strong>Inclus</strong>
+              </div>
+              <div class="pkg-length-row extra gold">
+                <span>Médium · Large · Extra Large</span>
+                <strong>+ 7 000 Gdes</strong>
+              </div>
+            </div>
+          </div>
+          <div class="package-card__footer">
+            <button class="btn add-to-cart-package" style="width:100%;text-align:center;"
+              data-package="Golden Luxury Package" data-price="20000" data-price-usd="167">
+              <i data-lucide="plus"></i> Ajouter au panier
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Règlement -->
+      <div style="margin-top:2.5rem;">
+        <h3
+          style="font-size:1rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--marron-700);margin-bottom:1rem;">
+          Règlement abonnement</h3>
+        <div class="reglement-grid">
+          <div class="reglement-item">
+            <div class="reglement-icon"><i data-lucide="calendar-check" style="width:16px;height:16px;"></i></div>
+            <p>Abonnement valable <strong>30 jours</strong></p>
+          </div>
+          <div class="reglement-item">
+            <div class="reglement-icon"><i data-lucide="credit-card" style="width:16px;height:16px;"></i></div>
+            <p>Paiement à <strong>l'avance obligatoire</strong></p>
+          </div>
+          <div class="reglement-item">
+            <div class="reglement-icon"><i data-lucide="x-circle" style="width:16px;height:16px;"></i></div>
+            <p>Sessions non utilisées = <strong>perdues</strong></p>
+          </div>
+          <div class="reglement-item">
+            <div class="reglement-icon"><i data-lucide="clock" style="width:16px;height:16px;"></i></div>
+            <p>Retard = <strong>temps réduit</strong></p>
+          </div>
+          <div class="reglement-item">
+            <div class="reglement-icon"><i data-lucide="bell-off" style="width:16px;height:16px;"></i></div>
+            <p>Annulation <strong>24h avant</strong> requise</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+  </main>
+
+  <footer class="site-footer">
+    <p>© <span id="year"></span> DALIGHT. Tous droits réservés.</p>
+    <div class="footer-links">
+      <a href="./login.html">Espace client</a>
+      <a href="./services.html">Nos Services</a>
+      <a href="mailto:dalightbeauty15mai@gmail.com">dalightbeauty15mai@gmail.com</a>
+    </div>
+    <div class="footer-credit">
+      <span>Conçu avec soin par <a href="https://cvisual.netlify.app/" target="_blank" rel="noopener"
+          class="cvisual-link">Cvisual</a></span>
+    </div>
+  </footer>
+
+  <nav class="mobile-nav">
+    <a href="../index.html" data-page="home">
+      <i data-lucide="home"></i>
+    </a>
+    <a href="./services.html" class="active" data-page="services">
+      <i data-lucide="sparkles"></i>
+    </a>
+    <a href="./shop.html" data-page="shop">
+      <i data-lucide="shopping-bag"></i>
+    </a>
+    <a href="./orders.html" data-page="orders">
+      <i data-lucide="folder-check"></i>
+    </a>
+    <a href="./services.html" data-page="reservation">
+      <i data-lucide="calendar"></i>
+    </a>
+    <a href="./login.html" data-page="login">
+      <i data-lucide="user"></i>
+    </a>
+  </nav>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Cart Sidebar -->
+    <div class="cart-overlay" id="cart-overlay"></div>
+    <aside class="cart-sidebar" id="cart-sidebar">
+      <div class="cart-header">
+        <h3><i data-lucide="shopping-cart"></i> Votre Panier</h3>
+        <button class="cart-close" id="cart-close" aria-label="Fermer">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="cart-body" id="cart-body">
+        <div class="cart-empty">
+          <i data-lucide="shopping-bag"></i>
+          <p>Votre panier est vide</p>
+          <span>Ajoutez des services pour commencer</span>
+        </div>
+      </div>
+      <div class="cart-footer" id="cart-footer" style="display:none;">
+        <div class="cart-total">
+          <span>Total:</span>
+          <strong id="cart-total-price">0 HTG</strong>
+        </div>
+        <button class="btn btn-primary btn-block" id="cart-checkout">
+          Finaliser la réservation <i data-lucide="arrow-right"></i>
+        </button>
+        <button class="btn btn-ghost btn-sm btn-block" id="cart-clear">
+          Vider le panier
+        </button>
+      </div>
+    </aside>
 
     <!-- Chat Widget -->
     <div class="chat-widget" id="chat-widget">
@@ -155,7 +294,8 @@
       </div>
     </div>
 
-    <script type="module" src="../js/main.js"></script>
+    <script type="module" src="../js/main.js?v=1.0.1"></script>
+    <script src="../js/pwa.js?v=1.0.1"></script>
     <script type="module">
       import { initChatWidget } from '../js/chat-widget.js';
       import { getSupabase } from '../js/main.js';
@@ -169,27 +309,347 @@
         { name: 'Rituel Renaissance 4', description: 'Cure de 4 rituels personnalisés pour une chevelure éclatante et un esprit apaisé.', duration: '4 rituels', price_usd: 300, price_htg: 35000 },
       ];
 
+      // ============================================
+      // TOAST NOTIFICATIONS
+      // ============================================
+      function showToast(type, title, message, duration = 4000) {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+
+        const icons = {
+          success: 'check-circle',
+          error: 'alert-circle',
+          info: 'info'
+        };
+
+        toast.innerHTML = `
+          <div class="toast-icon ${type}">
+            <i data-lucide="${icons[type] || 'info'}"></i>
+          </div>
+          <div class="toast-content">
+            <div class="toast-title">${title}</div>
+            <div class="toast-message">${message}</div>
+          </div>
+          <button class="toast-close" onclick="this.parentElement.remove()">
+            <i data-lucide="x"></i>
+          </button>
+        `;
+
+        container.appendChild(toast);
+        if (window.lucide) lucide.createIcons();
+
+        // Auto remove after duration
+        setTimeout(() => {
+          toast.classList.add('hiding');
+          setTimeout(() => toast.remove(), 300);
+        }, duration);
+      }
+
+      // ============================================
+      // CART SYSTEM
+      // ============================================
+      const CART_KEY = 'dalight:serviceCart';
+      let cart = [];
+
+      function loadCart() {
+        try {
+          const saved = localStorage.getItem(CART_KEY);
+          cart = saved ? JSON.parse(saved) : [];
+        } catch (e) {
+          cart = [];
+        }
+        updateCartUI();
+      }
+
+      function saveCart() {
+        localStorage.setItem(CART_KEY, JSON.stringify(cart));
+        updateCartUI();
+      }
+
+      function addToCart(service) {
+        const exists = cart.find(item => item.name === service.name);
+        if (exists) {
+          showToast('error', 'Déjà dans le panier', 'Ce service est déjà ajouté. Ouvrez le panier pour finaliser.');
+          openCart();
+          return;
+        }
+        cart.push({ ...service, id: Date.now().toString() });
+        saveCart();
+        showToast('success', 'Ajouté au panier', `${service.name} a été ajouté avec succès.`);
+        openCart();
+      }
+
+      function removeFromCart(id) {
+        cart = cart.filter(item => item.id !== id);
+        saveCart();
+        renderCartItems();
+      }
+
+      function clearCart() {
+        if (confirm('Vider le panier ?')) {
+          cart = [];
+          saveCart();
+          renderCartItems();
+        }
+      }
+
+      function getCartTotal() {
+        return cart.reduce((sum, item) => sum + (Number(item.price_htg) || 0), 0);
+      }
+
+      function updateCartUI() {
+        const badge = document.getElementById('cart-badge');
+        if (badge) {
+          badge.textContent = cart.length;
+          badge.style.display = cart.length > 0 ? 'flex' : 'none';
+        }
+        // Update mobile cart badge
+        const mobileBadge = document.getElementById('mobile-cart-badge');
+        if (mobileBadge) {
+          mobileBadge.textContent = cart.length;
+          mobileBadge.style.display = cart.length > 0 ? 'flex' : 'none';
+        }
+        renderCartItems();
+      }
+
+      function renderCartItems() {
+        const body = document.getElementById('cart-body');
+        const footer = document.getElementById('cart-footer');
+        const totalEl = document.getElementById('cart-total-price');
+
+        if (!body) return;
+
+        if (cart.length === 0) {
+          body.innerHTML = `
+            <div class="cart-empty">
+              <i data-lucide="shopping-bag"></i>
+              <p>Votre panier est vide</p>
+              <span>Ajoutez des services pour commencer</span>
+            </div>
+          `;
+          if (footer) footer.style.display = 'none';
+        } else {
+          body.innerHTML = cart.map(item => `
+            <div class="cart-item">
+              <div class="cart-item-info">
+                <h4>${esc(item.name)}</h4>
+                <p>${esc(item.duration || '')}</p>
+                <div class="cart-item-price">${Number(item.price_htg).toLocaleString()} HTG</div>
+              </div>
+              <button class="cart-item-remove" data-cart-id="${item.id}" aria-label="Retirer">
+                <i data-lucide="trash-2"></i>
+              </button>
+            </div>
+          `).join('');
+
+          // Wire remove buttons
+          body.querySelectorAll('.cart-item-remove').forEach(btn => {
+            btn.addEventListener('click', () => removeFromCart(btn.dataset.cartId));
+          });
+
+          if (footer) footer.style.display = 'block';
+          if (totalEl) totalEl.textContent = getCartTotal().toLocaleString() + ' HTG';
+        }
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function openCart() {
+        document.getElementById('cart-overlay')?.classList.add('active');
+        document.getElementById('cart-sidebar')?.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeCart() {
+        document.getElementById('cart-overlay')?.classList.remove('active');
+        document.getElementById('cart-sidebar')?.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+
+      function checkout() {
+        if (cart.length === 0) {
+          alert('Votre panier est vide !');
+          return;
+        }
+        // Save cart items and redirect to new reservation system
+        localStorage.setItem('dalight:cartServices', JSON.stringify(cart));
+        window.location.href = './reservation-v2.html';
+      }
+
+      // Cart event listeners
+      function initCart() {
+        document.getElementById('cart-toggle')?.addEventListener('click', openCart);
+        document.getElementById('cart-close')?.addEventListener('click', closeCart);
+        document.getElementById('cart-overlay')?.addEventListener('click', closeCart);
+
+        // Mobile cart toggle
+        const mobileCartToggle = document.getElementById('mobile-cart-toggle');
+        if (mobileCartToggle) {
+          mobileCartToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openCart();
+          });
+        }
+
+        // Package subscription buttons
+        document.querySelectorAll('.add-to-cart-package').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const packageName = btn.dataset.package;
+            const priceHtg = btn.dataset.price;
+            const priceUsd = btn.dataset.priceUsd;
+
+            const exists = cart.find(item => item.name === packageName);
+            if (exists) {
+              showToast('error', 'Déjà dans le panier', `${packageName} est déjà ajouté.`);
+              openCart();
+              return;
+            }
+
+            cart.push({
+              id: Date.now().toString(),
+              name: packageName,
+              description: 'Abonnement mensuel - 4 séances par mois',
+              duration: '1 mois (4 séances)',
+              price_htg: priceHtg,
+              price_usd: priceUsd,
+              isPackage: true
+            });
+            saveCart();
+            showToast('success', 'Abonnement ajouté', `${packageName} a été ajouté au panier.`);
+            openCart();
+
+            // Visual feedback
+            btn.classList.add('added');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="check"></i> <span>Ajouté !</span>';
+            if (window.lucide) lucide.createIcons();
+            setTimeout(() => {
+              btn.classList.remove('added');
+              btn.innerHTML = originalHtml;
+              if (window.lucide) lucide.createIcons();
+            }, 1500);
+          });
+        });
+        document.getElementById('cart-clear')?.addEventListener('click', clearCart);
+        document.getElementById('cart-checkout')?.addEventListener('click', checkout);
+
+        // Close on escape key
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') closeCart();
+        });
+      }
+
+      // ============================================
+      // SERVICES GRID
+      // ============================================
+      let allServices = [];
+      let currentFilter = 'all';
+      let searchQuery = '';
+
       function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+      function getCategoryFromService(service) {
+        const name = (service.name || '').toLowerCase();
+        if (name.includes('duo')) return 'duo';
+        if (name.includes('cure') || name.includes('pack') || name.includes('renaissance')) return 'cure';
+        if (name.includes('head spa')) return 'head-spa';
+        if (name.includes('rituel')) return 'rituel';
+        return 'other';
+      }
+
+      function filterAndRenderServices() {
+        let filtered = allServices;
+
+        // Apply category filter
+        if (currentFilter !== 'all') {
+          filtered = filtered.filter(s => getCategoryFromService(s) === currentFilter);
+        }
+
+        // Apply search filter
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase();
+          filtered = filtered.filter(s =>
+            (s.name || '').toLowerCase().includes(q) ||
+            (s.description || '').toLowerCase().includes(q)
+          );
+        }
+
+        renderGrid(filtered);
+      }
 
       function renderGrid(services) {
         const grid = document.getElementById('services-grid');
         if (!grid) return;
+
+        if (services.length === 0) {
+          grid.innerHTML = `
+            <div style="grid-column:1/-1;text-align:center;padding:3rem;color:rgba(74,55,40,.6);">
+              <i data-lucide="search-x" style="width:48px;height:48px;margin-bottom:1rem;opacity:0.5;"></i>
+              <p>Aucun service ne correspond à votre recherche</p>
+            </div>
+          `;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
         grid.innerHTML = services.map(s => `
-          <article class="service-tile">
+          <article class="service-tile" data-category="${getCategoryFromService(s)}">
             <header>
               <h3>${esc(s.name)}</h3>
               <span class="price">${Number(s.price_htg).toLocaleString()} HTG · $${Number(s.price_usd)}</span>
             </header>
             <p>${esc(s.description || '')} ${s.duration ? '(' + esc(s.duration) + ')' : ''}</p>
-            <button class="btn secondary" data-service="${esc(s.name)}">Réserver</button>
+            <button class="add-to-cart" data-service-name="${esc(s.name)}" data-service-desc="${esc(s.description || '')}" data-service-duration="${esc(s.duration || '')}" data-service-price-htg="${s.price_htg}" data-service-price-usd="${s.price_usd}">
+              <i data-lucide="plus"></i> Ajouter au panier
+            </button>
           </article>
         `).join('');
 
-        // Wire reserve buttons
-        grid.querySelectorAll('[data-service]').forEach(btn => {
+        // Wire add to cart buttons
+        grid.querySelectorAll('.add-to-cart').forEach(btn => {
           btn.addEventListener('click', () => {
-            localStorage.setItem('dalight:selectedRitual', btn.dataset.service);
-            window.location.href = './reservation.html';
+            const service = {
+              name: btn.dataset.serviceName,
+              description: btn.dataset.serviceDesc,
+              duration: btn.dataset.serviceDuration,
+              price_htg: btn.dataset.servicePriceHtg,
+              price_usd: btn.dataset.servicePriceUsd
+            };
+            addToCart(service);
+            // Visual feedback
+            btn.classList.add('added');
+            btn.innerHTML = '<i data-lucide="check"></i> <span>Ajouté !</span>';
+            if (window.lucide) lucide.createIcons();
+            setTimeout(() => {
+              btn.classList.remove('added');
+              btn.innerHTML = '<i data-lucide="plus"></i> <span>Ajouter au panier</span>';
+              if (window.lucide) lucide.createIcons();
+            }, 1500);
+          });
+        });
+      }
+
+      function initSearchAndFilter() {
+        const searchInput = document.getElementById('service-search');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+
+        // Search functionality
+        searchInput?.addEventListener('input', (e) => {
+          searchQuery = e.target.value;
+          filterAndRenderServices();
+        });
+
+        // Filter functionality
+        filterBtns.forEach(btn => {
+          btn.addEventListener('click', () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilter = btn.dataset.filter;
+            filterAndRenderServices();
           });
         });
       }
@@ -212,7 +672,9 @@
               .order('sort_order');
 
             if (!error && data && data.length > 0) {
-              renderGrid(data);
+              allServices = data;
+              initSearchAndFilter();
+              filterAndRenderServices();
               return;
             }
           } catch (e) {
@@ -220,14 +682,19 @@
           }
         }
 
-        renderGrid(FALLBACK_SERVICES);
+        allServices = FALLBACK_SERVICES;
+        initSearchAndFilter();
+        filterAndRenderServices();
       }
 
       document.addEventListener('DOMContentLoaded', () => {
         if (window.lucide) lucide.createIcons();
         initChatWidget();
+        loadCart();
+        initCart();
         loadServices();
       });
     </script>
-  </body>
+</body>
+
 </html>

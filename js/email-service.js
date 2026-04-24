@@ -765,7 +765,7 @@ function buildStatusUpdateEmailHTML(data, newStatus) {
             <div class="info-box">
               <strong>💡 Faire une nouvelle réservation:</strong>
               <p style="margin: 10px 0 0 0; color: #666;">Vous pouvez facilement faire une nouvelle réservation en visitant notre site web.</p>
-              <a href="https://dalight-headspa.com/pages/reservation.html" class="cta-button">Réserver Maintenant</a>
+              <a href="https://dalight-headspa.com/pages/services.html" class="cta-button">Réserver Maintenant</a>
             </div>
             ` : ''}
 

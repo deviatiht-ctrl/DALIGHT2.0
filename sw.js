@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dalight-spa-v1';
+const CACHE_NAME = 'dalight-spa-v2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -17,6 +17,9 @@ const urlsToCache = [
 
 // Install Service Worker
 self.addEventListener('install', (event) => {
+  // Force the waiting service worker to become the active service worker
+  self.skipWaiting();
+  
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
@@ -25,48 +28,63 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Fetch event - Network First strategy for API calls
+// Activate event - clean up old caches
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    Promise.all([
+      // Claim clients immediately
+      self.clients.claim(),
+      // Remove old caches
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== CACHE_NAME) {
+              console.log('[SW] Deleting old cache:', cacheName);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      })
+    ])
+  );
+});
+
+// Fetch event
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
-  // NEVER cache Supabase API calls - always use network
+  // 1. NEVER cache Supabase API calls
   if (url.hostname.includes('supabase.co')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // 2. Network-First strategy for HTML and JS files to ensure latest version
+  if (event.request.mode === 'navigate' || 
+      event.request.url.endsWith('.html') || 
+      event.request.url.endsWith('.js')) {
     event.respondWith(
-      fetch(event.request).catch((error) => {
-        console.error('[SW] Supabase request failed:', error);
-        return new Response(
-          JSON.stringify({ error: 'Network request failed' }),
-          { status: 503, headers: { 'Content-Type': 'application/json' } }
-        );
-      })
+      fetch(event.request)
+        .then((response) => {
+          // Update cache with new version
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          return response;
+        })
+        .catch(() => caches.match(event.request)) // Fallback to cache if offline
     );
     return;
   }
   
-  // For other requests, try cache first then network
+  // 3. Cache-First for assets (images, fonts, etc.)
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Return cached version or fetch from network
-        return response || fetch(event.request).catch((error) => {
-          console.error('[SW] Fetch failed:', error);
-          return new Response('Offline', { status: 503 });
+        return response || fetch(event.request).then((networkResponse) => {
+          const copy = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          return networkResponse;
         });
       })
-  );
-});
-
-// Activate event
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
   );
 });

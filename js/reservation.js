@@ -3,7 +3,8 @@ import { sendReservationEmail } from './email-service.js';
 
 let supabase = getSupabase();
 const reservationForm = document.getElementById('reservation-form');
-const serviceSelect = document.getElementById('service');
+const serviceSelect = document.getElementById('service-select');
+const hiddenServiceInput = document.getElementById('service');
 const reservationMessage = document.getElementById('reservation-message');
 
 // 🚀 ENHANCED WAITING - Fix Supabase timing issue
