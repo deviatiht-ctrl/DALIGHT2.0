@@ -238,9 +238,7 @@ async function initSupabase() {
 async function init() {
   console.log('🚀 Initializing DALIGHT app...');
   
-  // Initialize Supabase first
-  await initSupabase();
-  
+  // Setup UI first (don't wait for Supabase)
   document.body.classList.add('js-enabled');
   setYear();
   setupNavToggle();
@@ -248,8 +246,13 @@ async function init() {
   handleServiceShortcuts();
   highlightMobileNav();
   
-  // Detect session role BEFORE continuing
-  await detectSessionRole();
+  // Initialize Supabase (non-blocking for UI)
+  initSupabase().then(() => {
+    // Detect session role after Supabase is ready
+    detectSessionRole();
+  }).catch(err => {
+    console.warn('⚠️ Supabase init failed, continuing without auth:', err);
+  });
   
   setupRevealOnScroll();
   initLucideIcons();
@@ -280,10 +283,34 @@ function setYear() {
 function setupNavToggle() {
   const nav = document.querySelector('.top-nav');
   const toggle = document.querySelector('.nav-toggle');
-  if (!nav || !toggle) return;
-  toggle.addEventListener('click', () => {
+  if (!nav || !toggle) {
+    console.error('❌ Nav toggle not found - nav:', nav, 'toggle:', toggle);
+    return;
+  }
+  console.log('✅ Nav toggle found, adding listeners');
+  
+  // Direct inline handler for testing
+  toggle.onclick = function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('🍔 Toggle CLICKED via onclick');
+    console.log('📋 nav element:', nav);
+    console.log('📋 nav classes before:', nav.className);
     nav.classList.toggle('open');
-  });
+    console.log('📋 nav classes after:', nav.className);
+    console.log('📱 Menu open state:', nav.classList.contains('open'));
+  };
+  
+  // Also add standard event listeners
+  function handleToggle(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('🍔 Toggle clicked via addEventListener');
+    nav.classList.toggle('open');
+  }
+  
+  toggle.addEventListener('click', handleToggle);
+  toggle.addEventListener('touchend', handleToggle);
 }
 
 function syncMobileNavVisibility() {
@@ -442,15 +469,53 @@ async function detectSessionRole() {
     if (session) {
       console.log('📋 Session found for:', session.user?.email);
       applySessionRole(session);
+      updateNavbarAuth(true);
       
       if (isAdminEmail(session.user?.email || '')) {
         console.log('👑 Admin role detected - showing admin links');
       }
     } else {
       console.log('ℹ️ No active session');
+      updateNavbarAuth(false);
     }
   } catch (error) {
     console.error('❌ Error detecting session role:', error);
+  }
+}
+
+function updateNavbarAuth(isLoggedIn) {
+  const navCta = document.querySelector('.nav-cta');
+  if (!navCta) return;
+  
+  // Check if this page already has a specific CTA (like cart or reserve)
+  const hasSpecificCta = navCta.querySelector('.cart-toggle, .btn:not(.auth-btn)') || navCta.classList.contains('has-reserve-btn');
+  if (hasSpecificCta) return; // Don't override specific CTAs
+  
+  if (isLoggedIn) {
+    navCta.innerHTML = `
+      <button class="btn ghost auth-btn" id="navbar-logout-btn" type="button">
+        <i data-lucide="log-out" style="width:16px;height:16px;"></i> Déconnecter
+      </button>
+    `;
+    // Add logout handler
+    const logoutBtn = document.getElementById('navbar-logout-btn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', async () => {
+        await supabaseClient.auth.signOut();
+        window.location.href = './login.html';
+      });
+    }
+  } else {
+    navCta.innerHTML = `
+      <a class="btn ghost auth-btn" href="./login.html">
+        <i data-lucide="user" style="width:16px;height:16px;"></i> Connexion
+      </a>
+    `;
+  }
+  
+  // Re-init icons
+  if (window.lucide) {
+    lucide.createIcons();
   }
 }
 

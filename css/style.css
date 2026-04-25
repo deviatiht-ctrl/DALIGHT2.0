@@ -189,6 +189,8 @@ main {
   color: var(--white);
   border-bottom-left-radius: var(--radius-xl);
   border-bottom-right-radius: var(--radius-xl);
+  position: relative;
+  z-index: 200;
 }
 
 .site-header.internal {
@@ -241,8 +243,8 @@ main {
 }
 
 .brand-logo {
-  width: 56px;
-  height: 56px;
+  width: 70px;
+  height: 70px;
   object-fit: contain;
 }
 
@@ -293,6 +295,8 @@ body.is-admin .mobile-nav .admin-link {
   background: transparent;
   border: none;
   cursor: pointer;
+  z-index: 300;
+  position: relative;
 }
 
 .nav-toggle span {

@@ -11,12 +11,22 @@
       href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../css/style.css" />
-    <link rel="stylesheet" href="../css/responsive.css" />
+    <link rel="stylesheet" href="../css/style.css?v=2.0.0" />
+    <link rel="stylesheet" href="../css/responsive.css?v=2.0.0" />
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
     <script type="module" src="../js/main.js"></script>
     <script type="module" src="../js/follow.js" defer></script>
+    <script type="module" src="../js/chat-widget.js" defer></script>
+    <script type="module">
+      import { initChatWidget } from '../js/chat-widget.js';
+      document.addEventListener('DOMContentLoaded', () => {
+        if (window.lucide) {
+          lucide.createIcons();
+        }
+        initChatWidget();
+      });
+    </script>
   </head>
   <body data-page="follow">
     <header class="site-header internal">
@@ -39,8 +49,8 @@
           <a href="./follow.html" class="active">Suivre</a>
           <a href="../admin/dashboard.html" class="admin-link">Admin</a>
         </div>
-        <div class="nav-cta">
-          <button class="btn ghost" id="logout-btn" type="button">Se déconnecter</button>
+        <div class="nav-cta" id="nav-cta">
+          <!-- Auth button will be inserted here by JavaScript -->
         </div>
       </nav>
     </header>
@@ -178,6 +188,29 @@
       </div>
     </footer>
 
+    <!-- Chat Widget -->
+    <div class="chat-widget" id="chat-widget">
+      <button class="chat-bubble" id="chat-bubble">
+        <i data-lucide="message-circle"></i>
+      </button>
+      <div class="chat-window" id="chat-window" style="display:none;">
+        <div class="chat-header">
+          <h4>Assistant DALIGHT</h4>
+          <span class="chat-status">En ligne</span>
+          <button class="chat-close" id="chat-close">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area">
+          <input type="text" id="chat-input" placeholder="Écrivez votre message...">
+          <button id="chat-send">
+            <i data-lucide="send"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <nav class="mobile-nav">
       <a href="../index.html" data-page="home">
         <i data-lucide="home"></i>
@@ -185,13 +218,23 @@
       <a href="./services.html" data-page="services">
         <i data-lucide="sparkles"></i>
       </a>
+      <a href="./follow.html" data-page="follow">
+        <i data-lucide="users"></i>
+      </a>
       <a href="./services.html" data-page="reservation">
         <i data-lucide="calendar"></i>
       </a>
       <a href="./shop.html" data-page="shop">
         <i data-lucide="shopping-bag"></i>
       </a>
+      <a href="./login.html" data-page="login">
+        <i data-lucide="user"></i>
+      </a>
     </nav>
   </body>
 </html>
+
+
+
+
 

@@ -25,10 +25,8 @@
   }
 
   .nav-cta {
-    display: flex;
-    justify-content: center;
-    width: auto;
-    margin-top: 0.5rem;
+    display: none;
+    width: 100%;
   }
 
   .nav-toggle {
@@ -116,12 +114,14 @@
 
   .top-nav.open .nav-links,
   .top-nav.open .nav-cta {
-    display: flex;
+    display: flex !important;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.25rem;
     background: rgba(255, 255, 255, 0.08);
-    padding: 1rem 1.25rem;
+    padding: 0.5rem 0.75rem;
     border-radius: var(--radius-xl);
+    margin-top: 0.5rem;
+    width: 100%;
   }
 
   .top-nav.open .nav-links a {
@@ -475,6 +475,7 @@
     position: absolute;
     inset: 0;
     z-index: 1;
+    pointer-events: none;
   }
 
   .hero-video-container video {
@@ -485,6 +486,7 @@
     height: 100%;
     object-fit: cover;
     z-index: 1;
+    pointer-events: auto;
   }
 
   .hero-video-overlay {
@@ -514,6 +516,7 @@
     position: absolute;
     top: 1rem;
     right: 1rem;
+    pointer-events: auto;
     z-index: 10;
     width: 44px;
     height: 44px;
