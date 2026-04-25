@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS email_templates (
   greeting TEXT DEFAULT 'Cher(e) {{client_name}},',
   body_html TEXT NOT NULL DEFAULT '',
   footer_text TEXT DEFAULT '© {{year}} DALIGHT Head Spa. Tous droits réservés.',
-  logo_url TEXT DEFAULT 'https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/assets/images/logodaligth.jpg',
+  logo_url TEXT DEFAULT 'https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/assets/images/logodaligth.png',
   header_bg TEXT DEFAULT 'linear-gradient(135deg, #4A3728 0%, #6B4F3B 100%)',
   accent_color TEXT DEFAULT '#D4AF37',
   is_active BOOLEAN NOT NULL DEFAULT true,

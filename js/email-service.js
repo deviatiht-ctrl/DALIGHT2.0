@@ -432,7 +432,7 @@ function buildStatusUpdateEmail(reservationData, newStatus) {
  * Build HTML email content for client
  */
 function buildClientEmailHTML(data) {
-  const logoUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/assets/images/logodaligth.jpg';
+  const logoUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/assets/images/logodaligth.png';
   
   return `
     <!DOCTYPE html>
@@ -529,7 +529,7 @@ function buildClientEmailHTML(data) {
  * Build HTML email content for admin
  */
 function buildAdminEmailHTML(data) {
-  const logoUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/assets/images/logodaligth.jpg';
+  const logoUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/assets/images/logodaligth.png';
   
   return `
     <!DOCTYPE html>
@@ -648,7 +648,7 @@ function buildAdminEmailHTML(data) {
  * Build HTML email content for status updates (confirm/cancel/complete)
  */
 function buildStatusUpdateEmailHTML(data, newStatus) {
-  const logoUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/assets/images/logodaligth.jpg';
+  const logoUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/assets/images/logodaligth.png';
   
   const statusConfig = {
     'CONFIRMED': {
@@ -851,7 +851,7 @@ function buildFollowEmail(userData) {
  * Build HTML email content for client order confirmation
  */
 function buildClientOrderEmailHTML(data) {
-  const logoUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/assets/images/logodaligth.jpg';
+  const logoUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/assets/images/logodaligth.png';
   
   return `
     <!DOCTYPE html>
@@ -970,7 +970,7 @@ function buildClientOrderEmailHTML(data) {
  * Build HTML email content for admin order notification
  */
 function buildAdminOrderEmailHTML(data) {
-  const logoUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/assets/images/logodaligth.jpg';
+  const logoUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/assets/images/logodaligth.png';
   
   return `
     <!DOCTYPE html>
@@ -1113,7 +1113,7 @@ function buildAdminOrderEmailHTML(data) {
  * Build HTML email content for follow/subscription thank you
  */
 function buildFollowEmailHTML(data) {
-  const logoUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/assets/images/logodaligth.jpg';
+  const logoUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/assets/images/logodaligth.png';
   
   return `
     <!DOCTYPE html>
