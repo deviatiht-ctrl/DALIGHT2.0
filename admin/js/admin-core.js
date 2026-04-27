@@ -24,6 +24,26 @@ window.ADMIN_EMAILS = ADMIN_EMAILS;
 // AUTH CHECK
 // ============================================
 
+async function isAdminFromProfile(userId) {
+  try {
+    const { data, error } = await supabaseClient
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+    
+    if (error) {
+      console.log('⚠️ Could not fetch profile role:', error.message);
+      return false;
+    }
+    
+    return data && data.role === 'admin';
+  } catch (err) {
+    console.error('❌ Error checking admin role from profile:', err);
+    return false;
+  }
+}
+
 async function checkAdminAuth() {
   try {
     const { data: { session }, error } = await supabaseClient.auth.getSession();
@@ -34,7 +54,15 @@ async function checkAdminAuth() {
     }
     
     const userEmail = session.user.email;
-    if (!ADMIN_EMAILS.includes(userEmail)) {
+    const userId = session.user.id;
+    
+    // Check both hardcoded list and profiles table
+    const isHardcodedAdmin = ADMIN_EMAILS.includes(userEmail);
+    const isProfileAdmin = await isAdminFromProfile(userId);
+    
+    console.log('👑 Admin check - hardcoded:', isHardcodedAdmin, ', profile:', isProfileAdmin);
+    
+    if (!isHardcodedAdmin && !isProfileAdmin) {
       alert('Accès refusé. Vous n\'êtes pas administrateur.');
       window.location.href = '../index.html';
       return null;

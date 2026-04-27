@@ -607,6 +607,14 @@
           }
         }, { passive: true });
 
+        // Backup click event for older devices
+        videoContainer.addEventListener('click', (e) => {
+          if (e.target.closest('a') || e.target.closest('button')) return;
+          if (video.muted) {
+            toggleSound(true);
+          }
+        });
+
         videoContainer.style.cursor = 'pointer';
       }
 

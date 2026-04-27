@@ -428,7 +428,7 @@ export async function ensureAuth() {
     }
     
     console.log('✅ User authenticated:', session.user?.email);
-    applySessionRole(session);
+    await applySessionRole(session);
     return session;
   } catch (error) {
     console.error('❌ Auth check error:', error);
@@ -440,12 +440,39 @@ function isAdminEmail(email = '') {
   return ADMIN_EMAILS.includes(email.toLowerCase());
 }
 
-function applySessionRole(session) {
+async function isAdminFromProfile(userId) {
+  if (!supabaseClient || !userId) return false;
+  try {
+    const { data, error } = await supabaseClient
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+    
+    if (error) {
+      console.log('⚠️ Could not fetch profile role:', error.message);
+      return false;
+    }
+    
+    return data && data.role === 'admin';
+  } catch (err) {
+    console.error('❌ Error checking admin role from profile:', err);
+    return false;
+  }
+}
+
+async function applySessionRole(session) {
   const logoutBtn = document.getElementById('logout-btn');
   if (session) {
     if (logoutBtn) logoutBtn.style.display = 'block';
-    if (isAdminEmail(session.user?.email || '')) {
+    
+    // Check both hardcoded list and profiles table
+    const isHardcodedAdmin = isAdminEmail(session.user?.email || '');
+    const isProfileAdmin = await isAdminFromProfile(session.user?.id);
+    
+    if (isHardcodedAdmin || isProfileAdmin) {
       document.body.classList.add('is-admin');
+      console.log('👑 Admin role applied (hardcoded:', isHardcodedAdmin, ', profile:', isProfileAdmin + ')');
     } else {
       document.body.classList.remove('is-admin');
     }
@@ -468,7 +495,7 @@ async function detectSessionRole() {
     
     if (session) {
       console.log('📋 Session found for:', session.user?.email);
-      applySessionRole(session);
+      await applySessionRole(session);
       updateNavbarAuth(true);
       
       if (isAdminEmail(session.user?.email || '')) {
@@ -487,30 +514,40 @@ function updateNavbarAuth(isLoggedIn) {
   const navCta = document.querySelector('.nav-cta');
   if (!navCta) return;
   
-  // Check if this page already has a specific CTA (like cart or reserve)
-  const hasSpecificCta = navCta.querySelector('.cart-toggle, .btn:not(.auth-btn)') || navCta.classList.contains('has-reserve-btn');
-  if (hasSpecificCta) return; // Don't override specific CTAs
+  // Check if auth button already exists to avoid duplicates
+  const existingAuthBtn = navCta.querySelector('.auth-btn');
+  if (existingAuthBtn) {
+    existingAuthBtn.remove(); // Remove old auth button before adding new one
+  }
   
+  // Create the auth button HTML
+  let authHtml = '';
   if (isLoggedIn) {
-    navCta.innerHTML = `
+    authHtml = `
       <button class="btn ghost auth-btn" id="navbar-logout-btn" type="button">
         <i data-lucide="log-out" style="width:16px;height:16px;"></i> Déconnecter
       </button>
     `;
-    // Add logout handler
+  } else {
+    authHtml = `
+      <a class="btn ghost auth-btn" href="./pages/login.html">
+        <i data-lucide="user" style="width:16px;height:16px;"></i> Connexion
+      </a>
+    `;
+  }
+  
+  // Append auth button to nav-cta (adds to existing buttons like Reserve)
+  navCta.insertAdjacentHTML('beforeend', authHtml);
+  
+  // Add logout handler if logged in
+  if (isLoggedIn) {
     const logoutBtn = document.getElementById('navbar-logout-btn');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', async () => {
         await supabaseClient.auth.signOut();
-        window.location.href = './login.html';
+        window.location.href = './pages/login.html';
       });
     }
-  } else {
-    navCta.innerHTML = `
-      <a class="btn ghost auth-btn" href="./login.html">
-        <i data-lucide="user" style="width:16px;height:16px;"></i> Connexion
-      </a>
-    `;
   }
   
   // Re-init icons

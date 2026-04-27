@@ -165,7 +165,22 @@ main {
   background: rgba(255, 255, 255, 0.85);
   color: var(--marron-700);
   border: 1px solid rgba(107, 79, 59, 0.35);
-  box-shadow: none;
+}
+
+/* Auth button in navbar - displays alongside reserve/cart buttons */
+.nav-cta {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.nav-cta .auth-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 .btn:hover {
