@@ -99,38 +99,67 @@ async function loadProducts() {
 // Render products grid
 function renderProducts(products) {
   const grid = document.getElementById('products-grid');
-  
+
   if (products.length === 0) {
     grid.innerHTML = `
       <div class="empty-state" style="grid-column: 1 / -1;">
-        <p>Aucun produit trouvé</p>
+        <div class="empty-state-icon">🛍️</div>
+        <h3>Aucun produit trouvé</h3>
+        <p>Essayez de modifier vos filtres ou revenez plus tard.</p>
       </div>
     `;
     return;
   }
-  
+
   grid.innerHTML = products.map(product => {
     const price = product.sale_price || product.price;
     const hasDiscount = product.sale_price && product.sale_price < product.price;
-    
+    const categoryName = product.product_categories?.name || 'Produit';
+
+    // Generate badges
+    let badges = '';
+    if (product.is_featured) {
+      badges += `<span class="badge badge-featured">Vedette</span>`;
+    }
+    if (hasDiscount) {
+      const discountPercent = Math.round((1 - product.sale_price / product.price) * 100);
+      badges += `<span class="badge badge-sale">-${discountPercent}%</span>`;
+    }
+    if (product.stock_quantity === 0) {
+      badges += `<span class="badge badge-outofstock">Rupture</span>`;
+    } else if (product.stock_quantity <= 5) {
+      badges += `<span class="badge badge-new">Stock limité</span>`;
+    }
+
     return `
       <div class="product-card">
-        <img src="${product.image_urls?.[0] || 'https://via.placeholder.com/300x250?text=No+Image'}" 
-             alt="${product.name}" 
-             class="product-image"
-             onerror="this.src='https://via.placeholder.com/300x250?text=No+Image'">
+        <div class="product-image-wrapper">
+          <img src="${product.image_urls?.[0] || 'https://via.placeholder.com/400x320?text=No+Image'}"
+               alt="${product.name}"
+               class="product-image"
+               loading="lazy"
+               onerror="this.src='https://via.placeholder.com/400x320?text=No+Image'">
+          <div class="product-badges">
+            ${badges}
+          </div>
+        </div>
         <div class="product-info">
+          <div class="product-category">${categoryName}</div>
           <h3 class="product-name">${product.name}</h3>
-          ${product.short_description ? `<p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 0.5rem;">${product.short_description}</p>` : ''}
-          <div class="product-price">
-            ${hasDiscount ? `<span class="original">${product.price} HTG</span>` : ''}
-            ${price} HTG
+          ${product.short_description ? `<p class="product-description">${product.short_description}</p>` : ''}
+          <div class="product-price-container">
+            <div class="product-price">
+              ${hasDiscount ? `<span class="original">${product.price.toLocaleString()} <span class="currency">HTG</span></span>` : ''}
+              <span class="${hasDiscount ? 'sale-price' : ''}">${price.toLocaleString()} <span class="currency">HTG</span></span>
+            </div>
           </div>
           <div class="product-actions">
             <button class="btn-view" onclick="viewProduct('${product.id}')">
-              Voir détails
+              <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+              Voir
             </button>
             <button class="btn-add-cart" onclick="addToCart('${product.id}')" ${product.stock_quantity === 0 ? 'disabled' : ''}>
+              <i data-lucide="shopping-cart" style="width: 16px; height: 16px;"></i>
               ${product.stock_quantity === 0 ? 'Rupture' : 'Ajouter'}
             </button>
           </div>
@@ -138,6 +167,11 @@ function renderProducts(products) {
       </div>
     `;
   }).join('');
+
+  // Refresh Lucide icons
+  if (window.lucide) {
+    lucide.createIcons();
+  }
 }
 
 // Setup filters
