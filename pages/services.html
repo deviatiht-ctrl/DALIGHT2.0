@@ -69,10 +69,13 @@
         </div>
         <div class="filter-buttons">
           <button class="filter-btn active" data-filter="all">Tous</button>
-          <button class="filter-btn" data-filter="head-spa">Head Spa</button>
-          <button class="filter-btn" data-filter="rituel">Rituels</button>
-          <button class="filter-btn" data-filter="duo">Duo</button>
-          <button class="filter-btn" data-filter="cure">Cures</button>
+          <button class="filter-btn" data-filter="headspa">Head Spa</button>
+          <button class="filter-btn" data-filter="massage-relaxant">Massage</button>
+          <button class="filter-btn" data-filter="wood-therapy">Wood Therapy</button>
+          <button class="filter-btn" data-filter="packages-silver">Silver</button>
+          <button class="filter-btn" data-filter="packages-luxury">Luxury</button>
+          <button class="filter-btn" data-filter="couple">Couple</button>
+          <button class="filter-btn" data-filter="besties">Besties</button>
         </div>
       </div>
 
@@ -553,12 +556,30 @@
       function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
       function getCategoryFromService(service) {
+        // First check the category field from DB
+        const category = (service.category || '').toLowerCase();
+        if (category) {
+          if (category === 'headspa') return 'headspa';
+          if (category === 'massage-relaxant') return 'massage-relaxant';
+          if (category === 'wood-therapy') return 'wood-therapy';
+          if (category === 'packages-silver') return 'packages-silver';
+          if (category === 'packages-luxury') return 'packages-luxury';
+          if (category === 'couple-silver' || category === 'couple-golden') return 'couple';
+          if (category === 'besties-silver' || category === 'besties-golden') return 'besties';
+          if (category === 'cure') return 'cure';
+        }
+
+        // Fallback to name detection
         const name = (service.name || '').toLowerCase();
-        if (name.includes('duo')) return 'duo';
-        if (name.includes('cure') || name.includes('pack') || name.includes('renaissance')) return 'cure';
-        if (name.includes('head spa')) return 'head-spa';
-        if (name.includes('rituel')) return 'rituel';
-        return 'other';
+        if (name.includes('couple') || name.includes('duo')) return 'couple';
+        if (name.includes('bestie') || name.includes('ami')) return 'besties';
+        if (name.includes('luxury') || name.includes('gold')) return 'packages-luxury';
+        if (name.includes('silver') && name.includes('pack')) return 'packages-silver';
+        if (name.includes('wood')) return 'wood-therapy';
+        if (name.includes('massage')) return 'massage-relaxant';
+        if (name.includes('head spa')) return 'headspa';
+
+        return category || 'other';
       }
 
       function filterAndRenderServices() {

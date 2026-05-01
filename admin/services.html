@@ -181,6 +181,50 @@
         </div>
       </div>
 
+      <!-- Head Spa Pricing Manager -->
+      <div class="glass-card" id="headspa-pricing-section">
+        <div class="card-header" style="cursor:pointer;" onclick="toggleHeadSpaPricing()">
+          <div>
+            <h3 class="card-title">Gestion des prix Head Spa</h3>
+            <p class="card-subtitle">Tarifs selon la longueur des cheveux (Admin only)</p>
+          </div>
+          <span id="headspa-toggle-icon" style="font-size:1.2rem;transition:.25s;">▼</span>
+        </div>
+        <div id="headspa-pricing-body" style="display:none;padding:0 1.5rem 1.5rem;">
+          <div style="display:flex;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap;align-items:flex-end;">
+            <div class="form-group" style="flex:1;min-width:120px;margin-bottom:0;">
+              <label class="form-label" style="font-size:.78rem;">Type</label>
+              <select class="form-select" id="headspa-type" style="font-size:.85rem;">
+                <option value="extra-court">Extra Court</option>
+                <option value="court">Court</option>
+                <option value="medium">Medium</option>
+                <option value="large">Large</option>
+                <option value="extra-large">Extra Large</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex:1;min-width:100px;margin-bottom:0;">
+              <label class="form-label" style="font-size:.78rem;">Prix HTG</label>
+              <input class="form-input" id="headspa-price-htg" type="number" placeholder="3000" style="font-size:.85rem;">
+            </div>
+            <div class="form-group" style="flex:1;min-width:100px;margin-bottom:0;">
+              <label class="form-label" style="font-size:.78rem;">Prix USD</label>
+              <input class="form-input" id="headspa-price-usd" type="number" step="0.01" placeholder="25.00" style="font-size:.85rem;">
+            </div>
+            <button class="btn btn-primary btn-sm" id="headspa-update-btn" style="height:38px;">Mettre à jour</button>
+          </div>
+          <div class="table-responsive" style="overflow-x:auto;">
+            <table class="admin-table" style="font-size:.85rem;">
+              <thead>
+                <tr><th>Type</th><th>Description</th><th>Prix HTG</th><th>Prix USD</th><th>Statut</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="headspa-pricing-table">
+                <tr><td colspan="6" class="text-center text-muted" style="padding:1rem;">Chargement...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- Table -->
       <div class="glass-card">
         <div class="card-header">
@@ -346,10 +390,14 @@
       document.getElementById('delete-confirm').addEventListener('click', confirmDelete);
       document.getElementById('service-form').addEventListener('submit', handleSave);
       document.getElementById('cat-add-btn').addEventListener('click', addCategory);
+      document.getElementById('headspa-update-btn').addEventListener('click', updateHeadSpaPricing);
 
       // close modals on overlay click
       modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
       deleteModal.addEventListener('click', (e) => { if (e.target === deleteModal) closeDelete(); });
+
+      // Initialize global var for head spa editing
+      window.currentEditingHeadSpaId = null;
     }
 
     // ── Categories ──
@@ -389,6 +437,13 @@
 
     function populateCategorySelect() {
       const select = document.getElementById('svc-category');
+      const slugs = Object.keys(CATEGORY_LABELS);
+
+      if (slugs.length === 0) {
+        // Keep original HTML if no categories loaded
+        return;
+      }
+
       select.innerHTML = '';
       Object.entries(CATEGORY_LABELS).forEach(([slug, label]) => {
         const opt = document.createElement('option');
@@ -456,6 +511,123 @@
         if (error) throw error;
         await loadCategories();
         window.adminCore?.showToast('Catégorie supprimée');
+      } catch (err) { alert('Erreur: ' + err.message); }
+    }
+
+    // ── Head Spa Pricing ──
+    let headSpaPricing = [];
+
+    function toggleHeadSpaPricing() {
+      const body = document.getElementById('headspa-pricing-body');
+      const icon = document.getElementById('headspa-toggle-icon');
+      if (body.style.display === 'none') {
+        body.style.display = 'block';
+        icon.textContent = '▲';
+        loadHeadSpaPricing();
+      } else {
+        body.style.display = 'none';
+        icon.textContent = '▼';
+      }
+    }
+
+    async function loadHeadSpaPricing() {
+      try {
+        const { data, error } = await window.supabaseClient
+          .from('head_spa_pricing')
+          .select('*')
+          .order('sort_order', { ascending: true });
+        if (error) throw error;
+        headSpaPricing = data || [];
+        renderHeadSpaPricingTable();
+      } catch (err) {
+        console.error('Error loading head spa pricing:', err);
+        document.getElementById('headspa-pricing-table').innerHTML =
+          '<tr><td colspan="6" class="text-center text-muted" style="padding:1rem;">Table non trouvée. Exécutez le script SQL pour créer head_spa_pricing.</td></tr>';
+      }
+    }
+
+    function renderHeadSpaPricingTable() {
+      const tbody = document.getElementById('headspa-pricing-table');
+      if (headSpaPricing.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:1rem;">Aucun tarif configuré.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = headSpaPricing.map(p => `
+        <tr>
+          <td><strong>${esc(p.label)}</strong><br><code style="font-size:0.75rem;">${esc(p.type)}</code></td>
+          <td>${esc(p.description || '-')}</td>
+          <td>${p.price_htg.toLocaleString()} Gds</td>
+          <td>$${p.price_usd || '-'}</td>
+          <td><span class="status-badge ${p.is_active ? 'completed' : 'cancelled'}">${p.is_active ? 'Actif' : 'Inactif'}</span></td>
+          <td>
+            <div class="action-btns">
+              <button class="btn btn-secondary btn-sm btn-icon" title="Modifier" onclick="editHeadSpaPricing('${p.id}')">✎</button>
+              <button class="btn btn-secondary btn-sm btn-icon" title="${p.is_active ? 'Désactiver' : 'Activer'}" onclick="toggleHeadSpaPricingStatus('${p.id}', ${!p.is_active})">${p.is_active ? '⏸' : '▶'}</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function editHeadSpaPricing(id) {
+      const pricing = headSpaPricing.find(p => p.id === id);
+      if (!pricing) return;
+      document.getElementById('headspa-type').value = pricing.type;
+      document.getElementById('headspa-price-htg').value = pricing.price_htg;
+      document.getElementById('headspa-price-usd').value = pricing.price_usd || '';
+      document.getElementById('headspa-type').disabled = true;
+      window.currentEditingHeadSpaId = id;
+      document.getElementById('headspa-update-btn').textContent = 'Modifier';
+    }
+
+    async function updateHeadSpaPricing() {
+      const type = document.getElementById('headspa-type').value;
+      const priceHtg = parseInt(document.getElementById('headspa-price-htg').value);
+      const priceUsd = parseFloat(document.getElementById('headspa-price-usd').value) || null;
+
+      if (!priceHtg || priceHtg < 0) { alert('Prix HTG requis'); return; }
+
+      try {
+        const id = window.currentEditingHeadSpaId;
+        if (id) {
+          // Update existing
+          const { error } = await window.supabaseClient
+            .from('head_spa_pricing')
+            .update({ price_htg: priceHtg, price_usd: priceUsd })
+            .eq('id', id);
+          if (error) throw error;
+          window.adminCore?.showToast('Tarif mis à jour');
+        } else {
+          // Find by type and update
+          const { error } = await window.supabaseClient
+            .from('head_spa_pricing')
+            .update({ price_htg: priceHtg, price_usd: priceUsd })
+            .eq('type', type);
+          if (error) throw error;
+          window.adminCore?.showToast('Tarif mis à jour');
+        }
+
+        // Reset form
+        document.getElementById('headspa-type').disabled = false;
+        document.getElementById('headspa-price-htg').value = '';
+        document.getElementById('headspa-price-usd').value = '';
+        window.currentEditingHeadSpaId = null;
+        document.getElementById('headspa-update-btn').textContent = 'Mettre à jour';
+
+        await loadHeadSpaPricing();
+      } catch (err) {
+        alert('Erreur: ' + (err.message || 'Impossible de mettre à jour'));
+      }
+    }
+
+    async function toggleHeadSpaPricingStatus(id, newState) {
+      try {
+        const { error } = await window.supabaseClient
+          .from('head_spa_pricing')
+          .update({ is_active: newState })
+          .eq('id', id);
+        if (error) throw error;
+        await loadHeadSpaPricing();
       } catch (err) { alert('Erreur: ' + err.message); }
     }
 
