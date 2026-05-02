@@ -48,7 +48,7 @@ CREATE INDEX IF NOT EXISTS idx_availability_exceptions_date
     ON availability_exceptions(exception_date);
 
 CREATE INDEX IF NOT EXISTS idx_reservations_date_time_status 
-    ON reservations(reservation_date, reservation_time, status);
+    ON reservations(date, time, status);
 
 -- 3. DONE INITIAL (Règ Default)
 -- ============================================================
@@ -148,8 +148,8 @@ BEGIN
     -- 4. Konte rezèvasyon ki egziste
     SELECT COUNT(*) INTO v_current_bookings
     FROM reservations
-    WHERE reservation_date = p_date
-      AND reservation_time = p_time
+    WHERE date = p_date
+      AND time = p_time
       AND status NOT IN ('cancelled');
     
     -- 5. Retounen rezilta
@@ -179,7 +179,7 @@ DECLARE
 BEGIN
     -- Verifye avilabilite
     SELECT * INTO v_check
-    FROM check_availability(NEW.reservation_date, NEW.reservation_time);
+    FROM check_availability(NEW.date, NEW.time);
     
     IF NOT v_check.is_available THEN
         RAISE EXCEPTION 'Tan sa pa disponib: %', v_check.message;
@@ -315,13 +315,13 @@ BEGIN
     -- Konte rezèvasyon yo
     booking_counts AS (
         SELECT 
-            reservation_date, 
-            reservation_time, 
+            date as reservation_date, 
+            time as reservation_time, 
             COUNT(*) as cnt
         FROM reservations
-        WHERE reservation_date BETWEEN v_start_date AND v_end_date
+        WHERE date BETWEEN v_start_date AND v_end_date
           AND status NOT IN ('cancelled')
-        GROUP BY reservation_date, reservation_time
+        GROUP BY date, time
     ),
     -- Tcheke eksepsyon yo
     exception_check AS (
