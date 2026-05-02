@@ -705,30 +705,54 @@ function getSlotStatus(slot) {
 
 // Modal Functions
 function openBlockDateModal() {
-  document.getElementById('block-date-modal').style.display = 'flex';
-  document.getElementById('block-date-input').value = '';
-  document.getElementById('block-time-input').value = '';
-  document.getElementById('block-reason-input').value = '';
+  console.log('🔴 openBlockDateModal called');
+  const modal = document.getElementById('block-date-modal');
+  console.log('📦 Modal element:', modal);
+  
+  if (modal) {
+    modal.style.display = 'flex';
+    document.getElementById('block-date-input').value = '';
+    document.getElementById('block-time-input').value = '';
+    document.getElementById('block-reason-input').value = '';
+    console.log('✅ Modal opened');
+  } else {
+    console.error('❌ Modal not found!');
+    alert('Erreur: Modal non trouvé. Veuillez rafraîchir la page.');
+  }
 }
 
 function closeBlockDateModal() {
-  document.getElementById('block-date-modal').style.display = 'none';
+  const modal = document.getElementById('block-date-modal');
+  if (modal) {
+    modal.style.display = 'none';
+    console.log('✅ Modal closed');
+  }
 }
 
 async function confirmBlockDate() {
+  console.log('🔴 confirmBlockDate called');
+  
   const date = document.getElementById('block-date-input').value;
   const time = document.getElementById('block-time-input').value;
   const reason = document.getElementById('block-reason-input').value;
   
+  console.log('📅 Date:', date, '🕐 Time:', time, '📝 Reason:', reason);
+  
   if (!date) {
+    console.error('❌ No date selected');
     window.adminCore?.showToast('Veuillez sélectionner une date', 'error');
     return;
   }
   
   try {
     const supabase = window.adminCore?.supabase;
-    if (!supabase) throw new Error('Supabase not initialized');
+    console.log('🔌 Supabase:', supabase ? 'OK' : 'NULL');
     
+    if (!supabase) {
+      throw new Error('Supabase not initialized - refresh page');
+    }
+    
+    console.log('📤 Calling admin_block_date RPC...');
     const { data, error } = await supabase
       .rpc('admin_block_date', {
         p_date: date,
@@ -736,6 +760,8 @@ async function confirmBlockDate() {
         p_reason: reason || 'Bloque par admin',
         p_is_blocked: true
       });
+    
+    console.log('📥 Response:', { data, error });
     
     if (error) throw error;
     
@@ -747,8 +773,9 @@ async function confirmBlockDate() {
       window.adminCore?.showToast(data?.error || 'Erreur', 'error');
     }
   } catch (err) {
-    console.error('Error blocking date:', err);
+    console.error('❌ Error blocking date:', err);
     window.adminCore?.showToast('Erreur: ' + err.message, 'error');
+    alert('Erreur: ' + err.message + '\n\nVérifiez que vous avez exécuté dateheure.sql dans Supabase');
   }
 }
 
