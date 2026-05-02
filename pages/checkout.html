@@ -74,37 +74,115 @@
     }
     
     .payment-method {
-      padding: 1.5rem;
-      border: 2px solid #e5e7eb;
-      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.25rem 1.5rem;
+      border: 2px solid var(--beige-300, #e5e7eb);
+      border-radius: 12px;
       cursor: pointer;
-      transition: all 0.3s;
+      transition: all 0.3s ease;
+      background: white;
     }
     
     .payment-method:hover {
-      border-color: #667eea;
+      border-color: var(--marron-700, #8b7355);
+      box-shadow: 0 4px 12px rgba(74, 55, 40, 0.1);
+      transform: translateY(-2px);
     }
     
     .payment-method.selected {
-      border-color: #059669;
-      background: #f0fdf4;
+      border-color: var(--marron-900, #4a3728);
+      background: linear-gradient(135deg, #f8f5f0 0%, #f0ebe3 100%);
+      box-shadow: 0 4px 16px rgba(74, 55, 40, 0.15);
+    }
+    
+    .payment-method-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    
+    .payment-method-icon.moncash {
+      background: #0047ba;
+      padding: 6px;
+    }
+    
+    .payment-method-icon.natcash {
+      background: #1a1a1a;
+      padding: 6px;
+    }
+    
+    .payment-method-info {
+      flex: 1;
     }
     
     .payment-method h3 {
       font-size: 1.1rem;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.25rem;
+      color: var(--marron-900, #1f2937);
+      font-weight: 600;
     }
     
     .payment-method p {
-      color: #6b7280;
+      color: var(--marron-700, #6b7280);
       font-size: 0.9rem;
+    }
+    
+    .payment-proof-section {
+      margin-top: 1.5rem;
+      padding: 1.5rem;
+      background: linear-gradient(145deg, #fff9f0 0%, #f5ebe0 100%);
+      border-radius: 12px;
+      border: 2px dashed var(--beige-500, #d4a574);
+    }
+    
+    .payment-proof-section h4 {
+      color: var(--marron-900);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .payment-instructions {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+    }
+    
+    .payment-instructions strong {
+      color: #dc2626;
+    }
+    
+    .proof-upload {
+      margin-top: 1rem;
+    }
+    
+    .proof-upload label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--marron-800);
+    }
+    
+    .proof-upload input[type="file"] {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px dashed var(--beige-400);
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
     }
     
     .order-summary {
       background: white;
       border-radius: 12px;
       padding: 2rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       height: fit-content;
       position: sticky;
       top: 2rem;
@@ -160,6 +238,26 @@
           <small>L'Art du Bien-Être</small>
         </div>
       </a>
+      <button class="nav-toggle" aria-label="Ouvrir la navigation">
+        <span></span>
+        <span></span>
+      </button>
+      <div class="nav-links">
+        <a href="../index.html">Accueil</a>
+        <a href="./services.html">Services</a>
+        <a href="./shop.html">Boutique</a>
+        <a href="./services.html">Réservation</a>
+        <a href="./orders.html">Dossiers</a>
+        <a href="./payment.html">Paiement</a>
+        <a href="./cart.html" class="active">Panier</a>
+        <a href="../admin/dashboard.html" class="admin-link">Admin</a>
+      </div>
+      <div class="nav-cta">
+        <a class="btn" href="./cart.html">
+          <i data-lucide="shopping-cart" style="width: 18px; height: 18px;"></i>
+          Panier
+        </a>
+      </div>
     </nav>
   </header>
 
@@ -195,22 +293,76 @@
         <div class="form-section">
           <h2>Mode de Paiement</h2>
           <div class="payment-methods">
-            <div class="payment-method" onclick="selectPayment('moncash')">
-              <h3>📱 MonCash</h3>
-              <p>Paiement mobile via MonCash</p>
+            <div class="payment-method" onclick="selectPayment('moncash')" data-method="moncash">
+              <img src="../assets/images/moncash.jpg" alt="MonCash" class="payment-method-icon moncash">
+              <div class="payment-method-info">
+                <h3>MonCash</h3>
+                <p>Paiement mobile via MonCash - <strong>+509 48 28 4170</strong></p>
+              </div>
             </div>
-            <div class="payment-method" onclick="selectPayment('natcash')">
-              <h3>📱 NatCash</h3>
-              <p>Paiement mobile via NatCash</p>
+            <div class="payment-method" onclick="selectPayment('natcash')" data-method="natcash">
+              <img src="../assets/images/natcash.png" alt="NatCash" class="payment-method-icon natcash">
+              <div class="payment-method-info">
+                <h3>NatCash</h3>
+                <p>Paiement mobile via NatCash - <strong>+509 48 28 4170</strong></p>
+              </div>
             </div>
-            <div class="payment-method" onclick="selectPayment('cash')">
-              <h3>💵 Cash à la livraison</h3>
-              <p>Payez en espèces lors de la livraison</p>
+            <div class="payment-method" onclick="selectPayment('cash')" data-method="cash">
+              <div style="width: 48px; height: 48px; border-radius: 8px; background: linear-gradient(135deg, #059669, #047857); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">💵</div>
+              <div class="payment-method-info">
+                <h3>Cash à la livraison</h3>
+                <p>Payez en espèces lors de la livraison</p>
+              </div>
             </div>
-            <div class="payment-method" onclick="selectPayment('bank')">
-              <h3>🏦 Virement bancaire</h3>
-              <p>Transfert direct sur notre compte bancaire</p>
+            <div class="payment-method" onclick="selectPayment('bank')" data-method="bank">
+              <div style="width: 48px; height: 48px; border-radius: 8px; background: linear-gradient(135deg, #1e40af, #1e3a8a); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">🏦</div>
+              <div class="payment-method-info">
+                <h3>Virement bancaire</h3>
+                <p>Transfert direct sur notre compte bancaire</p>
+              </div>
             </div>
+          </div>
+
+          <!-- Payment Proof Section (for MonCash/NatCash) -->
+          <div id="payment-proof-section" class="payment-proof-section" style="display: none;">
+            <h4>
+              <i data-lucide="upload-cloud" style="width: 20px; height: 20px;"></i>
+              Preuve de paiement
+            </h4>
+            <div class="payment-instructions">
+              <p><strong>Étapes pour payer :</strong></p>
+              <ol style="margin-left: 1rem; margin-top: 0.5rem;">
+                <li>Ouvrez l'application <strong id="payment-app-name">MonCash</strong> ou composez <strong>*202#</strong></li>
+                <li>Effectuez un transfert vers le numéro : <strong>+509 48 28 4170</strong></li>
+                <li>Entrez le montant exact de votre commande</li>
+                <li>Prenez une capture d'écran du reçu de confirmation</li>
+                <li>Téléchargez la preuve ci-dessous</li>
+              </ol>
+            </div>
+            <div class="proof-upload">
+              <label for="payment-proof">📸 Capture d'écran du reçu de paiement *</label>
+              <input type="file" id="payment-proof" name="payment-proof" accept="image/*,.pdf" required>
+              <small style="color: var(--marron-700); display: block; margin-top: 0.5rem;">
+                Formats acceptés: JPG, PNG, PDF (max 5MB)
+              </small>
+            </div>
+            <div id="proof-preview" style="margin-top: 1rem; display: none;">
+              <p style="font-weight: 500; margin-bottom: 0.5rem;">Aperçu :</p>
+              <img id="proof-preview-img" src="" alt="Preuve de paiement" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid var(--beige-300);">
+            </div>
+          </div>
+
+          <!-- Bank Transfer Details -->
+          <div id="bank-details" style="display: none; margin-top: 1rem; padding: 1rem; background: #f3f4f6; border-radius: 8px;">
+            <p><strong>Coordonnées bancaires :</strong></p>
+            <p style="margin-top: 0.5rem; font-family: monospace;">
+              Banque: ---<br>
+              Compte: ---<br>
+              Titulaire: DALIGHT Head Spa
+            </p>
+            <p style="margin-top: 0.5rem; color: #dc2626;">
+              <strong>Important :</strong> Envoyez votre reçu à dalightbeauty15mai@gmail.com
+            </p>
           </div>
         </div>
 
@@ -251,11 +403,57 @@
     </div>
   </main>
 
+  <!-- Mobile Navigation -->
+  <nav class="mobile-nav">
+    <a href="../index.html" data-page="home">
+      <i data-lucide="home"></i>
+    </a>
+    <a href="./services.html" data-page="services">
+      <i data-lucide="sparkles"></i>
+    </a>
+    <a href="./shop.html" data-page="shop">
+      <i data-lucide="shopping-bag"></i>
+    </a>
+    <a href="./cart.html" data-page="cart" class="active">
+      <i data-lucide="shopping-cart"></i>
+    </a>
+    <a href="./orders.html" data-page="orders">
+      <i data-lucide="folder-check"></i>
+    </a>
+    <a href="./login.html" data-page="login">
+      <i data-lucide="user"></i>
+    </a>
+  </nav>
+
+  <!-- Chat Widget -->
+  <div class="chat-widget" id="chat-widget">
+    <button class="chat-bubble" id="chat-bubble">
+      <i data-lucide="message-circle"></i>
+    </button>
+    <div class="chat-window" id="chat-window" style="display:none;">
+      <div class="chat-header">
+        <h4>Assistant DALIGHT</h4>
+        <span class="chat-status">En ligne</span>
+        <button class="chat-close" id="chat-close">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-input-area">
+        <input type="text" id="chat-input" placeholder="Écrivez votre message...">
+        <button id="chat-send">
+          <i data-lucide="send"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <footer class="site-footer">
     <p>© <span id="year"></span> DALIGHT. Tous droits réservés.</p>
     <div class="footer-links">
       <a href="./login.html">Espace client</a>
       <a href="./services.html">Nos Services</a>
+      <a href="./shop.html">Boutique</a>
       <a href="mailto:dalightbeauty15mai@gmail.com">dalightbeauty15mai@gmail.com</a>
     </div>
     <div class="footer-credit">

@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="../css/style.css?v=2.0.0">
   <link rel="stylesheet" href="../css/responsive.css?v=2.0.0">
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
   <script type="module" src="../js/main.js"></script>
   <script type="module" src="../js/chat-widget.js" defer></script>
   <script type="module">
@@ -20,7 +20,8 @@
         lucide.createIcons();
       }
       initChatWidget();
-      loadProduct();
+      // Delay slightly to ensure all scripts loaded
+      setTimeout(loadProduct, 500);
     });
   </script>
   <style>
@@ -809,21 +810,49 @@
 
     // Supabase client
     let supabase;
+    const SUPABASE_URL = 'https://rbwoiejztrkghfkpxquo.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U';
 
     async function initSupabase() {
+      console.log('🔄 Product page: Initializing Supabase...');
+
+      // Wait up to 5 seconds for Supabase to be available
       let attempts = 0;
-      while (!window.supabase && attempts < 50) {
+      const maxAttempts = 50;
+
+      while ((!window.supabase || !window.supabase.createClient) && attempts < maxAttempts) {
         await new Promise(resolve => setTimeout(resolve, 100));
         attempts++;
       }
-      if (window.supabase) {
-        const { createClient } = window.supabase;
-        supabase = createClient(
-          'https://rbwoiejztrkghfkpxquo.supabase.co',
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U'
-        );
+
+      // Check if CDN-loaded Supabase is available
+      if (window.supabase && window.supabase.createClient) {
+        try {
+          supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+          console.log('✅ Product page: Supabase initialized from CDN');
+
+          // Test connection
+          const { data, error } = await supabase.from('products').select('id').limit(1);
+          if (error) {
+            console.error('❌ Supabase connection test failed:', error.message);
+          } else {
+            console.log('✅ Supabase connection test passed');
+          }
+
+          return true;
+        } catch (err) {
+          console.error('❌ Error creating Supabase client:', err);
+        }
+      }
+
+      // Fallback to main.js client
+      if (window.dalightSupabase) {
+        supabase = window.dalightSupabase;
+        console.log('✅ Product page: Using dalightSupabase from main.js');
         return true;
       }
+
+      console.error('❌ Product page: No Supabase client available after', maxAttempts * 100, 'ms');
       return false;
     }
 
@@ -835,17 +864,34 @@
 
     // Load product
     async function loadProduct() {
+      console.log('🔄 Product page: Starting load...');
+      console.log('📍 URL:', window.location.href);
+
+      // Initialize Supabase
       const ready = await initSupabase();
       if (!ready) {
-        showError();
+        console.error('❌ Product page: Supabase not available');
+        document.getElementById('loading-state').innerHTML = `
+          <div style="color: #dc2626;">
+            <p>Erreur de connexion à la base de données</p>
+            <p style="font-size: 0.9rem; margin-top: 1rem;">
+              <button onclick="location.reload()" style="padding: 0.5rem 1rem; background: var(--marron-900); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                Réessayer
+              </button>
+            </p>
+          </div>
+        `;
         return;
       }
 
       const productId = getProductId();
       if (!productId) {
+        console.error('❌ Product page: No product ID in URL');
         showError();
         return;
       }
+
+      console.log('✅ Product page: Loading product', productId);
 
       try {
         // Load product
@@ -859,7 +905,27 @@
           .eq('is_active', true)
           .single();
 
-        if (error || !data) {
+        if (error) {
+          console.error('❌ Product page: Supabase error:', error);
+          document.getElementById('loading-state').innerHTML = `
+            <div style="color: #dc2626;">
+              <h3>Erreur de chargement</h3>
+              <p>${error.message}</p>
+              <p style="margin-top: 1rem;">
+                <button onclick="location.reload()" style="padding: 0.5rem 1rem; background: var(--marron-900); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                  Réessayer
+                </button>
+                <button onclick="window.location.href='./shop.html'" style="padding: 0.5rem 1rem; margin-left: 0.5rem; background: transparent; border: 2px solid var(--marron-900); border-radius: 8px; cursor: pointer;">
+                  Retour boutique
+                </button>
+              </p>
+            </div>
+          `;
+          return;
+        }
+
+        if (!data) {
+          console.error('❌ Product page: Product not found');
           showError();
           return;
         }

@@ -49,12 +49,16 @@
           <a href="./shop.html">Boutique</a>
           <a href="./services.html">Réservation</a>
           <a href="./orders.html">Dossiers</a>
-          <a href="./payment.html" class="active">Paiement</a>
-          
-        <a href="./admin.html" class="admin-link">Admin</a>
+          <a href="./payment.html" class="active">Paiement Services</a>
+          <a href="./cart.html">Boutique Panier</a>
+          <a href="../admin/dashboard.html" class="admin-link">Admin</a>
         </div>
         <div class="nav-cta">
-          <button class="btn ghost" id="logout-btn" type="button">Se déconnecter</button>
+          <a class="btn" href="./cart.html">
+            <i data-lucide="shopping-cart" style="width: 18px; height: 18px;"></i>
+            Panier
+          </a>
+          <button class="btn ghost" id="logout-btn" type="button" style="margin-left: 0.5rem;">Se déconnecter</button>
         </div>
       </nav>
     </header>
@@ -105,6 +109,7 @@
       <div class="footer-links">
         <a href="./login.html">Espace client</a>
         <a href="./services.html">Nos Services</a>
+        <a href="./shop.html">Boutique</a>
         <a href="mailto:dalightbeauty15mai@gmail.com">dalightbeauty15mai@gmail.com</a>
       </div>
       <div class="footer-credit">
@@ -116,14 +121,20 @@
       <a href="../index.html" data-page="home">
         <i data-lucide="home"></i>
       </a>
-      <a href="./services.html" data-page="reservation">
-        <i data-lucide="calendar"></i>
+      <a href="./services.html" data-page="services">
+        <i data-lucide="sparkles"></i>
       </a>
-      <a href="./payment.html" class="active" data-page="payment">
-        <i data-lucide="credit-card"></i>
+      <a href="./shop.html" data-page="shop">
+        <i data-lucide="shopping-bag"></i>
+      </a>
+      <a href="./cart.html" data-page="cart">
+        <i data-lucide="shopping-cart"></i>
       </a>
       <a href="./orders.html" data-page="orders">
-        <i data-lucide="clipboard-list"></i>
+        <i data-lucide="folder-check"></i>
+      </a>
+      <a href="./login.html" data-page="login">
+        <i data-lucide="user"></i>
       </a>
     </nav>
 

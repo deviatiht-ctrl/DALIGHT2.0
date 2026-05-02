@@ -517,3 +517,293 @@ function truncateText(text, maxLength) {
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength) + '...';
 }
+
+// ============================================
+// AVAILABILITY MANAGEMENT
+// ============================================
+
+let currentAvailabilityMonth = new Date();
+let selectedSlot = null;
+
+// Initialize tabs
+document.addEventListener('DOMContentLoaded', () => {
+  initTabs();
+  initMonthNavigation();
+});
+
+function initTabs() {
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tabName = btn.dataset.tab;
+      
+      // Update buttons
+      tabBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      // Update content
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+        content.style.display = 'none';
+      });
+      
+      const activeTab = document.getElementById(`tab-${tabName}`);
+      if (activeTab) {
+        activeTab.classList.add('active');
+        activeTab.style.display = 'block';
+        
+        // Load availability data if that tab
+        if (tabName === 'availability') {
+          loadAvailability();
+        }
+      }
+    });
+  });
+}
+
+function initMonthNavigation() {
+  document.getElementById('prev-month')?.addEventListener('click', () => {
+    currentAvailabilityMonth.setMonth(currentAvailabilityMonth.getMonth() - 1);
+    loadAvailability();
+  });
+  
+  document.getElementById('next-month')?.addEventListener('click', () => {
+    currentAvailabilityMonth.setMonth(currentAvailabilityMonth.getMonth() + 1);
+    loadAvailability();
+  });
+}
+
+async function loadAvailability() {
+  const supabase = window.adminCore?.supabase;
+  if (!supabase) {
+    console.error('Supabase not initialized');
+    return;
+  }
+  
+  // Update month display
+  const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
+                      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+  document.getElementById('current-month-display').textContent = 
+    `${monthNames[currentAvailabilityMonth.getMonth()]} ${currentAvailabilityMonth.getFullYear()}`;
+  
+  try {
+    const year = currentAvailabilityMonth.getFullYear();
+    const month = currentAvailabilityMonth.getMonth() + 1;
+    
+    // Call the RPC function
+    const { data, error } = await supabase
+      .rpc('get_month_availability', { 
+        p_year: year, 
+        p_month: month 
+      });
+    
+    if (error) throw error;
+    
+    renderAvailabilityCalendar(data || []);
+  } catch (err) {
+    console.error('Error loading availability:', err);
+    window.adminCore?.showToast('Erreur lors du chargement du calendrier', 'error');
+  }
+}
+
+function renderAvailabilityCalendar(data) {
+  const tbody = document.getElementById('availability-body');
+  if (!tbody) return;
+  
+  // Group by date
+  const byDate = {};
+  data.forEach(slot => {
+    if (!byDate[slot.available_date]) {
+      byDate[slot.available_date] = {};
+    }
+    byDate[slot.available_date][slot.time_slot] = slot;
+  });
+  
+  // Sort dates
+  const dates = Object.keys(byDate).sort();
+  
+  const timeSlots = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+  
+  tbody.innerHTML = dates.map(date => {
+    const dateObj = new Date(date);
+    const dayName = dateObj.toLocaleDateString('fr-FR', { weekday: 'short' });
+    const dayNum = dateObj.getDate();
+    
+    return `
+      <tr>
+        <td style="font-weight: 600; white-space: nowrap;">
+          ${dayName} ${dayNum}
+        </td>
+        ${timeSlots.map(time => {
+          const slot = byDate[date]?.[time];
+          const status = getSlotStatus(slot);
+          return `
+            <td style="padding: 0;">
+              <button 
+                class="availability-cell ${status.class}"
+                onclick="openSlotModal('${date}', '${time}', ${slot ? JSON.stringify(slot).replace(/"/g, '&quot;') : 'null'})"
+                style="
+                  width: 100%;
+                  padding: 0.5rem;
+                  border: none;
+                  background: ${status.color};
+                  color: ${status.textColor};
+                  cursor: pointer;
+                  font-size: 0.75rem;
+                  ${slot?.is_exception ? 'border: 2px solid #dc2626;' : ''}
+                "
+                title="${status.tooltip}"
+              >
+                ${slot?.remaining_slots ?? '-'}
+              </button>
+            </td>
+          `;
+        }).join('')}
+      </tr>
+    `;
+  }).join('');
+}
+
+function getSlotStatus(slot) {
+  if (!slot || !slot.is_available) {
+    return { 
+      class: 'blocked', 
+      color: '#6b7280', 
+      textColor: 'white',
+      tooltip: 'Bloqué / Non disponible'
+    };
+  }
+  
+  const remaining = slot.remaining_slots;
+  const capacity = slot.max_capacity;
+  
+  if (remaining <= 0) {
+    return { 
+      class: 'full', 
+      color: '#ef4444', 
+      textColor: 'white',
+      tooltip: `Complet (${slot.current_bookings}/${capacity})`
+    };
+  }
+  
+  if (remaining <= Math.ceil(capacity * 0.3)) {
+    return { 
+      class: 'limited', 
+      color: '#f59e0b', 
+      textColor: 'white',
+      tooltip: `Presque plein - ${remaining} place${remaining > 1 ? 's' : ''} restante${remaining > 1 ? 's' : ''}`
+    };
+  }
+  
+  return { 
+    class: 'available', 
+    color: '#10b981', 
+    textColor: 'white',
+    tooltip: `${remaining} places disponibles`
+  };
+}
+
+// Modal Functions
+function openBlockDateModal() {
+  document.getElementById('block-date-modal').style.display = 'flex';
+  document.getElementById('block-date-input').value = '';
+  document.getElementById('block-time-input').value = '';
+  document.getElementById('block-reason-input').value = '';
+}
+
+function closeBlockDateModal() {
+  document.getElementById('block-date-modal').style.display = 'none';
+}
+
+async function confirmBlockDate() {
+  const date = document.getElementById('block-date-input').value;
+  const time = document.getElementById('block-time-input').value;
+  const reason = document.getElementById('block-reason-input').value;
+  
+  if (!date) {
+    window.adminCore?.showToast('Veuillez sélectionner une date', 'error');
+    return;
+  }
+  
+  try {
+    const supabase = window.adminCore?.supabase;
+    if (!supabase) throw new Error('Supabase not initialized');
+    
+    const { data, error } = await supabase
+      .rpc('admin_block_date', {
+        p_date: date,
+        p_time_slot: time || null,
+        p_reason: reason || 'Bloque par admin',
+        p_is_blocked: true
+      });
+    
+    if (error) throw error;
+    
+    if (data?.success) {
+      window.adminCore?.showToast(data.action === 'bloke' ? 'Date bloquée avec succès' : 'Modification effectuée');
+      closeBlockDateModal();
+      loadAvailability();
+    } else {
+      window.adminCore?.showToast(data?.error || 'Erreur', 'error');
+    }
+  } catch (err) {
+    console.error('Error blocking date:', err);
+    window.adminCore?.showToast('Erreur: ' + err.message, 'error');
+  }
+}
+
+function openSlotModal(date, time, slotData) {
+  selectedSlot = { date, time, ...slotData };
+  
+  document.getElementById('capacity-time-display').value = `${date} à ${time}`;
+  document.getElementById('capacity-input').value = slotData?.max_capacity || 1;
+  document.getElementById('capacity-available').checked = slotData?.is_available ?? true;
+  
+  document.getElementById('capacity-modal').style.display = 'flex';
+}
+
+function closeCapacityModal() {
+  document.getElementById('capacity-modal').style.display = 'none';
+  selectedSlot = null;
+}
+
+async function saveCapacity() {
+  if (!selectedSlot) return;
+  
+  const capacity = parseInt(document.getElementById('capacity-input').value);
+  const isAvailable = document.getElementById('capacity-available').checked;
+  
+  try {
+    const supabase = window.adminCore?.supabase;
+    if (!supabase) throw new Error('Supabase not initialized');
+    
+    // Get day of week from date
+    const dateObj = new Date(selectedSlot.date);
+    const dayOfWeek = dateObj.getDay();
+    
+    const { data, error } = await supabase
+      .rpc('admin_set_availability', {
+        p_day_of_week: dayOfWeek,
+        p_time_slot: selectedSlot.time + ':00',
+        p_is_available: isAvailable,
+        p_max_capacity: capacity
+      });
+    
+    if (error) throw error;
+    
+    if (data?.success) {
+      window.adminCore?.showToast('Capacité mise à jour');
+      closeCapacityModal();
+      loadAvailability();
+    } else {
+      window.adminCore?.showToast(data?.error || 'Erreur', 'error');
+    }
+  } catch (err) {
+    console.error('Error saving capacity:', err);
+    window.adminCore?.showToast('Erreur: ' + err.message, 'error');
+  }
+}
+
+function openSetCapacityModal() {
+  window.adminCore?.showToast('Sélectionnez un créneau dans le calendrier pour modifier sa capacité');
+}
