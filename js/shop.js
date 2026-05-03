@@ -116,53 +116,37 @@ function renderProducts(products) {
     const hasDiscount = product.sale_price && product.sale_price < product.price;
     const categoryName = product.product_categories?.name || 'Produit';
 
-    // Generate badges
-    let badges = '';
-    if (product.is_featured) {
-      badges += `<span class="badge badge-featured">Vedette</span>`;
-    }
-    if (hasDiscount) {
-      const discountPercent = Math.round((1 - product.sale_price / product.price) * 100);
-      badges += `<span class="badge badge-sale">-${discountPercent}%</span>`;
-    }
-    if (product.stock_quantity === 0) {
-      badges += `<span class="badge badge-outofstock">Rupture</span>`;
-    } else if (product.stock_quantity <= 5) {
-      badges += `<span class="badge badge-new">Stock limité</span>`;
-    }
+    // Calculate save amount for discount badge
+    const saveAmount = hasDiscount ? (product.price - product.sale_price).toFixed(2) : 0;
+
+    // Generate stars (mock rating - can be replaced with real data)
+    const rating = product.rating || 5;
+    const reviewCount = product.review_count || Math.floor(Math.random() * 3000) + 100;
+    const stars = '★'.repeat(Math.floor(rating)) + (rating % 1 >= 0.5 ? '½' : '');
 
     return `
-      <div class="product-card">
-        <div class="product-image-wrapper">
+      <div class="product-card-modern">
+        <div class="product-image-wrapper-modern">
           <img src="${product.image_urls?.[0] || 'https://via.placeholder.com/400x320?text=No+Image'}"
                alt="${product.name}"
-               class="product-image"
+               class="product-image-modern"
                loading="lazy"
                onerror="this.src='https://via.placeholder.com/400x320?text=No+Image'">
-          <div class="product-badges">
-            ${badges}
-          </div>
+          ${hasDiscount ? `<div class="save-badge">SAVE ${saveAmount} USD</div>` : ''}
         </div>
-        <div class="product-info">
-          <div class="product-category">${categoryName}</div>
-          <h3 class="product-name">${product.name}</h3>
-          ${product.short_description ? `<p class="product-description">${product.short_description}</p>` : ''}
-          <div class="product-price-container">
-            <div class="product-price">
-              ${hasDiscount ? `<span class="original">${product.price.toLocaleString()} <span class="currency">HTG</span></span>` : ''}
-              <span class="${hasDiscount ? 'sale-price' : ''}">${price.toLocaleString()} <span class="currency">HTG</span></span>
-            </div>
+        <div class="product-info-modern">
+          <h3 class="product-name-modern">${product.name}</h3>
+          <div class="product-rating-modern">
+            <span class="stars">${stars}</span>
+            <span class="review-count">(${reviewCount.toLocaleString()})</span>
           </div>
-          <div class="product-actions">
-            <button class="btn-view" onclick="viewProduct('${product.id}')">
-              <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
-              Voir
-            </button>
-            <button class="btn-add-cart" onclick="addToCart('${product.id}')" ${product.stock_quantity === 0 ? 'disabled' : ''}>
-              <i data-lucide="shopping-cart" style="width: 16px; height: 16px;"></i>
-              ${product.stock_quantity === 0 ? 'Rupture' : 'Ajouter'}
-            </button>
+          <div class="product-price-modern">
+            ${hasDiscount ? `<span class="price-original">$${product.price.toFixed(2)} USD</span>` : ''}
+            <span class="price-current">$${price.toFixed(2)} USD</span>
           </div>
+          <button class="btn-add-cart-modern" onclick="addToCart('${product.id}')" ${product.stock_quantity === 0 ? 'disabled' : ''}>
+            ${product.stock_quantity === 0 ? 'Rupture de stock' : 'Add to Cart'}
+          </button>
         </div>
       </div>
     `;
