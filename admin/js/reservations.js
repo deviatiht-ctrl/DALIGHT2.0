@@ -574,11 +574,28 @@ function initMonthNavigation() {
 }
 
 async function loadAvailability() {
+  // Wait for adminCore to be ready
+  let retries = 0;
+  while (!window.adminCore?.supabase && retries < 10) {
+    console.log('⏳ Waiting for Supabase... attempt', retries + 1);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    retries++;
+  }
+  
   const supabase = window.adminCore?.supabase;
   if (!supabase) {
-    console.error('Supabase not initialized');
+    console.error('❌ Supabase not initialized after waiting');
+    const tbody = document.getElementById('availability-body');
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="12" style="text-align: center; padding: 2rem; color: #ef4444;">
+        ⚠️ Erreur: Connexion Supabase non établie.<br>
+        <button onclick="location.reload()" class="btn btn-primary" style="margin-top: 1rem;">Rafraîchir la page</button>
+      </td></tr>`;
+    }
     return;
   }
+  
+  console.log('✅ Supabase connected, loading availability...');
   
   // Update month display
   const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
@@ -747,12 +764,28 @@ async function confirmBlockDate() {
     return;
   }
   
+  // Show loading state
+  const btn = document.querySelector('#block-date-modal .btn-danger');
+  const originalText = btn?.textContent;
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Traitement...';
+  }
+  
   try {
+    // Wait for Supabase
+    let retries = 0;
+    while (!window.adminCore?.supabase && retries < 10) {
+      console.log('⏳ Waiting for Supabase...', retries + 1);
+      await new Promise(resolve => setTimeout(resolve, 300));
+      retries++;
+    }
+    
     const supabase = window.adminCore?.supabase;
     console.log('🔌 Supabase:', supabase ? 'OK' : 'NULL');
     
     if (!supabase) {
-      throw new Error('Supabase not initialized - refresh page');
+      throw new Error('Supabase not initialized. Veuillez rafraîchir la page.');
     }
     
     console.log('📤 Calling admin_block_date RPC...');
@@ -779,6 +812,12 @@ async function confirmBlockDate() {
     console.error('❌ Error blocking date:', err);
     window.adminCore?.showToast('Erreur: ' + err.message, 'error');
     alert('Erreur: ' + err.message + '\n\nVérifiez que vous avez exécuté dateheure.sql dans Supabase');
+  } finally {
+    // Restore button state
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = originalText || 'Bloquer';
+    }
   }
 }
 
