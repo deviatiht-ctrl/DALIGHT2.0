@@ -117,12 +117,11 @@ function renderProducts(products) {
     const categoryName = product.product_categories?.name || 'Produit';
 
     // Calculate save amount for discount badge
-    const saveAmount = hasDiscount ? (product.price - product.sale_price).toFixed(2) : 0;
+    const saveAmount = hasDiscount ? (product.price - product.sale_price).toFixed(0) : 0;
 
-    // Generate stars (mock rating - can be replaced with real data)
-    const rating = product.rating || 5;
-    const reviewCount = product.review_count || Math.floor(Math.random() * 3000) + 100;
-    const stars = '★'.repeat(Math.floor(rating)) + (rating % 1 >= 0.5 ? '½' : '');
+    // Only show rating if product has real rating data
+    const hasRating = product.rating && product.rating > 0;
+    const stars = hasRating ? '★'.repeat(Math.floor(product.rating)) : '';
 
     return `
       <div class="product-card-modern">
@@ -132,20 +131,20 @@ function renderProducts(products) {
                class="product-image-modern"
                loading="lazy"
                onerror="this.src='https://via.placeholder.com/400x320?text=No+Image'">
-          ${hasDiscount ? `<div class="save-badge">SAVE ${saveAmount} USD</div>` : ''}
+          ${hasDiscount ? `<div class="save-badge">SAVE ${saveAmount} HTG</div>` : ''}
         </div>
         <div class="product-info-modern">
           <h3 class="product-name-modern">${product.name}</h3>
-          <div class="product-rating-modern">
+          ${hasRating ? `<div class="product-rating-modern">
             <span class="stars">${stars}</span>
-            <span class="review-count">(${reviewCount.toLocaleString()})</span>
-          </div>
+            ${product.review_count ? `<span class="review-count">(${product.review_count})</span>` : ''}
+          </div>` : ''}
           <div class="product-price-modern">
-            ${hasDiscount ? `<span class="price-original">$${product.price.toFixed(2)} USD</span>` : ''}
-            <span class="price-current">$${price.toFixed(2)} USD</span>
+            ${hasDiscount ? `<span class="price-original">${product.price.toLocaleString()} HTG</span>` : ''}
+            <span class="price-current">${price.toLocaleString()} HTG</span>
           </div>
           <button class="btn-add-cart-modern" onclick="addToCart('${product.id}')" ${product.stock_quantity === 0 ? 'disabled' : ''}>
-            ${product.stock_quantity === 0 ? 'Rupture de stock' : 'Add to Cart'}
+            ${product.stock_quantity === 0 ? 'Rupture de stock' : '<i data-lucide="shopping-cart" style="width:18px;height:18px;"></i> Add to Cart'}
           </button>
         </div>
       </div>
