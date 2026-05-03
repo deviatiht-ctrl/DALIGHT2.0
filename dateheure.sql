@@ -334,8 +334,8 @@ BEGIN
         WHERE exception_date BETWEEN v_start_date AND v_end_date
     )
     SELECT 
-        ds.slot_date,
-        ds.time_slot,
+        ds.slot_date as available_date,
+        ds.time_slot as time_slot,
         CASE 
             WHEN ec.is_blocked = true THEN false
             WHEN ds.rule_available = false THEN false

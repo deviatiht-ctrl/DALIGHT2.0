@@ -695,11 +695,20 @@ body::before {
   color: var(--admin-text);
 }
 
-/* Fix dropdown options in dark mode */
+/* Fix dropdown options in dark mode - STRONG override */
 .form-select option {
-  background-color: #1e1e32;
-  color: #ffffff;
+  background-color: #1e1e32 !important;
+  color: #ffffff !important;
   padding: 0.5rem;
+  font-size: 14px;
+}
+
+/* Even stronger for hover/selected states */
+.form-select option:hover,
+.form-select option:focus,
+.form-select option:checked {
+  background-color: #2d2d4a !important;
+  color: #ffffff !important;
 }
 
 /* Ensure dropdown is visible above modal */
