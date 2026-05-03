@@ -1152,3 +1152,9 @@ table tbody tr:hover td {
   height: 16px;
   border-radius: 4px;
 }
+
+/* Small button variant */
+.btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+}

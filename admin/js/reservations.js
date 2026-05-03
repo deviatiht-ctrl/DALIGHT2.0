@@ -730,9 +730,15 @@ function openBlockDateModal() {
     // Use active class for proper CSS display
     modal.classList.add('active');
     modal.style.display = 'flex';
+    // Clear all fields
     document.getElementById('block-date-input').value = '';
-    document.getElementById('block-time-input').value = '';
+    document.getElementById('block-time-from').value = '';
+    document.getElementById('block-time-to').value = '';
     document.getElementById('block-reason-input').value = '';
+    // Hide preview and reservations
+    document.getElementById('selected-hours-preview').style.display = 'none';
+    document.getElementById('existing-reservations-section').style.display = 'none';
+    document.getElementById('no-reservations-msg').style.display = 'none';
     console.log('✅ Modal opened with active class');
   } else {
     console.error('❌ Modal not found!');
@@ -747,9 +753,94 @@ function closeBlockDateModal() {
     modal.style.display = 'none';
     console.log('✅ Modal closed');
   }
-  // Clear reservations list
+  // Clear all sections
   document.getElementById('existing-reservations-section').style.display = 'none';
   document.getElementById('no-reservations-msg').style.display = 'none';
+  document.getElementById('selected-hours-preview').style.display = 'none';
+}
+
+// Time Range Functions
+function setTimeRange(from, to) {
+  console.log('⏰ Setting time range:', from, 'to', to);
+  document.getElementById('block-time-from').value = from;
+  document.getElementById('block-time-to').value = to;
+  updateHoursPreview();
+  window.adminCore?.showToast(`Plage horaire: ${from} à ${to}`);
+}
+
+function onTimeFromChange() {
+  const from = document.getElementById('block-time-from').value;
+  const toSelect = document.getElementById('block-time-to');
+  
+  // If "from" is selected and "to" is empty or before "from", set "to" to next hour
+  if (from && !toSelect.value) {
+    const nextHour = parseInt(from.split(':')[0]) + 1;
+    if (nextHour <= 18) {
+      toSelect.value = `${nextHour.toString().padStart(2, '0')}:00`;
+    }
+  }
+  
+  updateHoursPreview();
+}
+
+function updateHoursPreview() {
+  const from = document.getElementById('block-time-from').value;
+  const to = document.getElementById('block-time-to').value;
+  const previewSection = document.getElementById('selected-hours-preview');
+  const hoursList = document.getElementById('hours-to-block-list');
+  
+  if (!from || !to) {
+    previewSection.style.display = 'none';
+    return;
+  }
+  
+  // Generate list of hours to block
+  const startHour = parseInt(from.split(':')[0]);
+  const endHour = parseInt(to.split(':')[0]);
+  const hours = [];
+  
+  for (let h = startHour; h < endHour; h++) {
+    hours.push(`${h.toString().padStart(2, '0')}:00`);
+  }
+  
+  if (hours.length === 0) {
+    previewSection.style.display = 'none';
+    return;
+  }
+  
+  // Display hours
+  hoursList.innerHTML = hours.map(h => 
+    `<span style="padding: 0.25rem 0.5rem; background: #ef4444; color: white; border-radius: 4px; font-size: 0.75rem;">${h}</span>`
+  ).join('');
+  
+  previewSection.style.display = 'block';
+}
+
+// Get array of hours to block
+function getHoursToBlock() {
+  const from = document.getElementById('block-time-from').value;
+  const to = document.getElementById('block-time-to').value;
+  
+  if (!from && !to) {
+    // Block whole day - return special marker
+    return ['ALL_DAY'];
+  }
+  
+  if (!from || !to) {
+    // Single hour
+    return [from || to];
+  }
+  
+  // Range of hours
+  const startHour = parseInt(from.split(':')[0]);
+  const endHour = parseInt(to.split(':')[0]);
+  const hours = [];
+  
+  for (let h = startHour; h < endHour; h++) {
+    hours.push(`${h.toString().padStart(2, '0')}:00`);
+  }
+  
+  return hours;
 }
 
 // Load reservations when date is selected
@@ -849,7 +940,14 @@ async function onBlockDateChange(date) {
 // Select time from reservation
 function selectReservationTime(time, clientName, service) {
   console.log('⏰ Selected reservation time:', time);
-  document.getElementById('block-time-input').value = time;
+  
+  // Set as single hour (from and to are the same)
+  document.getElementById('block-time-from').value = time;
+  const nextHour = (parseInt(time.split(':')[0]) + 1).toString().padStart(2, '0') + ':00';
+  document.getElementById('block-time-to').value = nextHour;
+  
+  // Update preview
+  updateHoursPreview();
   
   // Auto-fill reason with client info
   const reasonInput = document.getElementById('block-reason-input');
@@ -864,10 +962,10 @@ async function confirmBlockDate() {
   console.log('🔴 confirmBlockDate called');
   
   const date = document.getElementById('block-date-input').value;
-  const time = document.getElementById('block-time-input').value;
   const reason = document.getElementById('block-reason-input').value;
+  const hoursToBlock = getHoursToBlock();
   
-  console.log('📅 Date:', date, '🕐 Time:', time, '📝 Reason:', reason);
+  console.log('📅 Date:', date, '🕐 Hours:', hoursToBlock, '📝 Reason:', reason);
   
   if (!date) {
     console.error('❌ No date selected');
@@ -880,7 +978,9 @@ async function confirmBlockDate() {
   const originalText = btn?.textContent;
   if (btn) {
     btn.disabled = true;
-    btn.textContent = 'Traitement...';
+    btn.textContent = hoursToBlock.length > 1 
+      ? `Bloquer ${hoursToBlock.length} heures...` 
+      : 'Traitement...';
   }
   
   try {
@@ -899,26 +999,46 @@ async function confirmBlockDate() {
       throw new Error('Supabase not initialized. Veuillez rafraîchir la page.');
     }
     
-    console.log('📤 Calling admin_block_date RPC...');
-    const { data, error } = await supabase
-      .rpc('admin_block_date', {
-        p_date: date,
-        p_time_slot: time || null,
-        p_reason: reason || 'Bloque par admin',
-        p_is_blocked: true
-      });
+    // Block each hour
+    const blockedHours = [];
+    const errors = [];
     
-    console.log('📥 Response:', { data, error });
+    for (const hour of hoursToBlock) {
+      console.log('📤 Blocking:', hour);
+      try {
+        const { data, error } = await supabase
+          .rpc('admin_block_date', {
+            p_date: date,
+            p_time_slot: hour === 'ALL_DAY' ? null : hour,
+            p_reason: reason || 'Bloque par admin',
+            p_is_blocked: true
+          });
+        
+        if (error) {
+          console.error('❌ Error blocking hour:', hour, error);
+          errors.push(`${hour}: ${error.message}`);
+        } else if (data?.success) {
+          blockedHours.push(hour === 'ALL_DAY' ? 'Toute la journée' : hour);
+        }
+      } catch (err) {
+        console.error('❌ Exception blocking hour:', hour, err);
+        errors.push(`${hour}: ${err.message}`);
+      }
+    }
     
-    if (error) throw error;
+    console.log('📊 Results:', { blocked: blockedHours.length, errors: errors.length });
     
-    if (data?.success) {
-      window.adminCore?.showToast(data.action === 'bloke' ? 'Date bloquée avec succès' : 'Modification effectuée');
+    if (blockedHours.length > 0) {
+      const message = blockedHours.length === 1 
+        ? `Heure bloquée: ${blockedHours[0]}`
+        : `${blockedHours.length} heures bloquées: ${blockedHours.join(', ')}`;
+      window.adminCore?.showToast(message);
       closeBlockDateModal();
       loadAvailability();
-    } else {
-      window.adminCore?.showToast(data?.error || 'Erreur', 'error');
+    } else if (errors.length > 0) {
+      window.adminCore?.showToast('Erreur: ' + errors[0], 'error');
     }
+    
   } catch (err) {
     console.error('❌ Error blocking date:', err);
     window.adminCore?.showToast('Erreur: ' + err.message, 'error');
@@ -927,7 +1047,7 @@ async function confirmBlockDate() {
     // Restore button state
     if (btn) {
       btn.disabled = false;
-      btn.textContent = originalText || 'Bloquer';
+      btn.textContent = originalText || '🚫 Bloquer';
     }
   }
 }

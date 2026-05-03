@@ -319,27 +319,72 @@
 
         <hr style="border: none; border-top: 1px solid var(--admin-border); margin: 1.5rem 0;">
 
-        <!-- Manual Time Selection -->
+        <!-- Time Range Selection -->
         <div class="form-group">
-          <label>Ou sélectionnez manuellement:</label>
-          <select id="block-time-input" class="form-input">
-            <option value="">Toute la journée</option>
-            <option value="08:00">08:00</option>
-            <option value="09:00">09:00</option>
-            <option value="10:00">10:00</option>
-            <option value="11:00">11:00</option>
-            <option value="12:00">12:00</option>
-            <option value="13:00">13:00</option>
-            <option value="14:00">14:00</option>
-            <option value="15:00">15:00</option>
-            <option value="16:00">16:00</option>
-            <option value="17:00">17:00</option>
-            <option value="18:00">18:00</option>
-          </select>
+          <label>Sélectionnez la plage horaire à bloquer:</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
+            <div>
+              <label style="font-size: 0.8rem; color: var(--admin-text-muted);">De:</label>
+              <select id="block-time-from" class="form-input" onchange="onTimeFromChange()">
+                <option value="">-- Heure début --</option>
+                <option value="08:00">08:00</option>
+                <option value="09:00">09:00</option>
+                <option value="10:00">10:00</option>
+                <option value="11:00">11:00</option>
+                <option value="12:00">12:00</option>
+                <option value="13:00">13:00</option>
+                <option value="14:00">14:00</option>
+                <option value="15:00">15:00</option>
+                <option value="16:00">16:00</option>
+                <option value="17:00">17:00</option>
+                <option value="18:00">18:00</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 0.8rem; color: var(--admin-text-muted);">À:</label>
+              <select id="block-time-to" class="form-input">
+                <option value="">-- Heure fin --</option>
+                <option value="08:00">08:00</option>
+                <option value="09:00">09:00</option>
+                <option value="10:00">10:00</option>
+                <option value="11:00">11:00</option>
+                <option value="12:00">12:00</option>
+                <option value="13:00">13:00</option>
+                <option value="14:00">14:00</option>
+                <option value="15:00">15:00</option>
+                <option value="16:00">16:00</option>
+                <option value="17:00">17:00</option>
+                <option value="18:00">18:00</option>
+              </select>
+            </div>
+          </div>
+          <p style="font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 0.5rem;">
+            💡 Laissez vide pour bloquer toute la journée. Sélectionnez "De" et "À" pour bloquer une plage (ex: 08:00 à 12:00)
+          </p>
         </div>
+
+        <!-- Quick Selection Buttons -->
         <div class="form-group">
+          <label>Sélection rapide:</label>
+          <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="setTimeRange('08:00', '12:00')">Matin (8h-12h)</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="setTimeRange('12:00', '14:00')">Midi (12h-14h)</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="setTimeRange('14:00', '18:00')">Après-midi (14h-18h)</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="setTimeRange('08:00', '18:00')">Toute la journée</button>
+          </div>
+        </div>
+
+        <!-- Selected Hours Preview -->
+        <div id="selected-hours-preview" style="margin-top: 1rem; padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3); display: none;">
+          <label style="font-size: 0.8rem; color: #ef4444; margin-bottom: 0.5rem; display: block;">
+            ⚠️ Heures qui seront bloquées:
+          </label>
+          <div id="hours-to-block-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
+        </div>
+
+        <div class="form-group" style="margin-top: 1rem;">
           <label>Raison (optionnel)</label>
-          <input type="text" id="block-reason-input" class="form-input" placeholder="Ex: Fête, Congé, Client spécial...">
+          <input type="text" id="block-reason-input" class="form-input" placeholder="Ex: Fête, Congé, Client spécial, Formation...">
         </div>
       </div>
       <div class="modal-footer">
