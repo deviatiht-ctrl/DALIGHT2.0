@@ -20,6 +20,24 @@ window.supabaseClient = supabaseClient;
 console.log('✅ Admin core: window.dalightAdminSupabase + window.dalightAdminReady=true');
 window.ADMIN_EMAILS = ADMIN_EMAILS;
 
+// Create adminCore object for pages that expect it (reservations.js compatibility)
+window.adminCore = {
+  supabase: supabaseClient,
+  showToast: function(message, type = 'success') {
+    // Simple toast fallback if showToast doesn't exist globally
+    if (window.showToast) {
+      window.showToast(message, type);
+    } else {
+      console.log(`[${type.toUpperCase()}] ${message}`);
+      // You can add a simple alert fallback for critical errors
+      if (type === 'error') {
+        alert(message);
+      }
+    }
+  }
+};
+console.log('✅ Admin core: window.adminCore initialized with supabase');
+
 // ============================================
 // AUTH CHECK
 // ============================================
