@@ -710,11 +710,13 @@ function openBlockDateModal() {
   console.log('📦 Modal element:', modal);
   
   if (modal) {
+    // Use active class for proper CSS display
+    modal.classList.add('active');
     modal.style.display = 'flex';
     document.getElementById('block-date-input').value = '';
     document.getElementById('block-time-input').value = '';
     document.getElementById('block-reason-input').value = '';
-    console.log('✅ Modal opened');
+    console.log('✅ Modal opened with active class');
   } else {
     console.error('❌ Modal not found!');
     alert('Erreur: Modal non trouvé. Veuillez rafraîchir la page.');
@@ -724,6 +726,7 @@ function openBlockDateModal() {
 function closeBlockDateModal() {
   const modal = document.getElementById('block-date-modal');
   if (modal) {
+    modal.classList.remove('active');
     modal.style.display = 'none';
     console.log('✅ Modal closed');
   }
@@ -780,18 +783,29 @@ async function confirmBlockDate() {
 }
 
 function openSlotModal(date, time, slotData) {
+  console.log('🔴 openSlotModal called:', date, time, slotData);
   selectedSlot = { date, time, ...slotData };
   
   document.getElementById('capacity-time-display').value = `${date} à ${time}`;
   document.getElementById('capacity-input').value = slotData?.max_capacity || 1;
   document.getElementById('capacity-available').checked = slotData?.is_available ?? true;
   
-  document.getElementById('capacity-modal').style.display = 'flex';
+  const modal = document.getElementById('capacity-modal');
+  if (modal) {
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+    console.log('✅ Capacity modal opened');
+  }
 }
 
 function closeCapacityModal() {
-  document.getElementById('capacity-modal').style.display = 'none';
+  const modal = document.getElementById('capacity-modal');
+  if (modal) {
+    modal.classList.remove('active');
+    modal.style.display = 'none';
+  }
   selectedSlot = null;
+  console.log('✅ Capacity modal closed');
 }
 
 async function saveCapacity() {
