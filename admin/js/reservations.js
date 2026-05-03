@@ -573,16 +573,44 @@ function initMonthNavigation() {
   });
 }
 
+// Helper to get Supabase from multiple sources
+function getSupabaseClient() {
+  // Check all possible sources
+  if (window.adminCore?.supabase) {
+    console.log('✅ Found supabase in window.adminCore');
+    return window.adminCore.supabase;
+  }
+  if (window.dalightAdminSupabase) {
+    console.log('✅ Found supabase in window.dalightAdminSupabase');
+    return window.dalightAdminSupabase;
+  }
+  if (window.supabaseClient) {
+    console.log('✅ Found supabase in window.supabaseClient');
+    return window.supabaseClient;
+  }
+  // Try global supabase object directly
+  if (typeof supabase !== 'undefined' && supabase.createClient) {
+    console.log('⚠️ Creating new supabase client');
+    const SUPABASE_URL = 'https://rbwoiejztrkghfkpxquo.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U';
+    return supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  }
+  return null;
+}
+
 async function loadAvailability() {
-  // Wait for adminCore to be ready
+  // Wait for Supabase to be available
   let retries = 0;
-  while (!window.adminCore?.supabase && retries < 10) {
+  let supabase = getSupabaseClient();
+  
+  while (!supabase && retries < 20) {
     console.log('⏳ Waiting for Supabase... attempt', retries + 1);
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 300));
+    supabase = getSupabaseClient();
     retries++;
   }
   
-  const supabase = window.adminCore?.supabase;
+  console.log('🔍 Final supabase check:', supabase ? 'FOUND' : 'NULL');
   if (!supabase) {
     console.error('❌ Supabase not initialized after waiting');
     const tbody = document.getElementById('availability-body');
@@ -862,9 +890,9 @@ async function onBlockDateChange(date) {
   noMsg.style.display = 'none';
 
   try {
-    const supabase = window.adminCore?.supabase;
+    const supabase = getSupabaseClient();
     if (!supabase) {
-      listContainer.innerHTML = '<p style="color: #ef4444;">Erreur: Supabase non connecté</p>';
+      listContainer.innerHTML = '<p style="color: #ef4444;">Erreur: Supabase non connecté. Rafraîchissez la page.</p>';
       return;
     }
 
@@ -984,15 +1012,17 @@ async function confirmBlockDate() {
   }
   
   try {
-    // Wait for Supabase
+    // Wait for Supabase using the helper function
     let retries = 0;
-    while (!window.adminCore?.supabase && retries < 10) {
+    let supabase = getSupabaseClient();
+    
+    while (!supabase && retries < 20) {
       console.log('⏳ Waiting for Supabase...', retries + 1);
       await new Promise(resolve => setTimeout(resolve, 300));
+      supabase = getSupabaseClient();
       retries++;
     }
     
-    const supabase = window.adminCore?.supabase;
     console.log('🔌 Supabase:', supabase ? 'OK' : 'NULL');
     
     if (!supabase) {
