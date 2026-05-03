@@ -284,7 +284,7 @@
 
   <!-- Block Date Modal -->
   <div class="modal-overlay" id="block-date-modal" style="display: none;">
-    <div class="modal" style="max-width: 500px;">
+    <div class="modal" style="max-width: 600px;">
       <div class="modal-header">
         <h3 class="modal-title">Bloquer une date</h3>
         <button class="modal-close" onclick="closeBlockDateModal()">
@@ -294,12 +294,34 @@
         </button>
       </div>
       <div class="modal-body">
+        <!-- Date Selection -->
         <div class="form-group">
           <label>Date à bloquer</label>
-          <input type="date" id="block-date-input" class="form-input">
+          <input type="date" id="block-date-input" class="form-input" onchange="onBlockDateChange(this.value)">
         </div>
+
+        <!-- Existing Reservations Section -->
+        <div id="existing-reservations-section" style="margin-top: 1.5rem; display: none;">
+          <h4 style="font-size: 1rem; margin-bottom: 0.75rem; color: var(--admin-text-muted);">
+            📅 Réservations existantes pour cette date
+          </h4>
+          <div id="existing-reservations-list" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--admin-border); border-radius: 8px; padding: 0.5rem;">
+            <!-- Reservations loaded here -->
+          </div>
+          <p style="font-size: 0.8rem; color: var(--admin-text-muted); margin-top: 0.5rem;">
+            💡 Cliquez sur une réservation pour bloquer cette heure spécifique
+          </p>
+        </div>
+
+        <div id="no-reservations-msg" style="margin-top: 1rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; display: none;">
+          <p style="color: #10b981; margin: 0;">✅ Aucune réservation pour cette date</p>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--admin-border); margin: 1.5rem 0;">
+
+        <!-- Manual Time Selection -->
         <div class="form-group">
-          <label>Heure spécifique (laisser vide pour toute la journée)</label>
+          <label>Ou sélectionnez manuellement:</label>
           <select id="block-time-input" class="form-input">
             <option value="">Toute la journée</option>
             <option value="08:00">08:00</option>
@@ -317,12 +339,12 @@
         </div>
         <div class="form-group">
           <label>Raison (optionnel)</label>
-          <input type="text" id="block-reason-input" class="form-input" placeholder="Ex: Fête, Congé...">
+          <input type="text" id="block-reason-input" class="form-input" placeholder="Ex: Fête, Congé, Client spécial...">
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeBlockDateModal()">Annuler</button>
-        <button class="btn btn-danger" onclick="confirmBlockDate()">Bloquer</button>
+        <button class="btn btn-danger" onclick="confirmBlockDate()">🚫 Bloquer</button>
       </div>
     </div>
   </div>

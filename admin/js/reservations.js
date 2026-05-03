@@ -747,6 +747,117 @@ function closeBlockDateModal() {
     modal.style.display = 'none';
     console.log('✅ Modal closed');
   }
+  // Clear reservations list
+  document.getElementById('existing-reservations-section').style.display = 'none';
+  document.getElementById('no-reservations-msg').style.display = 'none';
+}
+
+// Load reservations when date is selected
+async function onBlockDateChange(date) {
+  console.log('📅 Date changed:', date);
+  if (!date) {
+    document.getElementById('existing-reservations-section').style.display = 'none';
+    document.getElementById('no-reservations-msg').style.display = 'none';
+    return;
+  }
+
+  const listContainer = document.getElementById('existing-reservations-list');
+  const section = document.getElementById('existing-reservations-section');
+  const noMsg = document.getElementById('no-reservations-msg');
+
+  // Show loading
+  listContainer.innerHTML = '<p style="text-align: center; color: var(--admin-text-muted);">Chargement...</p>';
+  section.style.display = 'block';
+  noMsg.style.display = 'none';
+
+  try {
+    const supabase = window.adminCore?.supabase;
+    if (!supabase) {
+      listContainer.innerHTML = '<p style="color: #ef4444;">Erreur: Supabase non connecté</p>';
+      return;
+    }
+
+    // Load reservations for this date
+    const { data: reservations, error } = await supabase
+      .from('reservations')
+      .select('id, user_name, service, time, status, location')
+      .eq('date', date)
+      .not('status', 'eq', 'CANCELLED')
+      .order('time', { ascending: true });
+
+    if (error) throw error;
+
+    if (!reservations || reservations.length === 0) {
+      section.style.display = 'none';
+      noMsg.style.display = 'block';
+      return;
+    }
+
+    // Display reservations
+    listContainer.innerHTML = reservations.map(r => {
+      const time = r.time?.substring(0, 5) || '--:--';
+      const statusColors = {
+        'PENDING': '#f59e0b',
+        'CONFIRMED': '#10b981',
+        'COMPLETED': '#3b82f6',
+        'NO_SHOW': '#ef4444'
+      };
+      const statusLabels = {
+        'PENDING': 'En attente',
+        'CONFIRMED': 'Confirmée',
+        'COMPLETED': 'Terminée',
+        'NO_SHOW': 'No-show'
+      };
+
+      return `
+        <div onclick="selectReservationTime('${time}', '${r.user_name}', '${r.service}')" 
+             style="padding: 0.75rem; margin-bottom: 0.5rem; background: rgba(255,255,255,0.03); 
+                    border-radius: 8px; cursor: pointer; border: 1px solid var(--admin-border);
+                    transition: all 0.2s;"
+             onmouseover="this.style.background='rgba(255,255,255,0.08)'; this.style.borderColor='#6366f1'"
+             onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='var(--admin-border)'">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <strong style="font-size: 1.1rem; color: #fff;">${time}</strong>
+              <span style="margin-left: 0.5rem; color: var(--admin-text-muted);">${r.service}</span>
+            </div>
+            <span style="font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 4px; 
+                         background: ${statusColors[r.status] || '#6b7280'}20; 
+                         color: ${statusColors[r.status] || '#6b7280'};">
+              ${statusLabels[r.status] || r.status}
+            </span>
+          </div>
+          <div style="margin-top: 0.25rem; font-size: 0.85rem; color: var(--admin-text-muted);">
+            👤 ${r.user_name || 'Client'} | 📍 ${r.location || 'Spa'}
+          </div>
+          <div style="margin-top: 0.5rem; font-size: 0.75rem; color: #6366f1;">
+            → Cliquez pour bloquer cette heure
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    section.style.display = 'block';
+    noMsg.style.display = 'none';
+
+  } catch (err) {
+    console.error('Error loading reservations:', err);
+    listContainer.innerHTML = `<p style="color: #ef4444;">Erreur: ${err.message}</p>`;
+  }
+}
+
+// Select time from reservation
+function selectReservationTime(time, clientName, service) {
+  console.log('⏰ Selected reservation time:', time);
+  document.getElementById('block-time-input').value = time;
+  
+  // Auto-fill reason with client info
+  const reasonInput = document.getElementById('block-reason-input');
+  if (!reasonInput.value) {
+    reasonInput.value = `Bloquer - Réservation ${clientName} (${service})`;
+  }
+  
+  window.adminCore?.showToast(`Heure ${time} sélectionnée pour ${clientName}`);
 }
 
 async function confirmBlockDate() {
