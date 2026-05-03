@@ -661,7 +661,10 @@ function renderAvailabilityCalendar(data) {
     if (!byDate[slot.available_date]) {
       byDate[slot.available_date] = {};
     }
-    byDate[slot.available_date][slot.time_slot] = slot;
+    // Support both slot_time (new) and time_slot (old) column names
+    const timeKey = slot.slot_time || slot.time_slot;
+    const timeStr = timeKey ? String(timeKey).substring(0, 5) : null;
+    if (timeStr) byDate[slot.available_date][timeStr] = slot;
   });
   
   // Sort dates

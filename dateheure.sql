@@ -283,7 +283,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION get_month_availability(p_year INTEGER, p_month INTEGER)
 RETURNS TABLE (
     available_date DATE,
-    time_slot TIME,
+    slot_time TIME,
     is_available BOOLEAN,
     max_capacity INTEGER,
     current_bookings INTEGER,
@@ -296,64 +296,59 @@ DECLARE
 BEGIN
     RETURN QUERY
     WITH 
-    -- Jenerer tout dat nan mwa a
     all_dates AS (
         SELECT generate_series(v_start_date, v_end_date, '1 day'::INTERVAL)::DATE as d
     ),
-    -- Jenerer tout kombinasyon dat/tan
     date_slots AS (
         SELECT 
-            d.d as slot_date,
-            ar.time_slot,
-            ar.max_capacity,
-            ar.is_available as rule_available,
-            EXTRACT(DOW FROM d.d) as dow
+            d.d as ds_date,
+            ar.time_slot as ds_time,
+            ar.max_capacity as ds_capacity,
+            ar.is_available as ds_available
         FROM all_dates d
         CROSS JOIN availability_rules ar
         WHERE ar.day_of_week = EXTRACT(DOW FROM d.d)
     ),
-    -- Konte rezèvasyon yo
     booking_counts AS (
         SELECT 
-            date as reservation_date, 
-            time as reservation_time, 
-            COUNT(*) as cnt
-        FROM reservations
-        WHERE date BETWEEN v_start_date AND v_end_date
-          AND status NOT IN ('cancelled')
-        GROUP BY date, time
+            r.date as bc_date, 
+            r.time as bc_time, 
+            COUNT(*) as bc_cnt
+        FROM reservations r
+        WHERE r.date BETWEEN v_start_date AND v_end_date
+          AND r.status NOT IN ('cancelled')
+        GROUP BY r.date, r.time
     ),
-    -- Tcheke eksepsyon yo
     exception_check AS (
         SELECT 
-            exception_date,
-            time_slot,
-            is_blocked,
-            max_capacity as exc_capacity
-        FROM availability_exceptions
-        WHERE exception_date BETWEEN v_start_date AND v_end_date
+            ae.exception_date as ec_date,
+            ae.time_slot as ec_time,
+            ae.is_blocked as ec_blocked,
+            ae.max_capacity as ec_capacity
+        FROM availability_exceptions ae
+        WHERE ae.exception_date BETWEEN v_start_date AND v_end_date
     )
     SELECT 
-        ds.slot_date as available_date,
-        ds.time_slot as time_slot,
+        ds.ds_date::DATE,
+        ds.ds_time::TIME,
         CASE 
-            WHEN ec.is_blocked = true THEN false
-            WHEN ds.rule_available = false THEN false
+            WHEN ec.ec_blocked = true THEN false
+            WHEN ds.ds_available = false THEN false
             ELSE true
-        END as is_available,
-        COALESCE(ec.exc_capacity, ds.max_capacity) as max_capacity,
-        COALESCE(bc.cnt, 0) as current_bookings,
-        GREATEST(0, COALESCE(ec.exc_capacity, ds.max_capacity) - COALESCE(bc.cnt, 0)) as remaining_slots,
-        ec.is_blocked IS NOT NULL as is_exception
+        END::BOOLEAN,
+        COALESCE(ec.ec_capacity, ds.ds_capacity)::INTEGER,
+        COALESCE(bc.bc_cnt, 0)::INTEGER,
+        GREATEST(0, COALESCE(ec.ec_capacity, ds.ds_capacity) - COALESCE(bc.bc_cnt, 0))::INTEGER,
+        (ec.ec_blocked IS NOT NULL)::BOOLEAN
     FROM date_slots ds
     LEFT JOIN booking_counts bc 
-        ON ds.slot_date = bc.reservation_date 
-        AND ds.time_slot = bc.reservation_time
+        ON ds.ds_date = bc.bc_date 
+        AND ds.ds_time = bc.bc_time
     LEFT JOIN exception_check ec 
-        ON ds.slot_date = ec.exception_date 
-        AND (ec.time_slot = ds.time_slot OR ec.time_slot IS NULL)
-    WHERE ds.time_slot IS NOT NULL
-    ORDER BY ds.slot_date, ds.time_slot;
+        ON ds.ds_date = ec.ec_date 
+        AND (ec.ec_time = ds.ds_time OR ec.ec_time IS NULL)
+    WHERE ds.ds_time IS NOT NULL
+    ORDER BY ds.ds_date, ds.ds_time;
 END;
 $$ LANGUAGE plpgsql;
 
