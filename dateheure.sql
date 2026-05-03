@@ -365,6 +365,7 @@ ALTER TABLE availability_rules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE availability_exceptions ENABLE ROW LEVEL SECURITY;
 
 -- Admin ka tout
+DROP POLICY IF EXISTS "Admins manage availability_rules" ON availability_rules;
 CREATE POLICY "Admins manage availability_rules" ON availability_rules
     FOR ALL
     TO authenticated
@@ -372,18 +373,21 @@ CREATE POLICY "Admins manage availability_rules" ON availability_rules
     WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
 -- Piblik ka wè
+DROP POLICY IF EXISTS "Public view availability_rules" ON availability_rules;
 CREATE POLICY "Public view availability_rules" ON availability_rules
     FOR SELECT
     TO anon, authenticated
     USING (true);
 
 -- Admin exceptions
+DROP POLICY IF EXISTS "Admins manage exceptions" ON availability_exceptions;
 CREATE POLICY "Admins manage exceptions" ON availability_exceptions
     FOR ALL
     TO authenticated
     USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
     WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
+DROP POLICY IF EXISTS "Public view exceptions" ON availability_exceptions;
 CREATE POLICY "Public view exceptions" ON availability_exceptions
     FOR SELECT
     TO anon, authenticated
