@@ -12,7 +12,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script type="module" src="../js/main.js"></script>
-  <script type="module" src="../js/shop.js?v=4.0"></script>
+  <script type="module" src="../js/shop.js?v=5.0"></script>
   <script type="module" src="../js/chat-widget.js" defer></script>
   <script type="module">
     import { initChatWidget } from '../js/chat-widget.js';
@@ -493,6 +493,7 @@
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
+      text-align: center;
     }
 
     .product-name-modern {
@@ -528,6 +529,7 @@
     .product-price-modern {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 0.75rem;
       margin: 0.5rem 0;
     }
@@ -570,6 +572,10 @@
       background: #1a1a1a;
       transform: translateY(-2px);
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-add-cart-modern svg {
+      flex-shrink: 0;
     }
 
     .btn-add-cart-modern:disabled {
