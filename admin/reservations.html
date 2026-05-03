@@ -449,6 +449,32 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/admin-core.js"></script>
+  <script>
+    // Ensure Supabase is available globally before reservations.js runs
+    (function() {
+      const SUPABASE_URL = 'https://rbwoiejztrkghfkpxquo.supabase.co';
+      const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U';
+      
+      // Create client if not already available
+      if (!window.dalightAdminSupabase && !window.supabaseClient && typeof supabase !== 'undefined') {
+        window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        window.dalightAdminSupabase = window.supabaseClient;
+        console.log('✅ Supabase initialized from reservations.html');
+      }
+      
+      // Ensure adminCore exists
+      if (!window.adminCore) {
+        window.adminCore = {
+          supabase: window.dalightAdminSupabase || window.supabaseClient,
+          showToast: function(msg, type) {
+            if (window.showToast) window.showToast(msg, type);
+            else console.log(`[${type}] ${msg}`);
+          }
+        };
+        console.log('✅ adminCore created from reservations.html');
+      }
+    })();
+  </script>
   <script src="js/reservations.js"></script>
 </body>
 </html>

@@ -690,6 +690,22 @@ body::before {
 
 .form-select {
   cursor: pointer;
+  /* Fix for dark mode dropdown options */
+  background-color: var(--admin-card);
+  color: var(--admin-text);
+}
+
+/* Fix dropdown options in dark mode */
+.form-select option {
+  background-color: #1e1e32;
+  color: #ffffff;
+  padding: 0.5rem;
+}
+
+/* Ensure dropdown is visible above modal */
+.form-select {
+  position: relative;
+  z-index: 10;
 }
 
 /* ============================================
