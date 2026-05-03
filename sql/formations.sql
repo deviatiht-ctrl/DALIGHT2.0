@@ -15,9 +15,25 @@ CREATE TABLE IF NOT EXISTS formations (
   wa_message   text,                          -- pre-filled WhatsApp text
   is_active    boolean      DEFAULT true,
   order_index  int          DEFAULT 0,
+  -- Price details (in Gourdes)
+  price_inscription int DEFAULT 0,
+  price_blouse int DEFAULT 0,
+  price_cosmetique int DEFAULT 0,
+  price_corporel int DEFAULT 0,
+  price_decoration int DEFAULT 0,
+  price_massage int DEFAULT 0,
   created_at   timestamptz  DEFAULT now(),
   updated_at   timestamptz  DEFAULT now()
 );
+
+-- Add price detail columns to existing table (if upgrading)
+ALTER TABLE formations 
+  ADD COLUMN IF NOT EXISTS price_inscription int DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS price_blouse int DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS price_cosmetique int DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS price_corporel int DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS price_decoration int DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS price_massage int DEFAULT 0;
 
 -- Row Level Security
 ALTER TABLE formations ENABLE ROW LEVEL SECURITY;

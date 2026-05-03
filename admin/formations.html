@@ -214,12 +214,50 @@
 
         <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
           <div class="form-group">
-            <label>Prix</label>
+            <label>Prix Total</label>
             <input type="text" id="f-price" class="form-input" placeholder="Ex: 15 000 Gdes">
           </div>
           <div class="form-group">
             <label>Durée</label>
             <input type="text" id="f-duration" class="form-input" placeholder="Ex: 3 jours">
+          </div>
+        </div>
+
+        <!-- Détails des prix -->
+        <div class="form-group" style="margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+          <label style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: #f59e0b; font-weight: 600;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            Détails des coûts (en Gourdes)
+          </label>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
+            <div class="form-group" style="margin: 0;">
+              <label style="font-size: 0.8rem;">Inscriptions</label>
+              <input type="number" id="f-price-inscription" class="form-input" placeholder="3500" min="0" style="font-size: 0.9rem;">
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label style="font-size: 0.8rem;">Blouse et documents</label>
+              <input type="number" id="f-price-blouse" class="form-input" placeholder="10000" min="0" style="font-size: 0.9rem;">
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label style="font-size: 0.8rem;">Participation cosmétiques</label>
+              <input type="number" id="f-price-cosmetique" class="form-input" placeholder="60000" min="0" style="font-size: 0.9rem;">
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label style="font-size: 0.8rem;">Participation corporels</label>
+              <input type="number" id="f-price-corporel" class="form-input" placeholder="30000" min="0" style="font-size: 0.9rem;">
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label style="font-size: 0.8rem;">Participation Décoration</label>
+              <input type="number" id="f-price-decoration" class="form-input" placeholder="25000" min="0" style="font-size: 0.9rem;">
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label style="font-size: 0.8rem;">Massothérapie</label>
+              <input type="number" id="f-price-massage" class="form-input" placeholder="25000" min="0" style="font-size: 0.9rem;">
+            </div>
+          </div>
+          <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(245, 158, 11, 0.1); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">Total calculé:</span>
+            <span id="calculated-total" style="font-size: 1.1rem; font-weight: 700; color: #f59e0b;">0 Gds</span>
           </div>
         </div>
 
@@ -379,6 +417,28 @@
       document.getElementById('features-list').appendChild(buildFeatureRow());
     });
 
+    /* ── Price calculation ── */
+    function calculateTotal() {
+      const fields = ['f-price-inscription', 'f-price-blouse', 'f-price-cosmetique', 
+                      'f-price-corporel', 'f-price-decoration', 'f-price-massage'];
+      let total = 0;
+      fields.forEach(id => {
+        const val = parseInt(document.getElementById(id)?.value) || 0;
+        total += val;
+      });
+      document.getElementById('calculated-total').textContent = total.toLocaleString('fr-FR') + ' Gds';
+      return total;
+    }
+
+    // Add event listeners to all price fields
+    ['f-price-inscription', 'f-price-blouse', 'f-price-cosmetique', 
+     'f-price-corporel', 'f-price-decoration', 'f-price-massage'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', calculateTotal);
+      }
+    });
+
     /* ── Open Add ── */
     function openAdd() {
       document.getElementById('f-id').value       = '';
@@ -392,6 +452,14 @@
       document.getElementById('f-wa').value       = '';
       document.getElementById('f-active').checked = true;
       document.getElementById('features-list').innerHTML = '';
+      // Reset price detail fields
+      document.getElementById('f-price-inscription').value = '';
+      document.getElementById('f-price-blouse').value = '';
+      document.getElementById('f-price-cosmetique').value = '';
+      document.getElementById('f-price-corporel').value = '';
+      document.getElementById('f-price-decoration').value = '';
+      document.getElementById('f-price-massage').value = '';
+      calculateTotal();
       document.getElementById('modal-title').textContent = 'Nouvelle formation';
       document.getElementById('modal-overlay').classList.add('active');
     }
@@ -410,6 +478,14 @@
       document.getElementById('f-order').value    = f.order_index ?? 0;
       document.getElementById('f-wa').value       = f.wa_message || '';
       document.getElementById('f-active').checked = !!f.is_active;
+      // Load price detail fields
+      document.getElementById('f-price-inscription').value = f.price_inscription || '';
+      document.getElementById('f-price-blouse').value = f.price_blouse || '';
+      document.getElementById('f-price-cosmetique').value = f.price_cosmetique || '';
+      document.getElementById('f-price-corporel').value = f.price_corporel || '';
+      document.getElementById('f-price-decoration').value = f.price_decoration || '';
+      document.getElementById('f-price-massage').value = f.price_massage || '';
+      calculateTotal();
       const list = document.getElementById('features-list');
       list.innerHTML = '';
       (f.features || []).forEach(feat => list.appendChild(buildFeatureRow(feat)));
@@ -436,6 +512,13 @@
         wa_message:  document.getElementById('f-wa').value.trim(),
         is_active:   document.getElementById('f-active').checked,
         features,
+        // Price details
+        price_inscription: parseInt(document.getElementById('f-price-inscription').value) || 0,
+        price_blouse: parseInt(document.getElementById('f-price-blouse').value) || 0,
+        price_cosmetique: parseInt(document.getElementById('f-price-cosmetique').value) || 0,
+        price_corporel: parseInt(document.getElementById('f-price-corporel').value) || 0,
+        price_decoration: parseInt(document.getElementById('f-price-decoration').value) || 0,
+        price_massage: parseInt(document.getElementById('f-price-massage').value) || 0,
         updated_at:  new Date().toISOString(),
       };
 
