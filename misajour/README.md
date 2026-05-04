@@ -8,8 +8,9 @@ Kouri yo **youn pa youn** nan lòd sa:
 |---|--------|----------|
 | 1 | `01_categorie_produit.sql` | Kreye/fikse tab `product_categories` + lye ak `products` |
 | 2 | `02_services_fix.sql` | **Retire constraint** `services_category_check` ki koz erreur |
-| 3 | `03_headspa_prix_cheveux.sql` | Ajoute pri pa tip cheve pou Head Spa |
+| 3 | `03_headspa_prix_cheveux.sql` | Ajoute tab `service_hair_prices` (lye pa service_id) |
 | 4 | `04_creneaux_fix.sql` | Fix blokaj kreno pa tip sèvis + Realtime sync |
+| 5 | `05_head_spa_pricing.sql` | **Kreye tab `head_spa_pricing`** (Extra Court/Court/Large/Extra Large) |
 
 ## Aprè SQL yo — Chanjman Kòd
 

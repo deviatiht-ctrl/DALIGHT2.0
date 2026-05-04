@@ -383,6 +383,20 @@
         </div>
 
         <div class="form-group" style="margin-top: 1rem;">
+          <label>Type de service concerné</label>
+          <select id="block-service-type" class="form-input">
+            <option value="all">Tous les services (bloquer la salle entière)</option>
+            <option value="headspa">Head Spa uniquement</option>
+            <option value="massage">Massage uniquement</option>
+            <option value="package">Package uniquement</option>
+            <option value="cure">Cure uniquement</option>
+          </select>
+          <p style="font-size:0.75rem;color:var(--admin-text-muted);margin-top:0.25rem;">
+            💡 Choisissez "Tous" pour bloquer la salle complète, ou un service spécifique si d'autres salles restent disponibles.
+          </p>
+        </div>
+
+        <div class="form-group" style="margin-top: 0.75rem;">
           <label>Raison (optionnel)</label>
           <input type="text" id="block-reason-input" class="form-input" placeholder="Ex: Fête, Congé, Client spécial, Formation...">
         </div>

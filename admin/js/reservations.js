@@ -788,6 +788,9 @@ function closeBlockDateModal() {
   document.getElementById('existing-reservations-section').style.display = 'none';
   document.getElementById('no-reservations-msg').style.display = 'none';
   document.getElementById('selected-hours-preview').style.display = 'none';
+  // Reset service type selector
+  const svcTypeEl = document.getElementById('block-service-type');
+  if (svcTypeEl) svcTypeEl.value = 'all';
 }
 
 // Time Range Functions
@@ -994,67 +997,71 @@ async function confirmBlockDate() {
   
   const date = document.getElementById('block-date-input').value;
   const reason = document.getElementById('block-reason-input').value;
+  const serviceType = document.getElementById('block-service-type')?.value || 'all';
   const hoursToBlock = getHoursToBlock();
   
-  console.log('📅 Date:', date, '🕐 Hours:', hoursToBlock, '📝 Reason:', reason);
+  console.log('📅 Date:', date, '🕐 Hours:', hoursToBlock, '🏷️ Service:', serviceType);
   
   if (!date) {
-    console.error('❌ No date selected');
     window.adminCore?.showToast('Veuillez sélectionner une date', 'error');
     return;
   }
   
-  // Show loading state
   const btn = document.querySelector('#block-date-modal .btn-danger');
   const originalText = btn?.textContent;
   if (btn) {
     btn.disabled = true;
-    btn.textContent = hoursToBlock.length > 1 
-      ? `Bloquer ${hoursToBlock.length} heures...` 
+    btn.textContent = hoursToBlock.length > 1
+      ? `Bloquer ${hoursToBlock.length} heures...`
       : 'Traitement...';
   }
   
   try {
-    // Wait for Supabase using the helper function
     let retries = 0;
     let supabase = getSupabaseClient();
-    
     while (!supabase && retries < 20) {
-      console.log('⏳ Waiting for Supabase...', retries + 1);
       await new Promise(resolve => setTimeout(resolve, 300));
       supabase = getSupabaseClient();
       retries++;
     }
-    
-    console.log('🔌 Supabase:', supabase ? 'OK' : 'NULL');
-    
-    if (!supabase) {
-      throw new Error('Supabase not initialized. Veuillez rafraîchir la page.');
-    }
-    
-    // Block each hour
+    if (!supabase) throw new Error('Supabase non initialisé. Veuillez rafraîchir la page.');
+
     const blockedHours = [];
     const errors = [];
-    
+
     for (const hour of hoursToBlock) {
-      console.log('📤 Blocking:', hour);
+      console.log('📤 Blocking:', hour, 'service:', serviceType);
       try {
-        const { data, error } = await supabase
-          .rpc('admin_block_date', {
+        // Try new admin_block_slot first (supports service_type), fallback to admin_block_date
+        let data, error;
+        const slotResult = await supabase.rpc('admin_block_slot', {
+          p_date: date,
+          p_time_slot: hour === 'ALL_DAY' ? null : hour,
+          p_service_type: serviceType,
+          p_is_blocked: true,
+          p_reason: reason || 'Bloqué par admin'
+        });
+        data = slotResult.data;
+        error = slotResult.error;
+
+        // Fallback: if function doesn't exist yet, use old admin_block_date
+        if (error && error.message?.includes('does not exist')) {
+          const fallback = await supabase.rpc('admin_block_date', {
             p_date: date,
             p_time_slot: hour === 'ALL_DAY' ? null : hour,
-            p_reason: reason || 'Bloque par admin',
+            p_reason: reason || 'Bloqué par admin',
             p_is_blocked: true
           });
-        
+          data = fallback.data;
+          error = fallback.error;
+        }
+
         if (error) {
-          console.error('❌ Error blocking hour:', hour, error);
           errors.push(`${hour}: ${error.message}`);
         } else if (data?.success) {
           blockedHours.push(hour === 'ALL_DAY' ? 'Toute la journée' : hour);
         }
       } catch (err) {
-        console.error('❌ Exception blocking hour:', hour, err);
         errors.push(`${hour}: ${err.message}`);
       }
     }
@@ -1062,9 +1069,10 @@ async function confirmBlockDate() {
     console.log('📊 Results:', { blocked: blockedHours.length, errors: errors.length });
     
     if (blockedHours.length > 0) {
-      const message = blockedHours.length === 1 
-        ? `Heure bloquée: ${blockedHours[0]}`
-        : `${blockedHours.length} heures bloquées: ${blockedHours.join(', ')}`;
+      const svcLabel = serviceType === 'all' ? '' : ` (${serviceType})`;
+      const message = blockedHours.length === 1
+        ? `Créneau bloqué${svcLabel}: ${blockedHours[0]}`
+        : `${blockedHours.length} créneaux bloqués${svcLabel}: ${blockedHours.join(', ')}`;
       window.adminCore?.showToast(message);
       closeBlockDateModal();
       loadAvailability();
