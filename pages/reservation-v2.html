@@ -1897,9 +1897,22 @@ function loadCartData() {
       }
 
       // ─────────────────────────────────────────────────────────────
-      // TIME SLOTS SYSTEM
+      // TIME SLOTS SYSTEM — avec sync temps réel admin
       // ─────────────────────────────────────────────────────────────
-async function loadTimeSlots() {
+      let _realtimeChannel = null;
+
+      function getSupabaseClient() {
+        let client = window.dalightSupabase || window.supabaseClient || window.supabase;
+        if (!client && window.supabase?.createClient) {
+          client = window.supabase.createClient(
+            'https://rbwoiejztrkghfkpxquo.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U'
+          );
+        }
+        return client;
+      }
+
+      async function loadTimeSlots() {
         console.log('🕒 loadTimeSlots() called');
         const container = document.getElementById('time-slots-container');
         const date = document.getElementById('selected-date').value;
@@ -1908,55 +1921,70 @@ async function loadTimeSlots() {
         const slots = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
         container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--marron-600);">Vérification des disponibilités...</div>';
 
+        const supabaseClient = getSupabaseClient();
+        if (!supabaseClient) {
+          renderOfflineSlots(container, slots);
+          return;
+        }
+
         try {
-          let supabaseClient = window.dalightSupabase || window.supabase;
-          if (!supabaseClient && window.supabase?.createClient) {
-            const supabaseUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co';
-            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA1OTY4MTU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U';
-            supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-          }
+          // Fetch reservations AND admin-blocked exceptions in parallel
+          const [bookingsRes, exceptionsRes] = await Promise.all([
+            supabaseClient
+              .from('reservations')
+              .select('time')
+              .eq('date', date)
+              .in('status', ['pending', 'confirmed', 'PENDING', 'CONFIRMED']),
+            supabaseClient
+              .from('availability_exceptions')
+              .select('time_slot, is_blocked')
+              .eq('exception_date', date)
+              .eq('is_blocked', true)
+          ]);
 
-          if (!supabaseClient) {
-            console.warn('⚠️ Supabase client not found for time slots, using offline mode');
-            renderOfflineSlots(container, slots);
-            return;
-          }
+          const bookedTimes = (bookingsRes.data || []).map(b => b.time?.substring(0, 5));
+          const blockedTimes = (exceptionsRes.data || [])
+            .filter(e => e.is_blocked)
+            .map(e => e.time_slot?.substring(0, 5));
 
-          // Fetch all bookings for the selected date in ONE call
-          const { data: bookings, error } = await supabaseClient
-            .from('reservations')
-            .select('time')
-            .eq('date', date)
-            .in('status', ['PENDING', 'CONFIRMED']);
-
-          if (error) throw error;
-
-          // Normalize booked times (convert 09:00:00 to 09:00)
-          const bookedTimes = (bookings || []).map(b => b.time.substring(0, 5));
-          console.log('🚫 Booked times for ' + date + ':', bookedTimes);
+          const unavailableTimes = [...new Set([...bookedTimes, ...blockedTimes])];
+          console.log('🚫 Unavailable slots:', unavailableTimes);
 
           container.innerHTML = '';
           slots.forEach(time => {
             const slot = document.createElement('div');
             slot.className = 'time-slot';
             slot.textContent = time;
-            
-            const isBooked = bookedTimes.includes(time);
-            
-            if (isBooked) {
+
+            if (unavailableTimes.includes(time)) {
               slot.classList.add('disabled');
-              slot.title = 'Déjà réservé';
+              slot.title = blockedTimes.includes(time) ? 'Bloqué par l\'admin' : 'Déjà réservé';
             } else {
               slot.addEventListener('click', () => {
                 document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
                 slot.classList.add('selected');
                 document.getElementById('selected-time').value = time;
-                console.log('✅ Selected time:', time);
               });
             }
-
             container.appendChild(slot);
           });
+
+          // ── Realtime: recharger si admin bloque/débloque ──
+          if (_realtimeChannel) {
+            supabaseClient.removeChannel(_realtimeChannel);
+          }
+          _realtimeChannel = supabaseClient
+            .channel('availability-changes-' + date)
+            .on('postgres_changes', {
+              event: '*',
+              schema: 'public',
+              table: 'availability_exceptions',
+              filter: `exception_date=eq.${date}`
+            }, () => {
+              console.log('🔄 Admin changed availability — reloading slots');
+              loadTimeSlots();
+            })
+            .subscribe();
 
         } catch (error) {
           console.error('❌ Error loading time slots:', error);

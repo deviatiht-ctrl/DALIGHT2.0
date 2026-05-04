@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   supabase = window.dalightAdminSupabase || window.supabaseClient;
   
   await loadCategories();
+  renderCategoriesList();
   await loadProducts();
   setupEventListeners();
 });
@@ -81,6 +82,110 @@ function populateCategoryFilters() {
     });
   }
 }
+
+// ============================================
+// CATEGORY MANAGEMENT
+// ============================================
+
+function renderCategoriesList() {
+  const container = document.getElementById('categories-list');
+  if (!container) return;
+  
+  if (allCategories.length === 0) {
+    container.innerHTML = '<span style="color: var(--admin-text-muted);">Aucune catégorie</span>';
+    return;
+  }
+  
+  container.innerHTML = allCategories.map(cat => `
+    <div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid var(--admin-border); border-radius: 8px;">
+      <span style="font-weight: 500; font-size: 0.9rem;">${cat.name}</span>
+      <span style="font-size: 0.75rem; color: var(--admin-text-muted);">(${cat.slug})</span>
+      <button onclick="deleteCategory('${cat.id}', '${cat.name.replace(/'/g, "\\'")}')" 
+              style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0.2rem; margin-left: 0.25rem;"
+              title="Supprimer cette catégorie">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+  `).join('');
+}
+
+function openCategoryModal() {
+  const modal = document.getElementById('category-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    document.getElementById('category-name')?.focus();
+  }
+}
+
+function closeCategoryModal() {
+  const modal = document.getElementById('category-modal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.getElementById('category-form')?.reset();
+  }
+}
+
+async function createCategory(e) {
+  e.preventDefault();
+  
+  const name = document.getElementById('category-name').value.trim();
+  const slug = document.getElementById('category-slug').value.trim().toLowerCase();
+  const order = parseInt(document.getElementById('category-order').value) || 0;
+  
+  if (!name || !slug) {
+    showToast('Veuillez remplir tous les champs obligatoires', 'error');
+    return;
+  }
+  
+  try {
+    const { data, error } = await supabase
+      .from('product_categories')
+      .insert([{ name, slug, display_order: order, is_active: true }])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    showToast('Catégorie créée avec succès', 'success');
+    closeCategoryModal();
+    
+    // Refresh categories
+    await loadCategories();
+    renderCategoriesList();
+  } catch (error) {
+    console.error('Error creating category:', error);
+    showToast(`Erreur: ${error.message}`, 'error');
+  }
+}
+
+async function deleteCategory(id, name) {
+  if (!confirm(`Êtes-vous sûr de vouloir supprimer la catégorie "${name}" ?\n\nLes produits associés ne seront plus dans cette catégorie.`)) {
+    return;
+  }
+  
+  try {
+    const { error } = await supabase
+      .from('product_categories')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    showToast('Catégorie supprimée', 'success');
+    
+    // Refresh categories
+    await loadCategories();
+    renderCategoriesList();
+  } catch (error) {
+    console.error('Error deleting category:', error);
+    showToast(`Erreur: ${error.message}`, 'error');
+  }
+}
+
+// Make functions available globally
+window.openCategoryModal = openCategoryModal;
+window.closeCategoryModal = closeCategoryModal;
+window.deleteCategory = deleteCategory;
 
 // ============================================
 // LOAD PRODUCTS
@@ -432,6 +537,12 @@ function setupEventListeners() {
   const statusFilter = document.getElementById('status-filter');
   if (statusFilter) {
     statusFilter.addEventListener('change', filterProducts);
+  }
+  
+  // Category form
+  const categoryForm = document.getElementById('category-form');
+  if (categoryForm) {
+    categoryForm.addEventListener('submit', createCategory);
   }
   
   // Close modal on overlay click

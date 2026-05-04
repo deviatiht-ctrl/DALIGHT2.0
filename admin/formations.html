@@ -170,19 +170,17 @@
             <thead>
               <tr>
                 <th>Formation</th>
-                <th>Prix Total</th>
-                <th>Inscription</th>
-                <th>Blouse/Docs</th>
-                <th>Cosmétique</th>
-                <th>Corporel</th>
-                <th>Décoration</th>
-                <th>Massage</th>
+                <th>Frais Inscription</th>
+                <th>Frais Blouse/Docs</th>
+                <th>Participation</th>
+                <th>Durée</th>
+                <th>Total</th>
                 <th>Statut</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="formations-tbody">
-              <tr><td colspan="10" style="text-align:center;padding:2rem;color:rgba(255,255,255,0.3);">Chargement...</td></tr>
+              <tr><td colspan="8" style="text-align:center;padding:2rem;color:rgba(255,255,255,0.3);">Chargement...</td></tr>
             </tbody>
           </table>
         </div>
@@ -365,13 +363,14 @@
     function renderTable() {
       const tbody = document.getElementById('formations-tbody');
       if (!allFormations.length) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:2.5rem;color:rgba(255,255,255,0.3);">Aucune formation. Cliquez sur « + Nouvelle formation ».</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2.5rem;color:rgba(255,255,255,0.3);">Aucune formation. Cliquez sur « + Nouvelle formation ».</td></tr>';
         return;
       }
       tbody.innerHTML = allFormations.map(f => {
-        const totalPrice = (f.price_inscription || 0) + (f.price_blouse || 0) + 
-                          (f.price_cosmetique || 0) + (f.price_corporel || 0) + 
-                          (f.price_decoration || 0) + (f.price_massage || 0);
+        const participation = (f.price_cosmetique || 0) + (f.price_corporel || 0) +
+                              (f.price_decoration || 0) + (f.price_massage || 0);
+        const totalPrice = (f.price_inscription || 0) + (f.price_blouse || 0) + participation;
+        const fmt = n => n > 0 ? n.toLocaleString() + ' Gds' : '—';
         return `
         <tr>
           <td>
@@ -380,17 +379,14 @@
               <div>
                 <div style="font-weight:600;font-size:0.88rem;">${esc(f.name)}</div>
                 <div style="font-size:0.76rem;color:rgba(255,255,255,0.4);">${esc(f.subtitle||'')}</div>
-                <div style="font-size:0.7rem;color:rgba(255,255,255,0.3);">${esc(f.duration||'')}</div>
               </div>
             </div>
           </td>
-          <td><span class="price-tag">${totalPrice > 0 ? totalPrice.toLocaleString() + ' Gds' : esc(f.price||'—')}</span></td>
-          <td style="text-align:right;font-size:0.8rem;">${(f.price_inscription || 0).toLocaleString()}</td>
-          <td style="text-align:right;font-size:0.8rem;">${(f.price_blouse || 0).toLocaleString()}</td>
-          <td style="text-align:right;font-size:0.8rem;">${(f.price_cosmetique || 0).toLocaleString()}</td>
-          <td style="text-align:right;font-size:0.8rem;">${(f.price_corporel || 0).toLocaleString()}</td>
-          <td style="text-align:right;font-size:0.8rem;">${(f.price_decoration || 0).toLocaleString()}</td>
-          <td style="text-align:right;font-size:0.8rem;">${(f.price_massage || 0).toLocaleString()}</td>
+          <td style="text-align:right;font-size:0.82rem;">${fmt(f.price_inscription||0)}</td>
+          <td style="text-align:right;font-size:0.82rem;">${fmt(f.price_blouse||0)}</td>
+          <td style="text-align:right;font-size:0.82rem;">${fmt(participation)}</td>
+          <td style="font-size:0.82rem;">${esc(f.duration||'—')}</td>
+          <td><span class="price-tag">${totalPrice > 0 ? fmt(totalPrice) : esc(f.price||'—')}</span></td>
           <td>
             <label class="toggle-switch">
               <input type="checkbox" ${f.is_active ? 'checked' : ''} onchange="toggleActive('${f.id}', this.checked)">

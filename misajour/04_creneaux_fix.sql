@@ -1,0 +1,254 @@
+-- =============================================
+-- DALIGHT — Fix Créneaux + Sync Temps Réel
+-- Fichye: 04_creneaux_fix.sql
+-- Kouri nan Supabase SQL Editor
+-- =============================================
+-- LOGIQUE:
+--   Gen pliziè sal (massage, head spa, etc.)
+--   Admin ka bloke yon kreno POU YON TIP SÈVIS ESPESIFIK
+--   Kliyan wè sèlman kreno bloke pou sèvis li chwazi a
+--   Supabase Realtime transmèt chanjman yo tousuit
+-- =============================================
+
+-- Étape 1: Ajoute kolòn service_type nan availability_exceptions
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'availability_exceptions'
+      AND column_name = 'service_type'
+  ) THEN
+    ALTER TABLE availability_exceptions
+      ADD COLUMN service_type TEXT DEFAULT 'all';
+    RAISE NOTICE 'Colonne service_type ajoutée à availability_exceptions';
+  ELSE
+    RAISE NOTICE 'Colonne service_type déjà présente';
+  END IF;
+END
+$$;
+
+-- Ajoute aussi kolòn service_type nan availability_rules
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'availability_rules'
+      AND column_name = 'service_type'
+  ) THEN
+    ALTER TABLE availability_rules
+      ADD COLUMN service_type TEXT DEFAULT 'all';
+  END IF;
+END
+$$;
+
+-- Retire contrainte UNIQUE si li pa sipòte service_type
+ALTER TABLE availability_exceptions
+  DROP CONSTRAINT IF EXISTS availability_exceptions_exception_date_time_slot_key;
+
+-- Nouvo contrainte UNIQUE ki sipòte service_type
+ALTER TABLE availability_exceptions
+  DROP CONSTRAINT IF EXISTS uniq_exception_date_time_service;
+ALTER TABLE availability_exceptions
+  ADD CONSTRAINT uniq_exception_date_time_service
+  UNIQUE(exception_date, time_slot, service_type);
+
+-- Étape 2: Mete ajou fonksyon check_availability pou filtre pa service_type
+CREATE OR REPLACE FUNCTION check_availability(
+  p_date DATE,
+  p_time TIME,
+  p_service_id UUID DEFAULT NULL,
+  p_service_type TEXT DEFAULT 'all'
+)
+RETURNS TABLE (
+  is_available BOOLEAN,
+  remaining_slots INTEGER,
+  total_capacity INTEGER,
+  current_bookings INTEGER,
+  message TEXT
+) AS $$
+DECLARE
+  v_day_of_week INTEGER;
+  v_rule RECORD;
+  v_exception RECORD;
+  v_current_bookings INTEGER;
+  v_capacity INTEGER;
+BEGIN
+  v_day_of_week := EXTRACT(DOW FROM p_date);
+
+  -- 1. Tcheke eksepsyon espesifik pou sèvis sa oswa 'all'
+  SELECT * INTO v_exception
+  FROM availability_exceptions
+  WHERE exception_date = p_date
+    AND (time_slot = p_time OR time_slot IS NULL)
+    AND (service_type = p_service_type OR service_type = 'all')
+  ORDER BY CASE WHEN service_type = p_service_type THEN 0 ELSE 1 END
+  LIMIT 1;
+
+  IF FOUND AND v_exception.is_blocked THEN
+    RETURN QUERY SELECT false, 0, 0, 0, 'Kreno sa bloke pa admin'::TEXT;
+    RETURN;
+  END IF;
+
+  IF FOUND AND v_exception.max_capacity IS NOT NULL THEN
+    v_capacity := v_exception.max_capacity;
+  END IF;
+
+  -- 2. Tcheke règ jeneral
+  SELECT * INTO v_rule
+  FROM availability_rules
+  WHERE day_of_week = v_day_of_week
+    AND time_slot = p_time
+    AND (service_type = p_service_type OR service_type = 'all')
+  ORDER BY CASE WHEN service_type = p_service_type THEN 0 ELSE 1 END
+  LIMIT 1;
+
+  IF NOT FOUND THEN
+    RETURN QUERY SELECT false, 0, 0, 0, 'Pa gen règ pou tan sa'::TEXT;
+    RETURN;
+  END IF;
+
+  IF NOT v_rule.is_available THEN
+    RETURN QUERY SELECT false, 0, 0, 0, 'Tan sa pa disponib'::TEXT;
+    RETURN;
+  END IF;
+
+  IF v_capacity IS NULL THEN
+    v_capacity := v_rule.max_capacity;
+  END IF;
+
+  -- 3. Konte rezèvasyon ki egziste pou sèvis sa
+  SELECT COUNT(*) INTO v_current_bookings
+  FROM reservations
+  WHERE date = p_date
+    AND time = p_time
+    AND status NOT IN ('cancelled')
+    AND (
+      p_service_type = 'all'
+      OR service_id IN (SELECT id FROM services WHERE category = p_service_type)
+    );
+
+  IF v_current_bookings >= v_capacity THEN
+    RETURN QUERY SELECT false, 0, v_capacity, v_current_bookings, 'Tan sa fen ranpli'::TEXT;
+  ELSE
+    RETURN QUERY SELECT true, (v_capacity - v_current_bookings), v_capacity, v_current_bookings, 'Disponib'::TEXT;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Étape 3: Fonksyon pou admin bloke yon kreno pa tip sèvis
+CREATE OR REPLACE FUNCTION admin_block_slot(
+  p_date DATE,
+  p_time_slot TIME,
+  p_service_type TEXT DEFAULT 'all',
+  p_is_blocked BOOLEAN DEFAULT true,
+  p_reason TEXT DEFAULT 'Bloke pa admin'
+)
+RETURNS JSONB AS $$
+DECLARE
+  v_admin_id UUID := auth.uid();
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM profiles WHERE id = v_admin_id AND role = 'admin'
+  ) THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Akse refize: admin sèlman');
+  END IF;
+
+  INSERT INTO availability_exceptions
+    (exception_date, time_slot, service_type, is_blocked, reason, created_by)
+  VALUES
+    (p_date, p_time_slot, p_service_type, p_is_blocked, p_reason, v_admin_id)
+  ON CONFLICT (exception_date, time_slot, service_type)
+  DO UPDATE SET
+    is_blocked = EXCLUDED.is_blocked,
+    reason = EXCLUDED.reason,
+    created_by = v_admin_id,
+    created_at = NOW();
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'action', CASE WHEN p_is_blocked THEN 'bloke' ELSE 'debloké' END,
+    'date', p_date,
+    'time_slot', p_time_slot,
+    'service_type', p_service_type
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Étape 4: Mete ajou get_month_availability pou sipòte service_type
+CREATE OR REPLACE FUNCTION get_month_availability(
+  p_year INTEGER,
+  p_month INTEGER,
+  p_service_type TEXT DEFAULT 'all'
+)
+RETURNS TABLE (
+  available_date DATE,
+  slot_time TIME,
+  is_available BOOLEAN,
+  max_capacity INTEGER,
+  current_bookings INTEGER,
+  remaining_slots INTEGER,
+  is_exception BOOLEAN
+) AS $$
+DECLARE
+  v_start_date DATE := make_date(p_year, p_month, 1);
+  v_end_date DATE := (v_start_date + INTERVAL '1 month - 1 day')::DATE;
+BEGIN
+  RETURN QUERY
+  WITH
+  all_dates AS (
+    SELECT generate_series(v_start_date, v_end_date, '1 day'::INTERVAL)::DATE AS d
+  ),
+  date_slots AS (
+    SELECT
+      d.d AS ds_date,
+      ar.time_slot AS ds_time,
+      ar.max_capacity AS ds_capacity,
+      ar.is_available AS ds_available
+    FROM all_dates d
+    CROSS JOIN availability_rules ar
+    WHERE ar.day_of_week = EXTRACT(DOW FROM d.d)
+      AND (ar.service_type = p_service_type OR ar.service_type = 'all')
+  ),
+  booking_counts AS (
+    SELECT r.date AS bc_date, r.time AS bc_time, COUNT(*) AS bc_cnt
+    FROM reservations r
+    WHERE r.date BETWEEN v_start_date AND v_end_date
+      AND r.status NOT IN ('cancelled')
+      AND (
+        p_service_type = 'all'
+        OR EXISTS (SELECT 1 FROM services s WHERE s.id = r.service_id AND s.category = p_service_type)
+      )
+    GROUP BY r.date, r.time
+  ),
+  exception_check AS (
+    SELECT ae.exception_date AS ec_date, ae.time_slot AS ec_time,
+           ae.is_blocked AS ec_blocked, ae.max_capacity AS ec_capacity
+    FROM availability_exceptions ae
+    WHERE ae.exception_date BETWEEN v_start_date AND v_end_date
+      AND (ae.service_type = p_service_type OR ae.service_type = 'all')
+  )
+  SELECT
+    ds.ds_date::DATE,
+    ds.ds_time::TIME,
+    CASE
+      WHEN ec.ec_blocked = true THEN false
+      WHEN ds.ds_available = false THEN false
+      ELSE true
+    END::BOOLEAN,
+    COALESCE(ec.ec_capacity, ds.ds_capacity)::INTEGER,
+    COALESCE(bc.bc_cnt, 0)::INTEGER,
+    GREATEST(0, COALESCE(ec.ec_capacity, ds.ds_capacity) - COALESCE(bc.bc_cnt, 0))::INTEGER,
+    (ec.ec_blocked IS NOT NULL)::BOOLEAN
+  FROM date_slots ds
+  LEFT JOIN booking_counts bc ON ds.ds_date = bc.bc_date AND ds.ds_time = bc.bc_time
+  LEFT JOIN exception_check ec ON ds.ds_date = ec.ec_date
+    AND (ec.ec_time = ds.ds_time OR ec.ec_time IS NULL)
+  WHERE ds.ds_time IS NOT NULL
+  ORDER BY ds.ds_date, ds.ds_time;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Étape 5: Aktive Realtime pou Supabase
+-- (Client ap abòne sou chanjman yo tousuit san F5)
+ALTER PUBLICATION supabase_realtime ADD TABLE availability_exceptions;
+ALTER PUBLICATION supabase_realtime ADD TABLE availability_rules;

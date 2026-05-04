@@ -126,7 +126,7 @@ function renderProducts(products) {
     const stars = hasRating ? '★'.repeat(Math.floor(product.rating)) : '';
 
     return `
-      <div class="product-card-modern">
+      <div class="product-card-modern" onclick="goToProduct('${product.id}', event)">
         <div class="product-image-wrapper-modern">
           <img src="${product.image_urls?.[0] || 'https://via.placeholder.com/400x320?text=No+Image'}"
                alt="${product.name}"
@@ -158,6 +158,13 @@ function renderProducts(products) {
     lucide.createIcons();
   }
 }
+
+// Navigate to product detail page
+window.goToProduct = function(productId, event) {
+  // Don't navigate if user clicked the button
+  if (event.target.closest('button')) return;
+  window.location.href = `product.html?id=${productId}`;
+};
 
 // Setup filters
 function setupFilters() {

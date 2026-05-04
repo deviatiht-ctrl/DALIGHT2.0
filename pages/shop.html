@@ -108,8 +108,8 @@
     /* ===== PRODUCT GRID ===== */
     .product-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 2.5rem;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
     }
     
     /* ===== LUXURY PRODUCT CARD ===== */
@@ -397,8 +397,8 @@
       }
       
       .product-grid {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 1.5rem;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
       }
     }
     
@@ -414,8 +414,8 @@
       }
       
       .product-grid {
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-        gap: 1.25rem;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
       }
       
       .product-image-wrapper {
@@ -425,7 +425,8 @@
     
     @media (max-width: 480px) {
       .product-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
       }
       
       .product-actions {
@@ -444,6 +445,7 @@
       display: flex;
       flex-direction: column;
       border: 1px solid rgba(0, 0, 0, 0.05);
+      cursor: pointer;
     }
 
     .product-card-modern:hover {
@@ -454,7 +456,7 @@
     .product-image-wrapper-modern {
       position: relative;
       width: 100%;
-      height: 280px;
+      aspect-ratio: 1 / 1;
       overflow: hidden;
       background: linear-gradient(135deg, #f5f0e8 0%, #ebe5db 100%);
     }
@@ -463,6 +465,7 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      object-position: center;
       transition: transform 0.4s ease;
     }
 
