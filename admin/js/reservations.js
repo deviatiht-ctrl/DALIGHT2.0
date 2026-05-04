@@ -1179,30 +1179,40 @@ async function saveCapacity() {
   const isAvailable = document.getElementById('capacity-available').checked;
   
   try {
-    const supabase = window.adminCore?.supabase;
-    if (!supabase) throw new Error('Supabase not initialized');
-    
-    // Get day of week from date
-    const dateObj = new Date(selectedSlot.date);
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error('Connexion Supabase non établie. Rafraîchissez la page.');
+
+    const dateObj  = new Date(selectedSlot.date);
     const dayOfWeek = dateObj.getDay();
-    
-    const { data, error } = await supabase
-      .rpc('admin_set_availability', {
-        p_day_of_week: dayOfWeek,
-        p_time_slot: selectedSlot.time + ':00',
-        p_is_available: isAvailable,
-        p_max_capacity: capacity
-      });
-    
-    if (error) throw error;
-    
-    if (data?.success) {
-      window.adminCore?.showToast('Capacité mise à jour');
-      closeCapacityModal();
-      loadAvailability();
-    } else {
-      window.adminCore?.showToast(data?.error || 'Erreur', 'error');
+
+    // Essai RPC admin_set_availability
+    const { data, error } = await supabase.rpc('admin_set_availability', {
+      p_day_of_week:  dayOfWeek,
+      p_time_slot:    selectedSlot.time + ':00',
+      p_is_available: isAvailable,
+      p_max_capacity: capacity
+    });
+
+    if (error) {
+      // Fallback: écriture directe dans availability_rules
+      if (error.message?.includes('does not exist')) {
+        const { error: upsertErr } = await supabase
+          .from('availability_rules')
+          .upsert({
+            day_of_week:   dayOfWeek,
+            time_slot:     selectedSlot.time + ':00',
+            is_available:  isAvailable,
+            max_capacity:  capacity
+          }, { onConflict: 'day_of_week,time_slot' });
+        if (upsertErr) throw upsertErr;
+      } else {
+        throw error;
+      }
     }
+
+    window.adminCore?.showToast('Créneau mis à jour ✓');
+    closeCapacityModal();
+    loadAvailability();
   } catch (err) {
     console.error('Error saving capacity:', err);
     window.adminCore?.showToast('Erreur: ' + err.message, 'error');
