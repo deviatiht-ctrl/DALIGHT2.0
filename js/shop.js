@@ -278,13 +278,14 @@ window.addToCart = function(productId) {
 function updateCartBadge() {
   const cart = JSON.parse(localStorage.getItem('dalight_cart') || '[]');
   const badge = document.getElementById('cart-badge');
+  const countEl = document.getElementById('cart-badge-count');
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  
+
   if (totalItems > 0) {
-    badge.textContent = totalItems;
-    badge.style.display = 'flex';
+    if (countEl) countEl.textContent = totalItems;
+    if (badge) badge.style.display = 'flex';
   } else {
-    badge.style.display = 'none';
+    if (badge) badge.style.display = 'none';
   }
 }
 

@@ -9,15 +9,23 @@ let paymentMethodsList = [];
 // Wait for Supabase
 async function waitForSupabase() {
   let attempts = 0;
-  while (!window.supabase && attempts < 50) {
+  while (!window.dalightSupabase && !window.supabaseClient && !window.supabase && attempts < 50) {
     await new Promise(resolve => setTimeout(resolve, 100));
     attempts++;
   }
-  if (window.supabase) {
-    const { createClient } = window.supabase;
-    supabase = createClient(
+  // Priorité: dalightSupabase (main.js) > supabaseClient > créer nouveau
+  if (window.dalightSupabase) {
+    supabase = window.dalightSupabase;
+    return true;
+  }
+  if (window.supabaseClient) {
+    supabase = window.supabaseClient;
+    return true;
+  }
+  if (window.supabase?.createClient) {
+    supabase = window.supabase.createClient(
       'https://rbwoiejztrkghfkpxquo.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcwNjI3NzIsImV4cCI6MjA1MjYzODc3Mn0.J5rKmKxZQJ8vN5F8qR3kL9mP2nO4wX6yT7uV0sA1bCc'
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U'
     );
     return true;
   }
