@@ -3,6 +3,8 @@ import { sendOrderEmail } from './email-service.js';
 
 let supabase;
 let selectedPaymentMethod = null;
+let selectedPaymentMethodObj = null;
+let paymentMethodsList = [];
 
 // Wait for Supabase
 async function waitForSupabase() {
@@ -28,6 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   await waitForSupabase();
   loadOrderSummary();
+  loadPaymentMethodsFromDB();
   
   // Try to auto-fill if user is logged in
   try {
@@ -71,42 +74,71 @@ function loadOrderSummary() {
   document.getElementById('total').textContent = `${subtotal.toFixed(2)} HTG`;
 }
 
-// Select payment method
-window.selectPayment = function(method) {
-  selectedPaymentMethod = method;
+// Load payment methods dynamically from DB
+async function loadPaymentMethodsFromDB() {
+  const container = document.getElementById('payment-methods-container');
+  if (!container) return;
+  try {
+    const { data, error } = await supabase.from('payment_methods').select('*').eq('is_active', true).order('sort_order');
+    if (error) throw error;
+    paymentMethodsList = data || [];
+    renderPaymentMethodCards();
+  } catch (err) {
+    // Fallback: static MonCash only
+    container.innerHTML = `<p style="color:#dc2626;font-size:.85rem;">Impossible de charger les modes de paiement. Exécutez 06_payment_methods.sql dans Supabase.</p>`;
+  }
+}
 
-  // Update UI
-  document.querySelectorAll('.payment-method').forEach(el => {
-    el.classList.remove('selected');
-  });
-  event.currentTarget.classList.add('selected');
+function renderPaymentMethodCards() {
+  const container = document.getElementById('payment-methods-container');
+  if (!paymentMethodsList.length) {
+    container.innerHTML = '<p style="color:#6b7280;">Aucun mode de paiement configuré.</p>';
+    return;
+  }
+  container.innerHTML = paymentMethodsList.map(pm => {
+    const logo = pm.logo_url
+      ? `<img src="${pm.logo_url}" alt="${pm.name}" style="width:48px;height:48px;object-fit:contain;border-radius:8px;">`
+      : `<div style="width:48px;height:48px;border-radius:8px;background:linear-gradient(135deg,#4a3728,#8b7355);display:flex;align-items:center;justify-content:center;font-size:1.4rem;">💳</div>`;
+    return `<div class="payment-method" onclick="selectPayment('${pm.slug}')" data-method="${pm.slug}">
+      ${logo}
+      <div class="payment-method-info">
+        <h3>${pm.name}</h3>
+        <p>${pm.account_name ? `<strong>${pm.account_name}</strong> — ` : ''}${pm.account_number || pm.instructions?.split('\n')[0] || ''}</p>
+      </div>
+    </div>`;
+  }).join('');
+}
 
-  // Show/hide payment proof section for MonCash/NatCash
-  const proofSection = document.getElementById('payment-proof-section');
-  const bankDetails = document.getElementById('bank-details');
-  const appName = document.getElementById('payment-app-name');
+// Select payment method (dynamic)
+window.selectPayment = function(slug) {
+  selectedPaymentMethod = slug;
+  selectedPaymentMethodObj = paymentMethodsList.find(p => p.slug === slug) || null;
 
-  if (method === 'moncash' || method === 'natcash') {
-    proofSection.style.display = 'block';
-    bankDetails.style.display = 'none';
-    appName.textContent = method === 'moncash' ? 'MonCash' : 'NatCash';
-    document.getElementById('payment-proof').required = true;
+  document.querySelectorAll('.payment-method').forEach(el => el.classList.remove('selected'));
+  document.querySelector(`.payment-method[data-method="${slug}"]`)?.classList.add('selected');
 
-    // Refresh Lucide icons
-    if (window.lucide) {
-      lucide.createIcons();
+  const proofSection  = document.getElementById('payment-proof-section');
+  const detailBox     = document.getElementById('payment-detail-box');
+
+  if (selectedPaymentMethodObj) {
+    const pm = selectedPaymentMethodObj;
+    // Show account detail
+    if (detailBox) {
+      document.getElementById('pm-detail-title').textContent = pm.name;
+      document.getElementById('pm-detail-account').innerHTML = pm.account_name
+        ? `<strong>${pm.account_name}</strong>${pm.account_number ? ' — <code style="font-size:1rem;">' + pm.account_number + '</code>' : ''}`
+        : (pm.account_number || '');
+      document.getElementById('pm-detail-instructions').textContent = pm.instructions || '';
+      detailBox.style.display = 'block';
     }
-  } else if (method === 'bank') {
-    proofSection.style.display = 'none';
-    bankDetails.style.display = 'block';
-    document.getElementById('payment-proof').required = false;
-  } else {
-    proofSection.style.display = 'none';
-    bankDetails.style.display = 'none';
-    document.getElementById('payment-proof').required = false;
+    // Proof upload
+    if (proofSection) {
+      proofSection.style.display = pm.requires_proof ? 'block' : 'none';
+      const proofInput = document.getElementById('payment-proof');
+      if (proofInput) proofInput.required = pm.requires_proof;
+    }
   }
 
-  // Enable place order button
   document.getElementById('place-order-btn').disabled = false;
 };
 
@@ -163,36 +195,33 @@ document.getElementById('place-order-btn')?.addEventListener('click', async () =
     return;
   }
 
-  // Validate payment proof for MonCash/NatCash
+  // Validate + upload proof (based on requires_proof from DB)
   let paymentProofUrl = null;
-  if (selectedPaymentMethod === 'moncash' || selectedPaymentMethod === 'natcash') {
+  const requiresProof = selectedPaymentMethodObj?.requires_proof ?? (selectedPaymentMethod === 'moncash' || selectedPaymentMethod === 'natcash');
+  if (requiresProof) {
     const proofInput = document.getElementById('payment-proof');
-    if (!proofInput.files || !proofInput.files[0]) {
-      alert('Veuillez télécharger une preuve de paiement (capture d\'écran du reçu)');
+    if (!proofInput?.files?.[0]) {
+      alert('Veuillez télécharger une preuve de paiement (screenshot du reçu)');
       return;
     }
-
-    // Upload payment proof
     try {
       const file = proofInput.files[0];
       const fileExt = file.name.split('.').pop();
-      const fileName = `payment-proof-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `payment-proofs/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('order-attachments')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('order-attachments')
-        .getPublicUrl(filePath);
-
-      paymentProofUrl = publicUrl;
+      const filePath = `payment-proofs/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage.from('payment-proofs').upload(filePath, file);
+      if (uploadError) {
+        // Try fallback bucket
+        const { error: e2 } = await supabase.storage.from('order-attachments').upload(filePath, file);
+        if (e2) throw e2;
+        const { data: u2 } = supabase.storage.from('order-attachments').getPublicUrl(filePath);
+        paymentProofUrl = u2.publicUrl;
+      } else {
+        const { data: u1 } = supabase.storage.from('payment-proofs').getPublicUrl(filePath);
+        paymentProofUrl = u1.publicUrl;
+      }
     } catch (uploadErr) {
-      console.error('Error uploading payment proof:', uploadErr);
-      alert('Erreur lors du téléchargement de la preuve de paiement. Veuillez réessayer.');
+      console.error('Proof upload error:', uploadErr);
+      alert('Erreur upload preuve. Vérifiez le bucket Supabase Storage.');
       return;
     }
   }
@@ -225,6 +254,7 @@ document.getElementById('place-order-btn')?.addEventListener('click', async () =
       order_number: orderNumber,
       status: 'pending',
       payment_method: selectedPaymentMethod,
+      payment_method_id: selectedPaymentMethodObj?.id || null,
       payment_status: 'pending',
       payment_proof_url: paymentProofUrl,
       subtotal: subtotal,

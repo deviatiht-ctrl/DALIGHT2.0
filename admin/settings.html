@@ -179,6 +179,65 @@
           </a>
         </div>
 
+      </div>
+
+      <!-- Payment Methods — full width -->
+      <div class="glass-card" style="margin-top:0;grid-column:1/-1;">
+        <div class="card-header">
+          <div><h3 class="card-title">💳 Modes de Paiement</h3><p class="card-subtitle">Gérez les méthodes affichées au client lors du checkout et des réservations</p></div>
+        </div>
+        <!-- Form add/edit -->
+        <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:1rem;margin-bottom:1.25rem;">
+          <div style="font-size:.8rem;font-weight:600;margin-bottom:.75rem;color:rgba(255,255,255,.6);" id="pm-form-title">➕ Ajouter un mode de paiement</div>
+          <input type="hidden" id="pm-edit-id">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="font-size:.75rem;">Nom * <span style="opacity:.5;">(ex: MonCash)</span></label>
+              <input class="form-input" id="pm-name" placeholder="MonCash" style="font-size:.83rem;">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="font-size:.75rem;">Nom du compte</label>
+              <input class="form-input" id="pm-account-name" placeholder="DANOE ADAM" style="font-size:.83rem;">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="font-size:.75rem;">Numéro / Compte</label>
+              <input class="form-input" id="pm-account-number" placeholder="+509 4747-7221" style="font-size:.83rem;">
+            </div>
+            <div class="form-group" style="margin-bottom:0;grid-column:1/-1;">
+              <label class="form-label" style="font-size:.75rem;">Instructions (étapes pour payer)</label>
+              <textarea class="form-input" id="pm-instructions" rows="2" placeholder="Ouvrez l'app → Transfert → Screenshot..." style="font-size:.83rem;"></textarea>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="font-size:.75rem;">Logo — URL ou upload</label>
+              <input class="form-input" id="pm-logo-url" placeholder="https://... ou laisser vide" style="font-size:.83rem;">
+              <input type="file" id="pm-logo-file" accept="image/*" style="margin-top:.4rem;font-size:.75rem;" onchange="previewPmLogo(this)">
+              <img id="pm-logo-preview" src="" style="height:36px;margin-top:.4rem;border-radius:6px;display:none;object-fit:contain;">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="font-size:.75rem;">Upload preuve obligatoire ?</label>
+              <label class="toggle-switch" style="margin-top:.5rem;">
+                <input type="checkbox" id="pm-requires-proof" checked>
+                <span class="toggle-slider"></span>
+              </label>
+              <span style="font-size:.75rem;opacity:.6;margin-left:.5rem;">Oui = client doit envoyer screenshot</span>
+            </div>
+            <div style="display:flex;gap:.4rem;align-items:flex-end;">
+              <button class="btn btn-primary btn-sm" onclick="savePm()" id="pm-save-btn">Enregistrer</button>
+              <button class="btn btn-secondary btn-sm" onclick="resetPmForm()">✕</button>
+            </div>
+          </div>
+        </div>
+        <!-- Table -->
+        <div class="table-responsive" style="overflow-x:auto;">
+          <table class="admin-table" style="font-size:.85rem;">
+            <thead><tr><th>Logo</th><th>Nom</th><th>Compte</th><th>Numéro</th><th>Preuve</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody id="pm-table"><tr><td colspan="7" class="text-center text-muted" style="padding:1rem;">Chargement...</td></tr></tbody>
+          </table>
+        </div>
+        <p class="text-muted" style="font-size:.73rem;margin-top:.5rem;">Exécutez <code>06_payment_methods.sql</code> dans Supabase avant d'utiliser cette section.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem;">
         <!-- Danger Zone -->
         <div class="glass-card" style="border-color: rgba(248, 113, 113, 0.3);">
           <div class="card-header">
@@ -195,26 +254,169 @@
           </div>
         </div>
       </div>
+      </div>
     </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/admin-core.js"></script>
   <script>
+    let pmList = [];
+
     document.addEventListener('DOMContentLoaded', async () => {
       await new Promise(resolve => setTimeout(resolve, 100));
       const session = await window.adminCore?.checkAdminAuth();
       if (!session) return;
-      
       initForms();
+      loadPaymentMethods();
     });
-    
+
     function initForms() {
       const generalForm = document.getElementById('general-form');
       generalForm?.addEventListener('submit', (e) => {
         e.preventDefault();
         window.adminCore.showToast('Paramètres sauvegardés (stockage local)');
       });
+    }
+
+    // ── Payment Methods CRUD ──
+    const sb = () => window.supabaseClient || window.adminCore?.supabase;
+
+    async function loadPaymentMethods() {
+      const tbody = document.getElementById('pm-table');
+      try {
+        const { data, error } = await sb().from('payment_methods').select('*').order('sort_order');
+        if (error) throw error;
+        pmList = data || [];
+        renderPmTable();
+      } catch (err) {
+        if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted" style="padding:1rem;">
+          Table non trouvée — exécutez <code>06_payment_methods.sql</code></td></tr>`;
+      }
+    }
+
+    function renderPmTable() {
+      const tbody = document.getElementById('pm-table');
+      if (!pmList.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:1rem;">Aucun mode configuré.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = pmList.map(p => `
+        <tr>
+          <td>${p.logo_url ? `<img src="${p.logo_url}" style="height:32px;border-radius:4px;object-fit:contain;">` : '<span style="font-size:1.4rem;">💳</span>'}</td>
+          <td><strong>${esc(p.name)}</strong><br><code style="font-size:.72rem;">${esc(p.slug)}</code></td>
+          <td style="font-size:.82rem;">${esc(p.account_name || '—')}</td>
+          <td style="font-size:.82rem;font-family:monospace;">${esc(p.account_number || '—')}</td>
+          <td><span class="status-badge ${p.requires_proof ? 'pending' : 'completed'}">${p.requires_proof ? 'Obligatoire' : 'Non'}</span></td>
+          <td><label class="toggle-switch"><input type="checkbox" ${p.is_active ? 'checked' : ''} onchange="togglePm('${p.id}',this.checked)"><span class="toggle-slider"></span></label></td>
+          <td>
+            <div class="action-btns">
+              <button class="btn btn-secondary btn-sm btn-icon" onclick="editPm('${p.id}')">✎</button>
+              <button class="btn btn-danger btn-sm btn-icon" onclick="deletePm('${p.id}','${esc(p.name)}')">✕</button>
+            </div>
+          </td>
+        </tr>`).join('');
+    }
+
+    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    function editPm(id) {
+      const p = pmList.find(x => x.id === id); if (!p) return;
+      document.getElementById('pm-edit-id').value = p.id;
+      document.getElementById('pm-name').value = p.name;
+      document.getElementById('pm-account-name').value = p.account_name || '';
+      document.getElementById('pm-account-number').value = p.account_number || '';
+      document.getElementById('pm-instructions').value = p.instructions || '';
+      document.getElementById('pm-logo-url').value = p.logo_url || '';
+      document.getElementById('pm-requires-proof').checked = p.requires_proof;
+      const prev = document.getElementById('pm-logo-preview');
+      if (p.logo_url) { prev.src = p.logo_url; prev.style.display = 'block'; } else { prev.style.display = 'none'; }
+      document.getElementById('pm-form-title').textContent = '✎ Modifier: ' + p.name;
+      document.getElementById('pm-save-btn').textContent = 'Modifier';
+    }
+
+    function resetPmForm() {
+      ['pm-edit-id','pm-name','pm-account-name','pm-account-number','pm-instructions','pm-logo-url'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+      });
+      document.getElementById('pm-requires-proof').checked = true;
+      document.getElementById('pm-logo-preview').style.display = 'none';
+      document.getElementById('pm-form-title').textContent = '➕ Ajouter un mode de paiement';
+      document.getElementById('pm-save-btn').textContent = 'Enregistrer';
+      document.getElementById('pm-logo-file').value = '';
+    }
+
+    function previewPmLogo(input) {
+      const file = input.files?.[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const prev = document.getElementById('pm-logo-preview');
+        prev.src = e.target.result; prev.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function uploadPmLogo(file) {
+      const path = `pm-logos/${Date.now()}-${file.name.replace(/[^a-z0-9.]/gi,'_')}`;
+      const { data, error } = await sb().storage.from('payment-proofs').upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data: urlData } = sb().storage.from('payment-proofs').getPublicUrl(path);
+      return urlData.publicUrl;
+    }
+
+    async function savePm() {
+      const editId = document.getElementById('pm-edit-id').value;
+      const name   = document.getElementById('pm-name').value.trim();
+      const slug   = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+      if (!name) { alert('Nom requis'); return; }
+
+      let logoUrl = document.getElementById('pm-logo-url').value.trim();
+      const file  = document.getElementById('pm-logo-file').files?.[0];
+      if (file) {
+        try { logoUrl = await uploadPmLogo(file); } catch(e) { console.warn('Logo upload failed:', e.message); }
+      }
+
+      const payload = {
+        name,
+        account_name:   document.getElementById('pm-account-name').value.trim(),
+        account_number: document.getElementById('pm-account-number').value.trim(),
+        instructions:   document.getElementById('pm-instructions').value.trim(),
+        logo_url:       logoUrl,
+        requires_proof: document.getElementById('pm-requires-proof').checked,
+      };
+
+      try {
+        if (editId) {
+          const { error } = await sb().from('payment_methods').update(payload).eq('id', editId);
+          if (error) throw error;
+          window.adminCore?.showToast('Mode de paiement mis à jour ✓');
+        } else {
+          const nextOrder = pmList.length ? Math.max(...pmList.map(p => p.sort_order||0)) + 1 : 1;
+          const { error } = await sb().from('payment_methods').insert({ ...payload, slug, sort_order: nextOrder });
+          if (error) throw error;
+          window.adminCore?.showToast('Mode de paiement ajouté ✓');
+        }
+        resetPmForm();
+        await loadPaymentMethods();
+      } catch (err) { alert('Erreur: ' + err.message); }
+    }
+
+    async function deletePm(id, name) {
+      if (!confirm(`Supprimer "${name}" ?`)) return;
+      try {
+        const { error } = await sb().from('payment_methods').delete().eq('id', id);
+        if (error) throw error;
+        window.adminCore?.showToast('Supprimé ✓');
+        await loadPaymentMethods();
+      } catch(err) { alert('Erreur: ' + err.message); }
+    }
+
+    async function togglePm(id, state) {
+      try {
+        const { error } = await sb().from('payment_methods').update({ is_active: state }).eq('id', id);
+        if (error) throw error;
+        await loadPaymentMethods();
+      } catch(err) { alert('Erreur: ' + err.message); }
     }
     
     window.clearOldReservations = async function() {

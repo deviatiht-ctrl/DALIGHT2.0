@@ -1188,91 +1188,33 @@
             </div>
 
             <h4 style="margin: 2rem 0 1rem;">Méthode de paiement de l'acompte</h4>
-            <div class="payment-methods">
-              <label class="payment-method" id="payment-method-moncash">
-                <input type="radio" name="payment_method" value="moncash" required>
-                <span class="payment-icon"><img src="../assets/images/moncash.jpg" alt="MonCash"></span>
-                <div>
-                  <strong>MonCash</strong>
-                  <p style="margin: 0; font-size: 0.8rem; color: var(--marron-600);">DANOE ADAM</p>
-                </div>
-              </label>
-              <label class="payment-method" id="payment-method-natcash">
-                <input type="radio" name="payment_method" value="natcash">
-                <span class="payment-icon"><img src="../assets/images/natcash.png" alt="NatCash"></span>
-                <div>
-                  <strong>NatCash</strong>
-                  <p style="margin: 0; font-size: 0.8rem; color: var(--marron-600);">Fabiola Laborde</p>
-                </div>
-              </label>
-              <label class="payment-method">
-                <input type="radio" name="payment_method" value="bank">
-                <span class="payment-icon">🏦</span>
-                <div>
-                  <strong>Virement Bancaire</strong>
-                  <p style="margin: 0; font-size: 0.8rem; color: var(--marron-600);">Compte DALIGHT</p>
-                </div>
-              </label>
+            <div class="payment-methods" id="resv-payment-methods-container">
+              <div style="padding:.75rem;color:var(--marron-600);font-size:.9rem;">Chargement des modes de paiement...</div>
             </div>
 
-            <!-- Payment Details Panel -->
-            <div id="payment-details-panel" class="payment-details">
-              <!-- Moncash Details -->
-              <div id="moncash-details" class="payment-method-details" style="display: none;">
-                <h5>Informations MonCash</h5>
-                <div class="payment-info-row">
-                  <span class="payment-info-label">Nom :</span>
-                  <span class="payment-info-value">DANOE ADAM</span>
-                </div>
-                <div class="payment-info-row">
-                  <span class="payment-info-label">Numéro :</span>
-                  <span class="payment-info-value highlight">+509 47477221</span>
-                </div>
+            <!-- Détail dynamique du mode sélectionné -->
+            <div id="resv-payment-detail-box" class="payment-details" style="display:none;margin-top:1rem;">
+              <h5 id="resv-pm-title"></h5>
+              <div class="payment-info-row">
+                <span class="payment-info-label">Compte :</span>
+                <span class="payment-info-value" id="resv-pm-account-name"></span>
               </div>
-
-              <!-- Natcash Details -->
-              <div id="natcash-details" class="payment-method-details" style="display: none;">
-                <h5>Informations NatCash</h5>
-                <div class="payment-info-row">
-                  <span class="payment-info-label">Nom :</span>
-                  <span class="payment-info-value">Fabiola Laborde</span>
-                </div>
-                <div class="payment-info-row">
-                  <span class="payment-info-label">Numéro :</span>
-                  <span class="payment-info-value highlight">+509 42965018</span>
-                </div>
+              <div class="payment-info-row">
+                <span class="payment-info-label">Numéro :</span>
+                <span class="payment-info-value highlight" id="resv-pm-account-number"></span>
               </div>
-
-              <!-- Bank Details -->
-              <div id="bank-details" class="payment-method-details" style="display: none;">
-                <h5>Informations Virement Bancaire (BNC)</h5>
-                <div class="payment-info-row">
-                  <span class="payment-info-label">Banque :</span>
-                  <span class="payment-info-value">BNC</span>
-                </div>
-                <div class="payment-info-row">
-                  <span class="payment-info-label">Nom du compte :</span>
-                  <span class="payment-info-value">Danoe Adam</span>
-                </div>
-                <div class="payment-info-row">
-                  <span class="payment-info-label">Gourdes (HTG) :</span>
-                  <span class="payment-info-value highlight">3310013350</span>
-                </div>
-                <div class="payment-info-row">
-                  <span class="payment-info-label">Dollars (USD) :</span>
-                  <span class="payment-info-value highlight">3311005245</span>
-                </div>
-              </div>
+              <div id="resv-pm-instructions" style="font-size:.85rem;margin-top:.5rem;color:var(--marron-600);white-space:pre-line;"></div>
             </div>
 
-            <div class="form-group full-width" style="margin-top: 1.5rem;">
-              <label>Preuve de paiement (screenshot) *</label>
-              <div class="upload-zone-v2" id="upload-zone">
-                <input type="file" id="payment-proof" name="payment_proof" accept="image/*" required style="display: none;">
-                <i data-lucide="upload-cloud" style="width: 48px; height: 48px; color: var(--marron-400);"></i>
+            <!-- Upload preuve (visible seulement si requires_proof) -->
+            <div class="form-group full-width" id="resv-proof-section" style="margin-top: 1.5rem;">
+              <label>📸 Preuve de paiement (screenshot) <span style="color:#dc2626;" id="resv-proof-required-star">*</span></label>
+              <div class="upload-zone-v2" id="upload-zone" onclick="document.getElementById('payment-proof').click()">
+                <input type="file" id="payment-proof" name="payment_proof" accept="image/*" style="display:none;">
+                <i data-lucide="upload-cloud" style="width:48px;height:48px;color:var(--marron-400);"></i>
                 <p>Cliquez pour uploader votre screenshot</p>
-                <small style="color: var(--marron-600);">PNG, JPG - Max 5 MB</small>
-                <div id="file-name" style="margin-top: 0.5rem; font-weight: 500; color: var(--marron-900);"></div>
+                <small style="color:var(--marron-600);">PNG, JPG — Max 5 MB</small>
+                <div id="file-name" style="margin-top:.5rem;font-weight:500;color:var(--marron-900);"></div>
               </div>
             </div>
 
@@ -1341,6 +1283,7 @@
         lucide.createIcons();
         initChatWidget();
         initReservationSteps();
+        loadResvPaymentMethods();
       });
 
       // ─────────────────────────────────────────────────────────────
@@ -1350,6 +1293,67 @@
       const totalSteps = 5;
       const formData = {};
       let cartServices = [];
+      let resvPaymentMethods = [];
+      let selectedResvPM = null;
+
+      async function loadResvPaymentMethods() {
+        const container = document.getElementById('resv-payment-methods-container');
+        if (!container) return;
+        try {
+          let sb = window.supabaseClient;
+          if (!sb) {
+            await new Promise(r => setTimeout(r, 1500));
+            sb = window.supabaseClient;
+          }
+          if (!sb) throw new Error('Supabase non disponible');
+          const { data, error } = await sb.from('payment_methods').select('*').eq('is_active', true).order('sort_order');
+          if (error) throw error;
+          resvPaymentMethods = data || [];
+          renderResvPaymentCards();
+        } catch(err) {
+          console.warn('payment_methods load error:', err.message);
+          container.innerHTML = `<p style="font-size:.85rem;color:var(--marron-600);">Modes de paiement non disponibles — exécutez 06_payment_methods.sql</p>`;
+        }
+      }
+
+      function renderResvPaymentCards() {
+        const container = document.getElementById('resv-payment-methods-container');
+        if (!resvPaymentMethods.length) { container.innerHTML = '<p style="color:var(--marron-600);">Aucun mode configuré.</p>'; return; }
+        container.innerHTML = resvPaymentMethods.map(pm => {
+          const logoHtml = pm.logo_url
+            ? `<span class="payment-icon"><img src="${pm.logo_url}" alt="${pm.name}" style="width:100%;height:100%;object-fit:contain;"></span>`
+            : `<span class="payment-icon" style="font-size:1.4rem;">💳</span>`;
+          return `<label class="payment-method" onclick="selectResvPM('${pm.slug}',this)" data-slug="${pm.slug}">
+            <input type="radio" name="payment_method" value="${pm.slug}">
+            ${logoHtml}
+            <div><strong>${pm.name}</strong>
+              <p style="margin:0;font-size:.8rem;color:var(--marron-600);">${pm.account_name || ''}</p>
+            </div>
+          </label>`;
+        }).join('');
+      }
+
+      window.selectResvPM = function(slug, el) {
+        selectedResvPM = resvPaymentMethods.find(p => p.slug === slug) || null;
+        document.querySelectorAll('#resv-payment-methods-container .payment-method').forEach(e => e.classList.remove('selected'));
+        el?.classList.add('selected');
+        const pm = selectedResvPM;
+        if (pm) {
+          document.getElementById('resv-pm-title').textContent = pm.name;
+          document.getElementById('resv-pm-account-name').textContent = pm.account_name || '—';
+          document.getElementById('resv-pm-account-number').textContent = pm.account_number || '—';
+          document.getElementById('resv-pm-instructions').textContent = pm.instructions || '';
+          document.getElementById('resv-payment-detail-box').style.display = 'block';
+          const proofSection = document.getElementById('resv-proof-section');
+          if (proofSection) proofSection.style.display = pm.requires_proof ? 'block' : 'none';
+          const proofInput = document.getElementById('payment-proof');
+          if (proofInput) proofInput.required = pm.requires_proof;
+          const star = document.getElementById('resv-proof-required-star');
+          if (star) star.style.display = pm.requires_proof ? 'inline' : 'none';
+        }
+        formData.payment_method = slug;
+        formData.payment_method_id = pm?.id || null;
+      };
 
 function loadCartData() {
         console.log('🛒 loadCartData() started');
