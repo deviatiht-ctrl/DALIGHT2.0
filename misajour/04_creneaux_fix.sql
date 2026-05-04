@@ -52,7 +52,11 @@ ALTER TABLE availability_exceptions
   ADD CONSTRAINT uniq_exception_date_time_service
   UNIQUE(exception_date, time_slot, service_type);
 
--- Étape 2: Mete ajou fonksyon check_availability pou filtre pa service_type
+-- Étape 2: DROP vye sinatir anvan kreye nouvo a (evite ambiguity error)
+DROP FUNCTION IF EXISTS check_availability(DATE, TIME, UUID);
+DROP FUNCTION IF EXISTS get_month_availability(INTEGER, INTEGER);
+
+-- Kreye nouvo check_availability avèk sinatir ki sipòte service_type
 CREATE OR REPLACE FUNCTION check_availability(
   p_date DATE,
   p_time TIME,
@@ -174,7 +178,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Étape 4: Mete ajou get_month_availability pou sipòte service_type
+-- Étape 4: get_month_availability (vye 2-param déjà droppé anwo)
 CREATE OR REPLACE FUNCTION get_month_availability(
   p_year INTEGER,
   p_month INTEGER,
@@ -248,7 +252,31 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Étape 5: Aktive Realtime pou Supabase
--- (Client ap abòne sou chanjman yo tousuit san F5)
-ALTER PUBLICATION supabase_realtime ADD TABLE availability_exceptions;
-ALTER PUBLICATION supabase_realtime ADD TABLE availability_rules;
+-- Étape 5: Aktive Realtime pou Supabase (sans erreur si déjà membre)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND tablename = 'availability_exceptions'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE availability_exceptions;
+    RAISE NOTICE 'availability_exceptions ajouté à supabase_realtime';
+  ELSE
+    RAISE NOTICE 'availability_exceptions déjà dans supabase_realtime';
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND tablename = 'availability_rules'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE availability_rules;
+    RAISE NOTICE 'availability_rules ajouté à supabase_realtime';
+  ELSE
+    RAISE NOTICE 'availability_rules déjà dans supabase_realtime';
+  END IF;
+END $$;

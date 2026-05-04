@@ -599,56 +599,109 @@ function getSupabaseClient() {
 }
 
 async function loadAvailability() {
-  // Wait for Supabase to be available
   let retries = 0;
   let supabase = getSupabaseClient();
-  
   while (!supabase && retries < 20) {
-    console.log('⏳ Waiting for Supabase... attempt', retries + 1);
     await new Promise(resolve => setTimeout(resolve, 300));
     supabase = getSupabaseClient();
     retries++;
   }
-  
-  console.log('🔍 Final supabase check:', supabase ? 'FOUND' : 'NULL');
+
   if (!supabase) {
-    console.error('❌ Supabase not initialized after waiting');
     const tbody = document.getElementById('availability-body');
-    if (tbody) {
-      tbody.innerHTML = `<tr><td colspan="12" style="text-align: center; padding: 2rem; color: #ef4444;">
-        ⚠️ Erreur: Connexion Supabase non établie.<br>
-        <button onclick="location.reload()" class="btn btn-primary" style="margin-top: 1rem;">Rafraîchir la page</button>
-      </td></tr>`;
-    }
+    if (tbody) tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:2rem;color:#ef4444;">
+      ⚠️ Connexion Supabase non établie.
+      <button onclick="location.reload()" class="btn btn-primary" style="margin-top:1rem;">Rafraîchir</button>
+    </td></tr>`;
     return;
   }
-  
-  console.log('✅ Supabase connected, loading availability...');
-  
-  // Update month display
-  const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
-                      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
-  document.getElementById('current-month-display').textContent = 
+
+  const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin',
+                      'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  document.getElementById('current-month-display').textContent =
     `${monthNames[currentAvailabilityMonth.getMonth()]} ${currentAvailabilityMonth.getFullYear()}`;
-  
+
+  const year  = currentAvailabilityMonth.getFullYear();
+  const month = currentAvailabilityMonth.getMonth() + 1;
+
   try {
-    const year = currentAvailabilityMonth.getFullYear();
-    const month = currentAvailabilityMonth.getMonth() + 1;
-    
-    // Call the RPC function
-    const { data, error } = await supabase
-      .rpc('get_month_availability', { 
-        p_year: year, 
-        p_month: month 
-      });
-    
-    if (error) throw error;
-    
+    // Essai 1: nouvelle fonction 3 params (04_creneaux_fix.sql)
+    let { data, error } = await supabase.rpc('get_month_availability', {
+      p_year: year, p_month: month
+    });
+
+    if (error) {
+      console.warn('⚠️ RPC get_month_availability échoué:', error.message);
+      // Essai 2: fallback direct sur les tables
+      data = await loadAvailabilityFallback(supabase, year, month);
+    }
+
     renderAvailabilityCalendar(data || []);
   } catch (err) {
-    console.error('Error loading availability:', err);
-    window.adminCore?.showToast('Erreur lors du chargement du calendrier', 'error');
+    console.error('❌ loadAvailability error:', err);
+    try {
+      const data = await loadAvailabilityFallback(supabase, year, month);
+      renderAvailabilityCalendar(data || []);
+    } catch (err2) {
+      window.adminCore?.showToast('Erreur calendrier: ' + err2.message, 'error');
+    }
   }
+}
+
+// Fallback: construit les données directement depuis availability_rules + exceptions
+async function loadAvailabilityFallback(supabase, year, month) {
+  console.log('🔄 Using fallback availability query...');
+  const startDate = `${year}-${String(month).padStart(2,'0')}-01`;
+  const endDate   = new Date(year, month, 0).toISOString().split('T')[0];
+
+  const [rulesRes, exceptionsRes, bookingsRes] = await Promise.all([
+    supabase.from('availability_rules').select('*'),
+    supabase.from('availability_exceptions').select('*')
+      .gte('exception_date', startDate).lte('exception_date', endDate),
+    supabase.from('reservations').select('date, time, status')
+      .gte('date', startDate).lte('date', endDate)
+      .not('status', 'eq', 'cancelled')
+  ]);
+
+  const rules      = rulesRes.data || [];
+  const exceptions = exceptionsRes.data || [];
+  const bookings   = bookingsRes.data || [];
+
+  const results = [];
+  const current = new Date(startDate);
+  const end     = new Date(endDate);
+
+  while (current <= end) {
+    const dow      = current.getDay();
+    const dateStr  = current.toISOString().split('T')[0];
+    const dayRules = rules.filter(r => r.day_of_week === dow && r.is_available);
+
+    for (const rule of dayRules) {
+      const timeStr = rule.time_slot?.substring(0, 5);
+      if (!timeStr) continue;
+
+      const exc = exceptions.find(e =>
+        e.exception_date === dateStr &&
+        (e.time_slot === null || e.time_slot?.substring(0,5) === timeStr)
+      );
+      const booked = bookings.filter(b =>
+        b.date === dateStr && b.time?.substring(0,5) === timeStr
+      ).length;
+      const capacity = exc?.max_capacity ?? rule.max_capacity ?? 1;
+
+      results.push({
+        available_date: dateStr,
+        slot_time:      rule.time_slot,
+        is_available:   exc?.is_blocked ? false : (booked < capacity),
+        max_capacity:   capacity,
+        current_bookings: booked,
+        remaining_slots: Math.max(0, capacity - booked),
+        is_exception:   !!exc
+      });
+    }
+    current.setDate(current.getDate() + 1);
+  }
+  return results;
 }
 
 function renderAvailabilityCalendar(data) {
