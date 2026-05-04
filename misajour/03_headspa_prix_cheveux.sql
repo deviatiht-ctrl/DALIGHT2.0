@@ -10,16 +10,30 @@
 --   Kliyan chwazi tip cheve li → pri kòrèk parèt
 -- =============================================
 
--- Étape 1: Kreye tab prix pa tip cheve
+-- Étape 1: Kreye tab prix pa tip cheve (SANS constraint hardcodé)
 CREATE TABLE IF NOT EXISTS service_hair_prices (
   id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   service_id  UUID NOT NULL REFERENCES services(id) ON DELETE CASCADE,
-  hair_type   TEXT NOT NULL CHECK (hair_type IN ('extra_court', 'court', 'large', 'extra_large')),
-  label_fr    TEXT NOT NULL, -- Afichaj: "Extra Court", "Court", etc.
+  hair_type   TEXT NOT NULL,
+  label_fr    TEXT NOT NULL,
+  hair_length TEXT DEFAULT '',
   price_htg   NUMERIC(12,2) NOT NULL DEFAULT 0,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE(service_id, hair_type)
 );
+
+-- Retire CHECK constraint si li egziste déjà
+DO $$
+DECLARE v_con TEXT;
+BEGIN
+  SELECT constraint_name INTO v_con
+  FROM information_schema.table_constraints
+  WHERE table_name = 'service_hair_prices'
+    AND constraint_type = 'CHECK';
+  IF v_con IS NOT NULL THEN
+    EXECUTE format('ALTER TABLE service_hair_prices DROP CONSTRAINT IF EXISTS %I', v_con);
+  END IF;
+END $$;
 
 -- Étape 2: RLS
 ALTER TABLE service_hair_prices ENABLE ROW LEVEL SECURITY;
@@ -47,10 +61,11 @@ SELECT
   hp.price_htg
 FROM services s
 CROSS JOIN (VALUES
-  ('extra_court', 'Extra Court', 8000),
-  ('court',       'Court',       10000),
-  ('large',       'Large',       12000),
-  ('extra_large', 'Extra Large', 15000)
+  ('extra_court', 'Extra Court', 3000),
+  ('court',       'Court',       4000),
+  ('medium',       'medium',       5000),
+   ('large',       'Large',       6000),
+  ('extra_large', 'Extra Large', 7500)
 ) AS hp(hair_type, label_fr, price_htg)
 WHERE s.name = 'Head Spa Signature'
 ON CONFLICT (service_id, hair_type) DO NOTHING;
