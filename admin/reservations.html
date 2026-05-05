@@ -412,7 +412,7 @@
   <div class="modal-overlay" id="capacity-modal" style="display: none;">
     <div class="modal" style="max-width: 400px;">
       <div class="modal-header">
-        <h3 class="modal-title">Modifier capacité</h3>
+        <h3 class="modal-title" id="capacity-modal-title">Configurer créneau</h3>
         <button class="modal-close" onclick="closeCapacityModal()">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
@@ -424,19 +424,29 @@
           <label>Créneau horaire</label>
           <input type="text" id="capacity-time-display" class="form-input" readonly>
         </div>
-        <div class="form-group">
+        <div class="form-group" id="capacity-input-group">
           <label>Capacité maximum (nombre de réservations)</label>
-          <input type="number" id="capacity-input" class="form-input" min="1" max="10" value="1">
+          <input type="number" id="capacity-input" class="form-input" min="1" max="20" value="1">
         </div>
         <div class="form-group">
-          <label>
-            <input type="checkbox" id="capacity-available"> Disponible
+          <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;">
+            <input type="checkbox" id="capacity-available"> Marquer comme disponible
           </label>
         </div>
+        <!-- Alèt kreno bloke -->
+        <div id="slot-blocked-info" style="display:none;background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:.75rem 1rem;font-size:.85rem;color:#92400e;">
+          🔒 Ce créneau est actuellement <strong>bloqué</strong>. Cliquez sur <em>Débloquer</em> pour le supprimer.
+        </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeCapacityModal()">Annuler</button>
-        <button class="btn btn-primary" onclick="saveCapacity()">Sauvegarder</button>
+      <div class="modal-footer" style="justify-content:space-between;flex-wrap:wrap;gap:.5rem;">
+        <button id="btn-deblock-slot" class="btn" onclick="deleteSlot()"
+          style="display:none;background:#ef4444;color:white;border:none;padding:.5rem 1rem;border-radius:8px;cursor:pointer;font-weight:600;">
+          🔓 Débloquer / Supprimer
+        </button>
+        <div style="display:flex;gap:.5rem;margin-left:auto;">
+          <button class="btn btn-secondary" onclick="closeCapacityModal()">Annuler</button>
+          <button class="btn btn-primary" onclick="saveCapacity()">Sauvegarder</button>
+        </div>
       </div>
     </div>
   </div>

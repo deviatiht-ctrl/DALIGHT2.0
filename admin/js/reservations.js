@@ -1098,17 +1098,65 @@ async function confirmBlockDate() {
 
 function openSlotModal(date, time, slotData) {
   console.log('🔴 openSlotModal called:', date, time, slotData);
-  selectedSlot = { date, time, ...slotData };
-  
+  selectedSlot = { date, time, data: slotData };
+
+  const isExisting  = !!slotData;
+  const isBlocked   = slotData?.is_blocked === true;
+
+  // Titre modal
+  const titleEl = document.getElementById('capacity-modal-title');
+  if (titleEl) titleEl.textContent = isExisting ? 'Modifier créneau' : 'Ajouter créneau';
+
+  // Champs
   document.getElementById('capacity-time-display').value = `${date} à ${time}`;
   document.getElementById('capacity-input').value = slotData?.max_capacity || 1;
-  document.getElementById('capacity-available').checked = slotData?.is_available ?? true;
-  
+  document.getElementById('capacity-available').checked = isBlocked ? false : (slotData?.is_available ?? true);
+
+  // Bouton débloquer — visible sèlman si kreno egziste nan DB
+  const btnDeblock = document.getElementById('btn-deblock-slot');
+  const blockedInfo = document.getElementById('slot-blocked-info');
+  if (btnDeblock) btnDeblock.style.display = isExisting ? 'block' : 'none';
+  if (blockedInfo) blockedInfo.style.display = isBlocked ? 'block' : 'none';
+
   const modal = document.getElementById('capacity-modal');
   if (modal) {
     modal.classList.add('active');
     modal.style.display = 'flex';
-    console.log('✅ Capacity modal opened');
+  }
+}
+
+async function deleteSlot() {
+  if (!selectedSlot?.date || !selectedSlot?.time) return;
+  if (!confirm(`Supprimer le créneau ${selectedSlot.date} à ${selectedSlot.time} ?`)) return;
+
+  try {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error('Connexion Supabase non établie.');
+
+    // Essai 1: avec service_type
+    let { error } = await supabase
+      .from('availability_exceptions')
+      .delete()
+      .eq('exception_date', selectedSlot.date)
+      .eq('time_slot', selectedSlot.time + ':00')
+      .eq('service_type', 'all');
+
+    if (error) {
+      // Essai 2: sans service_type
+      const { error: e2 } = await supabase
+        .from('availability_exceptions')
+        .delete()
+        .eq('exception_date', selectedSlot.date)
+        .eq('time_slot', selectedSlot.time + ':00');
+      if (e2) throw e2;
+    }
+
+    window.adminCore?.showToast('Créneau supprimé ✓');
+    closeCapacityModal();
+    loadAvailability();
+  } catch (err) {
+    console.error('Error deleting slot:', err);
+    window.adminCore?.showToast('Erreur: ' + err.message, 'error');
   }
 }
 
