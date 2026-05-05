@@ -4,6 +4,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Nos Services — DALIGHT</title>
   <link rel="icon" href="../assets/images/logodaligth.png?v=2" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -241,6 +244,59 @@
       <i data-lucide="user"></i>
     </a>
   </nav>
+
+    <!-- ===== MODAL: SELEKSYON TIP CHEVEUX HEAD SPA ===== -->
+    <div id="hair-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;align-items:center;justify-content:center;padding:1rem;">
+      <div style="background:#fff;border-radius:20px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+        <div style="background:linear-gradient(135deg,#4A3728,#6B4F3B);padding:1.25rem 1.5rem;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <h3 style="color:white;margin:0;font-family:'Playfair Display',serif;font-size:1.2rem;">Type de cheveux</h3>
+            <p style="color:rgba(255,255,255,.75);margin:.25rem 0 0;font-size:.85rem;" id="hair-modal-service-name"></p>
+          </div>
+          <button onclick="closeHairModal()" style="background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;line-height:1;">&times;</button>
+        </div>
+
+        <div style="padding:1.25rem;">
+          <!-- ÉTAPE 1: Type visuel -->
+          <p style="font-size:.85rem;color:#6b7280;margin:0 0 .75rem;">Sélectionnez votre type de cheveux pour nous aider à mieux vous servir :</p>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1.25rem;" id="hair-type-cards">
+            <div class="hair-type-card" onclick="selectHairType('dreadlocks')" data-type="dreadlocks"
+              style="border:2px solid #e5e7eb;border-radius:12px;overflow:hidden;cursor:pointer;transition:all .2s;">
+              <img src="../assets/images/dreadlocks.jpg" alt="Dreadlocks" style="width:100%;aspect-ratio:1/1;object-fit:cover;">
+              <p style="text-align:center;margin:.4rem 0;font-size:.78rem;font-weight:600;color:#374151;">Dreadlocks</p>
+            </div>
+            <div class="hair-type-card" onclick="selectHairType('defrises')" data-type="defrises"
+              style="border:2px solid #e5e7eb;border-radius:12px;overflow:hidden;cursor:pointer;transition:all .2s;">
+              <img src="../assets/images/defrises.jpg" alt="Défrisés" style="width:100%;aspect-ratio:1/1;object-fit:cover;">
+              <p style="text-align:center;margin:.4rem 0;font-size:.78rem;font-weight:600;color:#374151;">Défrisés</p>
+            </div>
+            <div class="hair-type-card" onclick="selectHairType('naturels')" data-type="naturels"
+              style="border:2px solid #e5e7eb;border-radius:12px;overflow:hidden;cursor:pointer;transition:all .2s;">
+              <img src="../assets/images/naturels.jpg" alt="Naturels" style="width:100%;aspect-ratio:1/1;object-fit:cover;">
+              <p style="text-align:center;margin:.4rem 0;font-size:.78rem;font-weight:600;color:#374151;">Naturels</p>
+            </div>
+          </div>
+
+          <!-- ÉTAPE 2: Longueur -->
+          <p style="font-size:.9rem;font-weight:600;color:#1f2937;margin:0 0 .5rem;">Longueur de cheveux <span style="color:#6b7280;font-weight:400;font-size:.8rem;">(détermine le prix)</span></p>
+          <div id="hair-pricing-list" style="display:flex;flex-direction:column;gap:.4rem;">
+            <p style="color:#9ca3af;font-size:.85rem;">Chargement des tarifs...</p>
+          </div>
+
+          <!-- Prix sélectionné -->
+          <div id="hair-price-display" style="display:none;background:linear-gradient(135deg,#4A3728,#6B4F3B);color:white;border-radius:12px;padding:1rem;margin-top:1rem;text-align:center;">
+            <p style="margin:0;font-size:.85rem;opacity:.85;">Prix sélectionné</p>
+            <p style="margin:.25rem 0 0;font-size:1.4rem;font-weight:700;" id="hair-price-value">0 HTG</p>
+          </div>
+
+          <button id="hair-confirm-btn" onclick="confirmHairSelection()" disabled
+            style="width:100%;margin-top:1rem;padding:.9rem;background:#9ca3af;color:white;border:none;border-radius:12px;font-size:.95rem;font-weight:600;cursor:not-allowed;transition:all .3s;">
+            Ajouter au panier
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- ===== FIN MODAL ===== -->
 
     <!-- Toast Notifications -->
     <div class="toast-container" id="toast-container"></div>
@@ -547,6 +603,111 @@
       }
 
       // ============================================
+      // HEAD SPA HAIR TYPE MODAL
+      // ============================================
+      let hairModalService  = null;
+      let selectedHairType  = null;
+      let selectedPricing   = null;
+      let headSpaPricing    = [];
+
+      async function loadHeadSpaPricing() {
+        const supabase = getSupabase();
+        if (!supabase) return;
+        try {
+          const { data } = await supabase.from('head_spa_pricing').select('*').eq('is_active', true).order('sort_order');
+          headSpaPricing = data || [];
+        } catch(e) { console.warn('head_spa_pricing load failed', e); }
+      }
+
+      function openHairModal(service) {
+        hairModalService = service;
+        selectedHairType = null;
+        selectedPricing  = null;
+        document.getElementById('hair-modal-service-name').textContent = service.name;
+        document.getElementById('hair-price-display').style.display = 'none';
+        const confirmBtn = document.getElementById('hair-confirm-btn');
+        confirmBtn.disabled = true;
+        confirmBtn.style.background = '#9ca3af';
+        confirmBtn.style.cursor = 'not-allowed';
+        // Reset type selection
+        document.querySelectorAll('.hair-type-card').forEach(c => {
+          c.style.borderColor = '#e5e7eb';
+          c.style.boxShadow = 'none';
+        });
+        renderPricingOptions();
+        document.getElementById('hair-modal-overlay').style.display = 'flex';
+      }
+
+      function closeHairModal() {
+        document.getElementById('hair-modal-overlay').style.display = 'none';
+        hairModalService = null;
+      }
+      window.closeHairModal = closeHairModal;
+
+      function selectHairType(type) {
+        selectedHairType = type;
+        document.querySelectorAll('.hair-type-card').forEach(c => {
+          const active = c.dataset.type === type;
+          c.style.borderColor = active ? '#4A3728' : '#e5e7eb';
+          c.style.boxShadow   = active ? '0 0 0 3px rgba(74,55,40,.2)' : 'none';
+        });
+      }
+      window.selectHairType = selectHairType;
+
+      function renderPricingOptions() {
+        const container = document.getElementById('hair-pricing-list');
+        if (headSpaPricing.length === 0) {
+          container.innerHTML = '<p style="color:#9ca3af;font-size:.85rem;">Aucun tarif configuré par l\'admin.</p>';
+          return;
+        }
+        container.innerHTML = headSpaPricing.map((p, i) => `
+          <label onclick="selectPricingByIndex(${i})"
+            style="display:flex;justify-content:space-between;align-items:center;padding:.65rem .9rem;
+                   border:2px solid #e5e7eb;border-radius:10px;cursor:pointer;transition:all .2s;
+                   background:white;" data-pricing-idx="${i}">
+            <div>
+              <span style="font-weight:600;font-size:.88rem;color:#1f2937;">${p.label}</span>
+              <span style="color:#6b7280;font-size:.78rem;margin-left:.4rem;">${p.hair_length || ''}</span>
+            </div>
+            <strong style="color:#4A3728;font-size:.92rem;">${Number(p.price_htg).toLocaleString()} HTG</strong>
+          </label>
+        `).join('');
+      }
+
+      function selectPricingByIndex(idx) {
+        const pricing = headSpaPricing[idx];
+        if (!pricing) return;
+        selectedPricing = pricing;
+        document.querySelectorAll('[data-pricing-idx]').forEach(el => {
+          const active = el.dataset.pricingIdx === String(idx);
+          el.style.borderColor = active ? '#4A3728' : '#e5e7eb';
+          el.style.background  = active ? '#faf6f2' : 'white';
+        });
+        document.getElementById('hair-price-value').textContent = Number(pricing.price_htg).toLocaleString() + ' HTG';
+        document.getElementById('hair-price-display').style.display = 'block';
+        const confirmBtn = document.getElementById('hair-confirm-btn');
+        confirmBtn.disabled = false;
+        confirmBtn.style.background = 'linear-gradient(135deg,#4A3728,#6B4F3B)';
+        confirmBtn.style.cursor = 'pointer';
+      }
+      window.selectPricingByIndex = selectPricingByIndex;
+
+      function confirmHairSelection() {
+        if (!selectedPricing || !hairModalService) return;
+        const service = {
+          ...hairModalService,
+          price_htg: selectedPricing.price_htg,
+          price_usd: selectedPricing.price_usd || hairModalService.price_usd,
+          hair_type: selectedHairType || 'non précisé',
+          hair_length: selectedPricing.label,
+          name: hairModalService.name + ' — ' + selectedPricing.label
+        };
+        closeHairModal();
+        addToCart(service);
+      }
+      window.confirmHairSelection = confirmHairSelection;
+
+      // ============================================
       // SERVICES GRID
       // ============================================
       let allServices = [];
@@ -617,22 +778,26 @@
           return;
         }
 
-        grid.innerHTML = services.map(s => `
-          <article class="service-tile" data-category="${getCategoryFromService(s)}">
+        grid.innerHTML = services.map(s => {
+          const cat = getCategoryFromService(s);
+          const isHeadSpa = cat === 'headspa';
+          return `
+          <article class="service-tile" data-category="${cat}">
             <header>
               <h3>${esc(s.name)}</h3>
-              <span class="price">${Number(s.price_htg).toLocaleString()} HTG · $${Number(s.price_usd)}</span>
+              <span class="price">${isHeadSpa ? 'Dè ' : ''}${Number(s.price_htg).toLocaleString()} HTG${isHeadSpa ? ' <small style="font-size:.7em;opacity:.7;">(selon longueur)</small>' : ' · $' + Number(s.price_usd)}</span>
             </header>
             <p>${esc(s.description || '')} ${s.duration ? '(' + esc(s.duration) + ')' : ''}</p>
-            <button class="add-to-cart" data-service-name="${esc(s.name)}" data-service-desc="${esc(s.description || '')}" data-service-duration="${esc(s.duration || '')}" data-service-price-htg="${s.price_htg}" data-service-price-usd="${s.price_usd}">
+            <button class="add-to-cart" data-service-id="${s.id || ''}" data-is-headspa="${isHeadSpa}" data-service-name="${esc(s.name)}" data-service-desc="${esc(s.description || '')}" data-service-duration="${esc(s.duration || '')}" data-service-price-htg="${s.price_htg}" data-service-price-usd="${s.price_usd}">
               <i data-lucide="plus"></i> Ajouter au panier
             </button>
           </article>
-        `).join('');
+        `}).join('');
 
         // Wire add to cart buttons
         grid.querySelectorAll('.add-to-cart').forEach(btn => {
           btn.addEventListener('click', () => {
+            const isHeadSpa = btn.dataset.isHeadspa === 'true';
             const service = {
               name: btn.dataset.serviceName,
               description: btn.dataset.serviceDesc,
@@ -640,6 +805,10 @@
               price_htg: btn.dataset.servicePriceHtg,
               price_usd: btn.dataset.servicePriceUsd
             };
+            if (isHeadSpa && headSpaPricing.length > 0) {
+              openHairModal(service);
+              return;
+            }
             addToCart(service);
             // Visual feedback
             btn.classList.add('added');
@@ -714,6 +883,11 @@
         loadCart();
         initCart();
         loadServices();
+        loadHeadSpaPricing();
+        // Ferme modal si klike deyò
+        document.getElementById('hair-modal-overlay')?.addEventListener('click', (e) => {
+          if (e.target.id === 'hair-modal-overlay') closeHairModal();
+        });
       });
     </script>
 </body>

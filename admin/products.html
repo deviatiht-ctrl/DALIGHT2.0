@@ -269,15 +269,16 @@
         <button class="modal-close" onclick="closeCategoryModal()">&times;</button>
       </div>
       <div class="modal-body">
-        <form id="category-form">
+        <form id="category-form" onsubmit="createCategory(event)">
           <div class="form-group">
             <label for="category-name">Nom de la catégorie *</label>
-            <input type="text" id="category-name" required placeholder="Ex: Soins, Huiles, Accessoires...">
+            <input type="text" id="category-name" required placeholder="Ex: Soins, Huiles, Accessoires..."
+              oninput="document.getElementById('category-slug').value=this.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')">
           </div>
           <div class="form-group">
             <label for="category-slug">Slug (identifiant) *</label>
             <input type="text" id="category-slug" required placeholder="Ex: soins, huiles, accessoires...">
-            <small style="color: var(--admin-text-muted); font-size: 0.8rem;">Sans espaces, sans accents</small>
+            <small style="color: var(--admin-text-muted); font-size: 0.8rem;">Généré automatiquement · Sans espaces, sans accents</small>
           </div>
           <div class="form-group">
             <label for="category-order">Ordre d'affichage</label>
