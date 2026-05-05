@@ -113,13 +113,15 @@ function openCategoryModal() {
   const modal = document.getElementById('category-modal');
   if (modal) {
     modal.style.display = 'flex';
-    document.getElementById('category-name')?.focus();
+    modal.classList.add('active');
+    setTimeout(() => document.getElementById('category-name')?.focus(), 50);
   }
 }
 
 function closeCategoryModal() {
   const modal = document.getElementById('category-modal');
   if (modal) {
+    modal.classList.remove('active');
     modal.style.display = 'none';
     document.getElementById('category-form')?.reset();
   }

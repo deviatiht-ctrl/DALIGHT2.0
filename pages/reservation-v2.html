@@ -1149,7 +1149,7 @@
             <div class="deposit-notice">
               <i data-lucide="wallet"></i>
               <div>
-                <strong>Acompte de 1 000 HTG requis</strong>
+                <strong>Avance de réservation : 1 000 HTG</strong>
                 <p style="margin: 0; font-size: 0.85rem; color: var(--marron-600);">Le solde sera réglé sur place le jour du rendez-vous.</p>
               </div>
             </div>
@@ -1174,7 +1174,7 @@
             <div class="conditions-box">
               <h4 style="margin-top: 0;">📋 Conditions générales</h4>
               <ul>
-                <li><strong>Acompte obligatoire :</strong> 1 000 HTG requis pour confirmer.</li>
+                <li><strong>Avance obligatoire :</strong> 1 000 HTG requis pour confirmer la réservation.</li>
                 <li><strong>Annulation gratuite :</strong> Jusqu'à 48h avant.</li>
                 <li><strong>Annulation tardive (24h-48h) :</strong> 500 HTG retenus.</li>
                 <li><strong>No-show :</strong> Acompte non remboursable.</li>
@@ -1187,7 +1187,7 @@
               <label for="accept-conditions">J'accepte les conditions générales de réservation *</label>
             </div>
 
-            <h4 style="margin: 2rem 0 1rem;">Méthode de paiement de l'acompte</h4>
+            <h4 style="margin: 2rem 0 1rem;">Méthode de paiement de l'avance (1 000 HTG)</h4>
             <div class="payment-methods" id="resv-payment-methods-container">
               <div style="padding:.75rem;color:var(--marron-600);font-size:.9rem;">Chargement des modes de paiement...</div>
             </div>
@@ -1300,10 +1300,14 @@
         const container = document.getElementById('resv-payment-methods-container');
         if (!container) return;
         try {
-          let sb = window.supabaseClient;
+          let sb = window.dalightSupabase || window.supabaseClient || window.supabase?.createClient;
           if (!sb) {
-            await new Promise(r => setTimeout(r, 1500));
-            sb = window.supabaseClient;
+            let tries = 0;
+            while (!sb && tries < 30) {
+              await new Promise(r => setTimeout(r, 100));
+              sb = window.dalightSupabase || window.supabaseClient;
+              tries++;
+            }
           }
           if (!sb) throw new Error('Supabase non disponible');
           const { data, error } = await sb.from('payment_methods').select('*').eq('is_active', true).order('sort_order');
