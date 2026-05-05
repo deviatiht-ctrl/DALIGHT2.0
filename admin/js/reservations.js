@@ -625,26 +625,12 @@ async function loadAvailability() {
   const month = currentAvailabilityMonth.getMonth() + 1;
 
   try {
-    // Essai 1: nouvelle fonction 3 params (04_creneaux_fix.sql)
-    let { data, error } = await supabase.rpc('get_month_availability', {
-      p_year: year, p_month: month
-    });
-
-    if (error) {
-      console.warn('⚠️ RPC get_month_availability échoué:', error.message);
-      // Essai 2: fallback direct sur les tables
-      data = await loadAvailabilityFallback(supabase, year, month);
-    }
-
+    // Admin calendar: toujou itilize exceptions-only (pa RPC ki retounen règ rekiran)
+    const data = await loadAvailabilityFallback(supabase, year, month);
     renderAvailabilityCalendar(data || []);
   } catch (err) {
     console.error('❌ loadAvailability error:', err);
-    try {
-      const data = await loadAvailabilityFallback(supabase, year, month);
-      renderAvailabilityCalendar(data || []);
-    } catch (err2) {
-      window.adminCore?.showToast('Erreur calendrier: ' + err2.message, 'error');
-    }
+    window.adminCore?.showToast('Erreur calendrier: ' + err.message, 'error');
   }
 }
 
