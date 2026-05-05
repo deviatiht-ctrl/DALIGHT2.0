@@ -6,13 +6,14 @@ let allCategories = [];
 // Wait for Supabase to initialize
 async function waitForSupabase() {
   let attempts = 0;
-  while (!window.supabase && attempts < 50) {
+  while (!window.dalightSupabase && !window.supabaseClient && !window.supabase && attempts < 50) {
     await new Promise(resolve => setTimeout(resolve, 100));
     attempts++;
   }
-  if (window.supabase) {
-    const { createClient } = window.supabase;
-    supabase = createClient(
+  if (window.dalightSupabase) { supabase = window.dalightSupabase; return true; }
+  if (window.supabaseClient)  { supabase = window.supabaseClient;  return true; }
+  if (window.supabase?.createClient) {
+    supabase = window.supabase.createClient(
       'https://rbwoiejztrkghfkpxquo.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U'
     );

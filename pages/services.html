@@ -611,7 +611,13 @@
       let headSpaPricing    = [];
 
       async function loadHeadSpaPricing() {
-        const supabase = getSupabase();
+        let attempts = 0;
+        let supabase = getSupabase();
+        while (!supabase && attempts < 30) {
+          await new Promise(r => setTimeout(r, 100));
+          supabase = getSupabase();
+          attempts++;
+        }
         if (!supabase) return;
         try {
           const { data } = await supabase.from('head_spa_pricing').select('*').eq('is_active', true).order('sort_order');
