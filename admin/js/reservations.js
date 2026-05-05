@@ -648,14 +648,13 @@ async function loadAvailability() {
   }
 }
 
-// Fallback: construit les données directement depuis availability_rules + exceptions
+// Fallback: sèlman availability_exceptions (slots admin eksplisite mete) + bookings
 async function loadAvailabilityFallback(supabase, year, month) {
-  console.log('🔄 Using fallback availability query...');
+  console.log('🔄 Using exceptions-only fallback query...');
   const startDate = `${year}-${String(month).padStart(2,'0')}-01`;
   const endDate   = new Date(year, month, 0).toISOString().split('T')[0];
 
-  const [rulesRes, exceptionsRes, bookingsRes] = await Promise.all([
-    supabase.from('availability_rules').select('*'),
+  const [exceptionsRes, bookingsRes] = await Promise.all([
     supabase.from('availability_exceptions').select('*')
       .gte('exception_date', startDate).lte('exception_date', endDate),
     supabase.from('reservations').select('date, time, status')
@@ -663,43 +662,30 @@ async function loadAvailabilityFallback(supabase, year, month) {
       .not('status', 'eq', 'cancelled')
   ]);
 
-  const rules      = rulesRes.data || [];
   const exceptions = exceptionsRes.data || [];
   const bookings   = bookingsRes.data || [];
+  const results    = [];
 
-  const results = [];
-  const current = new Date(startDate);
-  const end     = new Date(endDate);
+  for (const exc of exceptions) {
+    if (!exc.time_slot) continue; // skip jou antye
+    const dateStr = exc.exception_date;
+    const timeStr = exc.time_slot.substring(0, 5);
+    const booked  = bookings.filter(b =>
+      b.date === dateStr && b.time?.substring(0,5) === timeStr
+    ).length;
+    const capacity  = exc.max_capacity ?? 1;
+    const remaining = exc.is_blocked ? 0 : Math.max(0, capacity - booked);
 
-  while (current <= end) {
-    const dow      = current.getDay();
-    const dateStr  = current.toISOString().split('T')[0];
-    const dayRules = rules.filter(r => r.day_of_week === dow && r.is_available);
-
-    for (const rule of dayRules) {
-      const timeStr = rule.time_slot?.substring(0, 5);
-      if (!timeStr) continue;
-
-      const exc = exceptions.find(e =>
-        e.exception_date === dateStr &&
-        (e.time_slot === null || e.time_slot?.substring(0,5) === timeStr)
-      );
-      const booked = bookings.filter(b =>
-        b.date === dateStr && b.time?.substring(0,5) === timeStr
-      ).length;
-      const capacity = exc?.max_capacity ?? rule.max_capacity ?? 1;
-
-      results.push({
-        available_date: dateStr,
-        slot_time:      rule.time_slot,
-        is_available:   exc?.is_blocked ? false : (booked < capacity),
-        max_capacity:   capacity,
-        current_bookings: booked,
-        remaining_slots: Math.max(0, capacity - booked),
-        is_exception:   !!exc
-      });
-    }
-    current.setDate(current.getDate() + 1);
+    results.push({
+      available_date:   dateStr,
+      slot_time:        exc.time_slot,
+      is_available:     !exc.is_blocked && remaining > 0,
+      is_blocked:       !!exc.is_blocked,
+      max_capacity:     capacity,
+      current_bookings: booked,
+      remaining_slots:  remaining,
+      is_exception:     true
+    });
   }
   return results;
 }
@@ -707,101 +693,79 @@ async function loadAvailabilityFallback(supabase, year, month) {
 function renderAvailabilityCalendar(data) {
   const tbody = document.getElementById('availability-body');
   if (!tbody) return;
-  
-  // Group by date
+
+  // Index exceptions par date+heure
   const byDate = {};
   data.forEach(slot => {
-    if (!byDate[slot.available_date]) {
-      byDate[slot.available_date] = {};
-    }
-    // Support both slot_time (new) and time_slot (old) column names
     const timeKey = slot.slot_time || slot.time_slot;
     const timeStr = timeKey ? String(timeKey).substring(0, 5) : null;
-    if (timeStr) byDate[slot.available_date][timeStr] = slot;
+    if (!timeStr) return;
+    if (!byDate[slot.available_date]) byDate[slot.available_date] = {};
+    byDate[slot.available_date][timeStr] = slot;
   });
-  
-  // Sort dates
-  const dates = Object.keys(byDate).sort();
-  
-  const timeSlots = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
-  
-  tbody.innerHTML = dates.map(date => {
-    const dateObj = new Date(date);
+
+  // Montre TOUT jou nan mwa a (pou admin ka klike n'importe ki selil)
+  const year  = currentAvailabilityMonth.getFullYear();
+  const month = currentAvailabilityMonth.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const allDates = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    allDates.push(dateStr);
+  }
+
+  const timeSlots = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00'];
+
+  tbody.innerHTML = allDates.map(date => {
+    const dateObj = new Date(date + 'T12:00:00');
     const dayName = dateObj.toLocaleDateString('fr-FR', { weekday: 'short' });
-    const dayNum = dateObj.getDate();
-    
-    return `
-      <tr>
-        <td style="font-weight: 600; white-space: nowrap;">
-          ${dayName} ${dayNum}
-        </td>
-        ${timeSlots.map(time => {
-          const slot = byDate[date]?.[time];
-          const status = getSlotStatus(slot);
-          return `
-            <td style="padding: 0;">
-              <button 
-                class="availability-cell ${status.class}"
-                onclick="openSlotModal('${date}', '${time}', ${slot ? JSON.stringify(slot).replace(/"/g, '&quot;') : 'null'})"
-                style="
-                  width: 100%;
-                  padding: 0.5rem;
-                  border: none;
-                  background: ${status.color};
-                  color: ${status.textColor};
-                  cursor: pointer;
-                  font-size: 0.75rem;
-                  ${slot?.is_exception ? 'border: 2px solid #dc2626;' : ''}
-                "
-                title="${status.tooltip}"
-              >
-                ${slot?.remaining_slots ?? '-'}
-              </button>
-            </td>
-          `;
-        }).join('')}
-      </tr>
-    `;
+    const dayNum  = dateObj.getDate();
+    const isPast  = dateObj < new Date(new Date().toDateString());
+
+    return `<tr style="${isPast ? 'opacity:.5;' : ''}">
+      <td style="font-weight:600;white-space:nowrap;font-size:.8rem;padding:.25rem .5rem;">
+        ${dayName} ${dayNum}
+      </td>
+      ${timeSlots.map(time => {
+        const slot   = byDate[date]?.[time];
+        const status = getSlotStatus(slot);
+        const label  = slot
+          ? (slot.is_blocked ? '🔒' : `${slot.remaining_slots}/${slot.max_capacity}`)
+          : '+';
+        return `<td style="padding:1px;">
+          <button
+            class="availability-cell ${status.class}"
+            onclick="openSlotModal('${date}','${time}',${slot ? JSON.stringify(slot).replace(/"/g,'&quot;') : 'null'})"
+            style="width:100%;min-width:36px;height:34px;border:1px solid #e5e7eb;border-radius:4px;
+                   background:${status.color};color:${status.textColor};
+                   cursor:pointer;font-size:0.7rem;font-weight:600;"
+            title="${status.tooltip}"
+          >${label}</button>
+        </td>`;
+      }).join('')}
+    </tr>`;
   }).join('');
 }
 
 function getSlotStatus(slot) {
-  if (!slot || !slot.is_available) {
-    return { 
-      class: 'blocked', 
-      color: '#6b7280', 
-      textColor: 'white',
-      tooltip: 'Bloqué / Non disponible'
-    };
+  // Pa konfigire encore — selil gri ki ka klike pou ajoute
+  if (!slot) {
+    return { class: 'empty', color: '#f3f4f6', textColor: '#9ca3af', tooltip: 'Non configuré — cliquez pour ajouter' };
   }
-  
-  const remaining = slot.remaining_slots;
-  const capacity = slot.max_capacity;
-  
-  if (remaining <= 0) {
-    return { 
-      class: 'full', 
-      color: '#ef4444', 
-      textColor: 'white',
-      tooltip: `Complet (${slot.current_bookings}/${capacity})`
-    };
+  // Bloke pa admin
+  if (slot.is_blocked) {
+    return { class: 'blocked', color: '#6b7280', textColor: 'white', tooltip: 'Bloqué par admin' };
   }
-  
-  if (remaining <= Math.ceil(capacity * 0.3)) {
-    return { 
-      class: 'limited', 
-      color: '#f59e0b', 
-      textColor: 'white',
-      tooltip: `Presque plein - ${remaining} place${remaining > 1 ? 's' : ''} restante${remaining > 1 ? 's' : ''}`
-    };
+  // Konplè
+  if (slot.remaining_slots <= 0) {
+    return { class: 'full', color: '#ef4444', textColor: 'white', tooltip: `Complet (${slot.current_bookings}/${slot.max_capacity})` };
   }
-  
-  return { 
-    class: 'available', 
-    color: '#10b981', 
-    textColor: 'white',
-    tooltip: `${remaining} places disponibles`
-  };
+  // Prèske konplè (≤30%)
+  if (slot.remaining_slots <= Math.ceil(slot.max_capacity * 0.3)) {
+    return { class: 'limited', color: '#f59e0b', textColor: 'white', tooltip: `Presque plein — ${slot.remaining_slots} restante(s)` };
+  }
+  // Disponib
+  return { class: 'available', color: '#10b981', textColor: 'white', tooltip: `${slot.remaining_slots} place(s) disponible(s)` };
 }
 
 // Modal Functions
@@ -1174,40 +1138,36 @@ function closeCapacityModal() {
 
 async function saveCapacity() {
   if (!selectedSlot) return;
-  
-  const capacity = parseInt(document.getElementById('capacity-input').value);
+
+  const capacity    = parseInt(document.getElementById('capacity-input').value) || 1;
   const isAvailable = document.getElementById('capacity-available').checked;
-  
+
   try {
     const supabase = getSupabaseClient();
     if (!supabase) throw new Error('Connexion Supabase non établie. Rafraîchissez la page.');
 
-    const dateObj  = new Date(selectedSlot.date);
-    const dayOfWeek = dateObj.getDay();
-
-    // Essai RPC admin_set_availability
-    const { data, error } = await supabase.rpc('admin_set_availability', {
-      p_day_of_week:  dayOfWeek,
-      p_time_slot:    selectedSlot.time + ':00',
-      p_is_available: isAvailable,
-      p_max_capacity: capacity
-    });
+    // Ekri nan availability_exceptions (dat espesifik), pa availability_rules (rekiran)
+    const { error } = await supabase
+      .from('availability_exceptions')
+      .upsert({
+        exception_date: selectedSlot.date,
+        time_slot:      selectedSlot.time + ':00',
+        is_blocked:     !isAvailable,
+        max_capacity:   isAvailable ? capacity : null,
+        service_type:   'all'
+      }, { onConflict: 'exception_date,time_slot,service_type' });
 
     if (error) {
-      // Fallback: écriture directe dans availability_rules
-      if (error.message?.includes('does not exist')) {
-        const { error: upsertErr } = await supabase
-          .from('availability_rules')
-          .upsert({
-            day_of_week:   dayOfWeek,
-            time_slot:     selectedSlot.time + ':00',
-            is_available:  isAvailable,
-            max_capacity:  capacity
-          }, { onConflict: 'day_of_week,time_slot' });
-        if (upsertErr) throw upsertErr;
-      } else {
-        throw error;
-      }
+      // Si constraint pa egziste ak service_type, essaie san li
+      const { error: e2 } = await supabase
+        .from('availability_exceptions')
+        .upsert({
+          exception_date: selectedSlot.date,
+          time_slot:      selectedSlot.time + ':00',
+          is_blocked:     !isAvailable,
+          max_capacity:   isAvailable ? capacity : null
+        }, { onConflict: 'exception_date,time_slot' });
+      if (e2) throw e2;
     }
 
     window.adminCore?.showToast('Créneau mis à jour ✓');
