@@ -3,6 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>DALIGHT School — Formations Professionnelles</title>
     <link rel="icon" href="../assets/images/logodaligth.png?v=2" type="image/png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -285,8 +288,31 @@
         const featureItems = features.map(feat => `<li>${esc(feat)}</li>`).join('');
         const waText = f.wa_message || `Bonjour, je suis intéressé(e) par la formation ${f.name}`;
         const waHref = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(waText)}`;
-        const priceHtml = f.price ? `<div class="formation-meta"><i data-lucide="tag" style="width:14px;height:14px;"></i> ${esc(f.price)}</div>` : '';
+        const fmt = n => n > 0 ? Number(n).toLocaleString() + ' Gds' : null;
+
+        // Détail prix depuis admin
+        const inscription  = f.price_inscription  || 0;
+        const blouse       = f.price_blouse        || 0;
+        const participation = (f.price_cosmetique  || 0) + (f.price_corporel  || 0)
+                            + (f.price_decoration  || 0) + (f.price_massage   || 0);
+        const total = inscription + blouse + participation;
+
+        const hasPriceDetail = total > 0;
+
+        const priceDetailHtml = hasPriceDetail ? `
+          <div style="margin-top:.85rem;border:1px solid rgba(107,79,59,.12);border-radius:10px;overflow:hidden;font-size:.8rem;">
+            <div style="background:rgba(74,55,40,.04);padding:.45rem .85rem;font-weight:700;color:var(--marron-900);font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;">Détail des frais</div>
+            ${inscription  > 0 ? `<div style="display:flex;justify-content:space-between;padding:.35rem .85rem;border-top:1px solid rgba(107,79,59,.07);"><span style="color:rgba(74,55,40,.7);">Frais d'inscription</span><strong style="color:var(--marron-900);">${fmt(inscription)}</strong></div>` : ''}
+            ${blouse       > 0 ? `<div style="display:flex;justify-content:space-between;padding:.35rem .85rem;border-top:1px solid rgba(107,79,59,.07);"><span style="color:rgba(74,55,40,.7);">Blouse &amp; documentation</span><strong style="color:var(--marron-900);">${fmt(blouse)}</strong></div>` : ''}
+            ${participation> 0 ? `<div style="display:flex;justify-content:space-between;padding:.35rem .85rem;border-top:1px solid rgba(107,79,59,.07);"><span style="color:rgba(74,55,40,.7);">Participation (matériaux)</span><strong style="color:var(--marron-900);">${fmt(participation)}</strong></div>` : ''}
+            <div style="display:flex;justify-content:space-between;padding:.45rem .85rem;border-top:2px solid rgba(74,55,40,.15);background:rgba(212,175,55,.08);">
+              <span style="font-weight:700;color:var(--marron-900);">TOTAL</span>
+              <strong style="color:var(--marron-900);font-size:.9rem;">${fmt(total)}</strong>
+            </div>
+          </div>` : (f.price ? `<div class="formation-metas" style="margin-top:.75rem;"><div class="formation-meta"><i data-lucide="tag" style="width:14px;height:14px;"></i> ${esc(f.price)}</div></div>` : '');
+
         const durationHtml = f.duration ? `<div class="formation-meta"><i data-lucide="clock" style="width:14px;height:14px;"></i> ${esc(f.duration)}</div>` : '';
+
         return `
           <div class="formation-card">
             <div class="formation-card__header">
@@ -299,7 +325,8 @@
             <div class="formation-card__body">
               ${f.description ? `<p>${esc(f.description)}</p>` : ''}
               ${featureItems ? `<ul>${featureItems}</ul>` : ''}
-              ${priceHtml || durationHtml ? `<div class="formation-metas">${priceHtml}${durationHtml}</div>` : ''}
+              ${durationHtml ? `<div class="formation-metas" style="margin-top:.65rem;">${durationHtml}</div>` : ''}
+              ${priceDetailHtml}
             </div>
             <div class="formation-card__footer">
               <a class="btn" href="#formulaire" style="width:100%;text-align:center;">S'inscrire / Renseignements</a>
