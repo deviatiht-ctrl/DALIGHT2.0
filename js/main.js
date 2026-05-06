@@ -401,10 +401,17 @@ export function createOptionsForServices(selectEl) {
 export async function ensureAuth() {
   console.log('🔐 Checking authentication...');
   
+  // Wait for Supabase to initialize if not ready
+  let attempts = 0;
+  while (!supabaseClient && attempts < 30) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    attempts++;
+  }
+  
   if (!supabaseClient) {
-    console.error('❌ Supabase client not initialized');
-    alert('Erè: Supabase pa konekte. Tcheke koneksyon entènèt ou.');
-    window.location.href = loginPath;
+    console.error('❌ Supabase client not initialized after waiting');
+    // Don't redirect immediately - give user a chance to see the page
+    console.warn('⚠️ Auth check skipped - Supabase not ready');
     return null;
   }
   

@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Boutique - DALIGHT Head Spa</title>
   <link rel="icon" href="../assets/images/logodaligth.png?v=2" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,25 +29,96 @@
   <style>
     /* ===== OVERRIDE page-shell centrage ===== */
     main.page-shell { max-width:100%!important;width:100%!important;margin:0!important;padding:0!important; }
+
+    /* ===== SHOP HERO (centered, spacious) ===== */
+    .shop-hero {
+      text-align: center;
+      padding: 2.5rem 1rem 2rem;
+      background: #faf8f5;
+      border-bottom: 1px solid #e8e0d5;
+    }
+    .shop-hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      color: #4A3728;
+      margin: 0 0 .35rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .shop-hero p {
+      color: #6b5a4a;
+      font-size: .9rem;
+      margin: 0;
+    }
     
     /* ===== SHOP LAYOUT ===== */
     .shop-container {
-      display: grid;
-      grid-template-columns: 180px 1fr;
-      align-items: start;
+      display: block;
       min-height: 60vh;
     }
     
     .shop-sidebar {
-      background: #faf8f5;
-      padding: .85rem .75rem;
-      border-right: 1px solid #e8e0d5;
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0,0,0,.5);
+      padding: 0;
+    }
+    .shop-sidebar.open {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .sidebar-content {
+      background: #fff;
+      width: 100%;
+      max-width: 500px;
+      max-height: 85vh;
+      border-radius: 20px 20px 0 0;
+      overflow-y: auto;
+      animation: slideUp .3s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 1.5rem;
+      background: #fff;
+      border-bottom: 1px solid #e8e0d5;
       position: sticky;
       top: 0;
-      min-height: 100vh;
+      z-index: 1;
     }
-    
-    .filter-section { margin-bottom: 1.2rem; }
+    .sidebar-header h3 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #4A3728;
+      border: none;
+      padding: 0;
+    }
+    .sidebar-close {
+      background: #f5f0e8;
+      border: none;
+      font-size: 1.5rem;
+      color: #4A3728;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .filter-section {
+      padding: 0 1.5rem;
+      margin-bottom: 1.5rem;
+    }
     .filter-section h3 {
       font-size: .65rem; font-weight: 700; text-transform: uppercase;
       letter-spacing: .08em; color: #4A3728;
@@ -55,13 +126,44 @@
       border-bottom: 1px solid #e8e0d5;
     }
     
-    .search-input {
-      width: 100%; padding: .45rem .6rem;
-      border: 1px solid #d8cfc4; border-radius: 7px;
-      font-size: .78rem; background: #fff; color: #1a0f08;
-      box-sizing: border-box;
+    /* ===== TOP SEARCH BAR (centered, beautiful) ===== */
+    .shop-search-section {
+      display: flex;
+      justify-content: center;
+      padding: 1rem 1rem 0;
+      background: #faf8f5;
     }
-    .search-input:focus { outline: none; border-color: #4A3728; }
+    .search-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+    }
+    .search-input {
+      width: 100%;
+      padding: .85rem 1rem .85rem 2.5rem;
+      border: 2px solid #e8e0d5;
+      border-radius: 50px;
+      font-size: .9rem;
+      background: #fff;
+      color: #4A3728;
+      box-sizing: border-box;
+      transition: all .2s ease;
+      box-shadow: 0 2px 8px rgba(74,55,40,.06);
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: #4A3728;
+      box-shadow: 0 4px 16px rgba(74,55,40,.12);
+    }
+    .search-input::placeholder { color: #9e8e7a; }
+    .search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9e8e7a;
+      pointer-events: none;
+    }
     
     .category-checkbox {
       display: flex; align-items: center; gap: .4rem;
@@ -76,307 +178,58 @@
     /* ===== PRODUCT GRID ===== */
     .product-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1px;
-      background: #e8e0d5;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
       align-content: start;
+      padding: 20px;
+      max-width: 1600px;
+      margin: 0 auto;
     }
-    
-    /* ===== LUXURY PRODUCT CARD ===== */
-    .product-card {
-      background: linear-gradient(145deg, #ffffff 0%, #faf8f5 100%);
-      border-radius: var(--radius-xl);
-      overflow: hidden;
-      box-shadow: var(--shadow-soft);
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      border: 1px solid rgba(215, 196, 163, 0.2);
+    .mobile-filter-toggle {
       display: flex;
-      flex-direction: column;
-    }
-    
-    .product-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, var(--marron-900), var(--gold-500), var(--marron-900));
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    
-    .product-card:hover {
-      transform: translateY(-8px);
-      box-shadow: var(--shadow-card);
-    }
-    
-    .product-card:hover::before {
-      opacity: 1;
-    }
-    
-    /* ===== PRODUCT IMAGE CONTAINER ===== */
-    .product-image-wrapper {
-      position: relative;
-      width: 100%;
-      height: 320px;
-      overflow: hidden;
-      background: linear-gradient(135deg, #f1ebe0 0%, #eadbc8 100%);
-    }
-    
-    .product-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .product-card:hover .product-image {
-      transform: scale(1.08);
-    }
-    
-    /* Badges */
-    .product-badges {
-      position: absolute;
-      top: 1rem;
-      left: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      z-index: 10;
-    }
-    
-    .badge {
-      padding: 0.35rem 0.75rem;
-      border-radius: var(--radius-pill);
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    
-    .badge-featured {
-      background: linear-gradient(135deg, var(--gold-500), #B8860B);
-      color: white;
-      box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
-    }
-    
-    .badge-sale {
-      background: linear-gradient(135deg, #ef4444, #dc2626);
-      color: white;
-      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
-    }
-    
-    .badge-new {
-      background: linear-gradient(135deg, var(--marron-700), var(--marron-900));
-      color: white;
-    }
-    
-    .badge-outofstock {
-      background: rgba(107, 114, 128, 0.9);
-      color: white;
-    }
-    
-    /* ===== PRODUCT INFO ===== */
-    .product-info {
-      padding: 1.75rem;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .product-category {
-      font-size: 0.8rem;
-      color: var(--marron-700);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 0.5rem;
-      font-weight: 600;
-    }
-    
-    .product-name {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin-bottom: 0.75rem;
-      color: var(--marron-900);
-      line-height: 1.3;
-    }
-    
-    .product-description {
-      color: rgba(74, 55, 40, 0.7);
-      font-size: 0.9rem;
-      margin-bottom: 1rem;
-      line-height: 1.6;
-      flex: 1;
-    }
-    
-    /* ===== PRICING ===== */
-    .product-price-container {
-      margin-bottom: 1.25rem;
-      display: flex;
-      align-items: baseline;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-    
-    .product-price {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--marron-900);
-      font-family: 'Montserrat', sans-serif;
-    }
-    
-    .product-price .original {
-      text-decoration: line-through;
-      color: #9ca3af;
-      font-size: 1.1rem;
-      font-weight: 500;
-    }
-    
-    .product-price .sale-price {
-      color: #dc2626;
-      font-weight: 700;
-    }
-    
-    .product-price .currency {
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-    
-    /* ===== ACTIONS ===== */
-    .product-actions {
-      display: flex;
-      gap: 0.75rem;
-      margin-top: auto;
-    }
-    
-    .btn-view, .btn-add-cart {
-      flex: 1;
-      padding: 0.875rem 1rem;
+      align-items: center;
+      gap: .5rem;
+      padding: .6rem 1.2rem;
+      background: #4A3728;
+      color: #fff;
       border: none;
-      border-radius: var(--radius-pill);
-      font-weight: 600;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-    }
-    
-    .btn-view {
-      background: transparent;
-      color: var(--marron-900);
-      border: 2px solid var(--beige-500);
-    }
-    
-    .btn-view:hover {
-      background: var(--beige-200);
-      border-color: var(--marron-700);
-      color: var(--marron-900);
-    }
-    
-    .btn-add-cart {
-      background: linear-gradient(135deg, var(--marron-900) 0%, var(--marron-700) 100%);
-      color: white;
-      box-shadow: 0 4px 15px rgba(74, 55, 40, 0.2);
-    }
-    
-    .btn-add-cart:hover {
-      background: linear-gradient(135deg, var(--marron-700) 0%, var(--marron-900) 100%);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(74, 55, 40, 0.3);
-    }
-    
-    .btn-add-cart:disabled {
-      background: #9ca3af;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-    
-    /* ===== CART BADGE ===== */
-    .cart-badge {
-      position: fixed;
-      top: 1.2rem;
-      right: 1.2rem;
-      background: linear-gradient(135deg, var(--marron-900), var(--marron-700));
-      color: white;
       border-radius: 50px;
-      padding: 0.5rem 0.9rem;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-weight: 700;
-      font-size: 0.88rem;
-      z-index: 900;
+      font-size: .85rem;
+      font-weight: 600;
       cursor: pointer;
-      box-shadow: 0 4px 16px rgba(74, 55, 40, 0.35);
-      transition: all 0.25s ease;
-      border: 2px solid var(--gold-500);
-      text-decoration: none;
+      box-shadow: 0 2px 8px rgba(74,55,40,.2);
+      margin: .5rem 0 .75rem;
     }
-    .cart-badge:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(74, 55, 40, 0.45);
+    .mobile-filter-toggle svg { stroke-width: 2.5; }
+
+    @media (max-width: 1200px) {
+      .product-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 16px; }
     }
-    .cart-badge svg { width: 18px; height: 18px; flex-shrink: 0; }
-    .cart-badge-count {
-      background: var(--gold-500);
-      color: #2d1a0e;
-      border-radius: 50%;
-      width: 20px; height: 20px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.72rem;
-      font-weight: 800;
-      line-height: 1;
+    @media (max-width: 900px) {
+      .product-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; padding: 16px; }
     }
-    @media (max-width: 768px) {
-      .cart-badge { top: 1rem; right: 1rem; bottom: auto; padding: 0.45rem 0.75rem; font-size: .8rem; }
-    }
-    
-    /* ===== EMPTY STATE ===== */
-    .empty-state {
-      text-align: center;
-      padding: 5rem 2rem;
-      color: var(--marron-700);
-      grid-column: 1 / -1;
-    }
-    
-    .empty-state-icon {
-      font-size: 4rem;
-      margin-bottom: 1.5rem;
-      opacity: 0.5;
-    }
-    
-    .btn-reset {
-      width: 100%; padding: .48rem; margin-top: .25rem;
-      background: #4A3728; color: #fff;
-      border: none; border-radius: 7px;
-      font-size: .75rem; font-weight: 600; cursor: pointer;
-    }
-    .btn-reset:hover { background: #2d1f14; }
-    
-    /* ===== RESPONSIVE ===== */
-    .mobile-filter-toggle { display: none; }
     @media (max-width: 768px) {
       .shop-container { grid-template-columns: 1fr; }
-      .shop-sidebar { border-right: none; border-bottom: 1px solid #e8e0d5; min-height: auto; position: static; display: none; }
-      .shop-sidebar.open { display: block; }
       .mobile-filter-toggle {
-        display: flex !important; align-items: center; gap: .4rem;
-        width: 100%; padding: .6rem .85rem; margin: .6rem 0;
-        background: #4A3728; color: #fff;
-        border: none; border-radius: 8px; cursor: pointer;
-        font-weight: 600; font-size: .8rem;
+        display: flex !important;
+        align-items: center;
+        gap: .5rem;
+        padding: .6rem 1.2rem;
+        background: #4A3728;
+        color: #fff;
+        border: none;
+        border-radius: 50px;
+        font-size: .85rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(74,55,40,.2);
+        margin: .5rem 0 .75rem;
       }
+      .mobile-filter-toggle svg { stroke-width: 2.5; }
+      .product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 12px; }
+      .sidebar-content { max-width: 100%; }
     }
     @media (max-width: 480px) {
-      .product-info-modern { padding: .45rem .55rem .6rem; }
-      .product-name-modern { font-size: .72rem; }
       .price-current { font-size: .8rem; }
     }
 
@@ -388,6 +241,8 @@
       flex-direction: column;
       cursor: pointer;
       transition: background .15s;
+      max-width: 420px;
+      margin: 0 auto;
     }
     .product-card-modern:hover { background: #faf8f5; }
 
@@ -475,6 +330,26 @@
     .btn-add-cart-modern:hover { background: #2d1f14; }
     .btn-add-cart-modern svg { width: 13px; height: 13px; flex-shrink: 0; }
     .btn-add-cart-modern:disabled { background: #ccc; cursor: not-allowed; }
+
+    .btn-reset {
+      width: 100%;
+      padding: .75rem 1rem;
+      margin-top: .5rem;
+      background: transparent;
+      color: #4A3728;
+      border: 2px solid #4A3728;
+      border-radius: 8px;
+      font-size: .8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s ease;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .btn-reset:hover {
+      background: #4A3728;
+      color: #fff;
+    }
   </style>
 </head>
 <body data-page="shop">
@@ -484,7 +359,7 @@
         <img class="brand-logo" src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" />
         <div>
           <strong>DALIGHT</strong>
-          <small>L'Art du Bien-Être</small>
+          <small>L'Art du Bien-être</small>
         </div>
       </a>
       <button class="nav-toggle" aria-label="Ouvrir la navigation">
@@ -496,14 +371,15 @@
         <a href="./services.html">Services</a>
         <a href="./shop.html" class="active">Boutique</a>
         <a href="./services.html">Réservation</a>
-        <a href="./orders.html">Dossiers</a>
-        <a href="./login.html">Connexion</a>
+        <a href="./orders.html">Mes réservations</a>
+        
         <a href="../admin/dashboard.html" class="admin-link">Admin</a>
       </div>
       <div class="nav-cta">
-        <a class="btn" href="./cart.html">
-          <i data-lucide="shopping-cart" style="width: 18px; height: 18px;"></i>
-          Panier
+        <a class="btn cart-btn" href="./cart.html" style="position:relative;display:inline-flex;align-items:center;gap:.5rem;padding:.7rem 1.2rem;background:#4A3728;color:white;border-radius:50px;text-decoration:none;box-shadow:0 4px 12px rgba(74,55,40,.2);transition:all .3s ease;">
+          <i data-lucide="shopping-bag" style="width:20px;height:20px;"></i>
+          <span style="font-weight:600;font-size:.9rem;">Panier</span>
+          <span class="cart-badge" style="position:absolute;top:-4px;right:-4px;background:#D4AF37;color:white;font-size:.7rem;font-weight:700;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(212,175,55,.4);">0</span>
         </a>
       </div>
     </nav>
@@ -515,16 +391,25 @@
       <p>Découvrez nos produits de bien-être et de relaxation</p>
     </div>
 
+    <div class="shop-search-section">
+      <div class="search-wrapper">
+        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="search-input" class="search-input" placeholder="Rechercher un produit...">
+      </div>
+    </div>
+
+    <div style="height: 8px;"></div>
+
     <div class="shop-container">
       <!-- Sidebar Filters -->
-      <aside class="shop-sidebar">
-        <div class="filter-section">
-          <h3>Rechercher</h3>
-          <input type="text" id="search-input" class="search-input" placeholder="Nom du produit...">
-        </div>
-
-        <div class="filter-section">
-          <h3>Catégories</h3>
+      <aside class="shop-sidebar" id="shop-sidebar">
+        <div class="sidebar-content">
+          <div class="sidebar-header">
+            <h3>Filtres</h3>
+            <button class="sidebar-close" onclick="document.getElementById('shop-sidebar').classList.remove('open')">&times;</button>
+          </div>
+          <div class="filter-section">
+            <h3>Catégories</h3>
           <div id="category-filters">
             <p style="color: #6b7280; font-size: 0.9rem;">Chargement...</p>
           </div>
@@ -553,14 +438,15 @@
         <button class="btn-reset" onclick="resetFilters()">
           Réinitialiser
         </button>
+        </div>
       </aside>
 
       <!-- Products Grid -->
       <div>
         <!-- Toggle filtre sur mobile -->
         <button class="mobile-filter-toggle" onclick="document.querySelector('.shop-sidebar').classList.toggle('open')">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4h18M7 12h10M11 20h2"/></svg>
-          Filtres
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4h18M7 12h10M11 20h2"/></svg>
+          <span>Filtres</span>
         </button>
         <div id="products-grid" class="product-grid">
           <div class="empty-state">
@@ -632,6 +518,42 @@
       </div>
     </div>
   </div>
+  <script>
+    // Update cart badge count
+    function updateCartBadge() {
+      const cart = JSON.parse(localStorage.getItem('dalight_cart') || '[]');
+      const badges = document.querySelectorAll('.cart-badge');
+      if (badges) {
+        const count = cart.length;
+        badges.forEach(badge => {
+          badge.textContent = count;
+          badge.style.display = count > 0 ? 'flex' : 'flex';
+        });
+      }
+    }
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+      updateCartBadge();
+    });
+    // Update when cart changes
+    window.addEventListener('storage', updateCartBadge);
+  </script>
+
+  <!-- Floating Cart Button for Mobile -->
+  <a href="./cart.html" class="floating-cart-btn" style="position:fixed;top:80px;right:20px;width:60px;height:60px;background:#4A3728;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(74,55,40,.4);text-decoration:none;z-index:10000;transition:all .3s ease;display:none;">
+    <i data-lucide="shopping-bag" style="width:24px;height:24px;"></i>
+    <span class="cart-badge" style="position:absolute;top:-4px;right:-4px;background:#D4AF37;color:white;font-size:.7rem;font-weight:700;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(212,175,55,.4);">0</span>
+  </a>
+  <style>
+    @media (max-width: 768px) {
+      .floating-cart-btn {
+        display: flex !important;
+      }
+    }
+  </style>
 </body>
 </html>
 

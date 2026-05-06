@@ -1,20 +1,43 @@
 import { getSupabase } from '../js/main.js';
 import { sendFollowEmail } from './email-service.js';
 
-const supabase = getSupabase();
+let supabase = getSupabase();
 
 let currentUser = null;
 
+async function waitForSupabase() {
+  let attempts = 0;
+  while (!supabase && attempts < 50) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    supabase = getSupabase();
+    attempts++;
+  }
+  
+  if (!supabase) {
+    console.error('❌ Supabase failed to initialize in follow.js');
+    return false;
+  }
+  
+  return true;
+}
+
 async function initFollowPage() {
+  console.log('🚀 Initializing follow page...');
+  const ready = await waitForSupabase();
+  if (!ready) {
+    console.error('❌ Cannot initialize follow page - Supabase not ready');
+    return;
+  }
+  
+  console.log('✅ Supabase ready, getting current user...');
   currentUser = await getCurrentUser();
+  console.log('👤 Current user:', currentUser);
+  
   await loadSubscriberCount();
   await loadFeed();
   setupEventListeners();
   if (currentUser) {
     showSubscribeButton();
-    if (await isAdmin(currentUser.id)) {
-      showAdminFeatures();
-    }
     configureReviewAccess();
   } else {
     showLoginPrompt();
@@ -23,6 +46,11 @@ async function initFollowPage() {
 }
 
 async function getCurrentUser() {
+  if (!supabase) {
+    console.error('❌ Supabase is null in getCurrentUser');
+    return null;
+  }
+  
   const { data: { user } } = await supabase.auth.getUser();
   return user;
 }
@@ -113,22 +141,29 @@ function setupEventListeners() {
       window.location.href = './login.html';
     });
   }
-
-  // Video form for admins
-  const videoForm = document.getElementById('post-video-form');
-  if (videoForm) {
-    videoForm.addEventListener('submit', handleVideoSubmit);
-  }
 }
 
 async function handleSubscribe() {
+  console.log('🔘 Subscribe button clicked');
+  console.log('👤 Current user:', currentUser);
+
   if (!currentUser) {
+    console.log('⚠️ No user logged in, redirecting to login');
     window.location.href = './login.html';
     return;
   }
 
-  const { data, error } = await supabase.from('subscribers').insert([{ user_id: currentUser.id }]);
-  if (!error) {
+  try {
+    console.log('📝 Attempting to subscribe user:', currentUser.id);
+    const { data, error } = await supabase.from('subscribers').insert([{ user_id: currentUser.id }]);
+    
+    if (error) {
+      console.error('❌ Subscribe error:', error);
+      alert('Erè: ' + error.message);
+      return;
+    }
+
+    console.log('✅ Subscribe successful:', data);
     loadSubscriberCount();
     updateSubscribeButton('Abonné', { disabled: true });
     
@@ -137,6 +172,9 @@ async function handleSubscribe() {
       email: currentUser.email,
       name: currentUser.user_metadata?.full_name || currentUser.email,
     });
+  } catch (err) {
+    console.error('❌ Subscribe exception:', err);
+    alert('Erè: ' + err.message);
   }
 }
 
@@ -179,17 +217,6 @@ async function handleReviewSubmit(e) {
   e.target.reset();
 }
 
-async function handleVideoSubmit(e) {
-  e.preventDefault();
-  if (!currentUser || !await isAdmin(currentUser.id)) return;
-
-  const videoUrl = e.target.video_url.value;
-  const caption = e.target.caption.value;
-  await supabase.from('posts').insert([{ type: 'video', video_url: videoUrl, caption, user_id: currentUser.id }]);
-  loadFeed();
-  e.target.reset();
-}
-
 function showSubscribeButton() {
   // Check if already subscribed
   supabase.from('subscribers').select('*').eq('user_id', currentUser.id).single().then(({ data }) => {
@@ -197,11 +224,6 @@ function showSubscribeButton() {
       updateSubscribeButton('Abonné', { disabled: true });
     }
   });
-}
-
-function showAdminFeatures() {
-  document.getElementById('admin-post-form').style.display = 'block';
-  // Add subscriber list display
 }
 
 function showLoginPrompt() {

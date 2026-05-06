@@ -42,7 +42,7 @@
         <a href="./services.html" class="active">Services</a>
         <a href="./shop.html">Boutique</a>
         <a href="./services.html">Réservation</a>
-        <a href="./orders.html">Dossiers</a>
+        <a href="./orders.html">Mes réservations</a>
         <a href="./follow.html">Suivre</a>
         <a href="../admin/dashboard.html" class="admin-link">Admin</a>
       </div>
@@ -246,8 +246,9 @@
   </nav>
 
     <!-- ===== LIGHTBOX ZOOM FOTO ===== -->
-    <div id="hair-lightbox" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:10000;align-items:center;justify-content:center;cursor:zoom-out;">
-      <img id="hair-lightbox-img" src="" style="max-width:88vw;max-height:88vh;object-fit:contain;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+    <div id="hair-lightbox" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:11000;align-items:center;justify-content:center;cursor:zoom-out;padding:2rem;">
+      <img id="hair-lightbox-img" src="" style="max-width:88vw;max-height:88vh;object-fit:contain;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.5);cursor:default;" onclick="event.stopPropagation();">
+      <button onclick="document.getElementById('hair-lightbox').style.display='none'" style="position:absolute;top:1.5rem;right:1.5rem;background:rgba(255,255,255,.2);border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:white;font-size:1.5rem;transition:background .2s;">&times;</button>
     </div>
 
     <!-- ===== MODAL: SELEKSYON TIP CHEVEUX HEAD SPA ===== -->
@@ -269,7 +270,9 @@
               style="border:2px solid #e5e7eb;border-radius:12px;overflow:hidden;cursor:pointer;transition:all .2s;">
               <div style="position:relative;">
                 <img src="../assets/images/dreadlocks.jpg" alt="Dreadlocks" style="width:100%;aspect-ratio:1/1;object-fit:cover;display:block;">
-                <button onclick="event.stopPropagation();openHairLightbox('../assets/images/dreadlocks.jpg')" style="position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.5);border:none;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:zoom-in;" title="Agrandir">&#128269;</button>
+                <button onclick="event.stopPropagation();openHairLightbox('../assets/images/dreadlocks.jpg')" style="position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.5);border:none;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:zoom-in;" title="Agrandir">
+                  <i data-lucide="search" style="width:14px;height:14px;color:white;"></i>
+                </button>
               </div>
               <p style="text-align:center;margin:.4rem 0;font-size:.78rem;font-weight:600;color:#374151;">Dreadlocks</p>
             </div>
@@ -277,7 +280,9 @@
               style="border:2px solid #e5e7eb;border-radius:12px;overflow:hidden;cursor:pointer;transition:all .2s;">
               <div style="position:relative;">
                 <img src="../assets/images/defrises.jpg" alt="Défrisés" style="width:100%;aspect-ratio:1/1;object-fit:cover;display:block;">
-                <button onclick="event.stopPropagation();openHairLightbox('../assets/images/defrises.jpg')" style="position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.5);border:none;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:zoom-in;" title="Agrandir">&#128269;</button>
+                <button onclick="event.stopPropagation();openHairLightbox('../assets/images/defrises.jpg')" style="position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.5);border:none;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:zoom-in;" title="Agrandir">
+                  <i data-lucide="search" style="width:14px;height:14px;color:white;"></i>
+                </button>
               </div>
               <p style="text-align:center;margin:.4rem 0;font-size:.78rem;font-weight:600;color:#374151;">Défrisés</p>
             </div>
@@ -285,7 +290,9 @@
               style="border:2px solid #e5e7eb;border-radius:12px;overflow:hidden;cursor:pointer;transition:all .2s;">
               <div style="position:relative;">
                 <img src="../assets/images/naturels.jpg" alt="Naturels" style="width:100%;aspect-ratio:1/1;object-fit:cover;display:block;">
-                <button onclick="event.stopPropagation();openHairLightbox('../assets/images/naturels.jpg')" style="position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.5);border:none;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:zoom-in;" title="Agrandir">&#128269;</button>
+                <button onclick="event.stopPropagation();openHairLightbox('../assets/images/naturels.jpg')" style="position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.5);border:none;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:zoom-in;" title="Agrandir">
+                  <i data-lucide="search" style="width:14px;height:14px;color:white;"></i>
+                </button>
               </div>
               <p style="text-align:center;margin:.4rem 0;font-size:.78rem;font-weight:600;color:#374151;">Naturels</p>
             </div>
@@ -299,8 +306,8 @@
 
           <!-- Prix sélectionné -->
           <div id="hair-price-display" style="display:none;background:linear-gradient(135deg,#4A3728,#6B4F3B);color:white;border-radius:12px;padding:1rem;margin-top:1rem;text-align:center;">
-            <p style="margin:0;font-size:.85rem;opacity:.85;">Prix sélectionné</p>
-            <p style="margin:.25rem 0 0;font-size:1.4rem;font-weight:700;" id="hair-price-value">0 HTG</p>
+            <p style="margin:0;font-size:.85rem;opacity:.85;color:white;">Prix sélectionné</p>
+            <p style="margin:.25rem 0 0;font-size:1.4rem;font-weight:700;color:white;" id="hair-price-value">0 HTG</p>
           </div>
 
           <button id="hair-confirm-btn" onclick="confirmHairSelection()" disabled
@@ -641,7 +648,12 @@
 
       function openHairLightbox(src) {
         const lb = document.getElementById('hair-lightbox');
-        document.getElementById('hair-lightbox-img').src = src;
+        const img = document.getElementById('hair-lightbox-img');
+        if (!lb || !img) {
+          console.error('Lightbox elements not found');
+          return;
+        }
+        img.src = src;
         lb.style.display = 'flex';
       }
       window.openHairLightbox = openHairLightbox;
@@ -656,8 +668,12 @@
         confirmBtn.disabled = true;
         confirmBtn.style.background = '#9ca3af';
         confirmBtn.style.cursor = 'not-allowed';
-        // Reset type selection
+        // Reset type selection - show all 3 in grid
         document.querySelectorAll('.hair-type-card').forEach(c => {
+          c.style.display = 'block';
+          c.style.width = '';
+          c.style.maxWidth = '';
+          c.style.margin = '';
           c.style.borderColor = '#e5e7eb';
           c.style.boxShadow = 'none';
         });
@@ -682,8 +698,25 @@
         selectedHairType = type;
         document.querySelectorAll('.hair-type-card').forEach(c => {
           const active = c.dataset.type === type;
-          c.style.borderColor = active ? '#4A3728' : '#e5e7eb';
-          c.style.boxShadow   = active ? '0 0 0 3px rgba(74,55,40,.2)' : 'none';
+          if (active) {
+            c.style.display = 'block';
+            c.style.width = '100%';
+            c.style.maxWidth = '320px';
+            c.style.margin = '0 auto';
+            c.style.borderColor = '#4A3728';
+            c.style.boxShadow = '0 0 0 3px rgba(74,55,40,.2)';
+            // Make the image clickable for lightbox
+            const img = c.querySelector('img');
+            if (img) {
+              img.style.cursor = 'zoom-in';
+              img.onclick = (e) => {
+                e.stopPropagation();
+                openHairLightbox(img.src);
+              };
+            }
+          } else {
+            c.style.display = 'none';
+          }
         });
       }
       window.selectHairType = selectHairType;
@@ -714,8 +747,16 @@
         selectedPricing = pricing;
         document.querySelectorAll('[data-pricing-idx]').forEach(el => {
           const active = el.dataset.pricingIdx === String(idx);
-          el.style.borderColor = active ? '#4A3728' : '#e5e7eb';
-          el.style.background  = active ? '#faf6f2' : 'white';
+          if (active) {
+            el.style.borderColor = '#4A3728';
+            el.style.background = '#4A3728';
+            el.querySelectorAll('span, strong').forEach(s => s.style.color = 'white');
+          } else {
+            el.style.borderColor = '#e5e7eb';
+            el.style.background = 'white';
+            el.querySelectorAll('span').forEach(s => s.style.color = '');
+            el.querySelectorAll('strong').forEach(s => s.style.color = '#4A3728');
+          }
         });
         document.getElementById('hair-price-value').textContent = Number(pricing.price_htg).toLocaleString() + ' HTG';
         document.getElementById('hair-price-display').style.display = 'block';
@@ -819,7 +860,7 @@
           <article class="service-tile" data-category="${cat}">
             <header>
               <h3>${esc(s.name)}</h3>
-              <span class="price">${isHeadSpa ? 'Dè ' : ''}${Number(s.price_htg).toLocaleString()} HTG${isHeadSpa ? ' <small style="font-size:.7em;opacity:.7;">(selon longueur)</small>' : ' · $' + Number(s.price_usd)}</span>
+              <span class="price">${isHeadSpa ? 'À partir de ' : ''}${Number(s.price_htg).toLocaleString()} HTG${isHeadSpa ? ' <small style="font-size:.7em;opacity:.7;">(selon longueur)</small>' : ' · $' + Number(s.price_usd)}</span>
             </header>
             <p>${esc(s.description || '')} ${s.duration ? '(' + esc(s.duration) + ')' : ''}</p>
             <button class="add-to-cart" data-service-id="${s.id || ''}" data-is-headspa="${isHeadSpa}" data-service-name="${esc(s.name)}" data-service-desc="${esc(s.description || '')}" data-service-duration="${esc(s.duration || '')}" data-service-price-htg="${s.price_htg}" data-service-price-usd="${s.price_usd}">

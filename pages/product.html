@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Produit - DALIGHT Head Spa</title>
   <link rel="icon" href="../assets/images/logodaligth.png?v=2" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -578,13 +581,14 @@
         <a href="./services.html">Services</a>
         <a href="./shop.html">Boutique</a>
         <a href="./services.html">Réservation</a>
-        <a href="./orders.html">Dossiers</a>
+        <a href="./orders.html">Mes réservations</a>
         <a href="../admin/dashboard.html" class="admin-link">Admin</a>
       </div>
       <div class="nav-cta">
-        <a class="btn" href="./cart.html">
-          <i data-lucide="shopping-cart" style="width: 18px; height: 18px;"></i>
-          Panier
+        <a class="btn cart-btn" href="./cart.html" style="position:relative;display:inline-flex;align-items:center;gap:.5rem;padding:.7rem 1.2rem;background:#4A3728;color:white;border-radius:50px;text-decoration:none;box-shadow:0 4px 12px rgba(74,55,40,.2);transition:all .3s ease;">
+          <i data-lucide="shopping-bag" style="width:20px;height:20px;"></i>
+          <span style="font-weight:600;font-size:.9rem;">Panier</span>
+          <span class="cart-badge" style="position:absolute;top:-4px;right:-4px;background:#D4AF37;color:white;font-size:.7rem;font-weight:700;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(212,175,55,.4);">0</span>
         </a>
       </div>
     </nav>
@@ -1199,6 +1203,38 @@
       document.getElementById('loading-state').style.display = 'none';
       document.getElementById('error-state').style.display = 'block';
     }
+
+    // Update cart badge in navbar
+    function updateCartBadge() {
+      const cart = JSON.parse(localStorage.getItem('dalight_cart') || '[]');
+      const badge = document.querySelector('.cart-badge');
+      if (badge) {
+        const count = cart.length;
+        badge.textContent = count;
+        badge.style.display = count > 0 ? 'flex' : 'flex';
+      }
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+      updateCartBadge();
+    });
   </script>
+
+  <!-- Floating Cart Button for Mobile -->
+  <a href="./cart.html" class="floating-cart-btn" style="position:fixed;top:80px;right:20px;width:60px;height:60px;background:#4A3728;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(74,55,40,.4);text-decoration:none;z-index:10000;transition:all .3s ease;display:none;">
+    <i data-lucide="shopping-bag" style="width:24px;height:24px;"></i>
+    <span class="cart-badge" style="position:absolute;top:-4px;right:-4px;background:#D4AF37;color:white;font-size:.7rem;font-weight:700;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(212,175,55,.4);">0</span>
+  </a>
+  <style>
+    @media (max-width: 768px) {
+      .floating-cart-btn {
+        display: flex !important;
+      }
+    }
+  </style>
 </body>
 </html>

@@ -111,14 +111,17 @@ async function loadReservations() {
   }
 
   try {
+    // Get session (main.js already handles auth redirect for protected pages)
     const {
       data: { session },
     } = await supabase.auth.getSession();
 
     if (!session) {
-      window.location.href = './login.html';
+      console.log('⚠️ No session found - main.js should have redirected to login');
       return;
     }
+
+    console.log('✅ Session found for:', session.user?.email);
 
     const { data, error } = await supabase
       .from('reservations')
