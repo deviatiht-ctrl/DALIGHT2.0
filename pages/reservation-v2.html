@@ -1148,8 +1148,8 @@
             <div class="deposit-notice">
               <i data-lucide="wallet"></i>
               <div>
-                <strong>Avance de réservation : 1 000 HTG</strong>
-                <p style="margin: 0; font-size: 0.85rem; color: var(--marron-600);">Le solde sera réglé sur place le jour du rendez-vous.</p>
+                <strong id="deposit-amount-display">Avance de réservation : 1 000 HTG</strong>
+                <p style="margin: 0; font-size: 0.85rem; color: var(--marron-600);" id="deposit-desc-display">Le solde sera réglé sur place le jour du rendez-vous.</p>
               </div>
             </div>
 
@@ -1173,7 +1173,7 @@
             <div class="conditions-box">
               <h4 style="margin-top: 0;">📋 Conditions générales</h4>
               <ul>
-                <li><strong>Avance obligatoire :</strong> 1 000 HTG requis pour confirmer la réservation.</li>
+                <li><strong>Avance obligatoire :</strong> <span id="conditions-deposit-display">1 000 HTG</span> requis pour confirmer la réservation.</li>
                 <li><strong>Annulation gratuite :</strong> Jusqu'à 48h avant.</li>
                 <li><strong>Annulation tardive (24h-48h) :</strong> 500 HTG retenus.</li>
                 <li><strong>No-show :</strong> Acompte non remboursable.</li>
@@ -1186,7 +1186,7 @@
               <label for="accept-conditions">J'accepte les conditions générales de réservation *</label>
             </div>
 
-            <h4 style="margin: 2rem 0 1rem;">Méthode de paiement de l'avance (1 000 HTG)</h4>
+            <h4 style="margin: 2rem 0 1rem;" id="payment-heading-display">Méthode de paiement de l'avance (1 000 HTG)</h4>
             <div class="payment-methods" id="resv-payment-methods-container">
               <div style="padding:.75rem;color:var(--marron-600);font-size:.9rem;">Chargement des modes de paiement...</div>
             </div>
@@ -1774,19 +1774,47 @@ function loadCartData() {
         }
       }
 
+      const MASSAGE_CATS = ['massage-relaxant', 'wood-therapy', 'massage'];
+      function calcDeposit(services) {
+        let massageTotal = 0, hasOther = false;
+        (services || []).forEach(s => {
+          const cat = (s.category || '').toLowerCase();
+          if (MASSAGE_CATS.some(c => cat.includes(c))) massageTotal += Number(s.price_htg) || 0;
+          else hasOther = true;
+        });
+        return Math.round(massageTotal * 0.5) + (hasOther ? 1000 : 0);
+      }
+
       function updateSummary() {
         document.getElementById('summary-date').textContent = formData.date ? formatLocalDateFR(formData.date) : '-';
         document.getElementById('summary-time').textContent = formData.time || '-';
-        document.getElementById('summary-client').textContent = formData.firstName && formData.lastName ? 
+        document.getElementById('summary-client').textContent = formData.firstName && formData.lastName ?
           `${formData.firstName} ${formData.lastName}` : '-';
-        
-        // Calculate total from cart
-        let totalText = '1 000 HTG (acompte)';
-        if (cartServices.length > 0) {
-          const total = cartServices.reduce((sum, s) => sum + (Number(s.price_htg) || 0), 0);
-          totalText = `1 000 HTG (acompte sur ${total.toLocaleString()} HTG)`;
-        }
+
+        // Calculate total and deposit from cart
+        const total   = cartServices.reduce((sum, s) => sum + (Number(s.price_htg) || 0), 0);
+        const deposit = cartServices.length > 0 ? calcDeposit(cartServices) : 1000;
+        const hasMassage = cartServices.some(s => MASSAGE_CATS.some(c => (s.category||'').toLowerCase().includes(c)));
+        const totalText = cartServices.length > 0
+          ? `${deposit.toLocaleString()} HTG (acompte sur ${total.toLocaleString()} HTG)`
+          : `${deposit.toLocaleString()} HTG (acompte)`;
         document.getElementById('summary-total').textContent = totalText;
+
+        // Update all deposit displays
+        const depositLabel = hasMassage
+          ? `Avance de réservation : ${deposit.toLocaleString()} HTG (50% du montant)`
+          : `Avance de réservation : ${deposit.toLocaleString()} HTG`;
+        const depositDesc = hasMassage
+          ? 'Pour les massages, 50% est requis à la réservation. Le solde sera réglé sur place.'
+          : 'Le solde sera réglé sur place le jour du rendez-vous.';
+        const depEl = document.getElementById('deposit-amount-display');
+        if (depEl) depEl.textContent = depositLabel;
+        const descEl = document.getElementById('deposit-desc-display');
+        if (descEl) descEl.textContent = depositDesc;
+        const condEl = document.getElementById('conditions-deposit-display');
+        if (condEl) condEl.textContent = `${deposit.toLocaleString()} HTG`;
+        const pmEl = document.getElementById('payment-heading-display');
+        if (pmEl) pmEl.textContent = `Méthode de paiement de l'avance (${deposit.toLocaleString()} HTG)`;
         
         // Populate cart items in summary
         const summaryCartItems = document.getElementById('summary-cart-items');
@@ -2150,7 +2178,7 @@ function loadCartData() {
             notes: formData.notes || null,
             payment_method: paymentMethod.value,
             payment_proof_url: proofUrl,
-            deposit_amount: 1000,
+            deposit_amount: calcDeposit(cartServices),
             location: 'Spa',
             status: 'PENDING'
           };

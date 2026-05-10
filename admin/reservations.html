@@ -429,6 +429,19 @@
           <input type="number" id="capacity-input" class="form-input" min="1" max="20" value="1">
         </div>
         <div class="form-group">
+          <label>Type de service concerné</label>
+          <select id="capacity-service-type" class="form-input">
+            <option value="all">Tous les services (bloquer la salle entière)</option>
+            <option value="headspa">Head Spa uniquement</option>
+            <option value="massage-relaxant">Massage uniquement</option>
+            <option value="wood-therapy">Wood Therapy uniquement</option>
+            <option value="package">Package uniquement</option>
+          </select>
+          <p style="font-size:0.75rem;color:var(--admin-text-muted);margin-top:0.25rem;">
+            💡 Un blocage par type laisse les autres services disponibles sur ce créneau.
+          </p>
+        </div>
+        <div class="form-group">
           <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;">
             <input type="checkbox" id="capacity-available"> Marquer comme disponible
           </label>

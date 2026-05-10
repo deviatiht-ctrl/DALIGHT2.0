@@ -670,7 +670,8 @@ async function loadAvailabilityFallback(supabase, year, month) {
       max_capacity:     capacity,
       current_bookings: booked,
       remaining_slots:  remaining,
-      is_exception:     true
+      is_exception:     true,
+      service_type:     exc.service_type || 'all'
     });
   }
   return results;
@@ -680,14 +681,15 @@ function renderAvailabilityCalendar(data) {
   const tbody = document.getElementById('availability-body');
   if (!tbody) return;
 
-  // Index exceptions par date+heure
+  // Index exceptions par date+heure (array pou sipòte pliziè service_type)
   const byDate = {};
   data.forEach(slot => {
     const timeKey = slot.slot_time || slot.time_slot;
     const timeStr = timeKey ? String(timeKey).substring(0, 5) : null;
     if (!timeStr) return;
     if (!byDate[slot.available_date]) byDate[slot.available_date] = {};
-    byDate[slot.available_date][timeStr] = slot;
+    if (!byDate[slot.available_date][timeStr]) byDate[slot.available_date][timeStr] = [];
+    byDate[slot.available_date][timeStr].push(slot);
   });
 
   // Montre TOUT jou nan mwa a (pou admin ka klike n'importe ki selil)
@@ -713,15 +715,21 @@ function renderAvailabilityCalendar(data) {
         ${dayName} ${dayNum}
       </td>
       ${timeSlots.map(time => {
-        const slot   = byDate[date]?.[time];
-        const status = getSlotStatus(slot);
-        const label  = slot
-          ? (slot.is_blocked ? '🔒' : `${slot.remaining_slots}/${slot.max_capacity}`)
-          : '+';
+        const slots   = byDate[date]?.[time] || [];
+        const primary = slots.find(s => (s.service_type === 'all' || !s.service_type) && s.is_blocked)
+                     || slots.find(s => s.service_type === 'all' || !s.service_type)
+                     || slots[0] || null;
+        const hasPartialBlock = slots.some(s => s.is_blocked) &&
+          !slots.some(s => s.is_blocked && (s.service_type === 'all' || !s.service_type));
+        const status = getSlotStatus(primary, slots);
+        const label  = !primary ? '✓'
+          : (primary.is_blocked && (primary.service_type === 'all' || !primary.service_type)) ? '🔒'
+          : hasPartialBlock ? '⚡'
+          : `${primary.remaining_slots}/${primary.max_capacity}`;
         return `<td style="padding:1px;">
           <button
             class="availability-cell ${status.class}"
-            onclick="openSlotModal('${date}','${time}',${slot ? JSON.stringify(slot).replace(/"/g,'&quot;') : 'null'})"
+            onclick="openSlotModal('${date}','${time}',${primary ? JSON.stringify(primary).replace(/"/g,'&quot;') : 'null'})"
             style="width:100%;min-width:36px;height:34px;border:1px solid #e5e7eb;border-radius:4px;
                    background:${status.color};color:${status.textColor};
                    cursor:pointer;font-size:0.7rem;font-weight:600;"
@@ -733,14 +741,22 @@ function renderAvailabilityCalendar(data) {
   }).join('');
 }
 
-function getSlotStatus(slot) {
+function getSlotStatus(slot, allSlots) {
   // Pa konfigire encore — disponib pa default (vèt)
-  if (!slot) {
+  if (!slot && (!allSlots || allSlots.length === 0)) {
     return { class: 'available', color: '#10b981', textColor: 'white', tooltip: 'Disponible — cliquez pour configurer' };
   }
-  // Bloke pa admin
-  if (slot.is_blocked) {
-    return { class: 'blocked', color: '#6b7280', textColor: 'white', tooltip: 'Bloqué par admin' };
+  // Bloke pou tout sèvis
+  if (slot?.is_blocked && (slot.service_type === 'all' || !slot.service_type)) {
+    return { class: 'blocked', color: '#6b7280', textColor: 'white', tooltip: 'Bloqué (tous services)' };
+  }
+  // Blokaaj parsyèl — kèk kategori sèlman
+  if (allSlots?.some(s => s.is_blocked)) {
+    const cats = allSlots.filter(s => s.is_blocked).map(s => s.service_type || 'all').join(', ');
+    return { class: 'partial', color: '#f59e0b', textColor: 'white', tooltip: `Partiellement bloqué: ${cats}` };
+  }
+  if (!slot) {
+    return { class: 'available', color: '#10b981', textColor: 'white', tooltip: 'Disponible — cliquez pour configurer' };
   }
   // Konplè
   if (slot.remaining_slots <= 0) {
@@ -1111,6 +1127,8 @@ function openSlotModal(date, time, slotData) {
   document.getElementById('capacity-time-display').value = `${date} à ${time}`;
   document.getElementById('capacity-input').value = slotData?.max_capacity || 1;
   document.getElementById('capacity-available').checked = isBlocked ? false : (slotData?.is_available ?? true);
+  const svcTypeEl = document.getElementById('capacity-service-type');
+  if (svcTypeEl) svcTypeEl.value = slotData?.service_type || 'all';
 
   // Bouton débloquer — visible sèlman si kreno egziste nan DB
   const btnDeblock = document.getElementById('btn-deblock-slot');
@@ -1134,12 +1152,13 @@ async function deleteSlot() {
     if (!supabase) throw new Error('Connexion Supabase non établie.');
 
     // Essai 1: avec service_type
+    const delSvcType = document.getElementById('capacity-service-type')?.value || 'all';
     let { error } = await supabase
       .from('availability_exceptions')
       .delete()
       .eq('exception_date', selectedSlot.date)
       .eq('time_slot', selectedSlot.time + ':00')
-      .eq('service_type', 'all');
+      .eq('service_type', delSvcType);
 
     if (error) {
       // Essai 2: sans service_type
@@ -1175,6 +1194,7 @@ async function saveCapacity() {
 
   const capacity    = parseInt(document.getElementById('capacity-input').value) || 1;
   const isAvailable = document.getElementById('capacity-available').checked;
+  const serviceType = document.getElementById('capacity-service-type')?.value || 'all';
 
   try {
     const supabase = getSupabaseClient();
@@ -1188,7 +1208,7 @@ async function saveCapacity() {
         time_slot:      selectedSlot.time + ':00',
         is_blocked:     !isAvailable,
         max_capacity:   isAvailable ? capacity : null,
-        service_type:   'all'
+        service_type:   serviceType
       }, { onConflict: 'exception_date,time_slot,service_type' });
 
     if (error) {
