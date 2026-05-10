@@ -1082,6 +1082,50 @@ body.is-admin .mobile-nav .admin-link {
   gap: 1rem;
 }
 
+/* ── Footer 3-colonnes (reservation-v2 etc.) ── */
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 2rem;
+  width: 100%;
+}
+
+.footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.footer-brand img {
+  max-width: 90px;
+}
+
+.footer-contact h4,
+.footer-hours h4 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem;
+  color: rgba(74, 55, 40, 0.9);
+}
+
+.footer-contact p,
+.footer-hours p {
+  font-size: 0.85rem;
+  margin: 0.2rem 0;
+  color: rgba(74, 55, 40, 0.7);
+}
+
+@media (max-width: 768px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .footer-brand {
+    align-items: center;
+  }
+}
+
 /* ── Cvisual Credit ── */
 .footer-credit {
   width: 100%;
