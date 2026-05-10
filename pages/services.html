@@ -868,7 +868,7 @@
               <span class="price">${isHeadSpa ? 'À partir de ' : ''}${Number(s.price_htg).toLocaleString()} HTG${isHeadSpa ? ' <small style="font-size:.7em;opacity:.7;">(selon longueur)</small>' : ' · $' + Number(s.price_usd)}</span>
             </header>
             <p>${esc(s.description || '')} ${s.duration ? '(' + esc(s.duration) + ')' : ''}</p>
-            <button class="add-to-cart" data-service-id="${s.id || ''}" data-is-headspa="${isHeadSpa}" data-service-name="${esc(s.name)}" data-service-desc="${esc(s.description || '')}" data-service-duration="${esc(s.duration || '')}" data-service-price-htg="${s.price_htg}" data-service-price-usd="${s.price_usd}">
+            <button class="add-to-cart" data-service-id="${s.id || ''}" data-is-headspa="${isHeadSpa}" data-service-name="${esc(s.name)}" data-service-desc="${esc(s.description || '')}" data-service-duration="${esc(s.duration || '')}" data-service-price-htg="${s.price_htg}" data-service-price-usd="${s.price_usd}" data-service-category="${esc(s.category || '')}">
               <i data-lucide="plus"></i> Ajouter au panier
             </button>
           </article>
@@ -883,7 +883,8 @@
               description: btn.dataset.serviceDesc,
               duration: btn.dataset.serviceDuration,
               price_htg: btn.dataset.servicePriceHtg,
-              price_usd: btn.dataset.servicePriceUsd
+              price_usd: btn.dataset.servicePriceUsd,
+              category: btn.dataset.serviceCategory || ''
             };
             if (isHeadSpa && headSpaPricing.length > 0) {
               openHairModal(service);
