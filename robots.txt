@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Bloker paj admin yo pou Google pa indexe yo
+Disallow: /admin/
+Disallow: /pages/admin.html
+Disallow: /test-*.html
+
+Sitemap: https://www.dalightbeauty.com/sitemap.xml
