@@ -1779,8 +1779,12 @@ function loadCartData() {
         let massageTotal = 0, hasOther = false;
         (services || []).forEach(s => {
           const cat = (s.category || '').toLowerCase();
-          if (MASSAGE_CATS.some(c => cat.includes(c))) massageTotal += Number(s.price_htg) || 0;
-          else hasOther = true;
+          const name = (s.name || '').toLowerCase();
+          if (MASSAGE_CATS.some(c => cat.includes(c) || name.includes('massage') || name.includes('wood'))) {
+            massageTotal += Number(s.price_htg) || 0;
+          } else {
+            hasOther = true;
+          }
         });
         return Math.round(massageTotal * 0.5) + (hasOther ? 1000 : 0);
       }
@@ -1794,7 +1798,11 @@ function loadCartData() {
         // Calculate total and deposit from cart
         const total   = cartServices.reduce((sum, s) => sum + (Number(s.price_htg) || 0), 0);
         const deposit = cartServices.length > 0 ? calcDeposit(cartServices) : 1000;
-        const hasMassage = cartServices.some(s => MASSAGE_CATS.some(c => (s.category||'').toLowerCase().includes(c)));
+        const hasMassage = cartServices.some(s => {
+          const cat = (s.category||'').toLowerCase();
+          const name = (s.name||'').toLowerCase();
+          return MASSAGE_CATS.some(c => cat.includes(c) || name.includes('massage') || name.includes('wood'));
+        });
         const totalText = cartServices.length > 0
           ? `${deposit.toLocaleString()} HTG (acompte sur ${total.toLocaleString()} HTG)`
           : `${deposit.toLocaleString()} HTG (acompte)`;
