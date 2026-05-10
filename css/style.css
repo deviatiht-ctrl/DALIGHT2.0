@@ -306,18 +306,53 @@ body.is-admin .mobile-nav .admin-link {
 .nav-toggle {
   display: none;
   flex-direction: column;
-  gap: 6px;
-  background: transparent;
-  border: none;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
   cursor: pointer;
   z-index: 300;
   position: relative;
+  /* Touch target minimum 44×44px */
+  min-width: 44px;
+  min-height: 44px;
+  padding: 10px 12px;
+  transition: background 0.2s ease, transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-toggle:hover,
+.nav-toggle:focus {
+  background: rgba(255, 255, 255, 0.22);
+  outline: none;
+}
+
+.nav-toggle:active {
+  transform: scale(0.93);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .nav-toggle span {
-  width: 28px;
+  width: 22px;
   height: 2px;
   background: var(--white);
+  border-radius: 2px;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  display: block;
+}
+
+/* Animation X quand menu ouvert */
+.nav-toggle.active span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.nav-toggle.active span:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+.nav-toggle.active span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
 }
 
 .hero {

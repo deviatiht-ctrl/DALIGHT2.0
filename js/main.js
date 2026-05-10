@@ -293,28 +293,24 @@ function setupNavToggle() {
   }
   console.log('✅ Nav toggle found, adding listeners');
   
-  // Direct inline handler for testing
-  toggle.onclick = function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('🍔 Toggle CLICKED via onclick');
-    console.log('📋 nav element:', nav);
-    console.log('📋 nav classes before:', nav.className);
-    nav.classList.toggle('open');
-    console.log('📋 nav classes after:', nav.className);
-    console.log('📱 Menu open state:', nav.classList.contains('open'));
-  };
-  
-  // Also add standard event listeners
   function handleToggle(e) {
     e.preventDefault();
     e.stopPropagation();
-    console.log('🍔 Toggle clicked via addEventListener');
     nav.classList.toggle('open');
+    toggle.classList.toggle('active');
+    toggle.setAttribute('aria-expanded', nav.classList.contains('open'));
   }
-  
+
   toggle.addEventListener('click', handleToggle);
-  toggle.addEventListener('touchend', handleToggle);
+
+  // Fermer le menu si on clique en dehors
+  document.addEventListener('click', function(e) {
+    if (nav.classList.contains('open') && !nav.contains(e.target)) {
+      nav.classList.remove('open');
+      toggle.classList.remove('active');
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+  });
 }
 
 function syncMobileNavVisibility() {
