@@ -734,9 +734,9 @@ function renderAvailabilityCalendar(data) {
 }
 
 function getSlotStatus(slot) {
-  // Pa konfigire encore — selil gri ki ka klike pou ajoute
+  // Pa konfigire encore — disponib pa default (vèt)
   if (!slot) {
-    return { class: 'empty', color: '#f3f4f6', textColor: '#9ca3af', tooltip: 'Non configuré — cliquez pour ajouter' };
+    return { class: 'available', color: '#10b981', textColor: 'white', tooltip: 'Disponible — cliquez pour configurer' };
   }
   // Bloke pa admin
   if (slot.is_blocked) {

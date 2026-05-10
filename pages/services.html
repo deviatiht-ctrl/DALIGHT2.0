@@ -669,6 +669,8 @@
         confirmBtn.style.background = '#9ca3af';
         confirmBtn.style.cursor = 'not-allowed';
         // Reset type selection - show all 3 in grid
+        const hairCardsContainer = document.getElementById('hair-type-cards');
+        if (hairCardsContainer) { hairCardsContainer.style.display = 'grid'; hairCardsContainer.style.justifyContent = ''; }
         document.querySelectorAll('.hair-type-card').forEach(c => {
           c.style.display = 'block';
           c.style.width = '';
@@ -700,9 +702,9 @@
           const active = c.dataset.type === type;
           if (active) {
             c.style.display = 'block';
-            c.style.width = '100%';
-            c.style.maxWidth = '320px';
-            c.style.margin = '0 auto';
+            c.style.width = '160px';
+            c.style.maxWidth = '';
+            c.style.margin = '0';
             c.style.borderColor = '#4A3728';
             c.style.boxShadow = '0 0 0 3px rgba(74,55,40,.2)';
             // Make the image clickable for lightbox
@@ -718,6 +720,9 @@
             c.style.display = 'none';
           }
         });
+        // Centrer la carte sélectionnée
+        const ctr = document.getElementById('hair-type-cards');
+        if (ctr) { ctr.style.display = 'flex'; ctr.style.justifyContent = 'center'; }
       }
       window.selectHairType = selectHairType;
 
@@ -919,6 +924,32 @@
         });
       }
 
+      async function loadFilterButtons() {
+        let supabase = getSupabase();
+        let attempts = 0;
+        while (!supabase && attempts < 20) {
+          await new Promise(r => setTimeout(r, 100));
+          supabase = getSupabase();
+          attempts++;
+        }
+        if (!supabase) return;
+        try {
+          const { data, error } = await supabase
+            .from('service_categories')
+            .select('slug, label')
+            .eq('is_active', true)
+            .order('sort_order');
+          if (error || !data || data.length === 0) return;
+          const container = document.querySelector('.filter-buttons');
+          if (!container) return;
+          container.innerHTML = `<button class="filter-btn active" data-filter="all">Tous</button>` +
+            data.map(c => `<button class="filter-btn" data-filter="${esc(c.slug)}">${esc(c.label)}</button>`).join('');
+          currentFilter = 'all';
+        } catch (e) {
+          console.warn('loadFilterButtons failed:', e);
+        }
+      }
+
       async function loadServices() {
         let attempts = 0;
         let supabase = getSupabase();
@@ -952,11 +983,12 @@
         filterAndRenderServices();
       }
 
-      document.addEventListener('DOMContentLoaded', () => {
+      document.addEventListener('DOMContentLoaded', async () => {
         if (window.lucide) lucide.createIcons();
         initChatWidget();
         loadCart();
         initCart();
+        await loadFilterButtons();
         loadServices();
         loadHeadSpaPricing();
         // Ferme modal si klike deyò
