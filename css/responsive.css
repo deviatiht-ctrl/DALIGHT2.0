@@ -17,6 +17,7 @@
   .brand {
     flex: 1;
     min-width: 0;
+    order: 1;
   }
 
   /* Garder nav-cta visible pour l'icône panier uniquement */
@@ -24,6 +25,7 @@
     display: flex;
     flex-shrink: 0;
     align-items: center;
+    order: 2;
   }
 
   .nav-cta .btn {
@@ -34,6 +36,7 @@
   .nav-toggle {
     display: flex;
     flex-shrink: 0;
+    order: 3;
   }
 
   /* ====================================

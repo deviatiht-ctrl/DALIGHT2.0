@@ -235,7 +235,15 @@ async function initSupabase() {
   }
 }
 
+let isAppInitialized = false;
+
 async function init() {
+  if (isAppInitialized) {
+    console.log('⚠️ App already initialized, skipping...');
+    return;
+  }
+  isAppInitialized = true;
+  
   console.log('🚀 Initializing DALIGHT app...');
   
   // Setup UI first (don't wait for Supabase)
