@@ -2064,14 +2064,18 @@ function loadCartData() {
         // Must have at least one selected service before reservation
         if (!cartServices || cartServices.length === 0) {
           alert('Ou pa gen sèvis chwazi. Tanpri ale sou paj Services pou chwazi sèvis yo avan konfime reservation an.');
-          window.location.href = './services.html';
           return;
         }
 
         // 0. AUTH VALIDATION
-        let supabaseClient = window.dalightSupabase || window.supabaseClient;
-        const { data: { session } } = await supabaseClient.auth.getSession();
+        const sbClient = getSupabaseClient();
+        if (!sbClient) {
+          alert('Impossible de se connecter à la base de données.');
+          return;
+        }
         
+        const { data: { session } } = await sbClient.auth.getSession();
+
         if (!session) {
           alert('Veuillez vous connecter pour confirmer votre réservation.');
           window.location.href = './login.html';
@@ -2133,14 +2137,7 @@ function loadCartData() {
 
         try {
           console.log('🚀 Starting reservation submission...');
-          let supabaseClient = window.dalightSupabase || window.supabaseClient;
-          
-          if (!supabaseClient && window.supabase?.createClient) {
-            const supabaseUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co';
-            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA1OTY4MTU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U';
-            supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-          }
-
+          let supabaseClient = getSupabaseClient();
           if (!supabaseClient) throw new Error('Supabase not connected');
 
           // 1. UPLOAD PAYMENT PROOF

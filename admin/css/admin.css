@@ -4,19 +4,19 @@
    ============================================ */
 
 :root {
-  --admin-bg: #0f0f1a;
-  --admin-sidebar: rgba(255, 255, 255, 0.03);
-  --admin-card: rgba(255, 255, 255, 0.05);
-  --admin-card-hover: rgba(255, 255, 255, 0.08);
-  --admin-border: rgba(255, 255, 255, 0.1);
-  --admin-text: #ffffff;
-  --admin-text-muted: rgba(255, 255, 255, 0.6);
-  --admin-accent: #d4af37;
+  --admin-bg: #f9fafb; /* Light gray/white background */
+  --admin-sidebar: #ffffff; /* White sidebar */
+  --admin-card: #ffffff; /* White cards */
+  --admin-card-hover: #f3f4f6; /* Light hover effect */
+  --admin-border: #e5e7eb; /* Light border */
+  --admin-text: #1f2937; /* Dark gray/black text */
+  --admin-text-muted: #6b7280; /* Muted gray text */
+  --admin-accent: #d4af37; /* Gold accent kept for branding */
   --admin-accent-light: rgba(212, 175, 55, 0.15);
-  --admin-success: #4ade80;
-  --admin-warning: #fbbf24;
-  --admin-danger: #f87171;
-  --admin-info: #60a5fa;
+  --admin-success: #10b981; /* Slightly darker green */
+  --admin-warning: #f59e0b; /* Slightly darker amber */
+  --admin-danger: #ef4444; /* Slightly darker red */
+  --admin-info: #3b82f6; /* Slightly darker blue */
   --sidebar-width: 280px;
   --header-height: 70px;
 }
@@ -344,7 +344,8 @@ body::before {
 
 .glass-card:hover {
   background: var(--admin-card-hover);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--admin-border);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }
 
 .card-header {
@@ -678,15 +679,15 @@ body::before {
 /* Fix native select dropdown color on Windows/Chrome */
 select.form-input,
 select.form-select {
-  color-scheme: dark;
-  background-color: #1a1a2e;
-  color: #ffffff;
+  color-scheme: light;
+  background-color: var(--admin-card);
+  color: var(--admin-text);
 }
 
 select.form-input option,
 select.form-select option {
-  background-color: #1a1a2e !important;
-  color: #ffffff !important;
+  background-color: var(--admin-card) !important;
+  color: var(--admin-text) !important;
 }
 
 .form-input:focus,
@@ -709,20 +710,21 @@ select.form-select option {
   color: var(--admin-text);
 }
 
-/* Fix dropdown options in dark mode - STRONG override */
+/* Fix dropdown options in light mode - STRONG override */
 .form-select option {
-  background-color: #1e1e32 !important;
-  color: #ffffff !important;
+  background-color: var(--admin-card) !important;
+  color: var(--admin-text) !important;
   padding: 0.5rem;
   font-size: 14px;
 }
 
-/* Even stronger for hover/selected states */
-.form-select option:hover,
-.form-select option:focus,
-.form-select option:checked {
-  background-color: #2d2d4a !important;
-  color: #ffffff !important;
+/* For browsers that don't respect the above well (WebKit) */
+select option:hover,
+select option:focus,
+select option:active,
+select option:checked {
+  background: linear-gradient(0deg, var(--admin-card-hover) 0%, var(--admin-card-hover) 100%);
+  background-color: var(--admin-card-hover) !important;
 }
 
 /* Ensure dropdown is visible above modal */

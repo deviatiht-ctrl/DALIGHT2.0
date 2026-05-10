@@ -729,7 +729,7 @@ function renderAvailabilityCalendar(data) {
         return `<td style="padding:1px;">
           <button
             class="availability-cell ${status.class}"
-            onclick="openSlotModal('${date}','${time}',${primary ? JSON.stringify(primary).replace(/"/g,'&quot;') : 'null'})"
+            onclick="openSlotModal('${date}','${time}',${primary ? JSON.stringify(primary).replace(/"/g,'&quot;') : 'null'}, ${JSON.stringify(slots).replace(/"/g,'&quot;')})"
             style="width:100%;min-width:36px;height:34px;border:1px solid #e5e7eb;border-radius:4px;
                    background:${status.color};color:${status.textColor};
                    cursor:pointer;font-size:0.7rem;font-weight:600;"
@@ -1112,8 +1112,8 @@ async function confirmBlockDate() {
   }
 }
 
-function openSlotModal(date, time, slotData) {
-  console.log('🔴 openSlotModal called:', date, time, slotData);
+function openSlotModal(date, time, slotData, allSlotsData) {
+  console.log('🔴 openSlotModal called:', date, time, slotData, allSlotsData);
   selectedSlot = { date, time, data: slotData };
 
   const isExisting  = !!slotData;
@@ -1129,6 +1129,20 @@ function openSlotModal(date, time, slotData) {
   document.getElementById('capacity-available').checked = isBlocked ? false : (slotData?.is_available ?? true);
   const svcTypeEl = document.getElementById('capacity-service-type');
   if (svcTypeEl) svcTypeEl.value = slotData?.service_type || 'all';
+
+  // Breakdown list
+  const breakdownContainer = document.getElementById('capacity-breakdown');
+  const breakdownList = document.getElementById('capacity-breakdown-list');
+  if (breakdownContainer && breakdownList && allSlotsData && allSlotsData.length > 0) {
+    breakdownContainer.style.display = 'block';
+    breakdownList.innerHTML = allSlotsData.map(s => {
+      const type = s.service_type === 'all' ? 'Tous les services' : s.service_type;
+      const statusText = s.is_blocked ? '<span style="color:#ef4444;font-weight:bold;">Bloqué</span>' : `${s.remaining_slots}/${s.max_capacity} disponibles`;
+      return `<li style="margin-bottom:0.25rem;"><strong>${type}</strong>: ${statusText}</li>`;
+    }).join('');
+  } else if (breakdownContainer) {
+    breakdownContainer.style.display = 'none';
+  }
 
   // Bouton débloquer — visible sèlman si kreno egziste nan DB
   const btnDeblock = document.getElementById('btn-deblock-slot');

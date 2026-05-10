@@ -269,9 +269,13 @@ async function init() {
   console.log('👑 Is admin?', document.body.classList.contains('is-admin'));
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    init();
+  });
+} else {
   init();
-});
+}
 
 function setYear() {
   const yearEl = document.getElementById('year');
