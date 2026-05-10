@@ -1,116 +1,109 @@
 @media (max-width: 1120px) {
+  /* Le top-nav devient le point d'ancrage du dropdown */
   .top-nav {
-    flex-wrap: wrap;
+    position: relative;
+    flex-wrap: nowrap;
     padding: 0.75rem 1.5rem;
     gap: 0.5rem;
+    align-items: center;
   }
 
-  /* Masquer les liens nav et le bouton Réserver */
+  /* Masquer les liens nav */
   .nav-links {
     display: none;
-    width: 100%;
-    order: 3;
   }
 
   /* Brand prend l'espace disponible */
   .brand {
     flex: 1;
-    order: 0;
+    min-width: 0;
   }
 
-  /* Garder nav-cta visible pour l'icône panier, cacher seulement .btn */
+  /* Garder nav-cta visible pour l'icône panier uniquement */
   .nav-cta {
     display: flex;
-    order: 1;
-    width: auto;
     flex-shrink: 0;
+    align-items: center;
   }
 
   .nav-cta .btn {
     display: none;
   }
 
+  /* Afficher le bouton hamburger */
   .nav-toggle {
     display: flex;
-    order: 2;
     flex-shrink: 0;
   }
 
-  /* État ouvert : afficher tout */
+  /* ====================================
+     DROPDOWN ABSOLU — toujours par-dessus
+     ==================================== */
   .top-nav.open .nav-links {
     display: flex !important;
     flex-direction: column;
     gap: 0.25rem;
-    background: rgba(255, 255, 255, 0.08);
-    padding: 0.5rem 0.75rem;
-    border-radius: var(--radius-xl);
-    margin-top: 0.5rem;
-    width: 100%;
+    /* Position absolue : apparait PAR-DESSUS le contenu sur TOUTES les pages */
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    background: linear-gradient(135deg, rgba(74, 55, 40, 0.98), rgba(50, 36, 25, 0.98));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 0.75rem 1rem;
+    border-radius: 0 0 16px 16px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .top-nav.open .nav-links a {
     width: 100%;
     text-align: left;
-    background: transparent;
+    padding: 0.65rem 0.75rem;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.95rem;
+    transition: background 0.15s ease;
   }
 
-  .top-nav.open .nav-cta {
-    width: 100%;
-    order: 4;
-    background: rgba(255, 255, 255, 0.08);
-    padding: 0.5rem 0.75rem;
-    border-radius: var(--radius-xl);
-    align-items: stretch;
-    gap: 0.5rem;
+  .top-nav.open .nav-links a:hover,
+  .top-nav.open .nav-links a.active {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
   }
 
-  .top-nav.open .nav-cta .btn {
-    display: flex !important;
-    width: 100%;
-    justify-content: center;
-  }
-
-  .top-nav.open .nav-cta .cart-toggle {
-    display: none; /* Caché dans le panel ouvert, visible toujours dans la barre */
-  }
+  /* nav-cta reste inchangé quand ouvert (garde juste l'icône panier) */
 }
 
-/* Tablette / téléphone en mode paysage (landscape) */
+/* Tablette / téléphone en mode paysage : dropdown en grille 3 colonnes */
 @media (max-width: 1120px) and (orientation: landscape) {
   .top-nav.open .nav-links {
     display: grid !important;
     grid-template-columns: repeat(3, 1fr);
     gap: 0.25rem 0.5rem;
+    max-height: 70vh;
+    overflow-y: auto;
   }
 
   .top-nav.open .nav-links a {
     text-align: center;
   }
 
-  .top-nav.open .nav-cta {
-    flex-direction: row !important;
-    gap: 0.5rem;
-  }
-
-  .top-nav.open .nav-cta .btn {
-    display: flex !important;
-    flex: 1;
-    justify-content: center;
-  }
-
-  /* En mode paysage, navbar moins haute */
+  /* Navbar plus compacte en paysage */
   .site-header {
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
   }
 }
 
 @media (max-width: 900px) {
   .top-nav {
-    position: static;
-    flex-direction: column;
+    position: relative; /* Garder relative pour que le dropdown absolu fonctionne */
+    flex-direction: row;
     align-items: center;
-    padding: 1rem 1.5rem;
+    padding: 0.75rem 1rem;
   }
 
   .site-header.internal {
