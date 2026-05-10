@@ -2,12 +2,106 @@
   .top-nav {
     flex-wrap: wrap;
     padding: 0.75rem 1.5rem;
-    gap: 1rem;
+    gap: 0.5rem;
   }
 
-  .nav-links,
-  .nav-cta {
+  /* Masquer les liens nav et le bouton Réserver */
+  .nav-links {
+    display: none;
+    width: 100%;
     order: 3;
+  }
+
+  /* Brand prend l'espace disponible */
+  .brand {
+    flex: 1;
+    order: 0;
+  }
+
+  /* Garder nav-cta visible pour l'icône panier, cacher seulement .btn */
+  .nav-cta {
+    display: flex;
+    order: 1;
+    width: auto;
+    flex-shrink: 0;
+  }
+
+  .nav-cta .btn {
+    display: none;
+  }
+
+  .nav-toggle {
+    display: flex;
+    order: 2;
+    flex-shrink: 0;
+  }
+
+  /* État ouvert : afficher tout */
+  .top-nav.open .nav-links {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0.25rem;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-xl);
+    margin-top: 0.5rem;
+    width: 100%;
+  }
+
+  .top-nav.open .nav-links a {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+  }
+
+  .top-nav.open .nav-cta {
+    width: 100%;
+    order: 4;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-xl);
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .top-nav.open .nav-cta .btn {
+    display: flex !important;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .top-nav.open .nav-cta .cart-toggle {
+    display: none; /* Caché dans le panel ouvert, visible toujours dans la barre */
+  }
+}
+
+/* Tablette / téléphone en mode paysage (landscape) */
+@media (max-width: 1120px) and (orientation: landscape) {
+  .top-nav.open .nav-links {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.25rem 0.5rem;
+  }
+
+  .top-nav.open .nav-links a {
+    text-align: center;
+  }
+
+  .top-nav.open .nav-cta {
+    flex-direction: row !important;
+    gap: 0.5rem;
+  }
+
+  .top-nav.open .nav-cta .btn {
+    display: flex !important;
+    flex: 1;
+    justify-content: center;
+  }
+
+  /* En mode paysage, navbar moins haute */
+  .site-header {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
   }
 }
 
@@ -17,20 +111,6 @@
     flex-direction: column;
     align-items: center;
     padding: 1rem 1.5rem;
-  }
-
-  .nav-links {
-    display: none;
-    width: 100%;
-  }
-
-  .nav-cta {
-    display: none;
-    width: 100%;
-  }
-
-  .nav-toggle {
-    display: flex;
   }
 
   .site-header.internal {
@@ -110,32 +190,6 @@
 
   .hero-card img {
     max-height: 360px;
-  }
-
-  .top-nav.open .nav-links,
-  .top-nav.open .nav-cta {
-    display: flex !important;
-    flex-direction: column;
-    gap: 0.25rem;
-    background: rgba(255, 255, 255, 0.08);
-    padding: 0.5rem 0.75rem;
-    border-radius: var(--radius-xl);
-    margin-top: 0.5rem;
-    width: 100%;
-  }
-
-  .top-nav.open .nav-links a {
-    width: 100%;
-    text-align: left;
-    background: transparent;
-  }
-
-  .top-nav.open .nav-cta {
-    align-items: stretch;
-  }
-
-  .top-nav.open .nav-cta .btn {
-    width: 100%;
   }
 
   .follow-profile {
