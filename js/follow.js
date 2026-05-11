@@ -1,4 +1,4 @@
-import { getSupabase } from '../js/main.js';
+import { getSupabase } from '../js/main.js?v=3.0.0';
 import { sendFollowEmail } from './email-service.js';
 
 let supabase = getSupabase();

@@ -4,7 +4,7 @@
  * Uses DB templates from email_templates table, with hardcoded fallback
  */
 
-import { getConfig, getSupabase } from './main.js';
+import { getConfig, getSupabase } from './main.js?v=3.0.0';
 
 // ── Template Cache ──
 let _templateCache = null;

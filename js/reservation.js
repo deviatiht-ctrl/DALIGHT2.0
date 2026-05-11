@@ -1,4 +1,4 @@
-import { createOptionsForServices, getSupabase, getConfig } from './main.js';
+import { createOptionsForServices, getSupabase, getConfig } from './main.js?v=3.0.0';
 import { sendReservationEmail } from './email-service.js';
 
 let supabase = getSupabase();
