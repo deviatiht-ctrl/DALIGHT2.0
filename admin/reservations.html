@@ -207,9 +207,9 @@
           <div class="d-flex align-center justify-between">
             <h3 class="card-title">Calendrier des disponibilités</h3>
             <div class="d-flex gap-2">
-              <button class="btn btn-secondary" id="prev-month">← Mois précédent</button>
+              <button class="btn btn-secondary" id="prev-month">— — Mois précédent</button>
               <span id="current-month-display" class="text-lg font-semibold" style="min-width: 150px; text-align: center;"></span>
-              <button class="btn btn-secondary" id="next-month">Mois suivant →</button>
+              <button class="btn btn-secondary" id="next-month">Mois suivant — </button>
             </div>
           </div>
         </div>
@@ -303,18 +303,18 @@
         <!-- Existing Reservations Section -->
         <div id="existing-reservations-section" style="margin-top: 1.5rem; display: none;">
           <h4 style="font-size: 1rem; margin-bottom: 0.75rem; color: var(--admin-text-muted);">
-            📅 Réservations existantes pour cette date
+            —x& Réservations existantes pour cette date
           </h4>
           <div id="existing-reservations-list" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--admin-border); border-radius: 8px; padding: 0.5rem;">
             <!-- Reservations loaded here -->
           </div>
           <p style="font-size: 0.8rem; color: var(--admin-text-muted); margin-top: 0.5rem;">
-            💡 Cliquez sur une réservation pour bloquer cette heure spécifique
+            —x— Cliquez sur une réservation pour bloquer cette heure spécifique
           </p>
         </div>
 
         <div id="no-reservations-msg" style="margin-top: 1rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; display: none;">
-          <p style="color: #10b981; margin: 0;">✅ Aucune réservation pour cette date</p>
+          <p style="color: #10b981; margin: 0;">—S& Aucune réservation pour cette date</p>
         </div>
 
         <hr style="border: none; border-top: 1px solid var(--admin-border); margin: 1.5rem 0;">
@@ -341,7 +341,7 @@
               </select>
             </div>
             <div>
-              <label style="font-size: 0.8rem; color: var(--admin-text-muted);">À:</label>
+              <label style="font-size: 0.8rem; color: var(--admin-text-muted);">ì:</label>
               <select id="block-time-to" class="form-input">
                 <option value="">-- Heure fin --</option>
                 <option value="08:00">08:00</option>
@@ -359,7 +359,7 @@
             </div>
           </div>
           <p style="font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 0.5rem;">
-            💡 Laissez vide pour bloquer toute la journée. Sélectionnez "De" et "À" pour bloquer une plage (ex: 08:00 à 12:00)
+            —x— Laissez vide pour bloquer toute la journée. Sélectionnez "De" et "ì" pour bloquer une plage (ex: 08:00 à 12:00)
           </p>
         </div>
 
@@ -377,7 +377,7 @@
         <!-- Selected Hours Preview -->
         <div id="selected-hours-preview" style="margin-top: 1rem; padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3); display: none;">
           <label style="font-size: 0.8rem; color: #ef4444; margin-bottom: 0.5rem; display: block;">
-            ⚠️ Heures qui seront bloquées:
+            —a—️ Heures qui seront bloquées:
           </label>
           <div id="hours-to-block-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
         </div>
@@ -392,7 +392,7 @@
             <option value="cure">Cure uniquement</option>
           </select>
           <p style="font-size:0.75rem;color:var(--admin-text-muted);margin-top:0.25rem;">
-            💡 Choisissez "Tous" pour bloquer la salle complète, ou un service spécifique si d'autres salles restent disponibles.
+            —x— Choisissez "Tous" pour bloquer la salle complète, ou un service spécifique si d'autres salles restent disponibles.
           </p>
         </div>
 
@@ -403,7 +403,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeBlockDateModal()">Annuler</button>
-        <button class="btn btn-danger" onclick="confirmBlockDate()">🚫 Bloquer</button>
+        <button class="btn btn-danger" onclick="confirmBlockDate()">—xa— Bloquer</button>
       </div>
     </div>
   </div>
@@ -438,7 +438,7 @@
             <option value="package">Package uniquement</option>
           </select>
           <p style="font-size:0.75rem;color:var(--admin-text-muted);margin-top:0.25rem;">
-            💡 Un blocage par type laisse les autres services disponibles sur ce créneau.
+            —x— Un blocage par type laisse les autres services disponibles sur ce créneau.
           </p>
         </div>
         <div class="form-group">
@@ -454,13 +454,13 @@
         
         <!-- Alèt kreno bloke -->
         <div id="slot-blocked-info" style="display:none;background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:.75rem 1rem;font-size:.85rem;color:#92400e;">
-          🔒 Ce créneau est actuellement <strong>bloqué</strong>. Cliquez sur <em>Débloquer</em> pour le supprimer.
+          —x Ce créneau est actuellement <strong>bloqué</strong>. Cliquez sur <em>Débloquer</em> pour le supprimer.
         </div>
       </div>
       <div class="modal-footer" style="justify-content:space-between;flex-wrap:wrap;gap:.5rem;">
         <button id="btn-deblock-slot" class="btn" onclick="deleteSlot()"
           style="display:none;background:#ef4444;color:white;border:none;padding:.5rem 1rem;border-radius:8px;cursor:pointer;font-weight:600;">
-          🔓 Débloquer / Supprimer
+          —x Débloquer / Supprimer
         </button>
         <div style="display:flex;gap:.5rem;margin-left:auto;">
           <button class="btn btn-secondary" onclick="closeCapacityModal()">Annuler</button>
@@ -502,7 +502,7 @@
       if (!window.dalightAdminSupabase && !window.supabaseClient && typeof supabase !== 'undefined') {
         window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         window.dalightAdminSupabase = window.supabaseClient;
-        console.log('✅ Supabase initialized from reservations.html');
+        console.log('—S& Supabase initialized from reservations.html');
       }
       
       // Ensure adminCore exists
@@ -514,7 +514,7 @@
             else console.log(`[${type}] ${msg}`);
           }
         };
-        console.log('✅ adminCore created from reservations.html');
+        console.log('—S& adminCore created from reservations.html');
       }
     })();
   </script>

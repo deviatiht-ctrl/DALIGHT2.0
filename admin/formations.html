@@ -135,7 +135,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/></svg>
           </div>
           <div class="stat-info">
-            <div class="stat-value" id="stat-total">—</div>
+            <div class="stat-value" id="stat-total">—</div>
             <div class="stat-label">Total</div>
           </div>
         </div>
@@ -144,7 +144,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           </div>
           <div class="stat-info">
-            <div class="stat-value" id="stat-active">—</div>
+            <div class="stat-value" id="stat-active">—</div>
             <div class="stat-label">Actives</div>
           </div>
         </div>
@@ -153,7 +153,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           </div>
           <div class="stat-info">
-            <div class="stat-value" id="stat-inactive">—</div>
+            <div class="stat-value" id="stat-inactive">—</div>
             <div class="stat-label">Masquées</div>
           </div>
         </div>
@@ -188,7 +188,7 @@
     </div>
   </main>
 
-  <!-- ── Modal Add/Edit ── -->
+  <!-- ———— Modal Add/Edit ———— -->
   <div class="modal-overlay" id="modal-overlay">
     <div class="modal" style="max-width:600px;width:95%;max-height:90vh;overflow-y:auto;">
       <div class="modal-header">
@@ -300,7 +300,7 @@
     </div>
   </div>
 
-  <!-- ── Delete confirm ── -->
+  <!-- ———— Delete confirm ———— -->
   <div class="modal-overlay" id="delete-overlay">
     <div class="modal" style="max-width:400px;width:95%;">
       <div class="modal-header">
@@ -325,7 +325,7 @@
     let allFormations = [];
     let deleteTargetId = null;
 
-    /* ── Auth guard ── */
+    /* ———— Auth guard ———— */
     async function checkAuth() {
       const { data: { session } } = await sb.auth.getSession();
       if (!session) { window.location.href = '../pages/login.html'; return false; }
@@ -335,7 +335,7 @@
       return true;
     }
 
-    /* ── Load ── */
+    /* ———— Load ———— */
     async function loadFormations() {
       const tbody = document.getElementById('formations-tbody');
       tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:2rem;color:rgba(255,255,255,0.3);">Chargement...</td></tr>';
@@ -370,12 +370,12 @@
         const participation = (f.price_cosmetique || 0) + (f.price_corporel || 0) +
                               (f.price_decoration || 0) + (f.price_massage || 0);
         const totalPrice = (f.price_inscription || 0) + (f.price_blouse || 0) + participation;
-        const fmt = n => n > 0 ? n.toLocaleString() + ' Gds' : '—';
+        const fmt = n => n > 0 ? n.toLocaleString() + ' Gds' : '—';
         return `
         <tr>
           <td>
             <div style="display:flex;align-items:center;gap:0.75rem;">
-              <div class="formation-row-icon">🎓</div>
+              <div class="formation-row-icon">—x}</div>
               <div>
                 <div style="font-weight:600;font-size:0.88rem;">${esc(f.name)}</div>
                 <div style="font-size:0.76rem;color:rgba(255,255,255,0.4);">${esc(f.subtitle||'')}</div>
@@ -385,8 +385,8 @@
           <td style="text-align:right;font-size:0.82rem;">${fmt(f.price_inscription||0)}</td>
           <td style="text-align:right;font-size:0.82rem;">${fmt(f.price_blouse||0)}</td>
           <td style="text-align:right;font-size:0.82rem;">${fmt(participation)}</td>
-          <td style="font-size:0.82rem;">${esc(f.duration||'—')}</td>
-          <td><span class="price-tag">${totalPrice > 0 ? fmt(totalPrice) : esc(f.price||'—')}</span></td>
+          <td style="font-size:0.82rem;">${esc(f.duration||'—')}</td>
+          <td><span class="price-tag">${totalPrice > 0 ? fmt(totalPrice) : esc(f.price||'—')}</span></td>
           <td>
             <label class="toggle-switch">
               <input type="checkbox" ${f.is_active ? 'checked' : ''} onchange="toggleActive('${f.id}', this.checked)">
@@ -395,7 +395,7 @@
           </td>
           <td>
             <div style="display:flex;gap:0.4rem;">
-              <button class="btn btn-secondary" style="padding:0.3rem 0.6rem;font-size:0.78rem;" onclick="openEdit('${f.id}')">Éditer</button>
+              <button class="btn btn-secondary" style="padding:0.3rem 0.6rem;font-size:0.78rem;" onclick="openEdit('${f.id}')">—0diter</button>
               <button class="btn btn-danger"    style="padding:0.3rem 0.6rem;font-size:0.78rem;" onclick="openDelete('${f.id}','${esc(f.name)}')">Suppr.</button>
             </div>
           </td>
@@ -405,7 +405,7 @@
 
     function esc(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-    /* ── Toggle active ── */
+    /* ———— Toggle active ———— */
     async function toggleActive(id, val) {
       await sb.from('formations').update({ is_active: val, updated_at: new Date().toISOString() }).eq('id', id);
       const f = allFormations.find(x => x.id === id);
@@ -413,12 +413,12 @@
       renderStats();
     }
 
-    /* ── Features helper ── */
+    /* ———— Features helper ———— */
     function buildFeatureRow(val='') {
       const row = document.createElement('div');
       row.className = 'feature-row';
       row.innerHTML = `<input type="text" class="form-input feature-input" value="${esc(val)}" placeholder="Ex: Massage suédois & drainant">
-        <button type="button" onclick="this.parentElement.remove()">✕</button>`;
+        <button type="button" onclick="this.parentElement.remove()">—S"</button>`;
       return row;
     }
 
@@ -426,7 +426,7 @@
       document.getElementById('features-list').appendChild(buildFeatureRow());
     });
 
-    /* ── Price calculation ── */
+    /* ———— Price calculation ———— */
     function calculateTotal() {
       const fields = ['f-price-inscription', 'f-price-blouse', 'f-price-cosmetique', 
                       'f-price-corporel', 'f-price-decoration', 'f-price-massage'];
@@ -448,7 +448,7 @@
       }
     });
 
-    /* ── Open Add ── */
+    /* ———— Open Add ———— */
     function openAdd() {
       document.getElementById('f-id').value       = '';
       document.getElementById('f-name').value     = '';
@@ -473,7 +473,7 @@
       document.getElementById('modal-overlay').classList.add('active');
     }
 
-    /* ── Open Edit ── */
+    /* ———— Open Edit ———— */
     function openEdit(id) {
       const f = allFormations.find(x => x.id === id);
       if (!f) return;
@@ -502,7 +502,7 @@
       document.getElementById('modal-overlay').classList.add('active');
     }
 
-    /* ── Save ── */
+    /* ———— Save ———— */
     document.getElementById('save-btn').addEventListener('click', async () => {
       const name = document.getElementById('f-name').value.trim();
       if (!name) { alert('Le nom est requis.'); return; }
@@ -550,7 +550,7 @@
       loadFormations();
     });
 
-    /* ── Delete ── */
+    /* ———— Delete ———— */
     function openDelete(id, name) {
       deleteTargetId = id;
       document.getElementById('delete-name').textContent = name;
@@ -566,7 +566,7 @@
       loadFormations();
     });
 
-    /* ── Close modals ── */
+    /* ———— Close modals ———— */
     ['modal-close','cancel-btn'].forEach(id => {
       document.getElementById(id).addEventListener('click', () => {
         document.getElementById('modal-overlay').classList.remove('active');
@@ -586,7 +586,7 @@
       document.getElementById('sidebar').classList.toggle('open');
     });
 
-    /* ── Init ── */
+    /* ———— Init ———— */
     checkAuth().then(ok => { if (ok) loadFormations(); });
   </script>
 </body>

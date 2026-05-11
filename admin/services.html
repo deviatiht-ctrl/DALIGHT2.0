@@ -149,7 +149,7 @@
             <h3 class="card-title">Gestion des catégories</h3>
             <p class="card-subtitle">Créez, modifiez ou supprimez les types de services</p>
           </div>
-          <span id="cat-toggle-icon" style="font-size:1.2rem;transition:.25s;">▼</span>
+          <span id="cat-toggle-icon" style="font-size:1.2rem;transition:.25s;">——</span>
         </div>
         <div id="cat-body" style="display:none;padding:0 1.5rem 1.5rem;">
           <div style="display:flex;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap;align-items:flex-end;">
@@ -186,15 +186,15 @@
         <div class="card-header" style="cursor:pointer;" onclick="toggleHeadSpaPricing()">
           <div>
             <h3 class="card-title">Prix Head Spa par Type de Cheveux</h3>
-            <p class="card-subtitle">Ajoutez, modifiez ou supprimez n'importe quel type — contrôle total</p>
+            <p class="card-subtitle">Ajoutez, modifiez ou supprimez n'importe quel type — contrôle total</p>
           </div>
-          <span id="headspa-toggle-icon" style="font-size:1.2rem;transition:.25s;">▼</span>
+          <span id="headspa-toggle-icon" style="font-size:1.2rem;transition:.25s;">——</span>
         </div>
         <div id="headspa-pricing-body" style="display:none;padding:0 1.5rem 1.5rem;">
 
           <!-- Formulaire Ajouter / Modifier -->
           <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:1rem;margin-bottom:1.25rem;">
-            <div style="font-size:.8rem;font-weight:600;margin-bottom:.75rem;color:rgba(255,255,255,.6);" id="headspa-form-title">➕ Ajouter un type de cheveux</div>
+            <div style="font-size:.8rem;font-weight:600;margin-bottom:.75rem;color:rgba(255,255,255,.6);" id="headspa-form-title">—~" Ajouter un type de cheveux</div>
             <input type="hidden" id="headspa-edit-id">
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;gap:.6rem;align-items:flex-end;flex-wrap:wrap;">
               <div class="form-group" style="margin-bottom:0;">
@@ -207,7 +207,7 @@
               </div>
               <div class="form-group" style="margin-bottom:0;">
                 <label class="form-label" style="font-size:.75rem;">Longueur</label>
-                <input class="form-input" id="headspa-length" placeholder="ex: 30–50 cm" style="font-size:.83rem;">
+                <input class="form-input" id="headspa-length" placeholder="ex: 30—50 cm" style="font-size:.83rem;">
               </div>
               <div class="form-group" style="margin-bottom:0;">
                 <label class="form-label" style="font-size:.75rem;">Prix HTG *</label>
@@ -219,7 +219,7 @@
               </div>
               <div style="display:flex;gap:.4rem;">
                 <button class="btn btn-primary btn-sm" id="headspa-update-btn" onclick="saveHeadSpaPricing()" style="white-space:nowrap;">Enregistrer</button>
-                <button class="btn btn-secondary btn-sm" onclick="resetHeadSpaForm()" title="Annuler l'édition">✕</button>
+                <button class="btn btn-secondary btn-sm" onclick="resetHeadSpaForm()" title="Annuler l'édition">—S"</button>
               </div>
             </div>
           </div>
@@ -393,7 +393,7 @@
     const modal = document.getElementById('service-modal');
     const deleteModal = document.getElementById('delete-modal');
 
-    // ── Init ──
+    // ———— Init ————
     document.addEventListener('DOMContentLoaded', async () => {
       await new Promise(r => setTimeout(r, 100));
       const session = await window.adminCore?.checkAdminAuth();
@@ -421,16 +421,16 @@
       window.currentEditingHeadSpaId = null;
     }
 
-    // ── Categories ──
+    // ———— Categories ————
     function toggleCatSection() {
       const body = document.getElementById('cat-body');
       const icon = document.getElementById('cat-toggle-icon');
       if (body.style.display === 'none') {
         body.style.display = 'block';
-        icon.textContent = '▲';
+        icon.textContent = '——';
       } else {
         body.style.display = 'none';
-        icon.textContent = '▼';
+        icon.textContent = '——';
       }
     }
 
@@ -488,8 +488,8 @@
           <td><span class="status-badge ${c.is_active ? 'completed' : 'cancelled'}">${c.is_active ? 'Actif' : 'Inactif'}</span></td>
           <td>
             <div class="action-btns">
-              <button class="btn btn-secondary btn-sm btn-icon" title="Toggle" onclick="toggleCategory('${c.id}', ${!c.is_active})">${c.is_active ? '⏸' : '▶'}</button>
-              <button class="btn btn-danger btn-sm btn-icon" title="Supprimer" onclick="deleteCategory('${c.id}')">✕</button>
+              <button class="btn btn-secondary btn-sm btn-icon" title="Toggle" onclick="toggleCategory('${c.id}', ${!c.is_active})">${c.is_active ? '⏸' : '——'}</button>
+              <button class="btn btn-danger btn-sm btn-icon" title="Supprimer" onclick="deleteCategory('${c.id}')">—S"</button>
             </div>
           </td>
         </tr>
@@ -535,7 +535,7 @@
       } catch (err) { alert('Erreur: ' + err.message); }
     }
 
-    // ── Head Spa Pricing — FULL CRUD ──
+    // ———— Head Spa Pricing — FULL CRUD ————
     let headSpaPricing = [];
 
     function toggleHeadSpaPricing() {
@@ -543,11 +543,11 @@
       const icon = document.getElementById('headspa-toggle-icon');
       if (body.style.display === 'none') {
         body.style.display = 'block';
-        icon.textContent = '▲';
+        icon.textContent = '——';
         loadHeadSpaPricing();
       } else {
         body.style.display = 'none';
-        icon.textContent = '▼';
+        icon.textContent = '——';
       }
     }
 
@@ -563,7 +563,7 @@
       } catch (err) {
         console.error('Error loading head spa pricing:', err);
         document.getElementById('headspa-pricing-table').innerHTML =
-          '<tr><td colspan="7" class="text-center text-muted" style="padding:1rem;">Table non trouvée — exécutez <code>05_head_spa_pricing.sql</code>.</td></tr>';
+          '<tr><td colspan="7" class="text-center text-muted" style="padding:1rem;">Table non trouvée — exécutez <code>05_head_spa_pricing.sql</code>.</td></tr>';
       }
     }
 
@@ -577,9 +577,9 @@
         <tr>
           <td><code style="font-size:.78rem;">${esc(p.type)}</code></td>
           <td><strong>${esc(p.label)}</strong></td>
-          <td style="font-size:.8rem;color:rgba(255,255,255,.55);">${esc(p.hair_length || '—')}</td>
+          <td style="font-size:.8rem;color:rgba(255,255,255,.55);">${esc(p.hair_length || '—')}</td>
           <td><strong>${Number(p.price_htg).toLocaleString()} Gds</strong></td>
-          <td style="font-size:.8rem;">${p.price_usd ? '$' + p.price_usd : '—'}</td>
+          <td style="font-size:.8rem;">${p.price_usd ? '$' + p.price_usd : '—'}</td>
           <td>
             <label class="toggle-switch">
               <input type="checkbox" ${p.is_active ? 'checked' : ''} onchange="toggleHeadSpaPricingStatus('${p.id}', this.checked)">
@@ -588,8 +588,8 @@
           </td>
           <td>
             <div class="action-btns">
-              <button class="btn btn-secondary btn-sm btn-icon" title="Modifier" onclick="editHeadSpaPricing('${p.id}')">✎</button>
-              <button class="btn btn-danger btn-sm btn-icon" title="Supprimer" onclick="deleteHeadSpaPricing('${p.id}', '${esc(p.label)}')">✕</button>
+              <button class="btn btn-secondary btn-sm btn-icon" title="Modifier" onclick="editHeadSpaPricing('${p.id}')">—S}</button>
+              <button class="btn btn-danger btn-sm btn-icon" title="Supprimer" onclick="deleteHeadSpaPricing('${p.id}', '${esc(p.label)}')">—S"</button>
             </div>
           </td>
         </tr>
@@ -606,7 +606,7 @@
       document.getElementById('headspa-length').value = p.hair_length || '';
       document.getElementById('headspa-price-htg').value = p.price_htg;
       document.getElementById('headspa-price-usd').value = p.price_usd || '';
-      document.getElementById('headspa-form-title').textContent = '✎ Modifier: ' + p.label;
+      document.getElementById('headspa-form-title').textContent = '—S} Modifier: ' + p.label;
       document.getElementById('headspa-update-btn').textContent = 'Modifier';
       document.getElementById('headspa-pricing-body').scrollIntoView({ behavior: 'smooth' });
     }
@@ -619,7 +619,7 @@
       document.getElementById('headspa-length').value = '';
       document.getElementById('headspa-price-htg').value = '';
       document.getElementById('headspa-price-usd').value = '';
-      document.getElementById('headspa-form-title').textContent = '➕ Ajouter un type de cheveux';
+      document.getElementById('headspa-form-title').textContent = '—~" Ajouter un type de cheveux';
       document.getElementById('headspa-update-btn').textContent = 'Enregistrer';
     }
 
@@ -642,14 +642,14 @@
             .update({ label, hair_length: hairLen, price_htg: priceHtg, price_usd: priceUsd })
             .eq('id', editId);
           if (error) throw error;
-          window.adminCore?.showToast('Type mis à jour ✓');
+          window.adminCore?.showToast('Type mis à jour —S');
         } else {
           const nextOrder = headSpaPricing.length ? Math.max(...headSpaPricing.map(p => p.sort_order || 0)) + 1 : 1;
           const { error } = await window.supabaseClient
             .from('head_spa_pricing')
             .insert({ type, label, hair_length: hairLen, price_htg: priceHtg, price_usd: priceUsd, sort_order: nextOrder });
           if (error) throw error;
-          window.adminCore?.showToast('Type ajouté ✓');
+          window.adminCore?.showToast('Type ajouté —S');
         }
         resetHeadSpaForm();
         await loadHeadSpaPricing();
@@ -678,7 +678,7 @@
       } catch (err) { alert('Erreur: ' + err.message); }
     }
 
-    // ── CRUD ──
+    // ———— CRUD ————
     async function loadServices() {
       try {
         const { data, error } = await window.supabaseClient
@@ -725,18 +725,18 @@
               ${s.is_active ? 'Actif' : 'Inactif'}
             </span>
           </td>
-          <td>${s.is_featured ? '<span class="text-accent">★</span>' : '—'}</td>
+          <td>${s.is_featured ? '<span class="text-accent">——&</span>' : '—'}</td>
           <td>
             <div class="action-btns">
-              <button class="btn btn-secondary btn-sm btn-icon" title="Modifier" onclick="openModal('${s.id}')">✎</button>
-              <button class="btn btn-danger btn-sm btn-icon" title="Supprimer" onclick="openDelete('${s.id}')">✕</button>
+              <button class="btn btn-secondary btn-sm btn-icon" title="Modifier" onclick="openModal('${s.id}')">—S}</button>
+              <button class="btn btn-danger btn-sm btn-icon" title="Supprimer" onclick="openDelete('${s.id}')">—S"</button>
             </div>
           </td>
         </tr>
       `).join('');
     }
 
-    // ── Modal ──
+    // ———— Modal ————
     function openModal(id) {
       editingId = id || null;
       document.getElementById('modal-title').textContent = id ? 'Modifier le rituel' : 'Ajouter un rituel';
@@ -800,7 +800,7 @@
       }
     }
 
-    // ── Delete ──
+    // ———— Delete ————
     function openDelete(id) {
       deletingId = id;
       const s = allServices.find(x => x.id === id);

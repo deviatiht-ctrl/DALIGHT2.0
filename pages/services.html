@@ -34,12 +34,12 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="../css/style.css?v=3.0.0" />
-  <link rel="stylesheet" href="../css/responsive.css?v=3.0.0" />
+  <link rel="stylesheet" href="../css/style.css?v=5.0.0" />
+  <link rel="stylesheet" href="../css/responsive.css?v=5.0.0" />
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
-  <script type="module" src="../js/main.js?v=3.0.0"></script>
-  <script type="module" src="../js/chat-widget.js" defer></script>
+  <script type="module" src="../js/main.js?v=5.0.0"></script>
+  <script type="module" src="../js/chat-widget.js?v=5.0.0" defer></script>
 </head>
 
 <body data-page="services">
@@ -64,6 +64,7 @@
         <a href="./services.html">Réservation</a>
         <a href="./orders.html">Mes réservations</a>
         <a href="./follow.html">Suivre</a>
+        <a href="./login.html" class="mobile-auth-link" style="color:var(--gold-500);"><i data-lucide="user" style="width:16px;height:16px;display:inline-block;margin-right:4px;vertical-align:-3px;"></i> Connexion</a>
         <a href="../admin/dashboard.html" class="admin-link">Admin</a>
       </div>
       <div class="nav-cta">
@@ -395,10 +396,10 @@
       </div>
     </div>
 
-    <script type="module" src="../js/main.js?v=3.0.0"></script>
+    <script type="module" src="../js/main.js?v=5.0.0"></script>
     <script type="module">
-      import { initChatWidget } from '../js/chat-widget.js';
-      import { getSupabase } from '../js/main.js';
+      import { initChatWidget } from '../js/chat-widget.js?v=5.0.0';
+      import { getSupabase } from '../js/main.js?v=5.0.0';
 
       const FALLBACK_SERVICES = [
         { name: 'Head Spa Signature', description: 'Soin complet du cuir chevelu, massage crânien et détente cervicale.', duration: '60 min', price_usd: 85, price_htg: 10000 },

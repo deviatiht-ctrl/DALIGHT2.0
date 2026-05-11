@@ -31,11 +31,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="../css/style.css?v=3.0.0" />
-    <link rel="stylesheet" href="../css/responsive.css?v=3.0.0" />
+    <link rel="stylesheet" href="../css/style.css?v=5.0.0" />
+    <link rel="stylesheet" href="../css/responsive.css?v=5.0.0" />
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
-    <script type="module" src="../js/main.js?v=3.0.0"></script>
+    <script type="module" src="../js/main.js?v=5.0.0"></script>
     <style>
       /* ── Reservation Steps System ── */
       .reservation-steps-container {
@@ -936,9 +936,9 @@
           </div>
         </a>
         <button class="nav-toggle" aria-label="Ouvrir la navigation">
-          <span></span>
-          <span></span><span></span>
-        </button>
+        <span></span>
+        <span></span><span></span>
+      </button>
         <div class="nav-links">
           <a href="../index.html">Accueil</a>
           <a href="./about.html">À propos</a>
@@ -948,6 +948,7 @@
           <a href="./orders.html">Mes réservations</a>
           <a href="./login.html"><i data-lucide="user" style="width:16px;height:16px;"></i> Connexion</a>
           
+        <a href="./login.html" class="mobile-auth-link" style="color:var(--gold-500);"><i data-lucide="user" style="width:16px;height:16px;display:inline-block;margin-right:4px;vertical-align:-3px;"></i> Connexion</a>
         <a href="../admin/dashboard.html" class="admin-link">Admin</a>
         </div>
         <div class="nav-cta">
@@ -1296,7 +1297,7 @@
     </nav>
 
     <script type="module">
-      import { initChatWidget } from '../js/chat-widget.js';
+      import { initChatWidget } from '../js/chat-widget.js?v=5.0.0';
       
       document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();

@@ -144,7 +144,7 @@
             <div style="display:flex;gap:.5rem;">
               <button class="btn btn-secondary" id="btn-preview">Aperçu</button>
               <button class="btn btn-primary" id="btn-save">Enregistrer</button>
-              <button class="btn btn-secondary" id="btn-back">← Retour</button>
+              <button class="btn btn-secondary" id="btn-back">— — Retour</button>
             </div>
           </div>
 
@@ -245,7 +245,7 @@
     let allTemplates = [];
     let currentTpl = null;
 
-    // ── Init ──
+    // ———— Init ————
     document.addEventListener('DOMContentLoaded', async () => {
       await new Promise(r => setTimeout(r, 150));
       // If adminCore not ready after 2s, show error
@@ -256,8 +256,8 @@
       if (!ready) {
         document.getElementById('templates-list').innerHTML = `
           <div class="glass-card" style="grid-column:1/-1;text-align:center;padding:2rem;">
-            <p class="text-danger">⚠️ admin-core.js non chargé. Vérifiez la console.</p>
-            <button class="btn btn-primary" style="margin-top:1rem;" onclick="location.reload()">🔄 Recharger</button>
+            <p class="text-danger">—a—️ admin-core.js non chargé. Vérifiez la console.</p>
+            <button class="btn btn-primary" style="margin-top:1rem;" onclick="location.reload()">—x Recharger</button>
           </div>`;
         return;
       }
@@ -288,7 +288,7 @@
       document.head.appendChild(style);
     }
 
-    // ── Load ──
+    // ———— Load ————
     async function loadTemplates() {
       const list = document.getElementById('templates-list');
       try {
@@ -312,14 +312,14 @@
         const isTableMissing = msg.includes('does not exist') || msg.includes('relation') || msg.includes('42P01');
         list.innerHTML = `
           <div class="glass-card" style="grid-column:1/-1;text-align:center;padding:2rem;">
-            <p class="text-danger" style="margin-bottom:.75rem;">⚠️ ${esc(msg)}</p>
+            <p class="text-danger" style="margin-bottom:.75rem;">—a—️ ${esc(msg)}</p>
             ${isTableMissing ? `
               <p class="text-muted">La table <code>email_templates</code> n'existe pas encore.</p>
               <p class="text-muted">Exécutez le fichier <code>email_templates.sql</code> dans le <strong>SQL Editor</strong> de Supabase, puis rechargez cette page.</p>
             ` : `
               <p class="text-muted">Vérifiez que <code>email_templates.sql</code> a été exécuté dans Supabase.</p>
             `}
-            <button class="btn btn-primary" style="margin-top:1rem;" onclick="location.reload()">🔄 Recharger</button>
+            <button class="btn btn-primary" style="margin-top:1rem;" onclick="location.reload()">—x Recharger</button>
           </div>`;
       }
     }
@@ -329,13 +329,13 @@
       if (allTemplates.length === 0) {
         list.innerHTML = `
           <div class="glass-card" style="grid-column:1/-1;text-align:center;padding:2.5rem;">
-            <div style="font-size:2.5rem;margin-bottom:1rem;">📧</div>
+            <div style="font-size:2.5rem;margin-bottom:1rem;">—x—</div>
             <h3 class="card-title" style="margin-bottom:.5rem;">Aucun template trouvé</h3>
             <p class="text-muted" style="margin-bottom:1.25rem;">
               La table <code>email_templates</code> est vide.<br>
-              Allez dans <strong>Supabase → SQL Editor</strong> et exécutez le fichier <code>email_templates.sql</code>.
+              Allez dans <strong>Supabase —  SQL Editor</strong> et exécutez le fichier <code>email_templates.sql</code>.
             </p>
-            <button class="btn btn-primary" onclick="location.reload()">🔄 Recharger après exécution SQL</button>
+            <button class="btn btn-primary" onclick="location.reload()">—x Recharger après exécution SQL</button>
           </div>`;
         return;
       }
@@ -349,7 +349,7 @@
       `).join('');
     }
 
-    // ── Editor ──
+    // ———— Editor ————
     function openEditor(id) {
       currentTpl = allTemplates.find(t => t.id === id);
       if (!currentTpl) return;
@@ -382,7 +382,7 @@
       currentTpl = null;
     }
 
-    // ── Save ──
+    // ———— Save ————
     async function saveTemplate() {
       const id = document.getElementById('tpl-id').value;
       const payload = {
@@ -415,7 +415,7 @@
       }
     }
 
-    // ── Preview ──
+    // ———— Preview ————
     function showPreview() {
       const card = document.getElementById('preview-card');
       card.style.display = 'block';
@@ -442,7 +442,7 @@
         .replace(/\{\{service\}\}/g, 'Head Spa Signature')
         .replace(/\{\{date\}\}/g, 'samedi 19 avril 2025')
         .replace(/\{\{time\}\}/g, '14:00')
-        .replace(/\{\{location\}\}/g, 'DALIGHT — Delmas 65')
+        .replace(/\{\{location\}\}/g, 'DALIGHT — Delmas 65')
         .replace(/\{\{notes\}\}/g, 'Cheveux secs, besoin hydratation')
         .replace(/\{\{order_number\}\}/g, 'ORD-20250419-001')
         .replace(/\{\{year\}\}/g, new Date().getFullYear().toString())
@@ -491,9 +491,9 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;line-height:1.6;col
   ${bodyHtml}
   <div class="divider"></div>
   <div class="contact-box">
-    <div class="contact-item">📞 <strong>+509 48 48 12 25</strong></div>
-    <div class="contact-item">📍 <strong>Delmas 65, Faustin Premier Durandise #10</strong></div>
-    <div class="contact-item">📧 <strong>laurorejeanclarens0@gmail.com</strong></div>
+    <div class="contact-item">—x~ <strong>+509 48 48 12 25</strong></div>
+    <div class="contact-item">—x— <strong>Delmas 65, Faustin Premier Durandise #10</strong></div>
+    <div class="contact-item">—x— <strong>laurorejeanclarens0@gmail.com</strong></div>
   </div>
 </div>
 <div class="footer">

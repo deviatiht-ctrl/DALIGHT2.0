@@ -94,16 +94,16 @@
 </head>
 <body>
     <div class="container">
-        <h1>🧪 Quick Login Test</h1>
+        <h1>ðŸ§ª Quick Login Test</h1>
         <div class="warning">
-            ⚠️ <strong>Important:</strong> This test bypasses Service Worker to isolate the issue.
+            âš ï¸ <strong>Important:</strong> This test bypasses Service Worker to isolate the issue.
         </div>
         
         <button onclick="unregisterSW()" style="background: #ffc107; color: #000;">
-            🗑️ Unregister Service Worker
+            ðŸ—‘ï¸ Unregister Service Worker
         </button>
         <button onclick="clearAllCache()">
-            🧹 Clear All Cache
+            ðŸ§¹ Clear All Cache
         </button>
         
         <hr style="margin: 2rem 0; border: none; border-top: 2px solid #eee;">
@@ -117,11 +117,11 @@
         
         <div class="form-group">
             <label for="password">Password:</label>
-            <input type="password" id="password" placeholder="••••••••">
+            <input type="password" id="password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
         </div>
         
         <button onclick="testLogin()" class="success">
-            🔐 Test Login
+            ðŸ” Test Login
         </button>
         
         <div id="status" class="status info" style="display: none;"></div>
@@ -162,7 +162,7 @@
                 const registrations = await navigator.serviceWorker.getRegistrations();
                 
                 if (registrations.length === 0) {
-                    showStatus('✅ No Service Workers found', 'success');
+                    showStatus('âœ… No Service Workers found', 'success');
                     log('No Service Workers to unregister', 'success');
                     return;
                 }
@@ -172,10 +172,10 @@
                     log(`Unregistered: ${registration.scope}`, 'success');
                 }
                 
-                showStatus(`✅ Unregistered ${registrations.length} Service Worker(s)`, 'success');
+                showStatus(`âœ… Unregistered ${registrations.length} Service Worker(s)`, 'success');
                 log('All Service Workers unregistered!', 'success');
             } else {
-                showStatus('❌ Service Workers not supported', 'error');
+                showStatus('âŒ Service Workers not supported', 'error');
             }
         }
         
@@ -188,9 +188,9 @@
                     await caches.delete(cacheName);
                     log(`Deleted cache: ${cacheName}`, 'success');
                 }
-                showStatus(`✅ Cleared ${cacheNames.length} cache(s)`, 'success');
+                showStatus(`âœ… Cleared ${cacheNames.length} cache(s)`, 'success');
             } else {
-                showStatus('❌ Cache API not available', 'error');
+                showStatus('âŒ Cache API not available', 'error');
             }
             
             // Also clear localStorage
@@ -204,28 +204,28 @@
             const password = document.getElementById('password').value;
             
             if (!email || !password) {
-                showStatus('❌ Please enter email and password', 'error');
+                showStatus('âŒ Please enter email and password', 'error');
                 return;
             }
             
             log('=== Starting Login Test ===', 'info');
-            showStatus('⏳ Initializing...', 'info');
+            showStatus('â³ Initializing...', 'info');
             
             // Check if Supabase loaded
             if (typeof window.supabase === 'undefined') {
-                showStatus('❌ Supabase CDN not loaded!', 'error');
+                showStatus('âŒ Supabase CDN not loaded!', 'error');
                 log('Supabase CDN failed to load', 'error');
                 return;
             }
             
-            log('✅ Supabase CDN loaded', 'success');
+            log('âœ… Supabase CDN loaded', 'success');
             
             // Create client
             try {
                 supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
-                log('✅ Supabase client created', 'success');
+                log('âœ… Supabase client created', 'success');
             } catch (error) {
-                showStatus(`❌ Failed to create client: ${error.message}`, 'error');
+                showStatus(`âŒ Failed to create client: ${error.message}`, 'error');
                 log(`Client creation error: ${error.message}`, 'error');
                 return;
             }
@@ -238,14 +238,14 @@
                 if (error) {
                     log(`Connection test error: ${error.message}`, 'error');
                 } else {
-                    log('✅ Connection test passed', 'success');
+                    log('âœ… Connection test passed', 'success');
                 }
             } catch (error) {
                 log(`Connection test failed: ${error.message}`, 'error');
             }
             
             // Attempt login
-            showStatus('⏳ Attempting login...', 'info');
+            showStatus('â³ Attempting login...', 'info');
             log(`Attempting login for: ${email}`, 'info');
             
             try {
@@ -259,38 +259,38 @@
                 log(`Login request took: ${duration}ms`, 'info');
                 
                 if (error) {
-                    showStatus(`❌ Login failed: ${error.message}`, 'error');
+                    showStatus(`âŒ Login failed: ${error.message}`, 'error');
                     log(`Login error: ${error.message}`, 'error');
                     return;
                 }
                 
-                log('✅ Login successful!', 'success');
+                log('âœ… Login successful!', 'success');
                 log(`User: ${data.user?.email}`, 'success');
                 log(`Session created: ${data.session ? 'Yes' : 'No'}`, 'success');
                 
                 // Verify session
-                showStatus('⏳ Verifying session...', 'info');
+                showStatus('â³ Verifying session...', 'info');
                 log('Verifying session persists...', 'info');
                 
                 const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
                 
                 if (sessionError) {
-                    showStatus(`❌ Session verification failed: ${sessionError.message}`, 'error');
+                    showStatus(`âŒ Session verification failed: ${sessionError.message}`, 'error');
                     log(`Session error: ${sessionError.message}`, 'error');
                     return;
                 }
                 
                 if (sessionData.session) {
-                    showStatus(`✅ SUCCESS! Login working perfectly!\nUser: ${sessionData.session.user?.email}\nSession: Active`, 'success');
-                    log('✅ Session verified successfully!', 'success');
+                    showStatus(`âœ… SUCCESS! Login working perfectly!\nUser: ${sessionData.session.user?.email}\nSession: Active`, 'success');
+                    log('âœ… Session verified successfully!', 'success');
                     log('You can now use the main site - login should work!', 'success');
                 } else {
-                    showStatus('❌ Session not saved after login!', 'error');
+                    showStatus('âŒ Session not saved after login!', 'error');
                     log('ERROR: Session not persisted after login', 'error');
                 }
                 
             } catch (error) {
-                showStatus(`❌ Unexpected error: ${error.message}`, 'error');
+                showStatus(`âŒ Unexpected error: ${error.message}`, 'error');
                 log(`Unexpected error: ${error.message}`, 'error');
                 log(`Full error: ${JSON.stringify(error)}`, 'error');
             }

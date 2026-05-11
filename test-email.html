@@ -56,7 +56,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>📧 Test Email Backend</h1>
+        <h1>ðŸ“§ Test Email Backend</h1>
         <p>Klike sou bouton yo pou teste Edge Function an:</p>
         
         <button onclick="testEdgeFunctionDirect()">1. Test Edge Function Direct</button>
@@ -89,7 +89,7 @@
         }
         
         async function testEdgeFunctionDirect() {
-            log('\n🔵 Testing Edge Function (direct fetch)...');
+            log('\nðŸ”µ Testing Edge Function (direct fetch)...');
             
             try {
                 const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
@@ -100,7 +100,7 @@
                     },
                     body: JSON.stringify({
                         to: 'cvisualagency@gmail.com',
-                        subject: '🧪 Test Email - Direct',
+                        subject: 'ðŸ§ª Test Email - Direct',
                         html: '<h1>Test Email</h1><p>This is a test email from Edge Function.</p>',
                         isAdmin: false
                     })
@@ -112,23 +112,23 @@
                 log(`Response: ${JSON.stringify(data, null, 2)}`);
                 
                 if (response.ok) {
-                    log('✅ Email sent successfully!', 'success');
+                    log('âœ… Email sent successfully!', 'success');
                 } else {
-                    log(`❌ Error: ${data.error || 'Unknown error'}`, 'error');
+                    log(`âŒ Error: ${data.error || 'Unknown error'}`, 'error');
                 }
             } catch (error) {
-                log(`❌ Error: ${error.message}`, 'error');
+                log(`âŒ Error: ${error.message}`, 'error');
             }
         }
         
         async function testWithSupabase() {
-            log('\n🔵 Testing with Supabase Client...');
+            log('\nðŸ”µ Testing with Supabase Client...');
             
             try {
                 if (!supabase) {
                     log('Initializing Supabase client...');
                     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    log('✅ Supabase client initialized');
+                    log('âœ… Supabase client initialized');
                 }
                 
                 log('Invoking send-email function...');
@@ -136,27 +136,27 @@
                 const { data, error } = await supabase.functions.invoke('send-email', {
                     body: {
                         to: 'cvisualagency@gmail.com',
-                        subject: '🧪 Test Email - Supabase Client',
+                        subject: 'ðŸ§ª Test Email - Supabase Client',
                         html: '<h1>Test Email</h1><p>This is a test email from Supabase Edge Function.</p>',
                         isAdmin: false
                     }
                 });
                 
                 if (error) {
-                    log(`❌ Error: ${error.message}`, 'error');
+                    log(`âŒ Error: ${error.message}`, 'error');
                     log(`Error details: ${JSON.stringify(error, null, 2)}`, 'error');
                 } else {
-                    log(`✅ Response: ${JSON.stringify(data, null, 2)}`, 'success');
-                    log('✅ Email sent successfully!', 'success');
+                    log(`âœ… Response: ${JSON.stringify(data, null, 2)}`, 'success');
+                    log('âœ… Email sent successfully!', 'success');
                 }
             } catch (error) {
-                log(`❌ Error: ${error.message}`, 'error');
+                log(`âŒ Error: ${error.message}`, 'error');
                 log(`Stack: ${error.stack}`, 'error');
             }
         }
         
         // Initialize
-        log('🚀 Email Test Page Ready');
+        log('ðŸš€ Email Test Page Ready');
         log('Click a button to test the Edge Function');
     </script>
 </body>

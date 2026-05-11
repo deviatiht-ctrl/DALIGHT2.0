@@ -1,6 +1,6 @@
 // Magic function for compressing images and reducing their size by 95%
 
-import { getSupabase } from './main.js?v=3.0.0';
+import { getSupabase } from './main.js?v=5.0.0';
 
 const supabase = getSupabase();
 

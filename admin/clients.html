@@ -138,12 +138,12 @@
       const phone = '+509 4747-7221';
       const templates = {
         welcome: {
-          subject: 'Bienvenue chez DALIGHT Spa ✨',
-          body: `Bonjour ${name},\n\nBienvenue dans la famille DALIGHT ! Nous sommes ravis de vous compter parmi nos clients.\n\nDécouvrez Nos Services signature : Head Spa, massages thérapeutiques, soins capillaires personnalisés et plus encore.\n\n📅 Réservez en ligne : https://dalightspa.com\n📞 Ou appelez-nous : ${phone}\n\nÀ très bientôt,\nL'équipe DALIGHT`
+          subject: 'Bienvenue chez DALIGHT Spa —S—',
+          body: `Bonjour ${name},\n\nBienvenue dans la famille DALIGHT ! Nous sommes ravis de vous compter parmi nos clients.\n\nDécouvrez Nos Services signature : Head Spa, massages thérapeutiques, soins capillaires personnalisés et plus encore.\n\n—x& Réservez en ligne : https://dalightspa.com\n—x~ Ou appelez-nous : ${phone}\n\nì très bientôt,\nL'équipe DALIGHT`
         },
         promo: {
-          subject: '🎁 Offre spéciale DALIGHT Spa - Pour vous !',
-          body: `Bonjour ${name},\n\nNous avons une offre spéciale rien que pour vous !\n\n[Décrivez votre offre ici]\n\nRéservez dès maintenant :\n📞 ${phone}\n📍 Delmas 65, Faustin Premier Durandise #10\n\nÀ très vite,\nL'équipe DALIGHT`
+          subject: '—x}— Offre spéciale DALIGHT Spa - Pour vous !',
+          body: `Bonjour ${name},\n\nNous avons une offre spéciale rien que pour vous !\n\n[Décrivez votre offre ici]\n\nRéservez dès maintenant :\n—x~ ${phone}\n—x— Delmas 65, Faustin Premier Durandise #10\n\nì très vite,\nL'équipe DALIGHT`
         },
         custom: {
           subject: 'DALIGHT Spa',
@@ -233,9 +233,9 @@
           <td>${formatDate(c.created_at)}</td>
           <td>
             <div style="display:flex;gap:0.3rem;flex-wrap:wrap;">
-              <button class="btn btn-secondary btn-sm" onclick="sendClientEmail('${c.email}','${(c.full_name||'').replace(/'/g,"\\'")}','welcome')" title="Bienvenue">👋</button>
-              <button class="btn btn-secondary btn-sm" onclick="sendClientEmail('${c.email}','${(c.full_name||'').replace(/'/g,"\\'")}','promo')" title="Promo">🎁</button>
-              <button class="btn btn-secondary btn-sm" onclick="sendClientEmail('${c.email}','${(c.full_name||'').replace(/'/g,"\\'")}','custom')" title="Écrire">✏️</button>
+              <button class="btn btn-secondary btn-sm" onclick="sendClientEmail('${c.email}','${(c.full_name||'').replace(/'/g,"\\'")}','welcome')" title="Bienvenue">—x9</button>
+              <button class="btn btn-secondary btn-sm" onclick="sendClientEmail('${c.email}','${(c.full_name||'').replace(/'/g,"\\'")}','promo')" title="Promo">—x}—</button>
+              <button class="btn btn-secondary btn-sm" onclick="sendClientEmail('${c.email}','${(c.full_name||'').replace(/'/g,"\\'")}','custom')" title="—0crire">—S—️</button>
             </div>
           </td>
         </tr>

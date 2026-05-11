@@ -1,4 +1,4 @@
-import { createOptionsForServices, getConfig, getSupabase, servicesCatalog } from './main.js?v=3.0.0';
+import { createOptionsForServices, getConfig, getSupabase, servicesCatalog } from './main.js?v=5.0.0';
 
 const supabase = getSupabase();
 const config = getConfig();

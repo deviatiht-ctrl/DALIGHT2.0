@@ -68,7 +68,7 @@
         <!-- General Settings -->
         <div class="glass-card">
           <div class="card-header">
-            <h3 class="card-title">⚙️ Paramètres généraux</h3>
+            <h3 class="card-title">—a"️ Paramètres généraux</h3>
           </div>
           <form id="general-form">
             <div class="form-group">
@@ -94,7 +94,7 @@
         <!-- Admin Emails -->
         <div class="glass-card">
           <div class="card-header">
-            <h3 class="card-title">👤 Administrateurs</h3>
+            <h3 class="card-title">—x— Administrateurs</h3>
           </div>
           <p class="text-muted mb-2">Les emails suivants ont accès au panel admin:</p>
           <div class="admin-emails-list" id="admin-emails-list">
@@ -113,7 +113,7 @@
         <!-- Notifications -->
         <div class="glass-card">
           <div class="card-header">
-            <h3 class="card-title">🔔 Notifications</h3>
+            <h3 class="card-title">—x Notifications</h3>
           </div>
           <div class="form-group">
             <label class="d-flex align-center gap-2" style="cursor: pointer;">
@@ -138,7 +138,7 @@
         <!-- Horaires -->
         <div class="glass-card">
           <div class="card-header">
-            <h3 class="card-title">🕐 Horaires d'ouverture</h3>
+            <h3 class="card-title">—x"— Horaires d'ouverture</h3>
           </div>
           <div class="schedule-grid" style="display: grid; gap: 0.5rem;">
             <div class="d-flex justify-between align-center" style="padding: 0.5rem 0; border-bottom: 1px solid var(--admin-border);">
@@ -162,7 +162,7 @@
         <!-- Database -->
         <div class="glass-card">
           <div class="card-header">
-            <h3 class="card-title">🗄️ Base de données</h3>
+            <h3 class="card-title">—x️ Base de données</h3>
           </div>
           <div class="d-flex gap-1 mb-2">
             <div class="stat-icon blue" style="width: 40px; height: 40px;">
@@ -181,14 +181,14 @@
 
       </div>
 
-      <!-- Payment Methods — full width -->
+      <!-- Payment Methods — full width -->
       <div class="glass-card" style="margin-top:0;grid-column:1/-1;">
         <div class="card-header">
-          <div><h3 class="card-title">💳 Modes de Paiement</h3><p class="card-subtitle">Gérez les méthodes affichées au client lors du checkout et des réservations</p></div>
+          <div><h3 class="card-title">—x— Modes de Paiement</h3><p class="card-subtitle">Gérez les méthodes affichées au client lors du checkout et des réservations</p></div>
         </div>
         <!-- Form add/edit -->
         <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:1rem;margin-bottom:1.25rem;">
-          <div style="font-size:.8rem;font-weight:600;margin-bottom:.75rem;color:rgba(255,255,255,.6);" id="pm-form-title">➕ Ajouter un mode de paiement</div>
+          <div style="font-size:.8rem;font-weight:600;margin-bottom:.75rem;color:rgba(255,255,255,.6);" id="pm-form-title">—~" Ajouter un mode de paiement</div>
           <input type="hidden" id="pm-edit-id">
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;">
             <div class="form-group" style="margin-bottom:0;">
@@ -205,10 +205,10 @@
             </div>
             <div class="form-group" style="margin-bottom:0;grid-column:1/-1;">
               <label class="form-label" style="font-size:.75rem;">Instructions (étapes pour payer)</label>
-              <textarea class="form-input" id="pm-instructions" rows="2" placeholder="Ouvrez l'app → Transfert → Screenshot..." style="font-size:.83rem;"></textarea>
+              <textarea class="form-input" id="pm-instructions" rows="2" placeholder="Ouvrez l'app —  Transfert —  Screenshot..." style="font-size:.83rem;"></textarea>
             </div>
             <div class="form-group" style="margin-bottom:0;">
-              <label class="form-label" style="font-size:.75rem;">Logo — URL ou upload</label>
+              <label class="form-label" style="font-size:.75rem;">Logo — URL ou upload</label>
               <input class="form-input" id="pm-logo-url" placeholder="https://... ou laisser vide" style="font-size:.83rem;">
               <input type="file" id="pm-logo-file" accept="image/*" style="margin-top:.4rem;font-size:.75rem;" onchange="previewPmLogo(this)">
               <img id="pm-logo-preview" src="" style="height:36px;margin-top:.4rem;border-radius:6px;display:none;object-fit:contain;">
@@ -223,7 +223,7 @@
             </div>
             <div style="display:flex;gap:.4rem;align-items:flex-end;">
               <button class="btn btn-primary btn-sm" onclick="savePm()" id="pm-save-btn">Enregistrer</button>
-              <button class="btn btn-secondary btn-sm" onclick="resetPmForm()">✕</button>
+              <button class="btn btn-secondary btn-sm" onclick="resetPmForm()">—S"</button>
             </div>
           </div>
         </div>
@@ -241,9 +241,9 @@
         <!-- Danger Zone -->
         <div class="glass-card" style="border-color: rgba(248, 113, 113, 0.3);">
           <div class="card-header">
-            <h3 class="card-title text-danger">⚠️ Zone dangereuse</h3>
+            <h3 class="card-title text-danger">—a—️ Zone dangereuse</h3>
           </div>
-          <p class="text-muted mb-2">Actions irréversibles. À utiliser avec précaution.</p>
+          <p class="text-muted mb-2">Actions irréversibles. ì utiliser avec précaution.</p>
           <div class="d-flex gap-1" style="flex-wrap: wrap;">
             <button class="btn btn-danger btn-sm" onclick="clearOldReservations()">
               Supprimer anciennes réservations
@@ -279,7 +279,7 @@
       });
     }
 
-    // ── Payment Methods CRUD ──
+    // ———— Payment Methods CRUD ————
     const sb = () => window.supabaseClient || window.adminCore?.supabase;
 
     async function loadPaymentMethods() {
@@ -291,7 +291,7 @@
         renderPmTable();
       } catch (err) {
         if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted" style="padding:1rem;">
-          Table non trouvée — exécutez <code>06_payment_methods.sql</code></td></tr>`;
+          Table non trouvée — exécutez <code>06_payment_methods.sql</code></td></tr>`;
       }
     }
 
@@ -303,16 +303,16 @@
       }
       tbody.innerHTML = pmList.map(p => `
         <tr>
-          <td>${p.logo_url ? `<img src="${p.logo_url}" style="height:32px;border-radius:4px;object-fit:contain;">` : '<span style="font-size:1.4rem;">💳</span>'}</td>
+          <td>${p.logo_url ? `<img src="${p.logo_url}" style="height:32px;border-radius:4px;object-fit:contain;">` : '<span style="font-size:1.4rem;">—x—</span>'}</td>
           <td><strong>${esc(p.name)}</strong><br><code style="font-size:.72rem;">${esc(p.slug)}</code></td>
-          <td style="font-size:.82rem;">${esc(p.account_name || '—')}</td>
-          <td style="font-size:.82rem;font-family:monospace;">${esc(p.account_number || '—')}</td>
+          <td style="font-size:.82rem;">${esc(p.account_name || '—')}</td>
+          <td style="font-size:.82rem;font-family:monospace;">${esc(p.account_number || '—')}</td>
           <td><span class="status-badge ${p.requires_proof ? 'pending' : 'completed'}">${p.requires_proof ? 'Obligatoire' : 'Non'}</span></td>
           <td><label class="toggle-switch"><input type="checkbox" ${p.is_active ? 'checked' : ''} onchange="togglePm('${p.id}',this.checked)"><span class="toggle-slider"></span></label></td>
           <td>
             <div class="action-btns">
-              <button class="btn btn-secondary btn-sm btn-icon" onclick="editPm('${p.id}')">✎</button>
-              <button class="btn btn-danger btn-sm btn-icon" onclick="deletePm('${p.id}','${esc(p.name)}')">✕</button>
+              <button class="btn btn-secondary btn-sm btn-icon" onclick="editPm('${p.id}')">—S}</button>
+              <button class="btn btn-danger btn-sm btn-icon" onclick="deletePm('${p.id}','${esc(p.name)}')">—S"</button>
             </div>
           </td>
         </tr>`).join('');
@@ -331,7 +331,7 @@
       document.getElementById('pm-requires-proof').checked = p.requires_proof;
       const prev = document.getElementById('pm-logo-preview');
       if (p.logo_url) { prev.src = p.logo_url; prev.style.display = 'block'; } else { prev.style.display = 'none'; }
-      document.getElementById('pm-form-title').textContent = '✎ Modifier: ' + p.name;
+      document.getElementById('pm-form-title').textContent = '—S} Modifier: ' + p.name;
       document.getElementById('pm-save-btn').textContent = 'Modifier';
     }
 
@@ -341,7 +341,7 @@
       });
       document.getElementById('pm-requires-proof').checked = true;
       document.getElementById('pm-logo-preview').style.display = 'none';
-      document.getElementById('pm-form-title').textContent = '➕ Ajouter un mode de paiement';
+      document.getElementById('pm-form-title').textContent = '—~" Ajouter un mode de paiement';
       document.getElementById('pm-save-btn').textContent = 'Enregistrer';
       document.getElementById('pm-logo-file').value = '';
     }
@@ -389,12 +389,12 @@
         if (editId) {
           const { error } = await sb().from('payment_methods').update(payload).eq('id', editId);
           if (error) throw error;
-          window.adminCore?.showToast('Mode de paiement mis à jour ✓');
+          window.adminCore?.showToast('Mode de paiement mis à jour —S');
         } else {
           const nextOrder = pmList.length ? Math.max(...pmList.map(p => p.sort_order||0)) + 1 : 1;
           const { error } = await sb().from('payment_methods').insert({ ...payload, slug, sort_order: nextOrder });
           if (error) throw error;
-          window.adminCore?.showToast('Mode de paiement ajouté ✓');
+          window.adminCore?.showToast('Mode de paiement ajouté —S');
         }
         resetPmForm();
         await loadPaymentMethods();
@@ -406,7 +406,7 @@
       try {
         const { error } = await sb().from('payment_methods').delete().eq('id', id);
         if (error) throw error;
-        window.adminCore?.showToast('Supprimé ✓');
+        window.adminCore?.showToast('Supprimé —S');
         await loadPaymentMethods();
       } catch(err) { alert('Erreur: ' + err.message); }
     }

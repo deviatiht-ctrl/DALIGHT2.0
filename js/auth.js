@@ -1,4 +1,4 @@
-import { getSupabase } from './main.js?v=3.0.0';
+import { getSupabase } from './main.js?v=5.0.0';
 
 // Get Supabase client - but it might not be initialized yet
 let supabase = getSupabase();
