@@ -183,6 +183,10 @@ main {
   white-space: nowrap;
 }
 
+.mobile-auth-link {
+  display: none;
+}
+
 .btn:hover {
   transform: translateY(-2px);
   background: var(--marron-700);

@@ -526,45 +526,67 @@ async function detectSessionRole() {
 }
 
 function updateNavbarAuth(isLoggedIn) {
+  // 1. Mettre à jour dans nav-cta (desktop principalement)
   const navCta = document.querySelector('.nav-cta');
-  if (!navCta) return;
-  
-  // Check if auth button already exists to avoid duplicates
-  const existingAuthBtn = navCta.querySelector('.auth-btn');
-  if (existingAuthBtn) {
-    existingAuthBtn.remove(); // Remove old auth button before adding new one
-  }
-  
-  // Create the auth button HTML
-  let authHtml = '';
-  if (isLoggedIn) {
-    authHtml = `
-      <button class="btn ghost auth-btn" id="navbar-logout-btn" type="button">
-        <i data-lucide="log-out" style="width:16px;height:16px;"></i> Déconnecter
-      </button>
-    `;
-  } else {
-    authHtml = `
-      <a class="btn ghost auth-btn" href="./pages/login.html">
-        <i data-lucide="user" style="width:16px;height:16px;"></i> Connexion
-      </a>
-    `;
-  }
-  
-  // Append auth button to nav-cta (adds to existing buttons like Reserve)
-  navCta.insertAdjacentHTML('beforeend', authHtml);
-  
-  // Add logout handler if logged in
-  if (isLoggedIn) {
+  if (navCta) {
+    const existingAuthBtn = navCta.querySelector('.auth-btn');
+    if (existingAuthBtn) existingAuthBtn.remove();
+    
+    let authHtml = '';
+    if (isLoggedIn) {
+      authHtml = `
+        <button class="btn ghost auth-btn" id="navbar-logout-btn" type="button">
+          <i data-lucide="log-out" style="width:16px;height:16px;"></i> Déconnecter
+        </button>
+      `;
+    } else {
+      authHtml = `
+        <a class="btn ghost auth-btn" href="${loginPath}">
+          <i data-lucide="user" style="width:16px;height:16px;"></i> Connexion
+        </a>
+      `;
+    }
+    navCta.insertAdjacentHTML('beforeend', authHtml);
+    
     const logoutBtn = document.getElementById('navbar-logout-btn');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', async () => {
         await supabaseClient.auth.signOut();
-        window.location.href = './pages/login.html';
+        window.location.href = loginPath;
       });
     }
   }
-  
+
+  // 2. Mettre à jour dans nav-links (dropdown mobile + desktop)
+  const navLinks = document.querySelector('.nav-links');
+  if (navLinks) {
+    const existingMobileAuth = navLinks.querySelector('.mobile-auth-link');
+    if (existingMobileAuth) existingMobileAuth.remove();
+
+    let mobileAuthHtml = '';
+    if (isLoggedIn) {
+      mobileAuthHtml = `<a href="#" class="mobile-auth-link" id="mobile-logout-btn" style="color:var(--gold-500);"><i data-lucide="log-out" style="width:16px;height:16px;display:inline-block;margin-right:4px;vertical-align:-3px;"></i> Déconnexion</a>`;
+    } else {
+      mobileAuthHtml = `<a href="${loginPath}" class="mobile-auth-link" style="color:var(--gold-500);"><i data-lucide="user" style="width:16px;height:16px;display:inline-block;margin-right:4px;vertical-align:-3px;"></i> Connexion</a>`;
+    }
+
+    const adminLink = navLinks.querySelector('.admin-link');
+    if (adminLink) {
+      adminLink.insertAdjacentHTML('beforebegin', mobileAuthHtml);
+    } else {
+      navLinks.insertAdjacentHTML('beforeend', mobileAuthHtml);
+    }
+
+    const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
+    if (mobileLogoutBtn) {
+      mobileLogoutBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await supabaseClient.auth.signOut();
+        window.location.href = loginPath;
+      });
+    }
+  }
+
   // Re-init icons
   if (window.lucide) {
     lucide.createIcons();
