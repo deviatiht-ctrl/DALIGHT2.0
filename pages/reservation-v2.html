@@ -267,6 +267,16 @@
         box-shadow: 0 4px 12px rgba(74,55,40,0.2);
       }
 
+      #btn-submit {
+        background: #4A3728 !important;
+        color: #ffffff !important;
+        border: none !important;
+      }
+
+      #btn-submit:hover {
+        background: #6B4F3B !important;
+      }
+
       /* Calendar Styles - Compact & Clear */
       .calendar-container {
         background: rgba(248,245,240,0.5);
@@ -762,9 +772,8 @@
         font-weight: 500;
         color: var(--marron-800);
       }
-          flex: 1;
-        }
 
+      @media (max-width: 600px) {
       .cart-summary-box {
         padding: 1rem;
       }
@@ -791,11 +800,6 @@
         gap: 0.5rem;
       }
 
-
-        .cart-item-price {
-          font-size: 1rem;
-        }
-
       .payment-methods {
         grid-template-columns: 1fr;
       }
@@ -805,11 +809,10 @@
         gap: 0.5rem;
       }
 
-
-        .time-slot {
-          padding: 0.6rem;
-          font-size: 0.8rem;
-        }
+      .time-slot {
+        padding: 0.6rem;
+        font-size: 0.8rem;
+      }
       }
 
       /* Tablet and large phones */
@@ -1229,7 +1232,7 @@
             <!-- Upload preuve (visible seulement si requires_proof) -->
             <div class="form-group full-width" id="resv-proof-section" style="margin-top: 1.5rem;">
               <label>📸 Preuve de paiement (screenshot) <span style="color:#dc2626;" id="resv-proof-required-star">*</span></label>
-              <div class="upload-zone-v2" id="upload-zone" onclick="document.getElementById('payment-proof').click()">
+              <div class="upload-zone-v2" id="upload-zone">
                 <input type="file" id="payment-proof" name="payment_proof" accept="image/*" style="display:none;">
                 <i data-lucide="upload-cloud" style="width:48px;height:48px;color:var(--marron-400);"></i>
                 <p>Cliquez pour uploader votre screenshot</p>
