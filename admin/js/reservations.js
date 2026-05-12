@@ -196,8 +196,11 @@ window.openDetailModal = function(id) {
   const payMethodLabels = { moncash: '📱 MonCash', natcash: '📱 NatCash', bank: '🏦 Compte Bancaire' };
   const payMethodLabel = payMethodLabels[reservation.payment_method] || reservation.payment_method || 'Non spécifié';
 
-  // Payment proof(s) display
-  const proofs = Array.isArray(reservation.payment_proofs) ? reservation.payment_proofs : [];
+  // Payment proof(s) display - check both new array and old single field
+  let proofs = Array.isArray(reservation.payment_proofs) ? reservation.payment_proofs : [];
+  if (proofs.length === 0 && reservation.payment_proof_url) {
+    proofs = [reservation.payment_proof_url];
+  }
   const proofHtml = proofs.length > 0 ? `
     <div>
       <div class="text-muted mb-1">📸 Preuve(s) de paiement (${proofs.length})</div>
