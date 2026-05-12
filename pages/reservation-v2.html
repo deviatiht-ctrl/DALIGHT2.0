@@ -1549,11 +1549,41 @@ function loadCartData() {
         if (paymentCartItems) paymentCartItems.innerHTML = cartHTML;
       }
 
+      async function prefillUserInfo() {
+        const sbClient = getSupabaseClient();
+        if (!sbClient) return;
+        try {
+          const { data: { session } } = await sbClient.auth.getSession();
+          if (session?.user) {
+            const email = session.user.email;
+            const meta = session.user.user_metadata || {};
+            const firstName = meta.first_name || meta.firstName || '';
+            const lastName = meta.last_name || meta.lastName || '';
+            const phone = meta.phone || '';
+            const address = meta.address || '';
+            const emailField = document.getElementById('email');
+            const firstNameField = document.getElementById('first-name');
+            const lastNameField = document.getElementById('last-name');
+            const phoneField = document.getElementById('phone');
+            const addressField = document.getElementById('address');
+            if (emailField && !emailField.value) emailField.value = email || '';
+            if (firstNameField && !firstNameField.value) firstNameField.value = firstName || '';
+            if (lastNameField && !lastNameField.value) lastNameField.value = lastName || '';
+            if (phoneField && !phoneField.value) phoneField.value = phone || '';
+            if (addressField && !addressField.value) addressField.value = address || '';
+          }
+        } catch (e) {
+          console.warn('Failed to prefill user info:', e);
+        }
+      }
+
       function initReservationSteps() {
         // Load cart data first
         loadCartData();
         // Render cart in all sections (step 1, 4, 5)
         renderCartInAllSections();
+        // Prefill user info if logged in
+        prefillUserInfo();
         // Navigation buttons
         document.getElementById('btn-step-1-next')?.addEventListener('click', () => goToStep(2));
         document.getElementById('btn-step-2-prev')?.addEventListener('click', () => goToStep(1));
@@ -2194,6 +2224,7 @@ function loadCartData() {
           const reservationNumber = 'DL' + Date.now().toString().slice(-8);
 
           // 3. PREPARE RECORD
+          const totalAmount = cartServices.reduce((sum, s) => sum + (Number(s.price_htg) || 0), 0);
           const reservationRecord = {
             reservation_number: reservationNumber,
             user_id: user?.id || null,
@@ -2208,6 +2239,8 @@ function loadCartData() {
             payment_method: paymentMethod.value,
             payment_proof_url: proofUrl,
             deposit_amount: calcDeposit(cartServices),
+            total_amount: totalAmount,
+            payment_status: proofUrl ? 'deposit_paid' : 'pending',
             location: 'Spa',
             status: 'PENDING'
           };
