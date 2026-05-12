@@ -19,9 +19,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ============================================
 
 async function loadDashboardStats() {
-  const { fetchReservations, fetchClients } = window.adminCore;
+  const { fetchReservations, fetchClients, getSupabaseClient } = window.adminCore;
   
   try {
+    const supabase = getSupabaseClient();
+    
     // Fetch all reservations
     const reservations = await fetchReservations();
     const clients = await fetchClients();
@@ -36,7 +38,7 @@ async function loadDashboardStats() {
     // Total clients
     document.getElementById('total-clients').textContent = clients.length;
     
-    // Calculate revenue (this month)
+    // Calculate revenue (this month) from confirmed/completed reservations
     const now = new Date();
     const thisMonth = reservations.filter(r => {
       const date = new Date(r.created_at);
@@ -47,6 +49,64 @@ async function loadDashboardStats() {
     
     const revenue = thisMonth.reduce((sum, r) => sum + (parseFloat(r.total_amount_usd) || 0), 0);
     document.getElementById('total-revenue').textContent = `$${revenue.toFixed(0)}`;
+    
+    // Calculate revenue change vs last month
+    const lastMonth = reservations.filter(r => {
+      const date = new Date(r.created_at);
+      const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1);
+      return date.getMonth() === lastMonthDate.getMonth() && 
+             date.getFullYear() === lastMonthDate.getFullYear() &&
+             (r.status === 'COMPLETED' || r.status === 'CONFIRMED');
+    });
+    
+    const lastMonthRevenue = lastMonth.reduce((sum, r) => sum + (parseFloat(r.total_amount_usd) || 0), 0);
+    const revenueChange = lastMonthRevenue > 0 
+      ? ((revenue - lastMonthRevenue) / lastMonthRevenue * 100).toFixed(0)
+      : 0;
+    
+    const revenueChangeEl = document.getElementById('revenue-change');
+    if (revenueChangeEl) {
+      const isPositive = revenueChange >= 0;
+      revenueChangeEl.className = `stat-change ${isPositive ? 'positive' : 'negative'}`;
+      revenueChangeEl.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="14" height="14">
+          <path stroke-linecap="round" stroke-linejoin="round" d="${isPositive ? 'M5 10l7-7m0 0l7 7m-7-7v18' : 'M19 14l-7 7m0 0l-7-7m7 7V3'}"/>
+        </svg>
+        ${isPositive ? '+' : ''}${revenueChange}% vs dernier mois
+      `;
+    }
+    
+    // Visitors tracking (unique sessions this month)
+    const { count: visitorCount } = await supabase
+      .from('page_views')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', new Date(now.getFullYear(), now.getMonth(), 1).toISOString())
+      .lte('created_at', new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString());
+    
+    document.getElementById('total-visitors').textContent = visitorCount || 0;
+    
+    // Visitors change vs last month
+    const { count: lastMonthVisitorCount } = await supabase
+      .from('page_views')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString())
+      .lte('created_at', new Date(now.getFullYear(), now.getMonth(), 0).toISOString());
+    
+    const visitorChange = lastMonthVisitorCount > 0 
+      ? ((visitorCount - lastMonthVisitorCount) / lastMonthVisitorCount * 100).toFixed(0)
+      : 0;
+    
+    const visitorChangeEl = document.getElementById('visitors-change');
+    if (visitorChangeEl) {
+      const isPositive = visitorChange >= 0;
+      visitorChangeEl.className = `stat-change ${isPositive ? 'positive' : 'negative'}`;
+      visitorChangeEl.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="14" height="14">
+          <path stroke-linecap="round" stroke-linejoin="round" d="${isPositive ? 'M5 10l7-7m0 0l7 7m-7-7v18' : 'M19 14l-7 7m0 0l-7-7m7 7V3'}"/>
+        </svg>
+        ${isPositive ? '+' : ''}${visitorChange}% vs dernier mois
+      `;
+    }
     
   } catch (err) {
     console.error('Error loading stats:', err);

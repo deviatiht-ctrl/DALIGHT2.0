@@ -196,26 +196,33 @@ window.openDetailModal = function(id) {
   const payMethodLabels = { moncash: '📱 MonCash', natcash: '📱 NatCash', bank: '🏦 Compte Bancaire' };
   const payMethodLabel = payMethodLabels[reservation.payment_method] || reservation.payment_method || 'Non spécifié';
 
-  // Payment proof image
-  const proofHtml = reservation.payment_proof_url
-    ? `<div>
-         <div class="text-muted mb-1">📸 Preuve de paiement</div>
-         <div style="background:var(--admin-card);padding:0.75rem;border-radius:8px;text-align:center;">
-           <img src="${reservation.payment_proof_url}" alt="Preuve de paiement" 
-                style="max-width:100%;max-height:280px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);" 
-                onclick="window.open('${reservation.payment_proof_url}','_blank')">
-           <div style="margin-top:0.5rem;">
-             <a href="${reservation.payment_proof_url}" target="_blank" class="btn btn-secondary btn-sm" style="font-size:0.75rem;">🔍 Voir en grand</a>
-           </div>
-         </div>
-       </div>`
-    : `<div>
-         <div class="text-muted mb-1">📸 Preuve de paiement</div>
-         <div style="background:rgba(220,53,69,0.1);padding:0.75rem;border-radius:8px;color:#dc3545;font-size:0.85rem;">
-           ⚠️ Aucune preuve de paiement uploadée
-         </div>
-       </div>`;
-  
+  // Payment proof(s) display
+  const proofs = Array.isArray(reservation.payment_proofs) ? reservation.payment_proofs : [];
+  const proofHtml = proofs.length > 0 ? `
+    <div>
+      <div class="text-muted mb-1">📸 Preuve(s) de paiement (${proofs.length})</div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem;">
+        ${proofs.map((proof, index) => `
+          <div style="position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;">
+            <img src="${proof}" alt="Preuve de paiement ${index + 1}" 
+                 style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;"
+                 onclick="window.open('${proof}', '_blank')">
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: white; padding: 0.25rem; font-size: 0.75rem; text-align: center;">
+              ${index === 0 ? 'Acompte' : index === 1 ? 'Paiement complet' : `Preuve ${index + 1}`}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  ` : `
+    <div>
+      <div class="text-muted mb-1">📸 Preuve de paiement</div>
+      <div style="background:rgba(220,53,69,0.1);padding:0.75rem;border-radius:8px;color:#dc3545;font-size:0.85rem;">
+        ⚠️ Aucune preuve de paiement uploadée
+      </div>
+    </div>
+  `;
+
   content.innerHTML = `
     <div style="display: grid; gap: 1rem;">
       <div class="d-flex justify-between align-center">
