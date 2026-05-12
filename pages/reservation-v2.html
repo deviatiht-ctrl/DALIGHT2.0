@@ -35,6 +35,7 @@
     <link rel="stylesheet" href="../css/responsive.css?v=5.0.0" />
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
+    <script src="../js/toast.js?v=5.0.0"></script>
     <script type="module" src="../js/main.js?v=5.0.0"></script>
     <style>
       /* ── Reservation Steps System ── */
@@ -1219,7 +1220,7 @@
                   <div class="payment-choice-card" style="padding: 1rem; border: 2px solid rgba(74,55,40,0.2); border-radius: 10px; text-align: center; transition: all 0.2s; background: #fff;">
                     <div style="font-size: 1.1rem; font-weight: 600; color: #4A3728; margin-bottom: 0.5rem;">Acompte</div>
                     <div style="font-size: 0.9rem; color: #7a7068;">Payez l'avance maintenant</div>
-                    <div style="font-size: 1.2rem; font-weight: 700; color: #D4AF37; margin-top: 0.5rem;" id="deposit-amount-display">1 000 HTG</div>
+                    <div style="font-size: 1.2rem; font-weight: 700; color: #D4AF37; margin-top: 0.5rem;" id="choice-deposit-amount">1 000 HTG</div>
                   </div>
                 </label>
                 <label class="payment-choice-option" style="flex: 1; min-width: 200px; cursor: pointer;">
@@ -1227,7 +1228,7 @@
                   <div class="payment-choice-card" style="padding: 1rem; border: 2px solid rgba(74,55,40,0.2); border-radius: 10px; text-align: center; transition: all 0.2s; background: #fff;">
                     <div style="font-size: 1.1rem; font-weight: 600; color: #4A3728; margin-bottom: 0.5rem;">Paiement complet</div>
                     <div style="font-size: 0.9rem; color: #7a7068;">Payez tout maintenant</div>
-                    <div style="font-size: 1.2rem; font-weight: 700; color: #D4AF37; margin-top: 0.5rem;" id="full-amount-display">— HTG</div>
+                    <div style="font-size: 1.2rem; font-weight: 700; color: #D4AF37; margin-top: 0.5rem;" id="choice-full-amount">— HTG</div>
                   </div>
                 </label>
               </div>
@@ -1577,10 +1578,11 @@ function loadCartData() {
         // Update payment choice amounts
         const totalAmount = cartServices.reduce((sum, s) => sum + (Number(s.price_htg) || 0), 0);
         const depositAmount = calcDeposit(cartServices);
-        const depositDisplay = document.getElementById('deposit-amount-display');
-        const fullDisplay = document.getElementById('full-amount-display');
+        const depositDisplay = document.getElementById('choice-deposit-amount');
+        const fullDisplay = document.getElementById('choice-full-amount');
         if (depositDisplay) depositDisplay.textContent = `${depositAmount.toLocaleString()} HTG`;
         if (fullDisplay) fullDisplay.textContent = `${totalAmount.toLocaleString()} HTG`;
+        console.log('Payment choice amounts updated:', { depositAmount, totalAmount });
 
         // Step 5: payment
         if (paymentCartItems) paymentCartItems.innerHTML = cartHTML;
@@ -1652,8 +1654,16 @@ function loadCartData() {
             console.log('Payment choice:', choice, 'Deposit:', depositAmount, 'Total:', totalAmount);
             if (choice === 'deposit') {
               document.getElementById('payment-heading-display').textContent = `Méthode de paiement de l'avance (${depositAmount.toLocaleString()} HTG)`;
+              // Show toast notification
+              if (window.toast) {
+                toast.info('Acompte sélectionné', `Vous paierez ${depositAmount.toLocaleString()} HTG maintenant, le solde plus tard.`);
+              }
             } else {
               document.getElementById('payment-heading-display').textContent = `Méthode de paiement (${totalAmount.toLocaleString()} HTG)`;
+              // Show toast notification
+              if (window.toast) {
+                toast.success('Paiement complet sélectionné', `Vous paierez le montant total de ${totalAmount.toLocaleString()} HTG maintenant.`);
+              }
             }
           });
         });
