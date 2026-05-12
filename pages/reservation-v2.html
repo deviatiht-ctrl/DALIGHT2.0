@@ -1649,6 +1649,7 @@ function loadCartData() {
             // Update payment heading
             const totalAmount = cartServices.reduce((sum, s) => sum + (Number(s.price_htg) || 0), 0);
             const depositAmount = calcDeposit(cartServices);
+            console.log('Payment choice:', choice, 'Deposit:', depositAmount, 'Total:', totalAmount);
             if (choice === 'deposit') {
               document.getElementById('payment-heading-display').textContent = `Méthode de paiement de l'avance (${depositAmount.toLocaleString()} HTG)`;
             } else {
@@ -1656,6 +1657,16 @@ function loadCartData() {
             }
           });
         });
+
+        // Initialize first payment choice card as selected
+        const firstPaymentRadio = document.querySelector('input[name="payment_choice"]:checked');
+        if (firstPaymentRadio) {
+          const selectedCard = firstPaymentRadio.closest('.payment-choice-card');
+          if (selectedCard) {
+            selectedCard.style.borderColor = '#D4AF37';
+            selectedCard.style.background = 'rgba(212,175,55,0.08)';
+          }
+        }
 
         // Calendar navigation
         document.getElementById('prev-month')?.addEventListener('click', () => changeMonth(-1));
