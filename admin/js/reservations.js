@@ -223,7 +223,7 @@ window.openDetailModal = function(id) {
         ${getStatusBadge(reservation.status)}
       </div>
       
-      <hr style="border: none; border-top: 1px solid var(--admin-border);">
+      <hr style="border: none; border-top: 1px solid #e5e7eb;">
       
       <div>
         <div class="text-muted mb-1">Client</div>
@@ -257,6 +257,23 @@ window.openDetailModal = function(id) {
           <div style="font-weight: 500;">${payMethodLabel}</div>
         </div>
       </div>
+
+      <!-- Payment Choice Display -->
+      <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+        <div class="text-muted mb-1" style="font-weight: 500;">💰 Choix de paiement</div>
+        <div style="font-weight: 600; color: ${reservation.payment_choice === 'full' ? '#059669' : '#f59e0b'}; font-size: 1.1rem;">
+          ${reservation.payment_choice === 'full' ? '✓ Paiement complet' : '⏳ Acompte (reste à payer)'}
+        </div>
+        ${reservation.payment_choice === 'deposit' ? `
+          <div style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">
+            Le client a payé l'acompte et doit payer le reste à son arrivée au spa.
+          </div>
+        ` : `
+          <div style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">
+            Le client a payé le montant complet.
+          </div>
+        `}
+      </div>
       
       ${reservation.id_type ? `
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
@@ -276,7 +293,7 @@ window.openDetailModal = function(id) {
       ${reservation.notes ? `
         <div>
           <div class="text-muted mb-1">Notes</div>
-          <div style="background: var(--admin-card); padding: 1rem; border-radius: 8px;">${reservation.notes}</div>
+          <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">${reservation.notes}</div>
         </div>
       ` : ''}
       
@@ -439,8 +456,26 @@ async function sendBrevoEmail(reservation, type) {
   let html = '';
   let subject = '';
   
+  // Payment choice info for emails
+  const paymentChoiceText = reservation.payment_choice === 'full' 
+    ? '✓ Paiement complet effectué'
+    : '⏳ Acompte payé - Le reste sera réglé au spa';
+  
   if (type === 'confirmation') {
     html = adminConfirmationEmail(reservation);
+    // Add payment choice info to the email
+    const paymentInfo = `
+      <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; margin: 1rem 0; border-left: 4px solid ${reservation.payment_choice === 'full' ? '#059669' : '#f59e0b'};">
+        <div style="font-weight: 600; margin-bottom: 0.5rem;">💰 Information de paiement</div>
+        <div style="color: ${reservation.payment_choice === 'full' ? '#059669' : '#f59e0b'}; font-weight: 500;">${paymentChoiceText}</div>
+        ${reservation.payment_choice === 'deposit' ? `
+          <div style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">
+            N'oubliez pas de régler le montant restant à votre arrivée au spa.
+          </div>
+        ` : ''}
+      </div>
+    `;
+    html = html.replace('</body>', paymentInfo + '</body>');
     subject = `Votre réservation DALIGHT est confirmée`;
   } else if (type === 'completion') {
     html = `
@@ -451,6 +486,10 @@ async function sendBrevoEmail(reservation, type) {
         <h1 style="color: #4A3728;">Merci pour votre visite !</h1>
         <p>Bonjour ${reservation.user_name || 'Cher client'},</p>
         <p>Merci d'avoir choisi DALIGHT pour votre ${reservation.service} ! Nous espérons que vous avez apprécié ce moment de bien-être.</p>
+        <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; margin: 1rem 0; border-left: 4px solid #059669;">
+          <div style="font-weight: 600; margin-bottom: 0.5rem;">💰 Paiement</div>
+          <div style="color: #059669; font-weight: 500;">${paymentChoiceText}</div>
+        </div>
         <p>Votre avis compte énormément pour nous. N'hésitez pas à nous laisser un commentaire sur nos réseaux sociaux.</p>
         <p>À très bientôt,<br>L'équipe DALIGHT</p>
       </div>
@@ -487,6 +526,16 @@ window.sendEmailTemplate = function(reservationId, templateKey) {
   const time     = r.time          || '';
   const location = r.location      || 'notre spa';
   const phone    = '+509 4747-7221';
+  
+  // Payment choice info
+  const paymentChoiceText = r.payment_choice === 'full' 
+    ? '✓ Paiement complet effectué'
+    : '⏳ Acompte payé - Le reste sera réglé au spa';
+  const paymentInfo = `
+💰 Information de paiement
+${paymentChoiceText}
+${r.payment_choice === 'deposit' ? 'N\'oubliez pas de régler le montant restant à votre arrivée au spa.' : ''}
+`;
 
   const templates = {
     confirmation: {
@@ -500,6 +549,8 @@ Nous avons le plaisir de vous confirmer votre réservation chez DALIGHT Spa :
 • Date     : ${date}
 • Heure    : ${time}
 • Lieu     : ${location}
+
+${paymentInfo}
 
 Nous avons hâte de vous accueillir ! En cas de question ou d'empêchement, merci de nous prévenir au moins 24h à l'avance.
 
@@ -539,6 +590,8 @@ Petit rappel amical : vous avez rendez-vous chez DALIGHT Spa demain !
 • Heure   : ${time}
 • Lieu    : ${location}
 
+${paymentInfo}
+
 Nous vous attendons avec impatience. Merci d'arriver 5 à 10 minutes avant l'heure prévue.
 
 📞 Pour toute modification : ${phone}
@@ -554,6 +607,9 @@ L'équipe DALIGHT`
 
 Merci d'avoir choisi DALIGHT Spa pour votre ${service} ! Nous espérons que vous avez apprécié ce moment de détente et de bien-être.
 
+💰 Paiement
+${paymentChoiceText}
+
 Votre avis compte énormément pour nous. N'hésitez pas à nous laisser un commentaire sur nos réseaux sociaux :
 • Instagram : @dalightbeauty
 • TikTok    : @dalightbeauty
@@ -568,6 +624,8 @@ L'équipe DALIGHT
       subject: `DALIGHT Spa - ${service}`,
       body:
 `Bonjour ${name},
+
+${paymentInfo}
 
 `
     },
