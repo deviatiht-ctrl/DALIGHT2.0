@@ -1894,17 +1894,17 @@ function loadCartData() {
 
       const MASSAGE_CATS = ['massage-relaxant', 'wood-therapy', 'massage'];
       function calcDeposit(services) {
-        let massageTotal = 0, hasOther = false;
+        let massageTotal = 0, headspaCount = 0;
         (services || []).forEach(s => {
           const cat = (s.category || '').toLowerCase();
           const name = (s.name || '').toLowerCase();
           if (MASSAGE_CATS.some(c => cat.includes(c) || name.includes('massage') || name.includes('wood'))) {
             massageTotal += Number(s.price_htg) || 0;
           } else {
-            hasOther = true;
+            headspaCount += 1;
           }
         });
-        return Math.round(massageTotal * 0.5) + (hasOther ? 1000 : 0);
+        return Math.round(massageTotal * 0.5) + (headspaCount * 1000);
       }
 
       function updateSummary() {
