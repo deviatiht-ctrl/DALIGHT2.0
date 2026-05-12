@@ -900,36 +900,68 @@ select option:checked {
 
 @media (max-width: 768px) {
   .admin-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 280px;
+    z-index: 9999;
     transform: translateX(-100%);
+    transition: transform 0.3s ease;
   }
-  
+
   .admin-sidebar.open {
     transform: translateX(0);
   }
-  
+
+  .admin-sidebar.open::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+  }
+
   .admin-main {
     margin-left: 0;
   }
-  
+
   .mobile-menu-btn {
     display: block;
   }
-  
+
   .header-search {
     display: none;
   }
-  
+
   .admin-content {
     padding: 1rem;
   }
-  
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .admin-table {
     display: block;
     overflow-x: auto;
+  }
+
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .header-left {
+    width: 100%;
+  }
+
+  .header-right {
+    width: 100%;
   }
 }
 
