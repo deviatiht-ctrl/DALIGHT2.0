@@ -1210,7 +1210,34 @@
               <label for="accept-conditions">J'accepte les conditions générales de réservation *</label>
             </div>
 
-            <h4 style="margin: 2rem 0 1rem;" id="payment-heading-display">Méthode de paiement de l'avance (1 000 HTG)</h4>
+            <!-- Payment Choice: Acompte vs Paiement Complet -->
+            <div class="payment-choice-box" style="margin: 2rem 0 1.5rem; padding: 1.5rem; background: #faf8f6; border-radius: 12px; border: 1px solid rgba(74,55,40,0.1);">
+              <h4 style="margin: 0 0 1rem; color: #4A3728;">💰 Choix de paiement</h4>
+              <div class="payment-choice-buttons" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <label class="payment-choice-option" style="flex: 1; min-width: 200px; cursor: pointer;">
+                  <input type="radio" name="payment_choice" value="deposit" checked style="display: none;">
+                  <div class="payment-choice-card" style="padding: 1rem; border: 2px solid rgba(74,55,40,0.2); border-radius: 10px; text-align: center; transition: all 0.2s; background: #fff;">
+                    <div style="font-size: 1.1rem; font-weight: 600; color: #4A3728; margin-bottom: 0.5rem;">Acompte</div>
+                    <div style="font-size: 0.9rem; color: #7a7068;">Payez l'avance maintenant</div>
+                    <div style="font-size: 1.2rem; font-weight: 700; color: #D4AF37; margin-top: 0.5rem;" id="deposit-amount-display">1 000 HTG</div>
+                  </div>
+                </label>
+                <label class="payment-choice-option" style="flex: 1; min-width: 200px; cursor: pointer;">
+                  <input type="radio" name="payment_choice" value="full" style="display: none;">
+                  <div class="payment-choice-card" style="padding: 1rem; border: 2px solid rgba(74,55,40,0.2); border-radius: 10px; text-align: center; transition: all 0.2s; background: #fff;">
+                    <div style="font-size: 1.1rem; font-weight: 600; color: #4A3728; margin-bottom: 0.5rem;">Paiement complet</div>
+                    <div style="font-size: 0.9rem; color: #7a7068;">Payez tout maintenant</div>
+                    <div style="font-size: 1.2rem; font-weight: 700; color: #D4AF37; margin-top: 0.5rem;" id="full-amount-display">— HTG</div>
+                  </div>
+                </label>
+              </div>
+              <p style="font-size: 0.85rem; color: #7a7068; margin-top: 1rem; margin-bottom: 0;">
+                <i data-lucide="info" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i>
+                Si vous choisissez l'acompte, vous pourrez payer le solde plus tard dans "Mes réservations".
+              </p>
+            </div>
+
+            <h4 style="margin: 2rem 0 1rem;" id="payment-heading-display">Méthode de paiement</h4>
             <div class="payment-methods" id="resv-payment-methods-container">
               <div style="padding:.75rem;color:var(--marron-600);font-size:.9rem;">Chargement des modes de paiement...</div>
             </div>
@@ -1544,7 +1571,17 @@ function loadCartData() {
               removeServiceAt(idx);
             });
           });
+          lucide.createIcons();
         }
+
+        // Update payment choice amounts
+        const totalAmount = cartServices.reduce((sum, s) => sum + (Number(s.price_htg) || 0), 0);
+        const depositAmount = calcDeposit(cartServices);
+        const depositDisplay = document.getElementById('deposit-amount-display');
+        const fullDisplay = document.getElementById('full-amount-display');
+        if (depositDisplay) depositDisplay.textContent = `${depositAmount.toLocaleString()} HTG`;
+        if (fullDisplay) fullDisplay.textContent = `${totalAmount.toLocaleString()} HTG`;
+
         // Step 5: payment
         if (paymentCartItems) paymentCartItems.innerHTML = cartHTML;
       }
@@ -1593,6 +1630,32 @@ function loadCartData() {
         document.getElementById('btn-step-4-prev')?.addEventListener('click', () => goToStep(3));
         document.getElementById('btn-step-4-next')?.addEventListener('click', () => goToStep(5));
         document.getElementById('btn-step-5-prev')?.addEventListener('click', () => goToStep(4));
+
+        // Payment choice handling
+        const paymentChoiceRadios = document.querySelectorAll('input[name="payment_choice"]');
+        paymentChoiceRadios.forEach(radio => {
+          radio.addEventListener('change', (e) => {
+            const choice = e.target.value;
+            const cards = document.querySelectorAll('.payment-choice-card');
+            cards.forEach(card => {
+              card.style.borderColor = 'rgba(74,55,40,0.2)';
+              card.style.background = '#fff';
+            });
+            const selectedCard = e.target.closest('.payment-choice-card');
+            if (selectedCard) {
+              selectedCard.style.borderColor = '#D4AF37';
+              selectedCard.style.background = 'rgba(212,175,55,0.08)';
+            }
+            // Update payment heading
+            const totalAmount = cartServices.reduce((sum, s) => sum + (Number(s.price_htg) || 0), 0);
+            const depositAmount = calcDeposit(cartServices);
+            if (choice === 'deposit') {
+              document.getElementById('payment-heading-display').textContent = `Méthode de paiement de l'avance (${depositAmount.toLocaleString()} HTG)`;
+            } else {
+              document.getElementById('payment-heading-display').textContent = `Méthode de paiement (${totalAmount.toLocaleString()} HTG)`;
+            }
+          });
+        });
 
         // Calendar navigation
         document.getElementById('prev-month')?.addEventListener('click', () => changeMonth(-1));
@@ -1824,6 +1887,7 @@ function loadCartData() {
           case 5:
             formData.paymentMethod = document.querySelector('input[name="payment_method"]:checked')?.value;
             formData.acceptConditions = document.getElementById('accept-conditions')?.checked;
+            formData.paymentChoice = document.querySelector('input[name="payment_choice"]:checked')?.value || 'deposit';
             break;
         }
       }
@@ -2240,7 +2304,7 @@ function loadCartData() {
             payment_proof_url: proofUrl,
             deposit_amount: calcDeposit(cartServices),
             total_amount: totalAmount,
-            payment_status: proofUrl ? 'deposit_paid' : 'pending',
+            payment_status: !proofUrl ? 'pending' : (formData.paymentChoice === 'full' ? 'fully_paid' : 'deposit_paid'),
             location: 'Spa',
             status: 'PENDING'
           };
