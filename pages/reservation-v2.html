@@ -2260,7 +2260,37 @@ function loadCartData() {
 
           console.log('✅ Reservation saved!', insertData);
 
-          // 5. SUCCESS HANDLING
+          // 5. SEND EMAILS
+          try {
+            const savedReservation = insertData[0];
+            const { clientConfirmationEmail, adminNotificationEmail } = await import('../js/email-templates.js?v=5.0.0');
+
+            // Send confirmation email to client
+            const clientHtml = clientConfirmationEmail(savedReservation);
+            await supabaseClient.functions.invoke('send-email', {
+              body: {
+                to: formData.email,
+                subject: 'Votre réservation DALIGHT a été reçue',
+                html: clientHtml
+              }
+            });
+
+            // Send notification email to admin
+            const adminHtml = adminNotificationEmail(savedReservation);
+            await supabaseClient.functions.invoke('send-email', {
+              body: {
+                to: 'dalightbeauty15mai@gmail.com',
+                subject: `Nouvelle réservation: ${reservationNumber}`,
+                html: adminHtml
+              }
+            });
+
+            console.log('✅ Emails sent successfully');
+          } catch (emailError) {
+            console.warn('⚠️ Failed to send emails (reservation still saved):', emailError);
+          }
+
+          // 6. SUCCESS HANDLING
           localStorage.removeItem('dalight:serviceCart');
           localStorage.removeItem('dalight:cartServices');
 

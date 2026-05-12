@@ -124,6 +124,11 @@ function attachListeners(reservations = []) {
 
       if (newStatus !== oldStatus) {
         openEmailDraft(id, newStatus);
+
+        // Send automatic confirmation email when status changes to CONFIRMED
+        if (newStatus === 'CONFIRMED') {
+          await sendConfirmationEmail(id);
+        }
       }
     } catch (err) {
       setMessage('error', err.message || 'Unable to update status.');
@@ -134,6 +139,36 @@ function attachListeners(reservations = []) {
 
   statusFilter?.addEventListener('change', () => loadReservations());
   locationFilter?.addEventListener('change', () => loadReservations());
+}
+
+async function sendConfirmationEmail(reservationId) {
+  try {
+    const { data: reservation, error } = await supabase
+      .from('reservations')
+      .select('*')
+      .eq('id', reservationId)
+      .single();
+
+    if (error || !reservation) {
+      console.error('Failed to fetch reservation for email:', error);
+      return;
+    }
+
+    const { adminConfirmationEmail } = await import('./email-templates.js?v=5.0.0');
+    const html = adminConfirmationEmail(reservation);
+
+    await supabase.functions.invoke('send-email', {
+      body: {
+        to: reservation.user_email,
+        subject: `Votre réservation DALIGHT est confirmée`,
+        html: html
+      }
+    });
+
+    console.log('✅ Confirmation email sent to:', reservation.user_email);
+  } catch (emailError) {
+    console.warn('⚠️ Failed to send confirmation email:', emailError);
+  }
 }
 
 function initVideoUploader() {
