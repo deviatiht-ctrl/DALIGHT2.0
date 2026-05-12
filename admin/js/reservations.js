@@ -286,10 +286,23 @@ window.openDetailModal = function(id) {
     </div>
   `;
   
-  // Footer: email buttons + action buttons
+  // Footer: automatic Brevo buttons + manual email buttons + action buttons
+  const automaticButtonsHtml = `
+    <div style="display:flex;gap:0.4rem;flex-wrap:wrap;width:100%;margin-bottom:0.75rem;padding-bottom:0.75rem;border-bottom:1px solid #e5e7eb;">
+      <span style="font-size:0.78rem;color:#6b7280;width:100%;margin-bottom:0.25rem;">🤖 Actions automatiques (Brevo)</span>
+      ${reservation.status === 'PENDING' ? `
+        <button class="btn btn-success btn-sm" onclick="autoConfirmReservation('${reservation.id}')">✓ Confirmer & Envoyer Email</button>
+        <button class="btn btn-secondary btn-sm" onclick="autoSetPending('${reservation.id}')">⏳ Remettre en attente</button>
+      ` : ''}
+      ${reservation.status === 'CONFIRMED' ? `
+        <button class="btn btn-success btn-sm" onclick="autoCompleteReservation('${reservation.id}')">🎉 Terminer & Envoyer Email</button>
+      ` : ''}
+    </div>
+  `;
+
   const emailButtonsHtml = `
-    <div style="display:flex;gap:0.4rem;flex-wrap:wrap;width:100%;margin-bottom:0.75rem;padding-bottom:0.75rem;border-bottom:1px solid rgba(255,255,255,0.08);">
-      <span style="font-size:0.78rem;color:rgba(255,255,255,0.45);width:100%;margin-bottom:0.25rem;">📧 Envoyer un email manuel</span>
+    <div style="display:flex;gap:0.4rem;flex-wrap:wrap;width:100%;margin-bottom:0.75rem;padding-bottom:0.75rem;border-bottom:1px solid #e5e7eb;">
+      <span style="font-size:0.78rem;color:#6b7280;width:100%;margin-bottom:0.25rem;">📧 Emails manuels (mailto:)</span>
       <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${reservation.id}','confirmation')">✓ Confirmation</button>
       <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${reservation.id}','cancellation')">✕ Annulation</button>
       <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${reservation.id}','reminder')">⏰ Rappel</button>
@@ -303,16 +316,16 @@ window.openDetailModal = function(id) {
   if (reservation.status === 'PENDING') {
     actions = `
       <button class="btn btn-danger" onclick="updateStatus('${reservation.id}', 'CANCELLED'); closeModal();">Annuler</button>
-      <button class="btn btn-primary" onclick="updateStatus('${reservation.id}', 'CONFIRMED'); closeModal();">✓ Confirmer la réservation</button>
+      <button class="btn btn-primary" onclick="updateStatus('${reservation.id}', 'CONFIRMED'); closeModal();">✓ Confirmer (sans email)</button>
     `;
   } else if (reservation.status === 'CONFIRMED') {
     actions = `
       <button class="btn btn-secondary" onclick="closeModal()">Fermer</button>
-      <button class="btn btn-primary" onclick="updateStatus('${reservation.id}', 'COMPLETED'); closeModal();">Marquer terminé</button>
+      <button class="btn btn-primary" onclick="updateStatus('${reservation.id}', 'COMPLETED'); closeModal();">Marquer terminé (sans email)</button>
     `;
   }
 
-  footer.innerHTML = emailButtonsHtml + '<div style="display:flex;gap:0.5rem;justify-content:flex-end;width:100%;">' + actions + '</div>';
+  footer.innerHTML = automaticButtonsHtml + emailButtonsHtml + '<div style="display:flex;gap:0.5rem;justify-content:flex-end;width:100%;">' + actions + '</div>';
   footer.style.flexDirection = 'column';
   footer.style.alignItems = 'stretch';
   modal.classList.add('active');
@@ -323,6 +336,142 @@ window.closeModal = function() {
   modal.classList.remove('active');
   currentReservation = null;
 };
+
+// ============================================
+// AUTOMATIC BREVO ACTIONS
+// ============================================
+
+window.autoConfirmReservation = async function(id) {
+  const reservation = allReservations.find(r => r.id === id);
+  if (!reservation) return;
+
+  if (!confirm(`Voulez-vous confirmer cette réservation et envoyer un email automatique au client?`)) return;
+
+  try {
+    // Update status first
+    await window.adminCore.updateReservationStatus(id, 'CONFIRMED');
+    
+    // Send confirmation email via Brevo
+    await sendBrevoEmail(reservation, 'confirmation');
+    
+    window.adminCore.showToast('Réservation confirmée et email envoyé !');
+    
+    // Update local data
+    const index = allReservations.findIndex(r => r.id === id);
+    if (index !== -1) {
+      allReservations[index].status = 'CONFIRMED';
+    }
+    
+    renderReservations();
+    window.adminCore.updatePendingBadge();
+    closeModal();
+  } catch (err) {
+    const details = err?.message || err?.details || err?.hint || '';
+    window.adminCore.showToast(
+      details ? `Erreur: ${details}` : 'Erreur lors de la confirmation',
+      'error'
+    );
+  }
+};
+
+window.autoSetPending = async function(id) {
+  if (!confirm(`Voulez-vous remettre cette réservation en attente?`)) return;
+
+  try {
+    await window.adminCore.updateReservationStatus(id, 'PENDING');
+    window.adminCore.showToast('Réservation remise en attente');
+    
+    const index = allReservations.findIndex(r => r.id === id);
+    if (index !== -1) {
+      allReservations[index].status = 'PENDING';
+    }
+    
+    renderReservations();
+    window.adminCore.updatePendingBadge();
+    closeModal();
+  } catch (err) {
+    window.adminCore.showToast('Erreur lors de la mise à jour', 'error');
+  }
+};
+
+window.autoCompleteReservation = async function(id) {
+  const reservation = allReservations.find(r => r.id === id);
+  if (!reservation) return;
+
+  if (!confirm(`Voulez-vous marquer cette réservation comme terminée et envoyer un email de remerciement?`)) return;
+
+  try {
+    // Update status first
+    await window.adminCore.updateReservationStatus(id, 'COMPLETED');
+    
+    // Send completion email via Brevo
+    await sendBrevoEmail(reservation, 'completion');
+    
+    window.adminCore.showToast('Réservation terminée et email envoyé !');
+    
+    // Update local data
+    const index = allReservations.findIndex(r => r.id === id);
+    if (index !== -1) {
+      allReservations[index].status = 'COMPLETED';
+    }
+    
+    renderReservations();
+    closeModal();
+  } catch (err) {
+    const details = err?.message || err?.details || err?.hint || '';
+    window.adminCore.showToast(
+      details ? `Erreur: ${details}` : 'Erreur lors de la mise à jour',
+      'error'
+    );
+  }
+};
+
+// Send email via Brevo Edge Function
+async function sendBrevoEmail(reservation, type) {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    throw new Error('Connexion Supabase non disponible');
+  }
+
+  // Import email templates
+  const { adminConfirmationEmail } = await import('../../js/email-templates.js?v=5.0.0');
+  
+  let html = '';
+  let subject = '';
+  
+  if (type === 'confirmation') {
+    html = adminConfirmationEmail(reservation);
+    subject = `Votre réservation DALIGHT est confirmée`;
+  } else if (type === 'completion') {
+    html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 2rem;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+          <img src="https://www.dalightbeauty.com/assets/images/logodaligth.png" alt="DALIGHT" style="height: 60px;">
+        </div>
+        <h1 style="color: #4A3728;">Merci pour votre visite !</h1>
+        <p>Bonjour ${reservation.user_name || 'Cher client'},</p>
+        <p>Merci d'avoir choisi DALIGHT pour votre ${reservation.service} ! Nous espérons que vous avez apprécié ce moment de bien-être.</p>
+        <p>Votre avis compte énormément pour nous. N'hésitez pas à nous laisser un commentaire sur nos réseaux sociaux.</p>
+        <p>À très bientôt,<br>L'équipe DALIGHT</p>
+      </div>
+    `;
+    subject = `Merci pour votre visite - DALIGHT`;
+  }
+
+  const { data, error } = await supabase.functions.invoke('send-email', {
+    body: {
+      to: reservation.user_email,
+      subject: subject,
+      html: html
+    }
+  });
+
+  if (error) {
+    throw new Error(`Erreur envoi email: ${error.message}`);
+  }
+
+  return data;
+}
 
 // ============================================
 // MANUAL EMAIL TEMPLATES (mailto:)

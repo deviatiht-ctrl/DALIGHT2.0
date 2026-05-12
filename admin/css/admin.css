@@ -767,7 +767,7 @@ select option:checked {
 }
 
 .modal {
-  background: rgba(30, 30, 50, 0.98);
+  background: #ffffff;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--admin-border);
@@ -778,7 +778,29 @@ select option:checked {
   overflow-y: auto;
   transform: scale(0.9);
   transition: transform 0.3s ease;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  color: #333333;
+}
+
+.modal-body label {
+  color: #1a1a1a;
+  font-weight: 500;
+}
+
+.modal-body p,
+.modal-body span,
+.modal-body div {
+  color: #333333;
 }
 
 /* Override for product modal to be wider */
