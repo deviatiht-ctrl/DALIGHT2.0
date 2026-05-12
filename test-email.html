@@ -99,8 +99,8 @@
                         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
                     },
                     body: JSON.stringify({
-                        to: 'cvisualagency@gmail.com',
-                        subject: 'ðŸ§ª Test Email - Direct',
+                        to: 'dalightbeauty15mai@gmail.com',
+                        subject: '🧪 Test Email - Direct',
                         html: '<h1>Test Email</h1><p>This is a test email from Edge Function.</p>',
                         isAdmin: false
                     })
@@ -135,8 +135,8 @@
                 
                 const { data, error } = await supabase.functions.invoke('send-email', {
                     body: {
-                        to: 'cvisualagency@gmail.com',
-                        subject: 'ðŸ§ª Test Email - Supabase Client',
+                        to: 'dalightbeauty15mai@gmail.com',
+                        subject: '🧪 Test Email - Supabase Client',
                         html: '<h1>Test Email</h1><p>This is a test email from Supabase Edge Function.</p>',
                         isAdmin: false
                     }
