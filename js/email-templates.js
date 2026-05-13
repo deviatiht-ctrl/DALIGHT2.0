@@ -76,7 +76,7 @@ export function clientConfirmationEmail(reservation) {
       </div>
 
       <p class="message">Votre réservation est actuellement en attente de confirmation. Vous recevrez un email dès que notre équipe aura validé votre rendez-vous.</p>
-      <p class="message">Si vous avez des questions, n'hésitez pas à nous contacter au +509 4747-2221 ou par email à dalightbeauty15mai@gmail.com.</p>
+      <p class="message">Si vous avez des questions, n'hésitez pas à nous contacter au +509 4747-7221 ou par email à dalightbeauty15mai@gmail.com.</p>
       
       <a href="https://dalight.netlify.app/pages/orders.html" class="cta-button">Voir ma réservation</a>
     </div>
@@ -217,7 +217,7 @@ export function adminConfirmationEmail(reservation) {
     </div>
     <div class="footer">
       <p>© ${new Date().getFullYear()} DALIGHT. Tous droits réservés.</p>
-      <p>Delmas 65 Rue durandisse #10, Haïti — +509 4747-2221</p>
+      <p>Delmas 65 Rue durandisse #10, Haïti — +509 4747-7221</p>
     </div>
   </div>
 </body>
