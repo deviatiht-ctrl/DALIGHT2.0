@@ -1536,6 +1536,8 @@ async function saveCapacity() {
   const isAvailable = document.getElementById('capacity-available').checked;
   const serviceType = document.getElementById('capacity-service-type')?.value || 'all';
 
+  console.log('💾 Saving capacity:', { date: selectedSlot.date, time: selectedSlot.time, capacity, isAvailable, serviceType });
+
   try {
     const supabase = getSupabaseClient();
     if (!supabase) throw new Error('Connexion Supabase non établie. Rafraîchissez la page.');
@@ -1550,6 +1552,12 @@ async function saveCapacity() {
         max_capacity:   isAvailable ? capacity : null,
         service_type:   serviceType
       }, { onConflict: 'exception_date,time_slot,service_type' });
+
+    if (error) {
+      console.error('❌ Error saving capacity:', error);
+    } else {
+      console.log('✅ Capacity saved successfully');
+    }
 
     if (error) {
       // Si constraint pa egziste ak service_type, essaie san li
