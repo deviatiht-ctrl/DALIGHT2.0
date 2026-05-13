@@ -744,6 +744,8 @@
         // Centrer la carte sélectionnée
         const ctr = document.getElementById('hair-type-cards');
         if (ctr) { ctr.style.display = 'flex'; ctr.style.justifyContent = 'center'; }
+        // Filter pricing options by selected hair type
+        renderPricingOptions();
       }
       window.selectHairType = selectHairType;
 
@@ -753,7 +755,18 @@
           container.innerHTML = '<p style="color:#9ca3af;font-size:.85rem;">Aucun tarif configuré par l\'admin.</p>';
           return;
         }
-        container.innerHTML = headSpaPricing.map((p, i) => `
+        
+        // Filter pricing by selected hair type
+        const filteredPricing = selectedHairType 
+          ? headSpaPricing.filter(p => p.type === selectedHairType)
+          : headSpaPricing;
+        
+        if (filteredPricing.length === 0) {
+          container.innerHTML = '<p style="color:#9ca3af;font-size:.85rem;">Aucun tarif disponible pour ce type de cheveux.</p>';
+          return;
+        }
+        
+        container.innerHTML = filteredPricing.map((p, i) => `
           <label onclick="selectPricingByIndex(${i})"
             style="display:flex;justify-content:space-between;align-items:center;padding:.65rem .9rem;
                    border:2px solid #e5e7eb;border-radius:10px;cursor:pointer;transition:all .2s;
@@ -768,7 +781,10 @@
       }
 
       function selectPricingByIndex(idx) {
-        const pricing = headSpaPricing[idx];
+        const filteredPricing = selectedHairType 
+          ? headSpaPricing.filter(p => p.type === selectedHairType)
+          : headSpaPricing;
+        const pricing = filteredPricing[idx];
         if (!pricing) return;
         selectedPricing = pricing;
         document.querySelectorAll('[data-pricing-idx]').forEach(el => {

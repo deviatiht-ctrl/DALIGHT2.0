@@ -207,16 +207,21 @@
             <input type="hidden" id="headspa-edit-id">
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;gap:.6rem;align-items:flex-end;flex-wrap:wrap;">
               <div class="form-group" style="margin-bottom:0;">
-                <label class="form-label" style="font-size:.75rem;">Slug * <span style="opacity:.5;">(ex: long)</span></label>
-                <input class="form-input" id="headspa-type" placeholder="ex: long" style="font-size:.83rem;" pattern="[a-z0-9_]+">
+                <label class="form-label" style="font-size:.75rem;">Type de cheveux * <span style="opacity:.5;">(ex: dreadlocks)</span></label>
+                <select class="form-select" id="headspa-type" style="font-size:.83rem;">
+                  <option value="">Sélectionner...</option>
+                  <option value="dreadlocks">Dreadlocks</option>
+                  <option value="defrises">Cheveux Défrisés</option>
+                  <option value="naturels">Cheveux Naturels</option>
+                </select>
               </div>
               <div class="form-group" style="margin-bottom:0;">
                 <label class="form-label" style="font-size:.75rem;">Libellé *</label>
-                <input class="form-input" id="headspa-label" placeholder="ex: Long" style="font-size:.83rem;">
+                <input class="form-input" id="headspa-label" placeholder="ex: Extra Court" style="font-size:.83rem;">
               </div>
               <div class="form-group" style="margin-bottom:0;">
                 <label class="form-label" style="font-size:.75rem;">Longueur</label>
-                <input class="form-input" id="headspa-length" placeholder="ex: 30—50 cm" style="font-size:.83rem;">
+                <input class="form-input" id="headspa-length" placeholder="ex: 0-10 cm" style="font-size:.83rem;">
               </div>
               <div class="form-group" style="margin-bottom:0;">
                 <label class="form-label" style="font-size:.75rem;">Prix HTG *</label>
@@ -228,17 +233,21 @@
               </div>
               <div style="display:flex;gap:.4rem;">
                 <button class="btn btn-primary btn-sm" id="headspa-update-btn" onclick="saveHeadSpaPricing()" style="white-space:nowrap;">Enregistrer</button>
-                <button class="btn btn-secondary btn-sm" onclick="resetHeadSpaForm()" title="Annuler l'édition">—S"</button>
+                <button class="btn btn-secondary btn-sm" onclick="resetHeadSpaForm()" title="Annuler l'édition">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
 
-          <!-- Table des types -->
+          <!-- Table des types groupés par type de cheveux -->
           <div class="table-responsive" style="overflow-x:auto;">
             <table class="admin-table" style="font-size:.85rem;">
               <thead>
                 <tr>
-                  <th>Slug</th>
+                  <th>Type de cheveux</th>
                   <th>Libellé</th>
                   <th>Longueur</th>
                   <th>Prix HTG</th>
@@ -590,13 +599,20 @@
         tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:1rem;">Aucun type configuré. Utilisez le formulaire ci-dessus.</td></tr>';
         return;
       }
+      
+      const hairTypeLabels = {
+        dreadlocks: 'Dreadlocks',
+        defrises: 'Cheveux Défrisés',
+        naturels: 'Cheveux Naturels'
+      };
+      
       tbody.innerHTML = headSpaPricing.map(p => `
         <tr>
-          <td><code style="font-size:.78rem;">${esc(p.type)}</code></td>
+          <td><span class="status-badge confirmed">${hairTypeLabels[p.type] || p.type}</span></td>
           <td><strong>${esc(p.label)}</strong></td>
-          <td style="font-size:.8rem;color:rgba(255,255,255,.55);">${esc(p.hair_length || '—')}</td>
+          <td style="font-size:.8rem;color:rgba(255,255,255,.55);">${esc(p.hair_length || '—')}</td>
           <td><strong>${Number(p.price_htg).toLocaleString()} Gds</strong></td>
-          <td style="font-size:.8rem;">${p.price_usd ? '$' + p.price_usd : '—'}</td>
+          <td style="font-size:.8rem;">${p.price_usd ? '$' + p.price_usd : '—'}</td>
           <td>
             <label class="toggle-switch">
               <input type="checkbox" ${p.is_active ? 'checked' : ''} onchange="toggleHeadSpaPricingStatus('${p.id}', this.checked)">
@@ -631,7 +647,7 @@
       document.getElementById('headspa-length').value = p.hair_length || '';
       document.getElementById('headspa-price-htg').value = p.price_htg;
       document.getElementById('headspa-price-usd').value = p.price_usd || '';
-      document.getElementById('headspa-form-title').textContent = '—S} Modifier: ' + p.label;
+      document.getElementById('headspa-form-title').textContent = 'Modifier: ' + p.label;
       document.getElementById('headspa-update-btn').textContent = 'Modifier';
       document.getElementById('headspa-pricing-body').scrollIntoView({ behavior: 'smooth' });
     }
@@ -644,37 +660,37 @@
       document.getElementById('headspa-length').value = '';
       document.getElementById('headspa-price-htg').value = '';
       document.getElementById('headspa-price-usd').value = '';
-      document.getElementById('headspa-form-title').textContent = '—~" Ajouter un type de cheveux';
+      document.getElementById('headspa-form-title').textContent = 'Ajouter un type de cheveux';
       document.getElementById('headspa-update-btn').textContent = 'Enregistrer';
     }
 
     async function saveHeadSpaPricing() {
       const editId    = document.getElementById('headspa-edit-id').value;
-      const type      = document.getElementById('headspa-type').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
+      const type      = document.getElementById('headspa-type').value;
       const label     = document.getElementById('headspa-label').value.trim();
       const hairLen   = document.getElementById('headspa-length').value.trim();
       const priceHtg  = parseFloat(document.getElementById('headspa-price-htg').value);
       const priceUsd  = parseFloat(document.getElementById('headspa-price-usd').value) || null;
 
+      if (!type)              { alert('Type de cheveux requis'); return; }
       if (!label)              { alert('Libellé requis'); return; }
       if (!priceHtg || priceHtg < 0) { alert('Prix HTG requis'); return; }
-      if (!editId && !type)   { alert('Slug requis pour un nouveau type'); return; }
 
       try {
         if (editId) {
           const { error } = await window.supabaseClient
             .from('head_spa_pricing')
-            .update({ label, hair_length: hairLen, price_htg: priceHtg, price_usd: priceUsd })
+            .update({ type, label, hair_length: hairLen, price_htg: priceHtg, price_usd: priceUsd })
             .eq('id', editId);
           if (error) throw error;
-          window.adminCore?.showToast('Type mis à jour —S');
+          window.adminCore?.showToast('Type mis à jour');
         } else {
           const nextOrder = headSpaPricing.length ? Math.max(...headSpaPricing.map(p => p.sort_order || 0)) + 1 : 1;
           const { error } = await window.supabaseClient
             .from('head_spa_pricing')
             .insert({ type, label, hair_length: hairLen, price_htg: priceHtg, price_usd: priceUsd, sort_order: nextOrder });
           if (error) throw error;
-          window.adminCore?.showToast('Type ajouté —S');
+          window.adminCore?.showToast('Type ajouté');
         }
         resetHeadSpaForm();
         await loadHeadSpaPricing();
