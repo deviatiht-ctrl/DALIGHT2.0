@@ -919,7 +919,7 @@ function renderAvailabilityCalendar(data) {
     allDates.push(dateStr);
   }
 
-  const timeSlots = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00'];
+  const timeSlots = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'];
 
   tbody.innerHTML = allDates.map(date => {
     const dateObj = new Date(date + 'T12:00:00');

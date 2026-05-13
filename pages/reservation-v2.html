@@ -1201,7 +1201,7 @@
                 <li><strong>Avance obligatoire :</strong> <span id="conditions-deposit-display">1 000 HTG</span> requis pour confirmer la réservation.</li>
                 <li><strong>Annulation gratuite :</strong> Jusqu'à 48h avant.</li>
                 <li><strong>Annulation tardive (24h-48h) :</strong> 500 HTG retenus.</li>
-                <li><strong>No-show :</strong> Acompte non remboursable.</li>
+                <li><strong>No-show :</strong> Avance sur réservation non remboursable.</li>
                 <li><strong>Retard :</strong> Plus de 15min = annulation.</li>
               </ul>
             </div>
@@ -1211,14 +1211,14 @@
               <label for="accept-conditions">J'accepte les conditions générales de réservation *</label>
             </div>
 
-            <!-- Payment Choice: Acompte vs Paiement Complet -->
+            <!-- Payment Choice: Avance sur réservation vs Paiement Complet -->
             <div class="payment-choice-box" style="margin: 2rem 0 1.5rem; padding: 1.5rem; background: #faf8f6; border-radius: 12px; border: 1px solid rgba(74,55,40,0.1);">
               <h4 style="margin: 0 0 1rem; color: #4A3728;">💰 Choix de paiement</h4>
               <div class="payment-choice-buttons" style="display: flex; gap: 1rem; flex-wrap: wrap;">
                 <label class="payment-choice-option" style="flex: 1; min-width: 200px; cursor: pointer;">
                   <input type="radio" name="payment_choice" value="deposit" checked style="display: none;">
                   <div class="payment-choice-card" style="padding: 1rem; border: 2px solid rgba(74,55,40,0.2); border-radius: 10px; text-align: center; transition: all 0.2s; background: #fff;">
-                    <div style="font-size: 1.1rem; font-weight: 600; color: #4A3728; margin-bottom: 0.5rem;">Acompte</div>
+                    <div style="font-size: 1.1rem; font-weight: 600; color: #4A3728; margin-bottom: 0.5rem;">Avance sur réservation</div>
                     <div style="font-size: 0.9rem; color: #7a7068;">Payez l'avance maintenant</div>
                     <div style="font-size: 1.2rem; font-weight: 700; color: #D4AF37; margin-top: 0.5rem;" id="choice-deposit-amount">1 000 HTG</div>
                   </div>
@@ -1234,7 +1234,7 @@
               </div>
               <p style="font-size: 0.85rem; color: #7a7068; margin-top: 1rem; margin-bottom: 0;">
                 <i data-lucide="info" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i>
-                Si vous choisissez l'acompte, vous pourrez payer le solde plus tard dans "Mes réservations".
+                Si vous choisissez l'avance sur réservation, vous pourrez payer le solde plus tard dans "Mes réservations".
               </p>
             </div>
 
@@ -1656,7 +1656,7 @@ function loadCartData() {
               document.getElementById('payment-heading-display').textContent = `Méthode de paiement de l'avance (${depositAmount.toLocaleString()} HTG)`;
               // Show toast notification
               if (window.toast) {
-                toast.info('Acompte sélectionné', `Vous paierez ${depositAmount.toLocaleString()} HTG maintenant, le solde plus tard.`);
+                toast.info('Avance sur réservation sélectionné', `Vous paierez ${depositAmount.toLocaleString()} HTG maintenant, le solde plus tard.`);
               }
             } else {
               document.getElementById('payment-heading-display').textContent = `Méthode de paiement (${totalAmount.toLocaleString()} HTG)`;
@@ -1948,8 +1948,8 @@ function loadCartData() {
           return MASSAGE_CATS.some(c => cat.includes(c) || name.includes('massage') || name.includes('wood'));
         });
         const totalText = cartServices.length > 0
-          ? `${deposit.toLocaleString()} HTG (acompte sur ${total.toLocaleString()} HTG)`
-          : `${deposit.toLocaleString()} HTG (acompte)`;
+          ? `${deposit.toLocaleString()} HTG (avance sur réservation sur ${total.toLocaleString()} HTG)`
+          : `${deposit.toLocaleString()} HTG (avance sur réservation)`;
         document.getElementById('summary-total').textContent = totalText;
 
         // Update all deposit displays
