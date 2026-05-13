@@ -746,6 +746,7 @@ let selectedSlot = null;
 document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   initMonthNavigation();
+  loadServiceCategories();
 
   // Check for hash fragment to switch to availability tab
   if (window.location.hash === '#availability') {
@@ -755,6 +756,68 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 });
+
+// Fetch service categories from database and populate dropdowns
+async function loadServiceCategories() {
+  try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
+    const { data: services, error } = await supabase
+      .from('services')
+      .select('category')
+      .not('category', 'is', null);
+
+    if (error) {
+      console.error('Error fetching categories:', error);
+      return;
+    }
+
+    // Get distinct categories
+    const categories = [...new Set(services?.map(s => s.category) || [])];
+    console.log('Fetched categories:', categories);
+
+    // Populate availability category filter
+    const categoryFilter = document.getElementById('availability-category-filter');
+    if (categoryFilter) {
+      const currentValue = categoryFilter.value;
+      categoryFilter.innerHTML = '<option value="all">Toutes les catégories</option>';
+      categories.forEach(cat => {
+        if (cat) {
+          const option = document.createElement('option');
+          option.value = cat;
+          option.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+          categoryFilter.appendChild(option);
+        }
+      });
+      // Restore previous selection if possible
+      if (categories.includes(currentValue) || currentValue === 'all') {
+        categoryFilter.value = currentValue;
+      }
+    }
+
+    // Populate modal service type dropdown
+    const serviceTypeSelect = document.getElementById('capacity-service-type');
+    if (serviceTypeSelect) {
+      const currentValue = serviceTypeSelect.value;
+      serviceTypeSelect.innerHTML = '<option value="all">Tous les services (bloquer la salle entière)</option>';
+      categories.forEach(cat => {
+        if (cat) {
+          const option = document.createElement('option');
+          option.value = cat;
+          option.textContent = cat.charAt(0).toUpperCase() + cat.slice(1) + ' uniquement';
+          serviceTypeSelect.appendChild(option);
+        }
+      });
+      // Restore previous selection if possible
+      if (categories.includes(currentValue) || currentValue === 'all') {
+        serviceTypeSelect.value = currentValue;
+      }
+    }
+  } catch (err) {
+    console.error('Error loading service categories:', err);
+  }
+}
 
 function initTabs() {
   const tabBtns = document.querySelectorAll('.tab-btn');
