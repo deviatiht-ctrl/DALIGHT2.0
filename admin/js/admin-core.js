@@ -312,7 +312,7 @@ function buildFromDBTemplate(tpl, vars) {
   const accent = tpl.accent_color || '#D4AF37';
   const headerBg = tpl.header_bg || 'linear-gradient(135deg, #4A3728 0%, #6B4F3B 100%)';
   const logoUrl = tpl.logo_url || '';
-  const headerTitle = tplReplaceVars(tpl.header_title || 'DALIGHT Head Spa', vars);
+  const headerTitle = tplReplaceVars(tpl.header_title || 'DALIGHT', vars);
   const headerSubtitle = tplReplaceVars(tpl.header_subtitle || '', vars);
   const greeting = tplReplaceVars(tpl.greeting || '', vars);
   const body = tplReplaceVars(tpl.body_html || '', vars);
@@ -527,18 +527,18 @@ async function sendStatusUpdateEmail(reservation, newStatus) {
   } else {
     // Hardcoded fallback
     const statusSubjects = {
-      'CONFIRMED': '✓ Votre réservation est confirmée - DALIGHT Head Spa',
-      'CANCELLED': '✗ Votre réservation a été annulée - DALIGHT Head Spa',
-      'COMPLETED': '★ Merci pour votre visite - DALIGHT Head Spa',
+      'CONFIRMED': '✓ Votre réservation est confirmée - DALIGHT',
+      'CANCELLED': '✗ Votre réservation a été annulée - DALIGHT',
+      'COMPLETED': '★ Merci pour votre visite - DALIGHT',
     };
     const statusConfig = {
       'CONFIRMED': { icon:'✓', title:'Réservation Confirmée', color:'#4CAF50', bgColor:'#e8f5e9', message:'Bonne nouvelle! Votre réservation a été confirmée par notre équipe.' },
       'CANCELLED': { icon:'✗', title:'Réservation Annulée', color:'#f44336', bgColor:'#ffebee', message:'Votre réservation a été annulée. N\'hésitez pas à faire une nouvelle réservation.' },
-      'COMPLETED': { icon:'★', title:'Merci pour votre visite!', color:'#2196F3', bgColor:'#e3f2fd', message:'Nous espérons que vous avez apprécié votre expérience chez DALIGHT Head Spa.' },
+      'COMPLETED': { icon:'★', title:'Merci pour votre visite!', color:'#2196F3', bgColor:'#e3f2fd', message:'Nous espérons que vous avez apprécié votre expérience chez DALIGHT.' },
     };
     const config = statusConfig[newStatus] || statusConfig['CONFIRMED'];
     const logoUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/assets/images/logodaligth.png';
-    subject = statusSubjects[newStatus] || 'Mise à jour de votre réservation - DALIGHT Head Spa';
+    subject = statusSubjects[newStatus] || 'Mise à jour de votre réservation - DALIGHT';
     html = buildStatusUpdateEmailHTML(reservation, config, logoUrl, newStatus);
   }
 
@@ -585,7 +585,7 @@ async function sendOrderEmail(order, isAdmin = false) {
     subject = dbResult.subject;
     html = dbResult.html;
   } else {
-    subject = isAdmin ? '🔔 Nouvelle Commande Reçue' : '✓ Confirmation de Commande - DALIGHT Head Spa';
+    subject = isAdmin ? '🔔 Nouvelle Commande Reçue' : '✓ Confirmation de Commande - DALIGHT';
     const logoUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/assets/images/logodaligth.png';
     html = isAdmin ? buildAdminOrderEmailHTML(order, logoUrl) : buildClientOrderEmailHTML(order, logoUrl);
   }
@@ -648,7 +648,7 @@ function buildStatusUpdateEmailHTML(data, config, logoUrl, newStatus) {
         <div class="container">
           <div class="header">
             <img src="${logoUrl}" alt="DALIGHT Logo" class="logo" onerror="this.style.display='none'">
-            <h1>DALIGHT Head Spa</h1>
+            <h1>DALIGHT</h1>
             <p>Mise à jour de votre réservation</p>
           </div>
           <div class="content">
@@ -722,7 +722,7 @@ function buildStatusUpdateEmailHTML(data, config, logoUrl, newStatus) {
             </div>
           </div>
           <div class="footer">
-            <p style="margin: 0 0 10px 0;">© ${new Date().getFullYear()} <strong>DALIGHT Head Spa</strong>. Tous droits réservés.</p>
+            <p style="margin: 0 0 10px 0;">© ${new Date().getFullYear()} <strong>DALIGHT</strong>. Tous droits réservés.</p>
             <p style="margin: 0; font-size: 12px; opacity: 0.8;">L'art du bien-être et de la relaxation</p>
           </div>
         </div>
