@@ -204,12 +204,24 @@
       <div id="tab-availability" class="tab-content" style="display: none;">
         <!-- Month Navigation -->
         <div class="glass-card mb-3">
-          <div class="d-flex align-center justify-between">
+          <div class="d-flex align-center justify-between" style="flex-wrap: wrap; gap: 1rem;">
             <h3 class="card-title">Calendrier des disponibilités</h3>
-            <div class="d-flex gap-2">
-              <button class="btn btn-secondary" id="prev-month">— — Mois précédent</button>
-              <span id="current-month-display" class="text-lg font-semibold" style="min-width: 150px; text-align: center;"></span>
-              <button class="btn btn-secondary" id="next-month">Mois suivant — </button>
+            <div class="d-flex gap-2 align-center" style="flex-wrap: wrap;">
+              <div>
+                <label style="font-size: 0.8rem; color: var(--admin-text-muted);">Catégorie de service:</label>
+                <select id="availability-category-filter" class="form-input" style="min-width: 150px;">
+                  <option value="all">Toutes les catégories</option>
+                  <option value="headspa">Head Spa</option>
+                  <option value="massage">Massage</option>
+                  <option value="package">Package</option>
+                  <option value="cure">Cure</option>
+                </select>
+              </div>
+              <div class="d-flex gap-2">
+                <button class="btn btn-secondary" id="prev-month">— — Mois précédent</button>
+                <span id="current-month-display" class="text-lg font-semibold" style="min-width: 150px; text-align: center;"></span>
+                <button class="btn btn-secondary" id="next-month">Mois suivant — </button>
+              </div>
             </div>
           </div>
         </div>
@@ -429,10 +441,10 @@
           <label>Type de service concerné</label>
           <select id="capacity-service-type" class="form-input">
             <option value="all">Tous les services (bloquer la salle entière)</option>
-            <option value="headspa">Head Spa uniquement</option>
-            <option value="massage-relaxant">Massage uniquement</option>
-            <option value="wood-therapy">Wood Therapy uniquement</option>
-            <option value="package">Package uniquement</option>
+            <option value="headspa">Head Spa</option>
+            <option value="massage">Massage</option>
+            <option value="package">Package</option>
+            <option value="cure">Cure</option>
           </select>
           <p style="font-size:0.75rem;color:var(--admin-text-muted);margin-top:0.25rem;">
             —x— Un blocage par type laisse les autres services disponibles sur ce créneau.

@@ -2115,23 +2115,27 @@ function loadCartData() {
         }
 
         try {
+          // Get service category from cart to filter availability
+          const cartServices = window.cartServices || [];
+          const serviceCategory = cartServices.length > 0 ? cartServices[0].category : 'all';
+
           // Fetch reservations AND admin-blocked exceptions in parallel
           const [bookingsRes, exceptionsRes] = await Promise.all([
             supabaseClient
               .from('reservations')
-              .select('time')
+              .select('time, service_id')
               .eq('date', date)
               .in('status', ['pending', 'confirmed', 'PENDING', 'CONFIRMED']),
             supabaseClient
               .from('availability_exceptions')
-              .select('time_slot, is_blocked')
+              .select('time_slot, is_blocked, service_type')
               .eq('exception_date', date)
               .eq('is_blocked', true)
           ]);
 
           const bookedTimes = (bookingsRes.data || []).map(b => b.time?.substring(0, 5));
           const blockedTimes = (exceptionsRes.data || [])
-            .filter(e => e.is_blocked)
+            .filter(e => e.is_blocked && (e.service_type === 'all' || e.service_type === serviceCategory))
             .map(e => e.time_slot?.substring(0, 5));
 
           const unavailableTimes = [...new Set([...bookedTimes, ...blockedTimes])];

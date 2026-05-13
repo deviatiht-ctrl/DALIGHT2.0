@@ -746,6 +746,14 @@ let selectedSlot = null;
 document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   initMonthNavigation();
+
+  // Check for hash fragment to switch to availability tab
+  if (window.location.hash === '#availability') {
+    const availabilityTab = document.querySelector('.tab-btn[data-tab="availability"]');
+    if (availabilityTab) {
+      availabilityTab.click();
+    }
+  }
 });
 
 function initTabs() {
@@ -783,9 +791,13 @@ function initMonthNavigation() {
     currentAvailabilityMonth.setMonth(currentAvailabilityMonth.getMonth() - 1);
     loadAvailability();
   });
-  
+
   document.getElementById('next-month')?.addEventListener('click', () => {
     currentAvailabilityMonth.setMonth(currentAvailabilityMonth.getMonth() + 1);
+    loadAvailability();
+  });
+
+  document.getElementById('availability-category-filter')?.addEventListener('change', () => {
     loadAvailability();
   });
 }
@@ -857,10 +869,20 @@ async function loadAvailabilityFallback(supabase, year, month) {
   const startDate = `${year}-${String(month).padStart(2,'0')}-01`;
   const endDate   = new Date(year, month, 0).toISOString().split('T')[0];
 
+  // Get selected category filter
+  const categoryFilter = document.getElementById('availability-category-filter')?.value || 'all';
+
+  // Build exceptions query with category filter
+  let exceptionsQuery = supabase.from('availability_exceptions').select('*')
+    .gte('exception_date', startDate).lte('exception_date', endDate);
+  
+  if (categoryFilter !== 'all') {
+    exceptionsQuery = exceptionsQuery.eq('service_type', categoryFilter);
+  }
+
   const [exceptionsRes, bookingsRes] = await Promise.all([
-    supabase.from('availability_exceptions').select('*')
-      .gte('exception_date', startDate).lte('exception_date', endDate),
-    supabase.from('reservations').select('date, time, status')
+    exceptionsQuery,
+    supabase.from('reservations').select('date, time, status, service_id')
       .gte('date', startDate).lte('date', endDate)
       .not('status', 'eq', 'cancelled')
   ]);
@@ -869,11 +891,24 @@ async function loadAvailabilityFallback(supabase, year, month) {
   const bookings   = bookingsRes.data || [];
   const results    = [];
 
+  // Filter bookings by category if category filter is set
+  let filteredBookings = bookings;
+  if (categoryFilter !== 'all') {
+    // Get service IDs for the selected category
+    const { data: services } = await supabase
+      .from('services')
+      .select('id')
+      .eq('category', categoryFilter);
+    
+    const serviceIds = services?.map(s => s.id) || [];
+    filteredBookings = bookings.filter(b => serviceIds.includes(b.service_id));
+  }
+
   for (const exc of exceptions) {
     if (!exc.time_slot) continue; // skip jou antye
     const dateStr = exc.exception_date;
     const timeStr = exc.time_slot.substring(0, 5);
-    const booked  = bookings.filter(b =>
+    const booked  = filteredBookings.filter(b =>
       b.date === dateStr && b.time?.substring(0,5) === timeStr
     ).length;
     const capacity  = exc.max_capacity ?? 1;
@@ -884,11 +919,11 @@ async function loadAvailabilityFallback(supabase, year, month) {
       slot_time:        exc.time_slot,
       is_available:     !exc.is_blocked && remaining > 0,
       is_blocked:       !!exc.is_blocked,
+      service_type:     exc.service_type || 'all',
       max_capacity:     capacity,
       current_bookings: booked,
       remaining_slots:  remaining,
-      is_exception:     true,
-      service_type:     exc.service_type || 'all'
+      is_exception:     true
     });
   }
   return results;
@@ -1345,7 +1380,11 @@ function openSlotModal(date, time, slotData, allSlotsData) {
   document.getElementById('capacity-input').value = slotData?.max_capacity || 1;
   document.getElementById('capacity-available').checked = isBlocked ? false : (slotData?.is_available ?? true);
   const svcTypeEl = document.getElementById('capacity-service-type');
-  if (svcTypeEl) svcTypeEl.value = slotData?.service_type || 'all';
+  
+  // Pre-select the category filter value if no slot data exists, otherwise use slot's service_type
+  const categoryFilter = document.getElementById('availability-category-filter')?.value || 'all';
+  const serviceType = slotData?.service_type || categoryFilter;
+  if (svcTypeEl) svcTypeEl.value = serviceType;
 
   // Breakdown list
   const breakdownContainer = document.getElementById('capacity-breakdown');
