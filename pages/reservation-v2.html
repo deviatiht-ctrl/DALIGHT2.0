@@ -2116,8 +2116,22 @@ function loadCartData() {
 
         try {
           // Get service category from cart to filter availability
-          const cartServices = window.cartServices || [];
+          // Try multiple sources for cart services
+          let cartServices = [];
+          if (window.cartServices && window.cartServices.length > 0) {
+            cartServices = window.cartServices;
+          } else {
+            // Try localStorage
+            try {
+              const cartData = JSON.parse(localStorage.getItem('dalight:serviceCart') || '[]');
+              cartServices = cartData;
+            } catch (e) {
+              console.warn('Could not load cart from localStorage:', e);
+            }
+          }
+          
           const serviceCategory = cartServices.length > 0 ? cartServices[0].category : 'all';
+          console.log('📦 Service category for availability check:', serviceCategory, 'from cart:', cartServices);
 
           // Fetch reservations AND admin-blocked exceptions in parallel
           const [bookingsRes, exceptionsRes] = await Promise.all([

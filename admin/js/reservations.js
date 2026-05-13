@@ -821,9 +821,12 @@ async function loadServiceCategories() {
 
 function initTabs() {
   const tabBtns = document.querySelectorAll('.tab-btn');
+  console.log('📋 Initializing tabs, found', tabBtns.length, 'tab buttons');
+  
   tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const tabName = btn.dataset.tab;
+      console.log('🔄 Switching to tab:', tabName);
       
       // Update buttons
       tabBtns.forEach(b => b.classList.remove('active'));
@@ -835,15 +838,19 @@ function initTabs() {
         content.style.display = 'none';
       });
       
-      const activeTab = document.getElementById(`tab-${tabName}`);
-      if (activeTab) {
-        activeTab.classList.add('active');
-        activeTab.style.display = 'block';
+      const targetTab = document.getElementById(`tab-${tabName}`);
+      if (targetTab) {
+        targetTab.classList.add('active');
+        targetTab.style.display = 'block';
+        console.log('✅ Tab displayed:', tabName);
         
-        // Load availability data if that tab
+        // Load availability data when switching to availability tab
         if (tabName === 'availability') {
+          console.log('📅 Loading availability calendar...');
           loadAvailability();
         }
+      } else {
+        console.error('❌ Tab not found:', tabName);
       }
     });
   });
