@@ -923,7 +923,8 @@ window.adminCore = {
   formatCurrency,
   getStatusBadge,
   getInitials,
-  showToast
+  showToast,
+  supabase: supabaseClient
 };
 
 // Auto-initialize

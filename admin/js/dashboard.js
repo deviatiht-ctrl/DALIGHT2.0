@@ -12,31 +12,232 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadDashboardStats();
   loadRecentReservations();
   initCharts();
+  
+  // Notification button handler - show dropdown
+  const notifBtn = document.getElementById('notifications-btn');
+  if (notifBtn) {
+    notifBtn.addEventListener('click', () => {
+      toggleNotificationPanel();
+    });
+  }
 });
+
+// ============================================
+// NOTIFICATION PANEL
+// ============================================
+
+let notificationPanelVisible = false;
+
+async function toggleNotificationPanel() {
+  const existingPanel = document.getElementById('notification-panel');
+  
+  if (existingPanel) {
+    existingPanel.remove();
+    notificationPanelVisible = false;
+    return;
+  }
+  
+  const panel = document.createElement('div');
+  panel.id = 'notification-panel';
+  panel.style.cssText = `
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    width: 350px;
+    max-height: 500px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    z-index: 10000;
+    overflow: hidden;
+  `;
+  
+  panel.innerHTML = `
+    <div style="padding: 1rem; border-bottom: 1px solid #e5e7eb; background: #f9fafb;">
+      <h3 style="margin: 0; font-size: 1rem; font-weight: 600;">🔔 Notifications</h3>
+    </div>
+    <div id="notification-list" style="padding: 1rem; max-height: 400px; overflow-y: auto;">
+      <div style="text-align: center; padding: 2rem; color: #6b7280;">
+        <div style="width: 32px; height: 32px; border: 3px solid #e5e7eb; border-top-color: #9333ea; border-radius: 50%; margin: 0 auto 0.5rem; animation: spin 1s linear infinite;"></div>
+        <p style="margin: 0; font-size: 0.9rem;">Chargement...</p>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(panel);
+  notificationPanelVisible = true;
+  
+  // Load notifications
+  await loadNotifications();
+  
+  // Close when clicking outside
+  setTimeout(() => {
+    document.addEventListener('click', closeNotificationPanelOutside);
+  }, 0);
+}
+
+async function loadNotifications() {
+  const listEl = document.getElementById('notification-list');
+  if (!listEl) return;
+  
+  const { fetchReservations, supabase } = window.adminCore;
+  const notifications = [];
+  
+  try {
+    // Recent pending reservations
+    const reservations = await fetchReservations({ limit: 5 });
+    const pendingReservations = reservations.filter(r => r.status === 'PENDING');
+    
+    pendingReservations.forEach(r => {
+      notifications.push({
+        type: 'reservation',
+        title: '📅 Nouvelle réservation',
+        message: `${r.user_name || 'Client'} - ${r.service}`,
+        time: new Date(r.created_at),
+        link: 'reservations.html'
+      });
+    });
+    
+    // Recent messages (if table exists)
+    try {
+      const { data: messages } = await supabase
+        .from('messages')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (messages) {
+        messages.forEach(m => {
+          notifications.push({
+            type: 'message',
+            title: '💬 Nouveau message',
+            message: `${m.name || 'Client'}: ${m.message?.substring(0, 50)}${m.message?.length > 50 ? '...' : ''}`,
+            time: new Date(m.created_at),
+            link: 'messages.html'
+          });
+        });
+      }
+    } catch (msgErr) {
+      // Messages table might not exist
+    }
+    
+    // Sort by time
+    notifications.sort((a, b) => b.time - a.time);
+    
+    // Render
+    if (notifications.length === 0) {
+      listEl.innerHTML = `
+        <div style="text-align: center; padding: 2rem; color: #6b7280;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="48" height="48" style="margin-bottom: 0.5rem; opacity: 0.5;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+          <p style="margin: 0; font-size: 0.9rem;">Aucune notification récente</p>
+        </div>
+      `;
+    } else {
+      listEl.innerHTML = notifications.map(n => `
+        <div style="padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; background: ${n.type === 'reservation' ? '#fef3c7' : '#dbeafe'}; cursor: pointer; transition: background 0.2s;" onclick="window.location.href='${n.link}'">
+          <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">${n.title}</div>
+          <div style="font-size: 0.85rem; color: #4b5563; margin-bottom: 0.25rem;">${n.message}</div>
+          <div style="font-size: 0.75rem; color: #9ca3af;">${formatNotificationTime(n.time)}</div>
+        </div>
+      `).join('');
+    }
+  } catch (err) {
+    console.error('Error loading notifications:', err);
+    listEl.innerHTML = `
+      <div style="text-align: center; padding: 2rem; color: #dc3545;">
+        <p style="margin: 0; font-size: 0.9rem;">Erreur lors du chargement</p>
+      </div>
+    `;
+  }
+}
+
+function formatNotificationTime(date) {
+  const now = new Date();
+  const diff = now - date;
+  
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  
+  if (minutes < 1) return 'À l\'instant';
+  if (minutes < 60) return `Il y a ${minutes} min`;
+  if (hours < 24) return `Il y a ${hours} h`;
+  if (days < 7) return `Il y a ${days} j`;
+  
+  return date.toLocaleDateString('fr-FR');
+}
+
+function closeNotificationPanelOutside(e) {
+  const panel = document.getElementById('notification-panel');
+  const btn = document.getElementById('notifications-btn');
+  
+  if (panel && !panel.contains(e.target) && !btn.contains(e.target)) {
+    panel.remove();
+    notificationPanelVisible = false;
+    document.removeEventListener('click', closeNotificationPanelOutside);
+  }
+}
 
 // ============================================
 // STATS
 // ============================================
 
 async function loadDashboardStats() {
-  const { fetchReservations, fetchClients, getSupabaseClient } = window.adminCore;
+  console.log('Dashboard: loadDashboardStats called');
+  
+  // Check if adminCore is available
+  if (!window.adminCore) {
+    console.error('Dashboard: window.adminCore not available');
+    return;
+  }
+  
+  const { fetchReservations, fetchClients, supabase } = window.adminCore;
+  
+  if (!fetchReservations || !fetchClients || !supabase) {
+    console.error('Dashboard: Required functions not available', {
+      fetchReservations: !!fetchReservations,
+      fetchClients: !!fetchClients,
+      supabase: !!supabase
+    });
+    return;
+  }
   
   try {
-    const supabase = getSupabaseClient();
+    console.log('Dashboard: Supabase client obtained');
     
     // Fetch all reservations
     const reservations = await fetchReservations();
     const clients = await fetchClients();
     
+    console.log('Dashboard - Reservations:', reservations.length);
+    console.log('Dashboard - Clients:', clients.length);
+    
+    // Check if elements exist
+    const totalReservationsEl = document.getElementById('total-reservations');
+    const pendingReservationsEl = document.getElementById('pending-reservations');
+    const totalClientsEl = document.getElementById('total-clients');
+    const totalRevenueEl = document.getElementById('total-revenue');
+    const totalVisitorsEl = document.getElementById('total-visitors');
+    
+    console.log('Dashboard - Elements exist:', {
+      totalReservations: !!totalReservationsEl,
+      pendingReservations: !!pendingReservationsEl,
+      totalClients: !!totalClientsEl,
+      totalRevenue: !!totalRevenueEl,
+      totalVisitors: !!totalVisitorsEl
+    });
+    
     // Total reservations
-    document.getElementById('total-reservations').textContent = reservations.length;
+    if (totalReservationsEl) totalReservationsEl.textContent = reservations.length;
     
     // Pending reservations
     const pending = reservations.filter(r => r.status === 'PENDING');
-    document.getElementById('pending-reservations').textContent = pending.length;
+    if (pendingReservationsEl) pendingReservationsEl.textContent = pending.length;
     
     // Total clients
-    document.getElementById('total-clients').textContent = clients.length;
+    if (totalClientsEl) totalClientsEl.textContent = clients.length;
     
     // Calculate revenue (this month) from confirmed/completed reservations
     const now = new Date();
@@ -48,7 +249,7 @@ async function loadDashboardStats() {
     });
     
     const revenue = thisMonth.reduce((sum, r) => sum + (parseFloat(r.total_amount_usd) || 0), 0);
-    document.getElementById('total-revenue').textContent = `$${revenue.toFixed(0)}`;
+    if (totalRevenueEl) totalRevenueEl.textContent = `$${revenue.toFixed(0)}`;
     
     // Calculate revenue change vs last month
     const lastMonth = reservations.filter(r => {
@@ -76,21 +277,32 @@ async function loadDashboardStats() {
       `;
     }
     
-    // Visitors tracking (unique sessions this month)
-    const { count: visitorCount } = await supabase
-      .from('page_views')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', new Date(now.getFullYear(), now.getMonth(), 1).toISOString())
-      .lte('created_at', new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString());
+    // Visitors tracking (unique sessions this month) - handle if table doesn't exist
+    let visitorCount = 0;
+    let lastMonthVisitorCount = 0;
+    try {
+      const { count: thisMonthCount } = await supabase
+        .from('page_views')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', new Date(now.getFullYear(), now.getMonth(), 1).toISOString())
+        .lte('created_at', new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString());
+      
+      visitorCount = thisMonthCount || 0;
+      
+      const { count: lastMonthCount } = await supabase
+        .from('page_views')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString())
+        .lte('created_at', new Date(now.getFullYear(), now.getMonth(), 0).toISOString());
+      
+      lastMonthVisitorCount = lastMonthCount || 0;
+    } catch (visitorErr) {
+      console.log('page_views table might not exist yet:', visitorErr.message);
+      visitorCount = 0;
+      lastMonthVisitorCount = 0;
+    }
     
-    document.getElementById('total-visitors').textContent = visitorCount || 0;
-    
-    // Visitors change vs last month
-    const { count: lastMonthVisitorCount } = await supabase
-      .from('page_views')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString())
-      .lte('created_at', new Date(now.getFullYear(), now.getMonth(), 0).toISOString());
+    if (totalVisitorsEl) totalVisitorsEl.textContent = visitorCount;
     
     const visitorChange = lastMonthVisitorCount > 0 
       ? ((visitorCount - lastMonthVisitorCount) / lastMonthVisitorCount * 100).toFixed(0)
@@ -107,6 +319,8 @@ async function loadDashboardStats() {
         ${isPositive ? '+' : ''}${visitorChange}% vs dernier mois
       `;
     }
+    
+    console.log('Dashboard: Stats loaded successfully');
     
   } catch (err) {
     console.error('Error loading stats:', err);
