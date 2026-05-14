@@ -1297,7 +1297,7 @@
         </div>
         <div class="footer-hours">
           <h4>Horaires</h4>
-          <p>Tous les jours sauf lundi<br />07h00 — 17h00</p>
+          <p>Tous les jours<br />07h00 — 17h00</p>
         </div>
       </div>
       <div class="footer-credit">
@@ -2056,10 +2056,6 @@ function loadCartData() {
             cell.classList.add('selected');
           }
 
-          // Check if Monday (closed — DALIGHT fermé lundi)
-          if (date.getDay() === 1) {
-            cell.classList.add('disabled');
-          }
 
           cell.addEventListener('click', () => {
             if (!cell.classList.contains('disabled')) {
