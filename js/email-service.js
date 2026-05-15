@@ -802,6 +802,16 @@ function buildStatusUpdateEmailHTML(data, newStatus) {
  */
 function formatDate(dateString) {
   if (!dateString) return 'N/A';
+  // Handle YYYY-MM-DD format to avoid timezone issues
+  if (typeof dateString === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    const [y, m, d] = dateString.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  }
   const date = new Date(dateString);
   return date.toLocaleDateString('fr-FR', {
     weekday: 'long',
