@@ -2248,6 +2248,14 @@ function loadCartData() {
           return;
         }
 
+        // Validate phone number is required
+        const phone = document.getElementById('phone')?.value.trim();
+        clearFieldError('phone', 'phone-error');
+        if (!phone) {
+          showFieldError('phone', 'Tanpri ranpli nimewo telefòn sa a.', 'phone-error');
+          return;
+        }
+
         const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
         document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('field-error'));
         const oldPaymentError = document.getElementById('payment-method-error');
