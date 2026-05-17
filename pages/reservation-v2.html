@@ -2101,7 +2101,7 @@ function loadCartData() {
         const date = document.getElementById('selected-date').value;
         if (!date || !container) return;
 
-        const slots = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
+        const slots = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
         container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--marron-600);">Vérification des disponibilités...</div>';
 
         const supabaseClient = getSupabaseClient();
