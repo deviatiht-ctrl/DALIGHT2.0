@@ -21,13 +21,17 @@ CREATE INDEX IF NOT EXISTS idx_page_views_url ON page_views(page_url);
 -- Enable RLS
 ALTER TABLE page_views ENABLE ROW LEVEL SECURITY;
 
+-- Drop policies if they exist
+DROP POLICY IF EXISTS "Allow insert page_views" ON page_views;
+DROP POLICY IF EXISTS "Allow admin read page_views" ON page_views;
+
 -- Allow anyone to insert (for public tracking)
-CREATE POLICY IF NOT EXISTS "Allow insert page_views" 
+CREATE POLICY "Allow insert page_views" 
 ON page_views FOR INSERT 
 WITH CHECK (true);
 
 -- Allow admin to read
-CREATE POLICY IF NOT EXISTS "Allow admin read page_views" 
+CREATE POLICY "Allow admin read page_views" 
 ON page_views FOR SELECT 
 USING (auth.role() = 'authenticated');
 
