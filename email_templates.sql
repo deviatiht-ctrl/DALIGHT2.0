@@ -1,5 +1,5 @@
 -- =============================================
--- DALIGHT Head Spa — Email Templates Table
+-- DALIGHT — Email Templates Table
 -- Run this in Supabase SQL Editor
 -- =============================================
 
@@ -9,11 +9,11 @@ CREATE TABLE IF NOT EXISTS email_templates (
   template_key TEXT NOT NULL UNIQUE,
   label TEXT NOT NULL,
   subject TEXT NOT NULL,
-  header_title TEXT NOT NULL DEFAULT 'DALIGHT Head Spa',
+  header_title TEXT NOT NULL DEFAULT 'DALIGHT',
   header_subtitle TEXT DEFAULT '',
   greeting TEXT DEFAULT 'Cher(e) {{client_name}},',
   body_html TEXT NOT NULL DEFAULT '',
-  footer_text TEXT DEFAULT '© {{year}} DALIGHT Head Spa. Tous droits réservés.',
+  footer_text TEXT DEFAULT '© {{year}} DALIGHT. Tous droits réservés.',
   logo_url TEXT DEFAULT 'https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/assets/images/logodaligth.png',
   header_bg TEXT DEFAULT 'linear-gradient(135deg, #4A3728 0%, #6B4F3B 100%)',
   accent_color TEXT DEFAULT '#D4AF37',
@@ -67,8 +67,8 @@ CREATE TRIGGER email_templates_updated_at
 INSERT INTO email_templates (template_key, label, subject, header_title, header_subtitle, greeting, body_html, footer_text) VALUES
 
 -- Reservation received (client)
-('reservation_client', 'Réservation reçue (Client)', '📋 Réservation Reçue - En attente de confirmation · DALIGHT Head Spa',
- 'DALIGHT Head Spa', 'Réservation Reçue · En attente de confirmation',
+('reservation_client', 'Réservation reçue (Client)', '📋 Réservation Reçue - En attente de confirmation · DALIGHT',
+ 'DALIGHT', 'Réservation Reçue · En attente de confirmation',
  'Cher(e) {{client_name}},',
  '<p class="message">Nous vous remercions pour votre réservation. Elle a été enregistrée avec succès et est actuellement en attente de confirmation.</p>
 <div class="detail-box">
@@ -79,11 +79,11 @@ INSERT INTO email_templates (template_key, label, subject, header_title, header_
   {{#notes}}<div class="detail-row"><span class="label">Notes:</span><span class="value">{{notes}}</span></div>{{/notes}}
 </div>
 <div class="info-box"><strong>ℹ️ Prochaine étape:</strong> Notre équipe examinera votre demande et vous contactera sous peu pour confirmer votre rendez-vous.</div>',
- '© {{year}} DALIGHT Head Spa. Tous droits réservés.'),
+ '© {{year}} DALIGHT. Tous droits réservés.'),
 
 -- Reservation received (admin)
 ('reservation_admin', 'Nouvelle réservation (Admin)', '🔔 Nouvelle Réservation Reçue',
- '🔔 Nouvelle Réservation', 'DALIGHT Head Spa - Administration',
+ '🔔 Nouvelle Réservation', 'DALIGHT - Administration',
  '',
  '<div class="alert-box"><strong>⚡ Une nouvelle réservation vient d''être soumise!</strong><p style="margin:10px 0 0 0;color:#666;">Veuillez examiner les détails ci-dessous.</p></div>
 <h3 class="section-title">👤 Client</h3>
@@ -99,11 +99,11 @@ INSERT INTO email_templates (template_key, label, subject, header_title, header_
   <div class="detail-row"><span class="label">Lieu:</span><span class="value">{{location}}</span></div>
 </div>
 <div class="action-box"><strong>✅ Action requise:</strong> Connectez-vous au panneau d''administration pour confirmer cette réservation.</div>',
- '© {{year}} DALIGHT Head Spa - Système de Gestion'),
+ '© {{year}} DALIGHT - Système de Gestion'),
 
 -- Status: Confirmed
-('status_confirmed', 'Réservation confirmée', '✓ Votre réservation est confirmée - DALIGHT Head Spa',
- 'DALIGHT Head Spa', 'Mise à jour de votre réservation',
+('status_confirmed', 'Réservation confirmée', '✓ Votre réservation est confirmée - DALIGHT',
+ 'DALIGHT', 'Mise à jour de votre réservation',
  'Cher(e) {{client_name}},',
  '<div class="status-banner" style="background:#e8f5e9;border-left:4px solid #4CAF50;padding:30px;border-radius:8px;text-align:center;margin-bottom:25px;">
   <div style="font-size:48px;color:#4CAF50;margin-bottom:15px;">✓</div>
@@ -122,11 +122,11 @@ INSERT INTO email_templates (template_key, label, subject, header_title, header_
   <li>Apportez une pièce d''identité valide</li>
   <li>En cas d''empêchement, prévenez-nous 24h à l''avance</li>
 </ul></div>',
- '© {{year}} DALIGHT Head Spa. Tous droits réservés.'),
+ '© {{year}} DALIGHT. Tous droits réservés.'),
 
 -- Status: Cancelled
-('status_cancelled', 'Réservation annulée', '✗ Votre réservation a été annulée - DALIGHT Head Spa',
- 'DALIGHT Head Spa', 'Mise à jour de votre réservation',
+('status_cancelled', 'Réservation annulée', '✗ Votre réservation a été annulée - DALIGHT',
+ 'DALIGHT', 'Mise à jour de votre réservation',
  'Cher(e) {{client_name}},',
  '<div class="status-banner" style="background:#ffebee;border-left:4px solid #f44336;padding:30px;border-radius:8px;text-align:center;margin-bottom:25px;">
   <div style="font-size:48px;color:#f44336;margin-bottom:15px;">✗</div>
@@ -138,32 +138,32 @@ INSERT INTO email_templates (template_key, label, subject, header_title, header_
   <div class="detail-row"><span class="label">Date:</span><span class="value">{{date}}</span></div>
   <div class="detail-row"><span class="label">Heure:</span><span class="value">{{time}}</span></div>
 </div>',
- '© {{year}} DALIGHT Head Spa. Tous droits réservés.'),
+ '© {{year}} DALIGHT. Tous droits réservés.'),
 
 -- Status: Completed
-('status_completed', 'Visite terminée', '★ Merci pour votre visite - DALIGHT Head Spa',
- 'DALIGHT Head Spa', 'Mise à jour de votre réservation',
+('status_completed', 'Visite terminée', '★ Merci pour votre visite - DALIGHT',
+ 'DALIGHT', 'Mise à jour de votre réservation',
  'Cher(e) {{client_name}},',
  '<div class="status-banner" style="background:#e3f2fd;border-left:4px solid #2196F3;padding:30px;border-radius:8px;text-align:center;margin-bottom:25px;">
   <div style="font-size:48px;color:#2196F3;margin-bottom:15px;">★</div>
   <h2 style="font-size:24px;font-weight:600;color:#2196F3;margin:0 0 10px 0;">Merci pour votre visite!</h2>
-  <p style="color:#666;font-size:16px;margin:0;">Nous espérons que vous avez apprécié votre expérience chez DALIGHT Head Spa.</p>
+  <p style="color:#666;font-size:16px;margin:0;">Nous espérons que vous avez apprécié votre expérience chez DALIGHT.</p>
 </div>
 <div class="info-box"><strong>⭐ Votre avis compte!</strong><p style="margin:10px 0 0 0;color:#666;">N''hésitez pas à nous laisser un avis ou à recommander DALIGHT à vos proches.</p></div>',
- '© {{year}} DALIGHT Head Spa. Tous droits réservés.'),
+ '© {{year}} DALIGHT. Tous droits réservés.'),
 
 -- Order confirmation (client)
-('order_client', 'Commande confirmée (Client)', '✓ Confirmation de Commande - DALIGHT Head Spa',
- 'DALIGHT Head Spa', 'Commande Confirmée',
+('order_client', 'Commande confirmée (Client)', '✓ Confirmation de Commande - DALIGHT',
+ 'DALIGHT', 'Commande Confirmée',
  'Cher(e) {{client_name}},',
  '<p class="message">Nous vous remercions pour votre commande. Elle a été enregistrée avec succès et est en cours de traitement.</p>
 <div class="order-number"><div style="color:#666;font-size:14px;margin-bottom:5px;">Numéro de Commande</div><strong>{{order_number}}</strong></div>
 <div class="info-box"><strong>ℹ️ Prochaine étape:</strong> Notre équipe préparera votre commande et vous contactera pour organiser la livraison.</div>',
- '© {{year}} DALIGHT Head Spa. Tous droits réservés.'),
+ '© {{year}} DALIGHT. Tous droits réservés.'),
 
 -- Order notification (admin)
 ('order_admin', 'Nouvelle commande (Admin)', '🔔 Nouvelle Commande Reçue',
- '🔔 Nouvelle Commande', 'DALIGHT Head Spa - Administration',
+ '🔔 Nouvelle Commande', 'DALIGHT - Administration',
  '',
  '<div class="alert-box"><strong>⚡ Une nouvelle commande vient d''être soumise!</strong></div>
 <div class="order-number"><div style="color:#666;font-size:14px;margin-bottom:5px;">Numéro de Commande</div><strong>{{order_number}}</strong></div>
@@ -173,18 +173,18 @@ INSERT INTO email_templates (template_key, label, subject, header_title, header_
   <div class="detail-row"><span class="label">Email:</span><span class="value">{{client_email}}</span></div>
 </div>
 <div class="action-box"><strong>✅ Action requise:</strong> Connectez-vous pour traiter cette commande.</div>',
- '© {{year}} DALIGHT Head Spa - Système de Gestion'),
+ '© {{year}} DALIGHT - Système de Gestion'),
 
 -- Follow/subscription welcome
-('follow_welcome', 'Bienvenue abonné', '🌟 Merci de suivre DALIGHT Head Spa!',
- 'DALIGHT Head Spa', 'Bienvenue dans notre communauté!',
+('follow_welcome', 'Bienvenue abonné', '🌟 Merci de suivre DALIGHT!',
+ 'DALIGHT', 'Bienvenue dans notre communauté!',
  'Cher(e) membre DALIGHT,',
  '<div class="welcome-banner" style="background:linear-gradient(135deg,#fff3cd,#f9f7f5);padding:30px;border-radius:8px;text-align:center;border-left:4px solid #D4AF37;margin-bottom:25px;">
   <div style="font-size:48px;margin-bottom:15px;">🌟</div>
-  <h2 style="font-size:24px;font-weight:600;color:#4A3728;margin:0 0 10px 0;">Merci de suivre DALIGHT Head Spa!</h2>
+  <h2 style="font-size:24px;font-weight:600;color:#4A3728;margin:0 0 10px 0;">Merci de suivre DALIGHT!</h2>
   <p style="color:#666;font-size:16px;margin:0;">Vous faites maintenant partie de notre communauté bien-être exclusive.</p>
 </div>
 <p style="color:#666;line-height:1.8;margin-bottom:25px;">En suivant DALIGHT, vous avez accès à du contenu exclusif et restez informé de nos dernières actualités, promotions et rituels.</p>',
- '© {{year}} DALIGHT Head Spa. Tous droits réservés.')
+ '© {{year}} DALIGHT. Tous droits réservés.')
 
 ON CONFLICT (template_key) DO NOTHING;

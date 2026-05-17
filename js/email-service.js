@@ -65,7 +65,7 @@ function buildFromTemplate(tpl, vars) {
   const accent = tpl.accent_color || '#D4AF37';
   const headerBg = tpl.header_bg || 'linear-gradient(135deg, #4A3728 0%, #6B4F3B 100%)';
   const logoUrl = tpl.logo_url || '';
-  const headerTitle = replaceVars(tpl.header_title || 'DALIGHT Head Spa', vars);
+  const headerTitle = replaceVars(tpl.header_title || 'DALIGHT', vars);
   const headerSubtitle = replaceVars(tpl.header_subtitle || '', vars);
   const greeting = replaceVars(tpl.greeting || '', vars);
   const body = replaceVars(tpl.body_html || '', vars);
@@ -391,9 +391,9 @@ export async function sendFollowEmail(userData) {
  */
 function buildClientEmail(reservationData) {
   return {
-    from: 'DALIGHT Head Spa <onboarding@resend.dev>',
+    from: 'DALIGHT <onboarding@resend.dev>',
     to: [reservationData.user_email],
-    subject: '📋 Réservation Reçue - En attente de confirmation · DALIGHT Head Spa',
+    subject: '📋 Réservation Reçue - En attente de confirmation · DALIGHT',
     html: buildClientEmailHTML(reservationData),
   };
 }
@@ -415,15 +415,15 @@ function buildAdminEmail(reservationData, config) {
  */
 function buildStatusUpdateEmail(reservationData, newStatus) {
   const statusSubjects = {
-    'CONFIRMED': '✓ Votre réservation est confirmée - DALIGHT Head Spa',
-    'CANCELLED': '✗ Votre réservation a été annulée - DALIGHT Head Spa',
-    'COMPLETED': '★ Merci pour votre visite - DALIGHT Head Spa',
+    'CONFIRMED': '✓ Votre réservation est confirmée - DALIGHT',
+    'CANCELLED': '✗ Votre réservation a été annulée - DALIGHT',
+    'COMPLETED': '★ Merci pour votre visite - DALIGHT',
   };
 
   return {
-    from: 'DALIGHT Head Spa <onboarding@resend.dev>',
+    from: 'DALIGHT <onboarding@resend.dev>',
     to: [reservationData.user_email],
-    subject: statusSubjects[newStatus] || 'Mise à jour de votre réservation - DALIGHT Head Spa',
+    subject: statusSubjects[newStatus] || 'Mise à jour de votre réservation - DALIGHT',
     html: buildStatusUpdateEmailHTML(reservationData, newStatus),
   };
 }
@@ -468,7 +468,7 @@ function buildClientEmailHTML(data) {
         <div class="container">
           <div class="header">
             <img src="${logoUrl}" alt="DALIGHT Logo" class="logo" onerror="this.style.display='none'">
-            <h1>DALIGHT Head Spa</h1>
+            <h1>DALIGHT</h1>
             <p>Réservation Reçue · En attente de confirmation</p>
           </div>
           <div class="content">
@@ -515,7 +515,7 @@ function buildClientEmailHTML(data) {
             </div>
           </div>
           <div class="footer">
-            <p style="margin: 0 0 10px 0;">© ${new Date().getFullYear()} <strong>DALIGHT Head Spa</strong>. Tous droits réservés.</p>
+            <p style="margin: 0 0 10px 0;">© ${new Date().getFullYear()} <strong>DALIGHT</strong>. Tous droits réservés.</p>
             <p style="margin: 0; font-size: 12px; opacity: 0.8;">L'art du bien-être et de la relaxation</p>
           </div>
         </div>
@@ -566,7 +566,7 @@ function buildAdminEmailHTML(data) {
           <div class="header">
             <img src="${logoUrl}" alt="DALIGHT Logo" class="logo" onerror="this.style.display='none'">
             <h1>🔔 Nouvelle Réservation</h1>
-            <p>DALIGHT Head Spa - Panneau d'Administration</p>
+            <p>DALIGHT - Panneau d'Administration</p>
           </div>
           <div class="content">
             <div class="alert-box">
@@ -634,7 +634,7 @@ function buildAdminEmailHTML(data) {
             </div>
           </div>
           <div class="footer">
-            <p style="margin: 0 0 10px 0;">© ${new Date().getFullYear()} <strong>DALIGHT Head Spa</strong> - Système de Gestion</p>
+            <p style="margin: 0 0 10px 0;">© ${new Date().getFullYear()} <strong>DALIGHT</strong> - Système de Gestion</p>
             <p style="margin: 0; font-size: 12px; opacity: 0.8;">Ceci est un email automatique. Ne pas répondre directement.</p>
           </div>
         </div>
@@ -670,7 +670,7 @@ function buildStatusUpdateEmailHTML(data, newStatus) {
       title: 'Merci pour votre visite!',
       color: '#2196F3',
       bgColor: '#e3f2fd',
-      message: 'Nous espérons que vous avez apprécié votre expérience chez DALIGHT Head Spa.',
+      message: 'Nous espérons que vous avez apprécié votre expérience chez DALIGHT.',
     },
   };
 
@@ -713,7 +713,7 @@ function buildStatusUpdateEmailHTML(data, newStatus) {
         <div class="container">
           <div class="header">
             <img src="${logoUrl}" alt="DALIGHT Logo" class="logo" onerror="this.style.display='none'">
-            <h1>DALIGHT Head Spa</h1>
+            <h1>DALIGHT</h1>
             <p>Mise à jour de votre réservation</p>
           </div>
           <div class="content">
@@ -787,7 +787,7 @@ function buildStatusUpdateEmailHTML(data, newStatus) {
             </div>
           </div>
           <div class="footer">
-            <p style="margin: 0 0 10px 0;">© ${new Date().getFullYear()} <strong>DALIGHT Head Spa</strong>. Tous droits réservés.</p>
+            <p style="margin: 0 0 10px 0;">© ${new Date().getFullYear()} <strong>DALIGHT</strong>. Tous droits réservés.</p>
             <p style="margin: 0; font-size: 12px; opacity: 0.8;">L'art du bien-être et de la relaxation</p>
           </div>
         </div>
@@ -826,9 +826,9 @@ function formatDate(dateString) {
  */
 function buildClientOrderEmail(orderData) {
   return {
-    from: 'DALIGHT Head Spa <onboarding@resend.dev>',
+    from: 'DALIGHT <onboarding@resend.dev>',
     to: [orderData.customer_email],
-    subject: '✓ Confirmation de Commande - DALIGHT Head Spa',
+    subject: '✓ Confirmation de Commande - DALIGHT',
     html: buildClientOrderEmailHTML(orderData),
   };
 }
@@ -850,9 +850,9 @@ function buildAdminOrderEmail(orderData, config) {
  */
 function buildFollowEmail(userData) {
   return {
-    from: 'DALIGHT Head Spa <onboarding@resend.dev>',
+    from: 'DALIGHT <onboarding@resend.dev>',
     to: [userData.email],
-    subject: '🌟 Merci de suivre DALIGHT Head Spa!',
+    subject: '🌟 Merci de suivre DALIGHT!',
     html: buildFollowEmailHTML(userData),
   };
 }
@@ -904,7 +904,7 @@ function buildClientOrderEmailHTML(data) {
         <div class="container">
           <div class="header">
             <img src="${logoUrl}" alt="DALIGHT Logo" class="logo" onerror="this.style.display='none'">
-            <h1>DALIGHT Head Spa</h1>
+            <h1>DALIGHT</h1>
             <p>Commande Confirmée</p>
           </div>
           <div class="content">
@@ -966,7 +966,7 @@ function buildClientOrderEmailHTML(data) {
             </div>
           </div>
           <div class="footer">
-            <p style="margin: 0 0 10px 0;">© ${new Date().getFullYear()} <strong>DALIGHT Head Spa</strong>. Tous droits réservés.</p>
+            <p style="margin: 0 0 10px 0;">© ${new Date().getFullYear()} <strong>DALIGHT</strong>. Tous droits réservés.</p>
             <p style="margin: 0; font-size: 12px; opacity: 0.8;">L'art du bien-être et de la relaxation</p>
           </div>
         </div>
@@ -1027,7 +1027,7 @@ function buildAdminOrderEmailHTML(data) {
           <div class="header">
             <img src="${logoUrl}" alt="DALIGHT Logo" class="logo" onerror="this.style.display='none'">
             <h1>🔔 Nouvelle Commande</h1>
-            <p>DALIGHT Head Spa - Panneau d'Administration</p>
+            <p>DALIGHT - Panneau d'Administration</p>
           </div>
           <div class="content">
             <div class="alert-box">
@@ -1109,7 +1109,7 @@ function buildAdminOrderEmailHTML(data) {
             </div>
           </div>
           <div class="footer">
-            <p style="margin: 0 0 10px 0;">© ${new Date().getFullYear()} <strong>DALIGHT Head Spa</strong> - Système de Gestion</p>
+            <p style="margin: 0 0 10px 0;">© ${new Date().getFullYear()} <strong>DALIGHT</strong> - Système de Gestion</p>
             <p style="margin: 0; font-size: 12px; opacity: 0.8;">Ceci est un email automatique. Ne pas répondre directement.</p>
           </div>
         </div>
@@ -1166,20 +1166,20 @@ function buildFollowEmailHTML(data) {
         <div class="container">
           <div class="header">
             <img src="${logoUrl}" alt="DALIGHT Logo" class="logo" onerror="this.style.display='none'">
-            <h1>DALIGHT Head Spa</h1>
+            <h1>DALIGHT</h1>
             <p>Bienvenue dans notre communauté!</p>
           </div>
           <div class="content">
             <div class="welcome-banner">
               <div class="welcome-icon">🌟</div>
-              <h2 class="welcome-title">Merci de suivre DALIGHT Head Spa!</h2>
+              <h2 class="welcome-title">Merci de suivre DALIGHT!</h2>
               <p class="welcome-message">Nous sommes ravis de vous compter parmi nos abonnés. Vous faites maintenant partie de notre communauté bien-être exclusive.</p>
             </div>
 
             <p class="greeting">Cher(e) membre DALIGHT,</p>
             
             <p style="color: #666; line-height: 1.8; margin-bottom: 25px;">
-              En suivant DALIGHT Head Spa, vous avez accès à du contenu exclusif et restez informé de nos dernières actualités, promotions et nouveaux rituels.
+              En suivant DALIGHT, vous avez accès à du contenu exclusif et restez informé de nos dernières actualités, promotions et nouveaux rituels.
             </p>
 
             <div class="benefits-box">
@@ -1229,7 +1229,7 @@ function buildFollowEmailHTML(data) {
             </div>
           </div>
           <div class="footer">
-            <p style="margin: 0 0 10px 0;">© ${new Date().getFullYear()} <strong>DALIGHT Head Spa</strong>. Tous droits réservés.</p>
+            <p style="margin: 0 0 10px 0;">© ${new Date().getFullYear()} <strong>DALIGHT</strong>. Tous droits réservés.</p>
             <p style="margin: 0; font-size: 12px; opacity: 0.8;">L'art du bien-être et de la relaxation</p>
           </div>
         </div>
