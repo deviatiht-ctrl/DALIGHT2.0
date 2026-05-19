@@ -239,6 +239,7 @@ window.openDetailModal = function(id) {
         <div class="text-muted mb-1">Client</div>
         <div style="font-weight: 500;">${reservation.user_name || 'Non renseigné'}</div>
         <div class="text-muted">${reservation.user_email}</div>
+        ${reservation.phone ? `<div style="margin-top:0.25rem;font-size:0.9rem;">📞 <strong>${reservation.phone}</strong></div>` : ''}
       </div>
       
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
