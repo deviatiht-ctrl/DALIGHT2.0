@@ -2,6 +2,29 @@
 
 const LOGO_URL = 'https://raw.githubusercontent.com/deviatiht-ctrl/DALIGHT2.0/main/assets/images/logodaligth.png';
 
+const safeFormatDate = (dateStr) => {
+  if (!dateStr) return '';
+  const match = typeof dateStr === 'string' ? dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/) : null;
+  if (match) {
+    const y = parseInt(match[1], 10);
+    const m = parseInt(match[2], 10);
+    const d = parseInt(match[3], 10);
+    return new Date(y, m - 1, d).toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('fr-FR', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
+
 const BASE_STYLES = `
   body { font-family: 'Montserrat', sans-serif; background-color: #f5f3f0; margin: 0; padding: 20px; }
   .container { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(74,55,40,0.1); }
@@ -25,7 +48,7 @@ const BASE_STYLES = `
 `;
 
 export function clientConfirmationEmail(reservation) {
-  const formatDate = (date) => new Date(date).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const formatDate = (date) => safeFormatDate(date);
   const formatTime = (time) => time;
 
   return `
@@ -90,7 +113,7 @@ export function clientConfirmationEmail(reservation) {
 }
 
 export function adminNotificationEmail(reservation) {
-  const formatDate = (date) => new Date(date).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const formatDate = (date) => safeFormatDate(date);
 
   return `
 <!DOCTYPE html>
@@ -166,7 +189,7 @@ export function adminNotificationEmail(reservation) {
 }
 
 export function adminConfirmationEmail(reservation) {
-  const formatDate = (date) => new Date(date).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const formatDate = (date) => safeFormatDate(date);
 
   return `
 <!DOCTYPE html>

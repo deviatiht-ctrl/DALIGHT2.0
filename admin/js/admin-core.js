@@ -504,7 +504,17 @@ async function sendStatusUpdateEmail(reservation, newStatus) {
     'COMPLETED': 'status_completed',
   };
   const templateKey = statusTemplateMap[newStatus];
-  const formattedDate = new Date(reservation.date).toLocaleDateString('fr-FR', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  
+  const safeParseDate = (dateStr) => {
+    if (!dateStr) return new Date();
+    const match = typeof dateStr === 'string' ? dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/) : null;
+    if (match) {
+      return new Date(parseInt(match[1], 10), parseInt(match[2], 10) - 1, parseInt(match[3], 10));
+    }
+    return new Date(dateStr);
+  };
+  const formattedDate = safeParseDate(reservation.date).toLocaleDateString('fr-FR', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  
   const vars = {
     client_name: reservation.user_name || reservation.user_email || '',
     client_email: reservation.user_email || '',
@@ -604,7 +614,15 @@ async function sendOrderEmail(order, isAdmin = false) {
 }
 
 function buildStatusUpdateEmailHTML(data, config, logoUrl, newStatus) {
-  const formattedDate = new Date(data.date).toLocaleDateString('fr-FR', {
+  const safeParseDate = (dateStr) => {
+    if (!dateStr) return new Date();
+    const match = typeof dateStr === 'string' ? dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/) : null;
+    if (match) {
+      return new Date(parseInt(match[1], 10), parseInt(match[2], 10) - 1, parseInt(match[3], 10));
+    }
+    return new Date(dateStr);
+  };
+  const formattedDate = safeParseDate(data.date).toLocaleDateString('fr-FR', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',

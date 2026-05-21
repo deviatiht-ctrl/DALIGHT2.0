@@ -533,7 +533,17 @@ window.sendEmailTemplate = function(reservationId, templateKey) {
 
   const name     = r.user_name     || 'Cher(e) client(e)';
   const service  = r.service       || 'notre service';
-  const date     = r.date ? new Date(r.date).toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) : '';
+  
+  const safeParseDate = (dateStr) => {
+    if (!dateStr) return null;
+    const match = typeof dateStr === 'string' ? dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/) : null;
+    if (match) {
+      return new Date(parseInt(match[1], 10), parseInt(match[2], 10) - 1, parseInt(match[3], 10));
+    }
+    return new Date(dateStr);
+  };
+  const parsedDate = safeParseDate(r.date);
+  const date     = parsedDate ? parsedDate.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) : '';
   const time     = r.time          || '';
   const location = r.location      || 'notre spa';
   const phone    = '+509 4747-7221';

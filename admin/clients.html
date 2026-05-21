@@ -122,6 +122,7 @@
   <script>
     let allClients = [];
     let reservationCounts = {};
+    let clientPhones = {};
     
     document.addEventListener('DOMContentLoaded', async () => {
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -138,12 +139,12 @@
       const phone = '+509 4747-7221';
       const templates = {
         welcome: {
-          subject: 'Bienvenue chez DALIGHT Spa —S—',
-          body: `Bonjour ${name},\n\nBienvenue dans la famille DALIGHT ! Nous sommes ravis de vous compter parmi nos clients.\n\nDécouvrez Nos Services signature : Head Spa, massages thérapeutiques, soins capillaires personnalisés et plus encore.\n\n—x& Réservez en ligne : https://dalightspa.com\n—x~ Ou appelez-nous : ${phone}\n\nì très bientôt,\nL'équipe DALIGHT`
+          subject: 'Bienvenue chez DALIGHT Spa',
+          body: `Bonjour ${name},\n\nBienvenue dans la famille DALIGHT ! Nous sommes ravis de vous compter parmi nos clients.\n\nDécouvrez nos services signature : Head Spa, massages thérapeutiques, soins capillaires personnalisés et plus encore.\n\n✨ Réservez en ligne : https://dalightspa.com\n📞 Ou appelez-nous : ${phone}\n\nÀ très bientôt,\nL'équipe DALIGHT`
         },
         promo: {
-          subject: '—x}— Offre spéciale DALIGHT Spa - Pour vous !',
-          body: `Bonjour ${name},\n\nNous avons une offre spéciale rien que pour vous !\n\n[Décrivez votre offre ici]\n\nRéservez dès maintenant :\n—x~ ${phone}\n—x— Delmas 65, Faustin Premier Durandise #10\n\nì très vite,\nL'équipe DALIGHT`
+          subject: '🎁 Offre spéciale DALIGHT Spa - Pour vous !',
+          body: `Bonjour ${name},\n\nNous avons une offre spéciale rien que pour vous !\n\n[Décrivez votre offre ici]\n\nRéservez dès maintenant :\n📞 ${phone}\n📍 Delmas 65, Faustin Premier Durandise #10\n\nÀ très vite,\nL'équipe DALIGHT`
         },
         custom: {
           subject: 'DALIGHT Spa',
@@ -165,21 +166,20 @@
       const { fetchClients, fetchReservations, formatDate, getInitials } = window.adminCore;
       
       try {
-        // Get clients from profiles
         allClients = await fetchClients();
-        
-        // Get reservation counts
         const reservations = await fetchReservations();
         reservationCounts = {};
+        clientPhones = {};
         reservations.forEach(r => {
           const email = r.user_email;
           reservationCounts[email] = (reservationCounts[email] || 0) + 1;
+          if (r.phone && !clientPhones[email]) {
+            clientPhones[email] = r.phone;
+          }
         });
         
-        // Stats
         document.getElementById('total-clients').textContent = allClients.length;
         
-        // Active clients (with reservations this month)
         const now = new Date();
         const activeEmails = new Set();
         reservations.forEach(r => {
@@ -228,14 +228,14 @@
             </div>
           </td>
           <td>${c.email}</td>
-          <td>${c.phone || '-'}</td>
+          <td>${c.phone || clientPhones[c.email] || '-'}</td>
           <td><span class="status-badge ${reservationCounts[c.email] ? 'completed' : 'pending'}">${reservationCounts[c.email] || 0} réservation(s)</span></td>
           <td>${formatDate(c.created_at)}</td>
           <td>
             <div style="display:flex;gap:0.3rem;flex-wrap:wrap;">
-              <button class="btn btn-secondary btn-sm" onclick="sendClientEmail('${c.email}','${(c.full_name||'').replace(/'/g,"\\'")}','welcome')" title="Bienvenue">—x9</button>
-              <button class="btn btn-secondary btn-sm" onclick="sendClientEmail('${c.email}','${(c.full_name||'').replace(/'/g,"\\'")}','promo')" title="Promo">—x}—</button>
-              <button class="btn btn-secondary btn-sm" onclick="sendClientEmail('${c.email}','${(c.full_name||'').replace(/'/g,"\\'")}','custom')" title="—0crire">—S—️</button>
+              <button class="btn btn-secondary btn-sm" onclick="sendClientEmail('${c.email}','${(c.full_name||'').replace(/'/g,"\\'")}','welcome')" title="Bienvenue">👋 Bienvenue</button>
+              <button class="btn btn-secondary btn-sm" onclick="sendClientEmail('${c.email}','${(c.full_name||'').replace(/'/g,"\\'")}','promo')" title="Promo">🎁 Promo</button>
+              <button class="btn btn-secondary btn-sm" onclick="sendClientEmail('${c.email}','${(c.full_name||'').replace(/'/g,"\\'")}','custom')" title="Écrire">✉️ Écrire</button>
             </div>
           </td>
         </tr>
@@ -244,4 +244,3 @@
   </script>
 </body>
 </html>
-
