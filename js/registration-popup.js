@@ -43,6 +43,39 @@ export function initRegistrationPopup() {
         const { data: { session } } = await sb.auth.getSession();
         if (session?.user) {
           console.log('ℹ️ Active Supabase session found, skipping registration pop-up.');
+          
+          // Sync profile from Supabase Database "profiles" table to LocalStorage!
+          try {
+            const { data: profileData, error } = await sb
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+              
+            if (profileData && !error) {
+              const nameParts = (profileData.full_name || '').split(/\s+/);
+              const firstName = nameParts[0] || '';
+              const lastName = nameParts.slice(1).join(' ') || '';
+              
+              const profile = {
+                fullName: profileData.full_name || '',
+                firstName: firstName,
+                lastName: lastName,
+                email: profileData.email || session.user.email || '',
+                phone: profileData.phone || '',
+                address: profileData.address || '',
+                registeredAt: profileData.created_at || new Date().toISOString()
+              };
+              
+              localStorage.setItem('dalight:user_profile', JSON.stringify(profile));
+              console.log('🔄 Synced Supabase profiles table to localStorage:', profile);
+              
+              // Prefill fields on current page if user already on reservation or checkout
+              prefillCurrentPageForm(profile);
+            }
+          } catch (syncErr) {
+            console.warn('Failed to sync Supabase profile database to local storage:', syncErr);
+          }
           return;
         }
       }
