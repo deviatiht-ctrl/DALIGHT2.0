@@ -1,3 +1,5 @@
+import { initRegistrationPopup } from './registration-popup.js';
+
 const DEFAULT_CONFIG = {
   supabaseUrl: 'https://rbwoiejztrkghfkpxquo.supabase.co',
   supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U',
@@ -272,6 +274,9 @@ async function init() {
       console.error('❌ Auth check failed:', err.message);
     });
   }
+
+  // Initialize the luxury registration pop-up for unregistered users
+  initRegistrationPopup();
   
   console.log('✅ App initialization complete');
   console.log('👑 Is admin?', document.body.classList.contains('is-admin'));

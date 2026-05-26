@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
@@ -1589,6 +1589,30 @@ function loadCartData() {
       }
 
       async function prefillUserInfo() {
+        // 1. Try to pre-fill from localStorage user profile first
+        try {
+          const localProfileStr = localStorage.getItem('dalight:user_profile');
+          if (localProfileStr) {
+            const localProfile = JSON.parse(localProfileStr);
+            if (localProfile) {
+              const emailField = document.getElementById('email');
+              const firstNameField = document.getElementById('first-name');
+              const lastNameField = document.getElementById('last-name');
+              const phoneField = document.getElementById('phone');
+              const addressField = document.getElementById('address');
+              
+              if (emailField && !emailField.value) emailField.value = localProfile.email || '';
+              if (firstNameField && !firstNameField.value) firstNameField.value = localProfile.firstName || '';
+              if (lastNameField && !lastNameField.value) lastNameField.value = localProfile.lastName || '';
+              if (phoneField && !phoneField.value) phoneField.value = localProfile.phone || '';
+              if (addressField && !addressField.value) addressField.value = localProfile.address || '';
+            }
+          }
+        } catch (err) {
+          console.warn('Failed to prefill from local storage user profile:', err);
+        }
+
+        // 2. Fallback / Merge with Supabase session metadata if available
         const sbClient = getSupabaseClient();
         if (!sbClient) return;
         try {
@@ -1612,7 +1636,7 @@ function loadCartData() {
             if (addressField && !addressField.value) addressField.value = address || '';
           }
         } catch (e) {
-          console.warn('Failed to prefill user info:', e);
+          console.warn('Failed to prefill user info from Supabase:', e);
         }
       }
 

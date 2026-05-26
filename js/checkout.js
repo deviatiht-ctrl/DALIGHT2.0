@@ -40,15 +40,40 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadOrderSummary();
   loadPaymentMethodsFromDB();
   
-  // Try to auto-fill if user is logged in
+  // Try to auto-fill if user has local profile or is logged in
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      document.getElementById('customer-email').value = session.user.email || '';
-      document.getElementById('customer-name').value = session.user.user_metadata?.full_name || '';
+    // 1. Try to pre-fill from localStorage user profile first
+    const localProfileStr = localStorage.getItem('dalight:user_profile');
+    if (localProfileStr) {
+      const localProfile = JSON.parse(localProfileStr);
+      if (localProfile) {
+        const nameField = document.getElementById('customer-name');
+        const emailField = document.getElementById('customer-email');
+        const phoneField = document.getElementById('customer-phone');
+        const addressField = document.getElementById('customer-address');
+
+        if (nameField && !nameField.value) {
+          nameField.value = localProfile.fullName || `${localProfile.firstName || ''} ${localProfile.lastName || ''}`.trim() || '';
+        }
+        if (emailField && !emailField.value) emailField.value = localProfile.email || '';
+        if (phoneField && !phoneField.value) phoneField.value = localProfile.phone || '';
+        if (addressField && !addressField.value) addressField.value = localProfile.address || '';
+      }
+    }
+
+    // 2. Fallback / Merge with active Supabase session
+    if (supabase) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const emailField = document.getElementById('customer-email');
+        const nameField = document.getElementById('customer-name');
+        
+        if (emailField && !emailField.value) emailField.value = session.user.email || '';
+        if (nameField && !nameField.value) nameField.value = session.user.user_metadata?.full_name || '';
+      }
     }
   } catch (error) {
-    console.log('User not logged in');
+    console.log('Error auto-filling customer details:', error);
   }
 });
 
