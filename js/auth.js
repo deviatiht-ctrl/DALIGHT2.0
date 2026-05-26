@@ -66,6 +66,34 @@ async function handleLogin(event) {
     console.log('✅ Login successful:', data.user?.email);
     console.log('📋 Session:', data.session ? 'Created' : 'Not created');
     
+    // Sync profile from Supabase profiles table to localStorage instantly
+    try {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
+        
+      if (profileData) {
+        const nameParts = (profileData.full_name || '').split(/\s+/);
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+        const profile = {
+          fullName: profileData.full_name || '',
+          firstName,
+          lastName,
+          email: profileData.email || data.user.email || '',
+          phone: profileData.phone || '',
+          address: profileData.address || '',
+          registeredAt: profileData.created_at || new Date().toISOString()
+        };
+        localStorage.setItem('dalight:user_profile', JSON.stringify(profile));
+        console.log('🔄 Login profile synced successfully to localStorage:', profile);
+      }
+    } catch (err) {
+      console.warn('Could not sync user profile on login:', err);
+    }
+    
     setMessage(loginMessage, 'success', 'Welcome back! Redirecting...');
     
     // Wait a bit for session to be fully saved
@@ -126,6 +154,30 @@ async function handleRegister(event) {
     }
 
     console.log('✅ Registration successful');
+    
+    // Save user profile locally instantly for auto-fill bookings & checkout
+    try {
+      const nameParts = fullName.split(/\s+/);
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      const phone = formData.get('phone') || '';
+      
+      const profile = {
+        fullName,
+        firstName,
+        lastName,
+        email,
+        phone,
+        address: '',
+        registeredAt: new Date().toISOString()
+      };
+      
+      localStorage.setItem('dalight:user_profile', JSON.stringify(profile));
+      console.log('🔄 Registration profile saved successfully to localStorage:', profile);
+    } catch (err) {
+      console.warn('Could not save registration profile to localStorage:', err);
+    }
+
     setMessage(registerMessage, 'success', 'Account created! Check your email to verify.');
     registerForm.reset();
     setTimeout(() => {
