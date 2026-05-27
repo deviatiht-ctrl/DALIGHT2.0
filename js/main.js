@@ -86,7 +86,7 @@ const STORAGE_KEYS = {
   service: 'dalight:selectedRitual',
 };
 
-const pageId = document.body?.dataset?.page ?? '';
+let pageId = '';
 const isInsidePagesDir = window.location.pathname.includes('/pages/');
 const reservationPath = isInsidePagesDir ? './services.html' : './pages/services.html';
 const loginPath = isInsidePagesDir ? './login.html' : './pages/login.html';
@@ -246,6 +246,7 @@ async function init() {
     return;
   }
   isAppInitialized = true;
+  pageId = document.body?.dataset?.page ?? '';
   
   console.log('🚀 Initializing DALIGHT app...');
   
