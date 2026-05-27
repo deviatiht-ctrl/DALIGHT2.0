@@ -1,7 +1,7 @@
 /**
  * DALIGHT - Premium Navbar Announcement Banner Module
- * Injects a beautiful, modern banner at the very top of the page prompting new users
- * to register or login so their credentials can be automatically pre-filled on booking & checkout.
+ * Injects a highly responsive, mobile-optimized banner at the very top of the page.
+ * Prompts new users to register or login with clear, tap-friendly buttons to simplify bookings & purchases.
  */
 
 const isInsidePages = window.location.pathname.includes('/pages/');
@@ -97,7 +97,7 @@ function injectStyles() {
       background: linear-gradient(90deg, #D4AF37 0%, #f6e3a2 50%, #b89326 100%);
       color: #2A1A0A !important;
       border-bottom: 2px solid rgba(184, 147, 38, 0.4);
-      padding: 0.75rem 2.75rem 0.75rem 1.5rem;
+      padding: 0.75rem 3rem 0.75rem 1.5rem;
       position: relative;
       z-index: 9999;
       display: flex;
@@ -112,6 +112,7 @@ function injectStyles() {
       transform: translateY(-100%);
       transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
       width: 100%;
+      box-sizing: border-box;
     }
 
     .dl-alert-banner.active {
@@ -123,8 +124,10 @@ function injectStyles() {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.6rem;
+      gap: 0.75rem;
       flex-wrap: wrap;
+      width: 100%;
+      max-width: 1200px;
     }
 
     .dl-alert-text {
@@ -137,30 +140,53 @@ function injectStyles() {
       font-weight: 700;
     }
 
-    .dl-alert-link {
-      color: #2A1A0A !important;
-      text-decoration: underline !important;
-      font-weight: 700;
-      transition: opacity 0.2s ease;
-      text-underline-offset: 3px;
-      display: inline-block;
+    .dl-alert-buttons {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
     }
 
-    .dl-alert-link:hover {
-      opacity: 0.75;
+    /* Premium Tactile Buttons for Mobile/Desktop Touch Targets */
+    .dl-alert-btn {
+      background: #2A1A0A;
+      color: #D4AF37 !important;
+      padding: 0.35rem 0.9rem;
+      border-radius: 30px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.16);
+      transition: all 0.25s ease;
+      text-decoration: none !important;
+      border: 1px solid #2A1A0A;
+      cursor: pointer;
+    }
+
+    .dl-alert-btn:hover {
+      background: #4A3728;
+      border-color: #4A3728;
+      color: #ffffff !important;
+      transform: translateY(-1px);
+      box-shadow: 0 5px 12px rgba(42, 26, 10, 0.25);
+    }
+
+    .dl-alert-btn:active {
+      transform: translateY(0);
     }
 
     /* Elegant Close Button */
     .dl-alert-close {
       position: absolute;
-      right: 1.25rem;
+      right: 1rem;
       top: 50%;
       transform: translateY(-50%);
       background: none;
       border: none;
       color: #2A1A0A;
       cursor: pointer;
-      padding: 4px;
+      padding: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -174,16 +200,29 @@ function injectStyles() {
     }
 
     .dl-alert-close i {
-      width: 15px;
-      height: 15px;
+      width: 16px;
+      height: 16px;
     }
 
+    /* Highly Adaptable Mobile Styling */
     @media (max-width: 768px) {
       .dl-alert-banner {
         font-size: 0.82rem;
-        padding-right: 2.25rem;
-        padding-top: 0.65rem;
-        padding-bottom: 0.65rem;
+        padding: 0.8rem 2.75rem 0.8rem 1rem;
+      }
+      
+      .dl-alert-content {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      
+      .dl-alert-buttons {
+        margin-top: 0.1rem;
+      }
+      
+      .dl-alert-btn {
+        padding: 0.4rem 1rem; /* Even larger touch target on mobile */
+        font-size: 0.8rem;
       }
     }
   `;
@@ -202,10 +241,13 @@ function injectBanner() {
       <div class="dl-alert-content">
         <span class="dl-alert-icon">✨</span>
         <p class="dl-alert-text">
-          Byenvini nan <strong>DALIGHT</strong> ! 
-          <a href="${registerUrl}" class="dl-alert-link">Kreye kont ou</a> oswa 
-          <a href="${loginUrl}" class="dl-alert-link">Konekte w</a> pou w ka fè rezèvasyon rapid epi senplifye acha w yo.
+          Byenvini nan <strong>DALIGHT</strong> ! Pou w ka fè rezèvasyon pi fasil epi senplifye acha w yo :
         </p>
+        <div class="dl-alert-buttons">
+          <a href="${registerUrl}" class="dl-alert-btn">Kreye kont ou</a>
+          <span style="font-size: 0.78rem; opacity: 0.7; font-weight: 600; color: #2A1A0A;">oswa</span>
+          <a href="${loginUrl}" class="dl-alert-btn">Konekte w</a>
+        </div>
       </div>
       <button class="dl-alert-close" id="dl-alert-close-btn" aria-label="Fermer">
         <i data-lucide="x"></i>
