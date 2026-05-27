@@ -15,12 +15,11 @@ export function initRegistrationPopup() {
     return;
   }
 
-  // 2. Check if the user has a local profile or already dismissed the banner for this session
-  const localProfile = localStorage.getItem('dalight:user_profile');
+  // 2. Check if the user already dismissed the banner for this session
   const sessionDismissed = sessionStorage.getItem('dalight:popup_dismissed');
 
-  if (localProfile || sessionDismissed === 'true') {
-    console.log('ℹ️ User already registered or banner dismissed for this session.');
+  if (sessionDismissed === 'true') {
+    console.log('ℹ️ Banner dismissed for this session.');
     return;
   }
 
@@ -44,7 +43,7 @@ export function initRegistrationPopup() {
     }
 
     // Double check to prevent double render
-    if (localStorage.getItem('dalight:user_profile') || sessionStorage.getItem('dalight:popup_dismissed')) {
+    if (sessionStorage.getItem('dalight:popup_dismissed')) {
       return;
     }
 
