@@ -187,8 +187,21 @@ function loadSupabaseCDN() {
   });
 }
 
-// Initialize Supabase client asynchronously
+// Initialize Supabase client
 let supabaseClient = null;
+
+// Synchronous initialization if Supabase is already loaded on the page via script tag
+if (window.supabase && window.supabase.createClient) {
+  try {
+    supabaseClient = window.supabase.createClient(runtimeConfig.supabaseUrl, runtimeConfig.supabaseAnonKey);
+    window.dalightSupabase = supabaseClient;
+    window.dalightReady = true;
+    window.dalightServices = servicesCatalog;
+    console.log('✅ Supabase client initialized synchronously at script load');
+  } catch (err) {
+    console.warn('⚠️ Synchronous Supabase initialization failed:', err);
+  }
+}
 
 async function initSupabase() {
   console.log('🔧 Initializing Supabase client...');
@@ -247,6 +260,23 @@ async function init() {
   }
   isAppInitialized = true;
   pageId = document.body?.dataset?.page ?? '';
+  
+  // Robust fallback to URL path if pageId is missing or body not yet parsed
+  if (!pageId) {
+    const path = window.location.pathname.toLowerCase();
+    if (path.includes('services.html')) {
+      pageId = 'services';
+    } else if (path.includes('reservation-v2.html')) {
+      pageId = 'reservation-v2';
+    } else if (path.includes('orders.html')) {
+      pageId = 'orders';
+    } else if (path.includes('payment.html')) {
+      pageId = 'payment';
+    } else if (path.includes('/admin/')) {
+      pageId = 'admin';
+    }
+    console.log('ℹ️ pageId fallback from URL:', pageId);
+  }
   
   console.log('🚀 Initializing DALIGHT app...');
   
@@ -445,7 +475,7 @@ export async function ensureAuth() {
     
     if (!session) {
       console.log('⚠️ No session found, redirecting...');
-      const activePage = document.body?.dataset?.page ?? '';
+      const activePage = document.body?.dataset?.page ?? pageId ?? '';
       if (activePage === 'reservation-v2') {
         window.location.href = `${registerPath}?redirect=reservation-v2.html`;
       } else if (activePage === 'services') {

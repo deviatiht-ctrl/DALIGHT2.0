@@ -102,8 +102,14 @@ async function handleLogin(event) {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
-        console.log('✅ Session verified, redirecting to reservation');
-        window.location.href = './services.html';
+        console.log('✅ Session verified, checking redirect...');
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirect = urlParams.get('redirect');
+        if (redirect) {
+          window.location.href = `./${redirect}`;
+        } else {
+          window.location.href = './services.html';
+        }
       } else {
         console.error('❌ Session not found after login');
         setMessage(loginMessage, 'error', 'Erè: Session pa kreye. Eseye ankò.');

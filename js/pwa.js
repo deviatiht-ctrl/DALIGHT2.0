@@ -219,6 +219,19 @@ class PWAInstallPrompt {
                 navigator.serviceWorker.register('/sw.js')
                     .then((registration) => {
                         console.log('SW registered: ', registration);
+                        
+                        // Check for updates to the service worker
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            if (newWorker) {
+                                newWorker.addEventListener('statechange', () => {
+                                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                        console.log('✨ New service worker installed! Reloading to apply updates.');
+                                        window.location.reload();
+                                    }
+                                });
+                            }
+                        });
                     })
                     .catch((registrationError) => {
                         console.log('SW registration failed: ', registrationError);
