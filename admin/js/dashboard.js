@@ -466,19 +466,19 @@ async function initCharts() {
         scales: {
           x: {
             grid: {
-              color: 'rgba(255, 255, 255, 0.05)'
+              color: 'rgba(74, 55, 40, 0.06)'
             },
             ticks: {
-              color: 'rgba(255, 255, 255, 0.6)'
+              color: '#4b5563'
             }
           },
           y: {
             beginAtZero: true,
             grid: {
-              color: 'rgba(255, 255, 255, 0.05)'
+              color: 'rgba(74, 55, 40, 0.06)'
             },
             ticks: {
-              color: 'rgba(255, 255, 255, 0.6)',
+              color: '#4b5563',
               stepSize: 1
             }
           }
@@ -523,7 +523,7 @@ async function initCharts() {
           legend: {
             position: 'bottom',
             labels: {
-              color: 'rgba(255, 255, 255, 0.8)',
+              color: '#4b5563',
               padding: 15,
               usePointStyle: true
             }
