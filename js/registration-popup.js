@@ -241,12 +241,12 @@ function injectBanner() {
       <div class="dl-alert-content">
         <span class="dl-alert-icon">✨</span>
         <p class="dl-alert-text">
-          Byenvini nan <strong>DALIGHT</strong> ! Pou w ka fè rezèvasyon pi fasil epi senplifye acha w yo :
+          Nouveau chez <strong>DALIGHT</strong> ? Pour planifier vos rituels bien-être et simplifier vos achats :
         </p>
         <div class="dl-alert-buttons">
-          <a href="${registerUrl}" class="dl-alert-btn">Kreye kont ou</a>
-          <span style="font-size: 0.78rem; opacity: 0.7; font-weight: 600; color: #2A1A0A;">oswa</span>
-          <a href="${loginUrl}" class="dl-alert-btn">Konekte w</a>
+          <a href="${registerUrl}" class="dl-alert-btn">Créer un compte</a>
+          <span style="font-size: 0.78rem; opacity: 0.7; font-weight: 600; color: #2A1A0A;">ou</span>
+          <a href="${loginUrl}" class="dl-alert-btn">Se connecter</a>
         </div>
       </div>
       <button class="dl-alert-close" id="dl-alert-close-btn" aria-label="Fermer">
