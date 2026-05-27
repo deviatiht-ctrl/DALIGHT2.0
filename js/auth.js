@@ -178,11 +178,39 @@ async function handleRegister(event) {
       console.warn('Could not save registration profile to localStorage:', err);
     }
 
-    setMessage(registerMessage, 'success', 'Account created! Check your email to verify.');
+    // AUTOMATIC LOGIN AFTER REGISTRATION
+    setMessage(registerMessage, 'success', 'Compte créé ! Connexion automatique en cours...');
+    
+    try {
+      console.log('🔐 Performing automatic background sign-in...');
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (!signInError && signInData?.session) {
+        console.log('✅ Auto-signin successful!');
+        setMessage(registerMessage, 'success', 'Connexion réussie ! Redirection en cours...');
+        
+        // Wait a bit for session to populate and redirect
+        setTimeout(() => {
+          const urlParams = new URLSearchParams(window.location.search);
+          const redirect = urlParams.get('redirect');
+          if (redirect) {
+            window.location.href = `./${redirect}`;
+          } else {
+            window.location.href = './services.html';
+          }
+        }, 1000);
+        return;
+      }
+    } catch (signInErr) {
+      console.warn('Auto-login failed in background:', signInErr);
+    }
+
+    // Fallback if auto-login fails (e.g. email confirmation required)
+    setMessage(registerMessage, 'success', 'Compte créé ! Veuillez vérifier vos e-mails pour valider votre compte.');
     registerForm.reset();
     setTimeout(() => {
       window.location.href = './login.html';
-    }, 1200);
+    }, 2000);
   } catch (err) {
     console.error('❌ Unexpected error during registration:', err);
     setMessage(registerMessage, 'error', 'Erè enprevi: ' + err.message);

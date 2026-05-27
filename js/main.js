@@ -90,7 +90,8 @@ const pageId = document.body?.dataset?.page ?? '';
 const isInsidePagesDir = window.location.pathname.includes('/pages/');
 const reservationPath = isInsidePagesDir ? './services.html' : './pages/services.html';
 const loginPath = isInsidePagesDir ? './login.html' : './pages/login.html';
-const protectedPages = new Set(['reservation', 'payment', 'orders', 'admin']);
+const registerPath = isInsidePagesDir ? './register.html' : './pages/register.html';
+const protectedPages = new Set(['reservation', 'payment', 'orders', 'admin', 'reservation-v2']);
 
 const runtimeConfig = {
   supabaseUrl: window.__ENV__?.SUPABASE_URL || DEFAULT_CONFIG.supabaseUrl,
@@ -442,8 +443,13 @@ export async function ensureAuth() {
     console.log('Session check result:', session ? '✅ Active' : '❌ None');
     
     if (!session) {
-      console.log('⚠️ No session found, redirecting to login');
-      window.location.href = loginPath;
+      console.log('⚠️ No session found, redirecting...');
+      const activePage = document.body?.dataset?.page ?? '';
+      if (activePage === 'reservation-v2') {
+        window.location.href = `${registerPath}?redirect=reservation-v2.html`;
+      } else {
+        window.location.href = loginPath;
+      }
       throw new Error('User not authenticated');
     }
     
