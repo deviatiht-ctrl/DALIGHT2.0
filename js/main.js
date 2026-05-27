@@ -91,7 +91,7 @@ const isInsidePagesDir = window.location.pathname.includes('/pages/');
 const reservationPath = isInsidePagesDir ? './services.html' : './pages/services.html';
 const loginPath = isInsidePagesDir ? './login.html' : './pages/login.html';
 const registerPath = isInsidePagesDir ? './register.html' : './pages/register.html';
-const protectedPages = new Set(['reservation', 'payment', 'orders', 'admin', 'reservation-v2']);
+const protectedPages = new Set(['reservation', 'payment', 'orders', 'admin', 'reservation-v2', 'services']);
 
 const runtimeConfig = {
   supabaseUrl: window.__ENV__?.SUPABASE_URL || DEFAULT_CONFIG.supabaseUrl,
@@ -447,6 +447,8 @@ export async function ensureAuth() {
       const activePage = document.body?.dataset?.page ?? '';
       if (activePage === 'reservation-v2') {
         window.location.href = `${registerPath}?redirect=reservation-v2.html`;
+      } else if (activePage === 'services') {
+        window.location.href = `${registerPath}?redirect=services.html`;
       } else {
         window.location.href = loginPath;
       }
