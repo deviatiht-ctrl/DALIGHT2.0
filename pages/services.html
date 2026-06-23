@@ -34,12 +34,12 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="../css/style.css?v=5.0.0" />
-  <link rel="stylesheet" href="../css/responsive.css?v=5.0.0" />
+  <link rel="stylesheet" href="../css/style.css?v=5.1.0" />
+  <link rel="stylesheet" href="../css/responsive.css?v=5.1.0" />
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
-  <script type="module" src="../js/main.js?v=5.0.0"></script>
-  <script type="module" src="../js/chat-widget.js?v=5.0.0" defer></script>
+  <script type="module" src="../js/main.js?v=5.3.0"></script>
+  <script type="module" src="../js/chat-widget.js?v=5.3.0" defer></script>
 </head>
 
 <body data-page="services">
@@ -103,6 +103,16 @@
         </div>
       </div>
 
+      <!-- ═══ SPECIALS & PROMOS (above services) ═══ -->
+      <div id="specials-wrapper" style="margin-bottom:2.5rem;">
+        <div style="margin-bottom:1rem;">
+          <div class="svc-category-badge" style="display:inline-flex;align-items:center;gap:.4rem;margin-bottom:.5rem;"><i data-lucide="sparkles"></i> Spécials</div>
+          <h2 style="margin:0 0 .25rem;font-size:1.5rem;">Offres Spéciales</h2>
+          <p style="color:rgba(74,55,40,.6);margin:0;font-size:.9rem;">Promotions limitées avec réductions exclusives</p>
+        </div>
+        <div id="specials-frontend-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem;"></div>
+      </div>
+
       <div class="service-grid" id="services-grid">
         <!-- Loaded dynamically from Supabase -->
         <div style="grid-column:1/-1;text-align:center;padding:2rem;color:rgba(74,55,40,.6);">Chargement des rituels…
@@ -127,7 +137,7 @@
           <div class="package-card__header">
             <span class="package-badge">Basic Silver</span>
             <h3>Silver Package</h3>
-            <span class="package-price">15 000</span>
+            <span class="package-price">15 830</span>
             <span class="package-subtitle">Gourdes · 4 séances / mois</span>
           </div>
           <div class="package-card__body">
@@ -164,7 +174,7 @@
           <div class="package-card__header">
             <span class="package-badge">✦ Golden Luxury</span>
             <h3>Golden Luxury Package</h3>
-            <span class="package-price">20 000</span>
+            <span class="package-price">21 240</span>
             <span class="package-subtitle">Gourdes · 4 séances / mois</span>
           </div>
           <div class="package-card__body">
@@ -228,6 +238,8 @@
         </div>
       </div>
     </section>
+
+    <!-- Special Detail Modal: created dynamically by specials.js -->
 
 
   </main>
@@ -396,10 +408,11 @@
       </div>
     </div>
 
-    <script type="module" src="../js/main.js?v=5.0.0"></script>
+    <script type="module" src="../js/main.js?v=5.3.0"></script>
+    <script src="../js/specials.js?v=202606221910"></script>
     <script type="module">
-      import { initChatWidget } from '../js/chat-widget.js?v=5.0.0';
-      import { getSupabase } from '../js/main.js?v=5.0.0';
+      import { initChatWidget } from '../js/chat-widget.js?v=5.3.0';
+      import { getSupabase } from '../js/main.js?v=5.3.0';
 
       const FALLBACK_SERVICES = [
         { name: 'Head Spa Signature', description: 'Soin complet du cuir chevelu, massage crânien et détente cervicale.', duration: '60 min', price_usd: 85, price_htg: 10000 },
@@ -615,8 +628,8 @@
               name: packageName,
               description: 'Abonnement mensuel - 4 séances par mois',
               duration: '1 mois (4 séances)',
-              price_htg: priceHtg,
-              price_usd: priceUsd,
+              price_htg: withFee(priceHtg),
+              price_usd: withFeeUSD(priceUsd),
               isPackage: true
             });
             saveCart();
@@ -775,7 +788,7 @@
               <span style="font-weight:600;font-size:.88rem;color:#1f2937;">${p.label}</span>
               <span style="color:#6b7280;font-size:.78rem;margin-left:.4rem;">${p.hair_length || ''}</span>
             </div>
-            <strong style="color:#4A3728;font-size:.92rem;">${Number(p.price_htg).toLocaleString()} HTG</strong>
+            <strong style="color:#4A3728;font-size:.92rem;">${withFee(p.price_htg).toLocaleString()} HTG</strong>
           </label>
         `).join('');
       }
@@ -800,7 +813,7 @@
             el.querySelectorAll('strong').forEach(s => s.style.color = '#4A3728');
           }
         });
-        document.getElementById('hair-price-value').textContent = Number(pricing.price_htg).toLocaleString() + ' HTG';
+        document.getElementById('hair-price-value').textContent = withFee(pricing.price_htg).toLocaleString() + ' HTG';
         document.getElementById('hair-price-display').style.display = 'block';
         const confirmBtn = document.getElementById('hair-confirm-btn');
         confirmBtn.disabled = false;
@@ -813,8 +826,8 @@
         if (!selectedPricing || !hairModalService) return;
         const service = {
           ...hairModalService,
-          price_htg: selectedPricing.price_htg,
-          price_usd: selectedPricing.price_usd || hairModalService.price_usd,
+          price_htg: withFee(selectedPricing.price_htg),
+          price_usd: withFeeUSD(selectedPricing.price_usd || hairModalService.price_usd),
           hair_type: selectedHairType || 'non précisé',
           hair_length: selectedPricing.label,
           name: hairModalService.name + ' — ' + selectedPricing.label
@@ -902,7 +915,7 @@
           <article class="service-tile" data-category="${cat}">
             <header>
               <h3>${esc(s.name)}</h3>
-              <span class="price">${isHeadSpa ? 'À partir de ' : ''}${Number(s.price_htg).toLocaleString()} HTG${isHeadSpa ? ' <small style="font-size:.7em;opacity:.7;">(selon longueur)</small>' : ' · $' + Number(s.price_usd)}</span>
+              <span class="price">${isHeadSpa ? 'À partir de ' : ''}${withFee(s.price_htg).toLocaleString()} HTG${isHeadSpa ? ' <small style="font-size:.7em;opacity:.7;">(selon longueur)</small>' : ' · $' + withFeeUSD(s.price_usd)}</span>
             </header>
             <p>${esc(s.description || '')} ${s.duration ? '(' + esc(s.duration) + ')' : ''}</p>
             <button class="add-to-cart" data-service-id="${s.id || ''}" data-is-headspa="${isHeadSpa}" data-service-name="${esc(s.name)}" data-service-desc="${esc(s.description || '')}" data-service-duration="${esc(s.duration || '')}" data-service-price-htg="${s.price_htg}" data-service-price-usd="${s.price_usd}" data-service-category="${esc(s.category || '')}">
@@ -919,8 +932,8 @@
               name: btn.dataset.serviceName,
               description: btn.dataset.serviceDesc,
               duration: btn.dataset.serviceDuration,
-              price_htg: btn.dataset.servicePriceHtg,
-              price_usd: btn.dataset.servicePriceUsd,
+              price_htg: withFee(btn.dataset.servicePriceHtg),
+              price_usd: withFeeUSD(btn.dataset.servicePriceUsd),
               category: btn.dataset.serviceCategory || ''
             };
             if (isHeadSpa && headSpaPricing.length > 0) {

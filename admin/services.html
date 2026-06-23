@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -6,7 +6,7 @@
   <title>Services - DALIGHT Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/admin.css?v=202606211733">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     .toggle-switch{position:relative;width:44px;height:24px;display:inline-block;vertical-align:middle}
@@ -38,6 +38,7 @@
           Réservations
           <span class="badge" id="pending-count">0</span>
         </a>
+        <a href="retraits.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Retraits & Revenus</a>
       </div>
       <div class="nav-section">
         <div class="nav-section-title">Contenu</div>
@@ -299,6 +300,23 @@
           </table>
         </div>
       </div>
+
+      <!-- Specials Section -->
+      <div class="glass-card">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title">Spécials & Promos</h3>
+            <p class="card-subtitle">Créez des offres spéciales avec flyers et réductions</p>
+          </div>
+          <button class="btn btn-primary" id="add-special-btn">+ Nouveau Special</button>
+        </div>
+        <div id="specials-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem;">
+          <div class="text-center text-muted" style="grid-column:1/-1;padding:2rem;">
+            <div class="loading-spinner"></div>
+            Chargement...
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -390,7 +408,63 @@
     </div>
   </div>
 
-  <script src="js/admin-core.js"></script>
+  <!-- Special Modal -->
+  <div class="modal-overlay" id="special-modal">
+    <div class="modal" style="max-width:700px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="special-modal-title">Nouveau Special</h3>
+        <button class="modal-close" id="special-modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="special-form">
+          <input type="hidden" id="special-id">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Titre *</label>
+              <input class="form-input" id="special-title" required placeholder="Ex: Mois de la beauté">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date début *</label>
+              <input class="form-input" id="special-start-date" type="date" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date fin (optionnel)</label>
+              <input class="form-input" id="special-end-date" type="date">
+            </div>
+            <div class="form-group" style="display:flex;align-items:center;gap:.75rem;padding-top:1.5rem;">
+              <label class="toggle-switch">
+                <input type="checkbox" id="special-active" checked>
+                <span class="toggle-slider"></span>
+              </label>
+              <span style="font-size:.9rem;">Actif</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-textarea" id="special-description" rows="2" placeholder="Description de l'offre..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Flyer (image)</label>
+            <input class="form-input" id="special-flyer" type="file" accept="image/*">
+            <div id="special-flyer-preview" style="margin-top:.5rem;"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Services inclus (avec réductions)</label>
+            <div id="special-services-container" style="border:1px solid var(--admin-border);border-radius:10px;padding:1rem;background:var(--admin-muted-bg);">
+              <div class="text-muted" style="font-size:.85rem;">Chargement des services...</div>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" id="special-modal-cancel">Annuler</button>
+            <button type="submit" class="btn btn-primary" id="special-modal-save">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/admin-core.js?v=202606221000"></script>
+  <script src="js/specials.js?v=202606221000"></script>
   <script>
     // Dynamic categories from DB (fallback to defaults)
     let CATEGORY_LABELS = {

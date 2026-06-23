@@ -1,5 +1,6 @@
 // Checkout functionality
 import { sendOrderEmail } from './email-service.js';
+import { createPlopPayment, isAutomaticPlopPayment, isBankPayment } from './plop-payment.js';
 
 let supabase;
 let selectedPaymentMethod = null;
@@ -166,9 +167,10 @@ window.selectPayment = function(slug) {
     }
     // Proof upload
     if (proofSection) {
-      proofSection.style.display = pm.requires_proof ? 'block' : 'none';
+      const requiresManualProof = isBankPayment(pm.slug) && pm.requires_proof;
+      proofSection.style.display = requiresManualProof ? 'block' : 'none';
       const proofInput = document.getElementById('payment-proof');
-      if (proofInput) proofInput.required = pm.requires_proof;
+      if (proofInput) proofInput.required = requiresManualProof;
     }
   }
 
@@ -230,7 +232,7 @@ document.getElementById('place-order-btn')?.addEventListener('click', async () =
 
   // Validate + upload proof (based on requires_proof from DB)
   let paymentProofUrl = null;
-  const requiresProof = selectedPaymentMethodObj?.requires_proof ?? (selectedPaymentMethod === 'moncash' || selectedPaymentMethod === 'natcash');
+  const requiresProof = isBankPayment(selectedPaymentMethod) && (selectedPaymentMethodObj?.requires_proof ?? true);
   if (requiresProof) {
     const proofInput = document.getElementById('payment-proof');
     if (!proofInput?.files?.[0]) {
@@ -346,19 +348,30 @@ document.getElementById('place-order-btn')?.addEventListener('click', async () =
     sendOrderEmail(orderEmailData, false); // to client
     sendOrderEmail(orderEmailData, true);  // to admin
     
-    // Handle payment
-    if (selectedPaymentMethod === 'moncash') {
-      // TODO: Integrate MonCash API
-      alert('Redirection vers MonCash... (API à configurer)');
-    } else if (selectedPaymentMethod === 'natcash') {
-      // TODO: Integrate NatCash API
-      alert('Redirection vers NatCash... (API à configurer)');
+    if (isAutomaticPlopPayment(selectedPaymentMethod)) {
+      const payment = await createPlopPayment(supabase, {
+        refference_id: orderNumber,
+        montant: subtotal,
+        payment_method: selectedPaymentMethod,
+        context_type: 'order',
+        context_id: order.id,
+      });
+
+      await supabase
+        .from('orders')
+        .update({
+          plop_transaction_id: payment.transaction_id || null,
+          plop_reference_id: orderNumber,
+          payment_status: 'pending'
+        })
+        .eq('id', order.id);
+
+      localStorage.removeItem('dalight_cart');
+      window.location.href = payment.url;
+      return;
     }
-    
-    // Clear cart
+
     localStorage.removeItem('dalight_cart');
-    
-    // Redirect to confirmation
     window.location.href = `./order-confirmation.html?order=${orderNumber}`;
     
   } catch (error) {

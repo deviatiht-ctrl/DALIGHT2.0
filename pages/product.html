@@ -14,10 +14,10 @@
   <link rel="stylesheet" href="../css/responsive.css?v=5.0.0">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
-  <script type="module" src="../js/main.js?v=5.0.0"></script>
-  <script type="module" src="../js/chat-widget.js?v=5.0.0" defer></script>
+  <script type="module" src="../js/main.js?v=5.2.0"></script>
+  <script type="module" src="../js/chat-widget.js?v=5.2.0" defer></script>
   <script type="module">
-    import { initChatWidget } from '../js/chat-widget.js?v=5.0.0';
+    import { initChatWidget } from '../js/chat-widget.js?v=5.2.0';
     document.addEventListener('DOMContentLoaded', () => {
       if (window.lucide) {
         lucide.createIcons();
@@ -995,11 +995,12 @@
       const price = product.sale_price || product.price;
       const hasDiscount = product.sale_price && product.sale_price < product.price;
 
-      document.getElementById('current-price').textContent = `${price.toLocaleString()} HTG`;
+      const fee = window.withFee || ((p) => Math.round(p * 1.03));
+      document.getElementById('current-price').textContent = `${fee(price).toLocaleString()} HTG`;
       document.getElementById('current-price').className = hasDiscount ? 'current-price sale' : 'current-price';
 
       if (hasDiscount) {
-        document.getElementById('original-price').textContent = `${product.price.toLocaleString()} HTG`;
+        document.getElementById('original-price').textContent = `${fee(product.price).toLocaleString()} HTG`;
         document.getElementById('original-price').style.display = 'inline';
         const discountPercent = Math.round((1 - product.sale_price / product.price) * 100);
         document.getElementById('discount-badge').textContent = `-${discountPercent}%`;
@@ -1034,7 +1035,7 @@
       document.getElementById('detail-sku').textContent = product.sku || product.id.slice(0, 8).toUpperCase();
       document.getElementById('detail-category').textContent = product.product_categories?.name || 'Non catégorisé';
       document.getElementById('detail-stock').textContent = product.stock_quantity > 0 ? `${product.stock_quantity} unités` : 'Rupture';
-      document.getElementById('detail-price').textContent = `${price.toLocaleString()} HTG`;
+      document.getElementById('detail-price').textContent = `${fee(price).toLocaleString()} HTG`;
 
       // Refresh Lucide icons
       if (window.lucide) {
@@ -1174,7 +1175,7 @@
               </div>
               <div class="product-info" style="padding: 1rem;">
                 <h3 class="product-name" style="font-size: 1rem;">${product.name}</h3>
-                <div class="product-price" style="font-size: 1.2rem;">${price.toLocaleString()} HTG</div>
+                <div class="product-price" style="font-size: 1.2rem;">${(window.withFee||((p)=>Math.round(p*1.03)))(price).toLocaleString()} HTG</div>
               </div>
             </div>
           `;

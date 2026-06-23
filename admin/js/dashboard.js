@@ -241,6 +241,12 @@ async function loadDashboardStats() {
     
     // Calculate revenue (this month) from confirmed/completed reservations
     const now = new Date();
+    const calcPaid = (r) => {
+      if (r.payment_status === 'fully_paid')   return parseFloat(r.total_amount)   || 0;
+      if (r.payment_status === 'deposit_paid') return parseFloat(r.deposit_amount) || 0;
+      return 0;
+    };
+
     const thisMonth = reservations.filter(r => {
       const date = new Date(r.created_at);
       return date.getMonth() === now.getMonth() && 
@@ -248,8 +254,10 @@ async function loadDashboardStats() {
              (r.status === 'COMPLETED' || r.status === 'CONFIRMED');
     });
     
-    const revenue = thisMonth.reduce((sum, r) => sum + (parseFloat(r.total_amount_usd) || 0), 0);
-    if (totalRevenueEl) totalRevenueEl.textContent = `$${revenue.toFixed(0)}`;
+    const revenue = thisMonth.reduce((sum, r) => sum + calcPaid(r), 0);
+    if (totalRevenueEl) totalRevenueEl.textContent = revenue >= 1000
+      ? `${(revenue / 1000).toFixed(1)}K HTG`
+      : `${revenue.toFixed(0)} HTG`;
     
     // Calculate revenue change vs last month
     const lastMonth = reservations.filter(r => {
@@ -260,7 +268,7 @@ async function loadDashboardStats() {
              (r.status === 'COMPLETED' || r.status === 'CONFIRMED');
     });
     
-    const lastMonthRevenue = lastMonth.reduce((sum, r) => sum + (parseFloat(r.total_amount_usd) || 0), 0);
+    const lastMonthRevenue = lastMonth.reduce((sum, r) => sum + calcPaid(r), 0);
     const revenueChange = lastMonthRevenue > 0 
       ? ((revenue - lastMonthRevenue) / lastMonthRevenue * 100).toFixed(0)
       : 0;

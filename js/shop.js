@@ -115,12 +115,13 @@ function renderProducts(products) {
   }
 
   grid.innerHTML = products.map(product => {
+    const fee = window.withFee || ((p) => Math.round(p * 1.03));
     const price = product.sale_price || product.price;
     const hasDiscount = product.sale_price && product.sale_price < product.price;
     const categoryName = product.product_categories?.name || 'Produit';
 
-    // Calculate save amount for discount badge
-    const saveAmount = hasDiscount ? (product.price - product.sale_price).toFixed(0) : 0;
+    // Calculate save amount for discount badge (fee-inclusive)
+    const saveAmount = hasDiscount ? (fee(product.price) - fee(product.sale_price)) : 0;
 
     // Only show rating if product has real rating data
     const hasRating = product.rating && product.rating > 0;
@@ -143,8 +144,8 @@ function renderProducts(products) {
             ${product.review_count ? `<span class="review-count">(${product.review_count})</span>` : ''}
           </div>` : ''}
           <div class="product-price-modern">
-            <span class="price-current">${price.toLocaleString()} HTG</span>
-            ${hasDiscount ? `<span class="price-original">${product.price.toLocaleString()} HTG</span>` : ''}
+            <span class="price-current">${fee(price).toLocaleString()} HTG</span>
+            ${hasDiscount ? `<span class="price-original">${fee(product.price).toLocaleString()} HTG</span>` : ''}
           </div>
           <button class="btn-add-cart-modern" onclick="addToCart('${product.id}')" ${product.stock_quantity === 0 ? 'disabled' : ''}>
             ${product.stock_quantity === 0 ? 'Rupture de stock' : CART_ICON_SVG + ' Add to Cart'}

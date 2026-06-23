@@ -4,19 +4,27 @@
    ============================================ */
 
 :root {
-  --admin-bg: #f9fafb; /* Light gray/white background */
-  --admin-sidebar: #ffffff; /* White sidebar */
-  --admin-card: #ffffff; /* White cards */
-  --admin-card-hover: #f3f4f6; /* Light hover effect */
-  --admin-border: #e5e7eb; /* Light border */
-  --admin-text: #1f2937; /* Dark gray/black text */
-  --admin-text-muted: #6b7280; /* Muted gray text */
-  --admin-accent: #d4af37; /* Gold accent kept for branding */
-  --admin-accent-light: rgba(212, 175, 55, 0.15);
-  --admin-success: #10b981; /* Slightly darker green */
-  --admin-warning: #f59e0b; /* Slightly darker amber */
-  --admin-danger: #ef4444; /* Slightly darker red */
-  --admin-info: #3b82f6; /* Slightly darker blue */
+  --admin-bg: #f4f6fb;            /* Soft light background */
+  --admin-sidebar: #ffffff;       /* White sidebar */
+  --admin-card: #ffffff;          /* White cards */
+  --admin-card-hover: #f5f7fa;    /* Subtle hover */
+  --admin-muted-bg: #f8fafc;      /* Muted surface (table headers) */
+  --admin-border: #e8ebf2;        /* Light border */
+  --admin-border-strong: #d8dee9; /* Stronger border */
+  --admin-text: #1e293b;          /* Slate-800 text */
+  --admin-text-primary: #1e293b;  /* Alias */
+  --admin-text-muted: #64748b;    /* Slate-500 muted */
+  --admin-accent: #c9a227;        /* Refined gold */
+  --admin-accent-hover: #b8941f;
+  --admin-accent-light: rgba(201, 162, 39, 0.12);
+  --admin-success: #16a34a;
+  --admin-warning: #d97706;
+  --admin-danger: #dc2626;
+  --admin-info: #2563eb;
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --shadow-md: 0 4px 12px rgba(16, 24, 40, 0.08);
+  --shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.12);
   --sidebar-width: 280px;
   --header-height: 70px;
 }
@@ -35,7 +43,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Background gradient */
+/* Background gradient — subtle light tints, no dark patches */
 body::before {
   content: '';
   position: fixed;
@@ -43,10 +51,10 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background: 
-    radial-gradient(ellipse at 20% 20%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 80%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, rgba(16, 16, 32, 1) 0%, var(--admin-bg) 100%);
+  background:
+    radial-gradient(ellipse at 15% 0%, rgba(201, 162, 39, 0.06) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 100%, rgba(37, 99, 235, 0.05) 0%, transparent 45%),
+    var(--admin-bg);
   z-index: -1;
 }
 
@@ -124,6 +132,7 @@ body::before {
 }
 
 .nav-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -145,6 +154,19 @@ body::before {
 .nav-item.active {
   background: var(--admin-accent-light);
   color: var(--admin-accent);
+  font-weight: 600;
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: -1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 60%;
+  background: var(--admin-accent);
+  border-radius: 0 4px 4px 0;
 }
 
 .nav-item svg {
@@ -217,7 +239,7 @@ body::before {
   position: sticky;
   top: 0;
   height: var(--header-height);
-  background: rgba(15, 15, 26, 0.8);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--admin-border);
@@ -334,18 +356,17 @@ body::before {
 
 .glass-card {
   background: var(--admin-card);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--admin-border);
   border-radius: 16px;
   padding: 1.5rem;
-  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
 .glass-card:hover {
-  background: var(--admin-card-hover);
-  border-color: var(--admin-border);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  border-color: var(--admin-border-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
 .card-header {
@@ -399,17 +420,17 @@ body::before {
 }
 
 .stat-icon.gold {
-  background: rgba(212, 175, 55, 0.15);
+  background: var(--admin-accent-light);
   color: var(--admin-accent);
 }
 
 .stat-icon.green {
-  background: rgba(74, 222, 128, 0.15);
+  background: rgba(22, 163, 74, 0.12);
   color: var(--admin-success);
 }
 
 .stat-icon.blue {
-  background: rgba(96, 165, 250, 0.15);
+  background: rgba(37, 99, 235, 0.12);
   color: var(--admin-info);
 }
 
@@ -450,12 +471,12 @@ body::before {
 }
 
 .stat-change.positive {
-  background: rgba(74, 222, 128, 0.15);
+  background: rgba(22, 163, 74, 0.12);
   color: var(--admin-success);
 }
 
 .stat-change.negative {
-  background: rgba(248, 113, 113, 0.15);
+  background: rgba(220, 38, 38, 0.12);
   color: var(--admin-danger);
 }
 
@@ -497,11 +518,11 @@ body::before {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--admin-text-muted);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--admin-muted-bg);
 }
 
 .admin-table tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--admin-card-hover);
 }
 
 .admin-table .user-cell {
@@ -605,22 +626,26 @@ body::before {
 
 .btn-primary {
   background: var(--admin-accent);
-  color: #000;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(201, 162, 39, 0.3);
 }
 
 .btn-primary:hover {
-  background: #e5c349;
+  background: var(--admin-accent-hover);
   transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(201, 162, 39, 0.4);
 }
 
 .btn-secondary {
   background: var(--admin-card);
   color: var(--admin-text);
-  border: 1px solid var(--admin-border);
+  border: 1px solid var(--admin-border-strong);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-secondary:hover {
   background: var(--admin-card-hover);
+  border-color: var(--admin-text-muted);
 }
 
 .btn-success {
@@ -669,16 +694,24 @@ body::before {
 }
 
 .form-input,
+.form-control,
 .form-select,
 .form-textarea {
   width: 100%;
-  padding: 0.75rem 1rem;
-  background: var(--admin-card);
-  border: 1px solid var(--admin-border);
+  padding: 0.8rem 1rem;
+  background: var(--admin-muted-bg);
+  border: 1px solid var(--admin-border-strong);
   border-radius: 10px;
   color: var(--admin-text);
   font-size: 0.9rem;
-  transition: all 0.2s ease;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.form-input::placeholder,
+.form-control::placeholder,
+.form-textarea::placeholder {
+  color: var(--admin-text-muted);
 }
 
 /* Fix native select dropdown color on Windows/Chrome */
@@ -696,11 +729,13 @@ select.form-select option {
 }
 
 .form-input:focus,
+.form-control:focus,
 .form-select:focus,
 .form-textarea:focus {
   outline: none;
   border-color: var(--admin-accent);
-  background: var(--admin-card-hover);
+  background: #fff;
+  box-shadow: 0 0 0 3px var(--admin-accent-light);
 }
 
 .form-textarea {
@@ -783,7 +818,7 @@ select option:checked {
   overflow-y: auto;
   transform: scale(0.9);
   transition: transform 0.3s ease;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-lg);
 }
 
 .modal-title {
@@ -960,7 +995,12 @@ select option:checked {
   }
 
   .stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .stat-value {
+    font-size: 1.4rem;
   }
 
   .admin-table {
@@ -1000,6 +1040,19 @@ select option:checked {
 @media (max-width: 480px) {
   .admin-sidebar {
     width: 260px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    gap: 0.75rem;
+  }
+
+  .stat-icon {
+    width: 42px;
+    height: 42px;
   }
 
   .admin-header {
@@ -1117,8 +1170,10 @@ select option:checked {
   overflow: hidden;
 }
 
-.table-scroll {
+.table-scroll,
+.table-responsive {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 table {
@@ -1127,7 +1182,7 @@ table {
 }
 
 table thead {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--admin-muted-bg);
 }
 
 table th {
@@ -1148,7 +1203,7 @@ table td {
 }
 
 table tbody tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--admin-card-hover);
 }
 
 .product-image {
@@ -1253,8 +1308,9 @@ table tbody tr:hover td {
   display: flex;
   gap: 0.5rem;
   padding: 0.5rem;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 8px;
+  background: var(--admin-muted-bg);
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
 }
 
 .tab-btn {
@@ -1270,12 +1326,12 @@ table tbody tr:hover td {
 }
 
 .tab-btn:hover {
-  color: var(--admin-text-primary);
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--admin-text);
+  background: var(--admin-card-hover);
 }
 
 .tab-btn.active {
-  color: var(--admin-text-primary);
+  color: #fff;
   background: var(--admin-accent);
 }
 

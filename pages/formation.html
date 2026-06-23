@@ -286,7 +286,7 @@
       <a href="./services.html" data-page="reservation"><i data-lucide="calendar"></i></a>
     </nav>
 
-    <script type="module" src="../js/main.js?v=5.0.0"></script>
+    <script type="module" src="../js/main.js?v=5.2.0"></script>
     <script type="module">
       const WA_NUMBER = '50947472221';
 
@@ -309,7 +309,8 @@
         const featureItems = features.map(feat => `<li>${esc(feat)}</li>`).join('');
         const waText = f.wa_message || `Bonjour, je suis intéressé(e) par la formation ${f.name}`;
         const waHref = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(waText)}`;
-        const fmt = n => n > 0 ? Number(n).toLocaleString() + ' Gds' : null;
+        const feeF = window.withFee || ((p) => Math.round(p * 1.03));
+        const fmt = n => n > 0 ? feeF(Number(n)).toLocaleString() + ' Gds' : null;
 
         // Détail prix depuis admin
         const inscription  = f.price_inscription  || 0;

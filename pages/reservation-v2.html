@@ -38,6 +38,11 @@
     <script src="../js/toast.js?v=5.0.0"></script>
     <script type="module" src="../js/main.js?v=5.0.0"></script>
     <style>
+      :root {
+        --marron-800: #5C4432;
+        --gold-600: #B89327;
+      }
+
       /* ── Reservation Steps System ── */
       .reservation-steps-container {
         max-width: 600px;
@@ -112,21 +117,22 @@
       }
 
       .steps-progress {
+        --dot-size: 36px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 2rem;
+        margin-bottom: 2.5rem;
         position: relative;
       }
 
       .steps-progress::before {
         content: '';
         position: absolute;
-        top: 50%;
+        top: calc(var(--dot-size) / 2);
         left: 0;
         right: 0;
         height: 2px;
-        background: rgba(74,55,40,0.1);
+        background: rgba(74, 55, 40, 0.12);
         z-index: 0;
       }
 
@@ -137,34 +143,37 @@
         gap: 0.5rem;
         position: relative;
         z-index: 1;
-        background: var(--white);
-        padding: 0 0.5rem;
+        background: var(--cream-50);
+        padding: 0 12px;
       }
 
       .step-dot {
-        width: 36px;
-        height: 36px;
+        width: var(--dot-size);
+        height: var(--dot-size);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(74,55,40,0.1);
+        background: var(--white);
         color: var(--marron-600);
         font-weight: 600;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
-        border: 2px solid transparent;
+        font-size: 0.95rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid rgba(74, 55, 40, 0.15);
       }
 
       .step-indicator.active .step-dot {
-        background: linear-gradient(135deg, var(--gold-500), var(--gold-600));
-        color: white;
-        box-shadow: 0 4px 12px rgba(212,175,55,0.3);
+        background: var(--gold-500);
+        color: var(--white);
+        border-color: var(--gold-500);
+        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.35);
+        transform: scale(1.12);
       }
 
       .step-indicator.completed .step-dot {
         background: #22c55e;
-        color: white;
+        color: var(--white);
+        border-color: #22c55e;
       }
 
       .step-indicator.completed .step-dot i {
@@ -178,11 +187,12 @@
         font-weight: 500;
         text-align: center;
         white-space: nowrap;
+        transition: all 0.3s ease;
       }
 
       .step-indicator.active .step-label {
         color: var(--marron-900);
-        font-weight: 600;
+        font-weight: 700;
       }
 
       /* Step Panels */
@@ -819,14 +829,13 @@
       /* Tablet and large phones */
       @media (max-width: 768px) {
         .steps-progress {
+          --dot-size: 32px;
           margin-bottom: 1.5rem;
           overflow-x: auto;
           padding-bottom: 0.5rem;
         }
 
         .step-dot {
-          width: 32px;
-          height: 32px;
           font-size: 0.85rem;
         }
 
@@ -865,12 +874,11 @@
         }
 
         .steps-progress {
+          --dot-size: 28px;
           margin-bottom: 1rem;
         }
 
         .step-dot {
-          width: 28px;
-          height: 28px;
           font-size: 0.8rem;
         }
 
@@ -1257,8 +1265,8 @@
               <div id="resv-pm-instructions" style="font-size:.85rem;margin-top:.5rem;color:var(--marron-600);white-space:pre-line;"></div>
             </div>
 
-            <!-- Upload preuve (visible seulement si requires_proof) -->
-            <div class="form-group full-width" id="resv-proof-section" style="margin-top: 1.5rem;">
+            <!-- Upload preuve (visible seulement si peman bancaire) -->
+            <div class="form-group full-width" id="resv-proof-section" style="margin-top: 1.5rem; display:none;">
               <label>📸 Preuve de paiement (screenshot) <span style="color:#dc2626;" id="resv-proof-required-star">*</span></label>
               <div class="upload-zone-v2" id="upload-zone">
                 <input type="file" id="payment-proof" name="payment_proof" accept="image/*" style="display:none;">
@@ -1329,6 +1337,7 @@
 
     <script type="module">
       import { initChatWidget } from '../js/chat-widget.js?v=5.0.0';
+      import { createPlopPayment, isAutomaticPlopPayment, isBankPayment } from '../js/plop-payment.js?v=5.0.0';
       
       document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();
@@ -1394,17 +1403,26 @@
         el?.classList.add('selected');
         const pm = selectedResvPM;
         if (pm) {
-          document.getElementById('resv-pm-title').textContent = pm.name;
-          document.getElementById('resv-pm-account-name').textContent = pm.account_name || '—';
-          document.getElementById('resv-pm-account-number').textContent = pm.account_number || '—';
-          document.getElementById('resv-pm-instructions').textContent = pm.instructions || '';
-          document.getElementById('resv-payment-detail-box').style.display = 'block';
+          const isBank = isBankPayment(pm.slug);
+          const detailBox = document.getElementById('resv-payment-detail-box');
+          if (detailBox) {
+            if (isBank) {
+              document.getElementById('resv-pm-title').textContent = pm.name;
+              document.getElementById('resv-pm-account-name').textContent = pm.account_name || '—';
+              document.getElementById('resv-pm-account-number').textContent = pm.account_number || '—';
+              document.getElementById('resv-pm-instructions').textContent = pm.instructions || '';
+              detailBox.style.display = 'block';
+            } else {
+              detailBox.style.display = 'none';
+            }
+          }
+          const requiresManualProof = isBank && pm.requires_proof;
           const proofSection = document.getElementById('resv-proof-section');
-          if (proofSection) proofSection.style.display = pm.requires_proof ? 'block' : 'none';
+          if (proofSection) proofSection.style.display = requiresManualProof ? 'block' : 'none';
           const proofInput = document.getElementById('payment-proof');
-          if (proofInput) proofInput.required = pm.requires_proof;
+          if (proofInput) proofInput.required = requiresManualProof;
           const star = document.getElementById('resv-proof-required-star');
-          if (star) star.style.display = pm.requires_proof ? 'inline' : 'none';
+          if (star) star.style.display = requiresManualProof ? 'inline' : 'none';
         }
         formData.payment_method = slug;
         formData.payment_method_id = pm?.id || null;
@@ -1800,14 +1818,15 @@ function loadCartData() {
           ind.classList.remove('active', 'completed');
           if (indStep === step) {
             ind.classList.add('active');
+            ind.querySelector('.step-dot').textContent = indStep;
           } else if (indStep < step) {
             ind.classList.add('completed');
             ind.querySelector('.step-dot').innerHTML = '<i data-lucide="check"></i>';
-            lucide.createIcons();
           } else {
             ind.querySelector('.step-dot').textContent = indStep;
           }
         });
+        lucide.createIcons();
 
         currentStep = step;
 
@@ -2304,7 +2323,10 @@ function loadCartData() {
         const oldProofError = document.getElementById('proof-error');
         if (oldProofError) oldProofError.remove();
 
-        if (!proofFile) {
+        const selectedPaymentConfig = resvPaymentMethods.find(p => p.slug === paymentMethod.value) || selectedResvPM;
+        const requiresManualProof = isBankPayment(paymentMethod.value) && (selectedPaymentConfig?.requires_proof ?? true);
+
+        if (requiresManualProof && !proofFile) {
           if (uploadZone) {
             uploadZone.classList.add('field-error');
             const msg = document.createElement('div');
@@ -2376,7 +2398,7 @@ function loadCartData() {
             payment_proof_url: proofUrl,
             deposit_amount: calcDeposit(cartServices),
             total_amount: totalAmount,
-            payment_status: !proofUrl ? 'pending' : (formData.paymentChoice === 'full' ? 'fully_paid' : 'deposit_paid'),
+            payment_status: isAutomaticPlopPayment(paymentMethod.value) ? 'pending' : (!proofUrl ? 'pending' : (formData.paymentChoice === 'full' ? 'fully_paid' : 'deposit_paid')),
             location: 'Spa',
             status: 'PENDING'
           };
@@ -2395,6 +2417,33 @@ function loadCartData() {
           }
 
           console.log('✅ Reservation saved!', insertData);
+
+          const savedReservationForPayment = insertData[0];
+          if (isAutomaticPlopPayment(paymentMethod.value)) {
+            const amountToPay = formData.paymentChoice === 'full' ? totalAmount : calcDeposit(cartServices);
+            const paymentReference = `${reservationNumber}-${formData.paymentChoice === 'full' ? 'FULL' : 'DEP'}`;
+            const payment = await createPlopPayment(supabaseClient, {
+              refference_id: paymentReference,
+              montant: amountToPay,
+              payment_method: paymentMethod.value,
+              context_type: 'reservation',
+              context_id: savedReservationForPayment.id,
+            });
+
+            await supabaseClient
+              .from('reservations')
+              .update({
+                payment_reference: paymentReference,
+                plop_transaction_id: payment.transaction_id || null,
+                payment_status: 'pending'
+              })
+              .eq('id', savedReservationForPayment.id);
+
+            localStorage.removeItem('dalight:serviceCart');
+            localStorage.removeItem('dalight:cartServices');
+            window.location.href = payment.url;
+            return;
+          }
 
           // 5. SEND EMAILS
           try {

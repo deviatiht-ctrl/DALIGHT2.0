@@ -1,4 +1,5 @@
 import { formatDate, formatTime, getSupabase } from './main.js?v=5.0.0';
+import { createPlopPayment, isAutomaticPlopPayment, isBankPayment } from './plop-payment.js';
 
 let supabase = getSupabase();
 
@@ -156,7 +157,7 @@ function renderCard(r) {
         <div class="rc-payment-methods" data-balance-id="${r.id}">
           <div class="rc-loading">Chargement des méthodes de paiement...</div>
         </div>
-        <div class="rc-upload-zone" id="balance-upload-zone-${r.id}">
+        <div class="rc-upload-zone" id="balance-upload-zone-${r.id}" style="display:none;">
           <input type="file" id="balance-file-${r.id}" accept="image/*" style="display:none;">
           <i data-lucide="upload-cloud" style="width:32px;height:32px;color:#D4AF37;"></i>
           <p>Uploader la preuve du solde</p>
@@ -322,6 +323,9 @@ async function selectBalancePM(resvId, slug) {
       ${pm.account_name ? `<p><strong>Compte:</strong> ${escapeHtml(pm.account_name)}</p>` : ''}
     `;
   }
+
+  const zone = document.getElementById(`balance-upload-zone-${resvId}`);
+  if (zone) zone.style.display = isBankPayment(slug) && pm.requires_proof ? 'block' : 'none';
 }
 
 async function saveBalanceProof(btn) {
@@ -335,7 +339,7 @@ async function saveBalanceProof(btn) {
     return;
   }
 
-  if (!file) {
+  if (isBankPayment(pm.slug) && pm.requires_proof && !file) {
     alert('Veuillez uploader la preuve de paiement.');
     return;
   }
@@ -344,19 +348,23 @@ async function saveBalanceProof(btn) {
   btn.textContent = 'Traitement...';
 
   try {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `balance-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const filePath = `balance-proofs/${fileName}`;
+    let publicUrl = null;
+    if (file) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `balance-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `balance-proofs/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('payment-proofs')
-      .upload(filePath, file);
+      const { error: uploadError } = await supabase.storage
+        .from('payment-proofs')
+        .upload(filePath, file);
 
-    if (uploadError) throw new Error('Upload error: ' + uploadError.message);
+      if (uploadError) throw new Error('Upload error: ' + uploadError.message);
 
-    const { data: publicUrlData } = supabase.storage
-      .from('payment-proofs')
-      .getPublicUrl(filePath);
+      const { data: publicUrlData } = supabase.storage
+        .from('payment-proofs')
+        .getPublicUrl(filePath);
+      publicUrl = publicUrlData.publicUrl;
+    }
 
     const total = await supabase
       .from('reservations')
@@ -367,10 +375,34 @@ async function saveBalanceProof(btn) {
     const r = total.data;
     const balanceAmount = (r.total_amount || 0) - (r.deposit_amount || 0) - (r.balance_paid_amount || 0);
 
+    if (isAutomaticPlopPayment(pm.slug)) {
+      const reference = `RESV-BAL-${id}-${Date.now()}`;
+      const payment = await createPlopPayment(supabase, {
+        refference_id: reference,
+        montant: balanceAmount,
+        payment_method: pm.slug,
+        context_type: 'reservation_balance',
+        context_id: id,
+      });
+
+      const { error: autoUpdateError } = await supabase
+        .from('reservations')
+        .update({
+          balance_payment_reference: reference,
+          balance_plop_transaction_id: payment.transaction_id || null,
+          payment_status: 'balance_pending'
+        })
+        .eq('id', id);
+
+      if (autoUpdateError) throw autoUpdateError;
+      window.location.href = payment.url;
+      return;
+    }
+
     const { error: updateError } = await supabase
       .from('reservations')
       .update({
-        balance_proof_url: publicUrlData.publicUrl,
+        balance_proof_url: publicUrl,
         balance_paid_amount: (r.balance_paid_amount || 0) + balanceAmount,
         payment_status: 'balance_pending'
       })

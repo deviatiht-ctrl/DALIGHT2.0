@@ -1,5 +1,35 @@
 import { initRegistrationPopup } from './registration-popup.js';
 
+// ── Payment processing fees (3% + fixed tier fee) ──────────────────
+window.DALIGHT_FEE_RATE = 0.03;
+window.DALIGHT_FEE_TIERS = [
+  { min: 20,    max: 99,     fee: 6    },
+  { min: 100,   max: 249,    fee: 12   },
+  { min: 250,   max: 499,    fee: 15   },
+  { min: 500,   max: 999,    fee: 40   },
+  { min: 1000,  max: 1999,   fee: 65   },
+  { min: 2000,  max: 3999,   fee: 115  },
+  { min: 4000,  max: 7999,   fee: 185  },
+  { min: 8000,  max: 11999,  fee: 275  },
+  { min: 12000, max: 19999,  fee: 380  },
+  { min: 20000, max: 39999,  fee: 640  },
+  { min: 40000, max: 59999,  fee: 1050 },
+  { min: 60000, max: 74999,  fee: 1400 },
+  { min: 75000, max: 100000, fee: 1600 },
+];
+window.getTransactionFee = (price) => {
+  const p = Number(price);
+  const tier = window.DALIGHT_FEE_TIERS.find(t => p >= t.min && p <= t.max);
+  return tier ? tier.fee : 0;
+};
+// Client price = base × 1.03 + fixed tier fee (HTG only)
+window.withFee = (price) => {
+  const p = Number(price);
+  return Math.round(p * (1 + window.DALIGHT_FEE_RATE)) + window.getTransactionFee(p);
+};
+window.withFeeUSD = (price) => Math.round(Number(price) * (1 + window.DALIGHT_FEE_RATE) * 100) / 100;
+// ───────────────────────────────────────────────────────────────────
+
 const DEFAULT_CONFIG = {
   supabaseUrl: 'https://rbwoiejztrkghfkpxquo.supabase.co',
   supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U',
