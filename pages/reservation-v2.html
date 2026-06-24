@@ -1685,7 +1685,7 @@ function loadCartData() {
               card.style.borderColor = 'rgba(74,55,40,0.2)';
               card.style.background = '#fff';
             });
-            const selectedCard = e.target.closest('.payment-choice-card');
+            const selectedCard = e.target.parentElement.querySelector('.payment-choice-card');
             if (selectedCard) {
               selectedCard.style.borderColor = '#D4AF37';
               selectedCard.style.background = 'rgba(212,175,55,0.08)';
@@ -1713,7 +1713,7 @@ function loadCartData() {
         // Initialize first payment choice card as selected
         const firstPaymentRadio = document.querySelector('input[name="payment_choice"]:checked');
         if (firstPaymentRadio) {
-          const selectedCard = firstPaymentRadio.closest('.payment-choice-card');
+          const selectedCard = firstPaymentRadio.parentElement.querySelector('.payment-choice-card');
           if (selectedCard) {
             selectedCard.style.borderColor = '#D4AF37';
             selectedCard.style.background = 'rgba(212,175,55,0.08)';
@@ -1962,18 +1962,15 @@ function loadCartData() {
         (services || []).forEach(s => {
           const cat = (s.category || '').toLowerCase();
           const name = (s.name || '').toLowerCase();
-          console.log('Service:', { cat, name, price: s.price_htg });
           if (MASSAGE_CATS.some(c => cat.includes(c) || name.includes('massage') || name.includes('wood'))) {
             massageTotal += Number(s.price_htg) || 0;
-            console.log('→ Massage service, adding to massageTotal:', massageTotal);
           } else {
             headspaCount += 1;
-            console.log('→ Headspa service, headspaCount:', headspaCount);
           }
         });
-        const deposit = Math.round(massageTotal * 0.5) + (headspaCount * 1000);
-        console.log('Final deposit:', deposit, '(massageTotal:', massageTotal, ', headspaCount:', headspaCount, ')');
-        return deposit;
+        const feeFunc = window.withFee || ((p) => Math.round(p * 1.03));
+        const baseDeposit = Math.round(massageTotal * 0.5) + (headspaCount * 1000);
+        return feeFunc(baseDeposit);
       }
 
       function updateSummary() {

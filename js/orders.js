@@ -1,5 +1,5 @@
 import { formatDate, formatTime, getSupabase } from './main.js?v=5.0.0';
-import { createPlopPayment, isAutomaticPlopPayment, isBankPayment } from './plop-payment.js';
+import { createPlopPayment, verifyPlopPayment, isAutomaticPlopPayment, isBankPayment } from './plop-payment.js';
 
 let supabase = getSupabase();
 
@@ -167,6 +167,11 @@ function renderCard(r) {
             </div>`;
             if (balRef && balRef !== ref) rows += `<div class="rc-pay-row rc-pay-ref">
               <span>Réf. solde</span><span style="font-size:.72rem;font-family:monospace;">${escapeHtml(balRef)}</span>
+            </div>`;
+
+            if (r.plop_client_id) rows += `<div class="rc-pay-row" style="background:#f0f9ff;">
+              <span>ID Plop Plop client</span>
+              <span style="font-size:.72rem;font-family:monospace;font-weight:600;color:#0369a1;">${escapeHtml(r.plop_client_id)}</span>
             </div>`;
 
             return rows ? `<div class="rc-pay-detail">${rows}</div>` : '';
@@ -526,6 +531,31 @@ function updateMetrics(reservations = []) {
   }
 }
 
+async function verifyPendingPlopPayments(reservations) {
+  const pending = reservations.filter(
+    r => r.payment_status === 'pending' && r.payment_reference && !r.plop_client_id
+  );
+  if (!pending.length) return;
+
+  for (const r of pending) {
+    try {
+      const result = await verifyPlopPayment(supabase, r.payment_reference);
+      if (!result || result.trans_status !== 'ok') continue;
+
+      const isFullPayment = r.payment_reference.endsWith('-FULL');
+      const updates = {
+        payment_status: isFullPayment ? 'fully_paid' : 'deposit_paid',
+        plop_transaction_id: result.id_transaction || r.plop_transaction_id || null,
+        plop_client_id: result.id_client || null,
+      };
+
+      await supabase.from('reservations').update(updates).eq('id', r.id);
+
+      Object.assign(r, updates);
+    } catch (_) {}
+  }
+}
+
 async function loadReservations() {
   const ready = await waitForSupabase();
   if (!ready || !ordersList) {
@@ -549,6 +579,7 @@ async function loadReservations() {
     if (error) throw error;
 
     allReservations = Array.isArray(data) ? data : [];
+    await verifyPendingPlopPayments(allReservations);
     const hasRows = allReservations.length > 0;
     toggleSections(hasRows);
     updateMetrics(allReservations);

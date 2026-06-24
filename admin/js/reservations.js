@@ -300,7 +300,38 @@ window.openDetailModal = function(id) {
       ` : ''}
 
       ${proofHtml}
-      
+
+      ${(reservation.plop_transaction_id || reservation.plop_client_id || reservation.payment_reference) ? `
+        <div style="background:#f0f9ff;padding:1rem;border-radius:8px;border:1px solid #bae6fd;">
+          <div class="text-muted mb-1" style="font-weight:600;color:#0369a1;">🔗 Plop Plop — Vérification</div>
+          ${reservation.payment_reference ? `
+            <div style="font-size:0.82rem;margin-top:.5rem;display:flex;justify-content:space-between;">
+              <span style="color:#6b7280;">Référence</span>
+              <code style="font-size:.78rem;">${reservation.payment_reference}</code>
+            </div>` : ''}
+          ${reservation.plop_transaction_id ? `
+            <div style="font-size:0.82rem;margin-top:.35rem;display:flex;justify-content:space-between;">
+              <span style="color:#6b7280;">ID Transaction</span>
+              <code style="font-size:.78rem;">${reservation.plop_transaction_id}</code>
+            </div>` : ''}
+          ${reservation.plop_client_id ? `
+            <div style="font-size:0.82rem;margin-top:.35rem;display:flex;justify-content:space-between;background:#e0f2fe;padding:.4rem .6rem;border-radius:6px;">
+              <span style="color:#0369a1;font-weight:600;">ID Client Plop Plop</span>
+              <code style="font-size:.78rem;font-weight:700;color:#0369a1;">${reservation.plop_client_id}</code>
+            </div>` : '<div style="font-size:.8rem;color:#92400e;margin-top:.4rem;">⚠️ ID client Plop Plop non encore capturé</div>'}
+          ${reservation.balance_payment_reference ? `
+            <div style="font-size:0.82rem;margin-top:.5rem;padding-top:.5rem;border-top:1px dashed #bae6fd;">
+              <span style="color:#6b7280;">Réf. solde</span>
+              <code style="font-size:.78rem;margin-left:.5rem;">${reservation.balance_payment_reference}</code>
+            </div>` : ''}
+          ${reservation.balance_plop_client_id ? `
+            <div style="font-size:0.82rem;margin-top:.35rem;display:flex;justify-content:space-between;background:#e0f2fe;padding:.4rem .6rem;border-radius:6px;">
+              <span style="color:#0369a1;font-weight:600;">ID Client Plop (solde)</span>
+              <code style="font-size:.78rem;font-weight:700;color:#0369a1;">${reservation.balance_plop_client_id}</code>
+            </div>` : ''}
+        </div>
+      ` : ''}
+
       ${reservation.notes ? `
         <div>
           <div class="text-muted mb-1">Notes</div>
