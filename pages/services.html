@@ -577,6 +577,10 @@
         document.body.style.overflow = 'hidden';
       }
 
+      // Ekspòze global pou specials.js ak lòt scripts ka itilize yo
+      window.updateCartUI = updateCartUI;
+      window.openCart    = openCart;
+
       function closeCart() {
         document.getElementById('cart-overlay')?.classList.remove('active');
         document.getElementById('cart-sidebar')?.classList.remove('active');

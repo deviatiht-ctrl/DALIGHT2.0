@@ -126,7 +126,7 @@ function openSpecialDetail(id) {
           ${badge}
         </div>
       </div>
-      <button class="book-special-btn"
+      <button type="button" class="book-special-btn"
         data-service-id="${sv.service_id || ''}"
         data-service-name="${esc(sv.service_name)}"
         data-discount-percent="${sv.discount_type==='percentage' ? sv.discount_value : 0}"
