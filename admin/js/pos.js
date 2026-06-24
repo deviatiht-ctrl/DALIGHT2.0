@@ -92,30 +92,42 @@ async function loadAllItems() {
       price_htg: withFee(s.price_htg || 0),
       price_usd: s.price_usd ? Math.round(Number(s.price_usd) * 1.03 * 100) / 100 : null,
     }));
+    console.log('POS: Services chargés:', allServices.length);
 
-    // Load products
-    const { data: prodData, error: prodErr } = await sb.from('products').select('*').eq('is_active', true).order('category').order('name');
-    if (prodErr) console.warn('POS: Erreur chargement produits', prodErr);
-    allProducts = (prodData || []).map(p => ({
-      ...p,
-      type: 'product',
-      price_htg: withFee(p.price_htg || 0),
-      price_usd: p.price_usd ? Math.round(Number(p.price_usd) * 1.03 * 100) / 100 : null,
-    }));
+    // Load products (optional)
+    try {
+      const { data: prodData, error: prodErr } = await sb.from('products').select('*').eq('is_active', true).order('category').order('name');
+      if (prodErr) console.warn('POS: Erreur chargement produits (table peut ne pas exister)', prodErr);
+      allProducts = (prodData || []).map(p => ({
+        ...p,
+        type: 'product',
+        price_htg: withFee(p.price_htg || 0),
+        price_usd: p.price_usd ? Math.round(Number(p.price_usd) * 1.03 * 100) / 100 : null,
+      }));
+      console.log('POS: Produits chargés:', allProducts.length);
+    } catch (e) {
+      console.warn('POS: Products table error (ignoring):', e.message);
+    }
 
-    // Load formations
-    const { data: formationsData, error: formationsErr } = await sb.from('formations').select('*').eq('is_active', true).order('category').order('name');
-    if (formationsErr) console.warn('POS: Erreur chargement formations', formationsErr);
-    allFormations = (formationsData || []).map(f => ({
-      ...f,
-      type: 'formation',
-      price_htg: withFee(f.price_htg || 0),
-      price_usd: f.price_usd ? Math.round(Number(f.price_usd) * 1.03 * 100) / 100 : null,
-    }));
+    // Load formations (optional)
+    try {
+      const { data: formationsData, error: formationsErr } = await sb.from('formations').select('*').eq('is_active', true).order('category').order('name');
+      if (formationsErr) console.warn('POS: Erreur chargement formations (table peut ne pas exister)', formationsErr);
+      allFormations = (formationsData || []).map(f => ({
+        ...f,
+        type: 'formation',
+        price_htg: withFee(f.price_htg || 0),
+        price_usd: f.price_usd ? Math.round(Number(f.price_usd) * 1.03 * 100) / 100 : null,
+      }));
+      console.log('POS: Formations chargées:', allFormations.length);
+    } catch (e) {
+      console.warn('POS: Formations table error (ignoring):', e.message);
+    }
 
     buildCategoryFilter();
     renderServiceGrid('all', '');
   } catch (e) {
+    console.error('POS: Erreur critique chargement:', e);
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--admin-danger);">Erreur chargement: ${esc(e.message)}</div>`;
   }
 }
@@ -134,24 +146,30 @@ function buildCategoryFilter() {
 }
 
 // Category filter event listener (single, not duplicated)
-document.getElementById('cat-filter').addEventListener('click', e => {
-  const btn = e.target.closest('.cat-btn');
-  if (!btn) return;
-  document.getElementById('cat-filter').querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderServiceGrid(btn.dataset.cat, document.getElementById('svc-search').value);
-});
+if (!document.getElementById('cat-filter')._posListenerAttached) {
+  document.getElementById('cat-filter')._posListenerAttached = true;
+  document.getElementById('cat-filter').addEventListener('click', e => {
+    const btn = e.target.closest('.cat-btn');
+    if (!btn) return;
+    document.getElementById('cat-filter').querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderServiceGrid(btn.dataset.cat, document.getElementById('svc-search').value);
+  });
+}
 
 // Type filter event listener
-document.getElementById('type-filter').addEventListener('click', e => {
-  const btn = e.target.closest('.cat-btn');
-  if (!btn) return;
-  document.getElementById('type-filter').querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  currentType = btn.dataset.type;
-  buildCategoryFilter();
-  renderServiceGrid('all', document.getElementById('svc-search').value);
-});
+if (!document.getElementById('type-filter')._posListenerAttached) {
+  document.getElementById('type-filter')._posListenerAttached = true;
+  document.getElementById('type-filter').addEventListener('click', e => {
+    const btn = e.target.closest('.cat-btn');
+    if (!btn) return;
+    document.getElementById('type-filter').querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentType = btn.dataset.type;
+    buildCategoryFilter();
+    renderServiceGrid('all', document.getElementById('svc-search').value);
+  });
+}
 
 function renderServiceGrid(cat = 'all', search = '') {
   const grid = document.getElementById('svc-grid');
@@ -472,7 +490,7 @@ document.getElementById('btn-confirm').addEventListener('click', async () => {
   if (!orderItems.length) return;
   openReceipt(true);
 
-  // Optionally save the sale to DB as a completed reservation
+  // Save the sale to pos_sales table
   if (sb) {
     try {
       const clientName  = document.getElementById('client-name').value.trim() || 'Client POS';
@@ -480,21 +498,33 @@ document.getElementById('btn-confirm').addEventListener('click', async () => {
       const subtotal    = orderItems.reduce((s, it) => s + it.price_htg * it.qty, 0);
       const deposit     = calcDeposit(orderItems);
       const isDeposit   = payChoice === 'deposit';
-      const serviceList = orderItems.map(it => `${it.name}${it.qty > 1 ? ` ×${it.qty}` : ''}`).join(', ');
+      const amountDue   = isDeposit ? deposit : subtotal;
+      const balance     = isDeposit ? (subtotal - amountDue) : 0;
 
-      await sb.from('reservations').insert({
-        service:        serviceList,
-        user_name:      clientName,
-        phone:          clientPhone || null,
-        date:           new Date().toISOString().slice(0,10),
-        time:           new Date().toTimeString().slice(0,5),
-        total_amount:   subtotal,
-        deposit_amount: isDeposit ? deposit : subtotal,
-        payment_status: isDeposit ? 'deposit_paid' : 'fully_paid',
+      const { data: { user } } = await sb.auth.getUser();
+
+      await sb.from('pos_sales').insert({
+        receipt_no: receiptData.receiptNo,
+        client_name: clientName,
+        client_phone: clientPhone || null,
+        items: orderItems.map(it => ({
+          id: it.id,
+          name: it.name,
+          price_htg: it.price_htg,
+          price_usd: it.price_usd,
+          qty: it.qty,
+          category: it.category,
+          type: it.type || 'service',
+        })),
+        subtotal_htg: subtotal,
+        deposit_htg: amountDue,
+        amount_due_htg: amountDue,
+        balance_htg: balance,
         payment_method: selectedPM,
-        status:         'COMPLETED',
-        location:       'Spa',
-        notes:          `[POS] Reçu: ${receiptData.receiptNo}`,
+        payment_choice: payChoice,
+        admin_id: user?.id || null,
+        admin_email: user?.email || null,
+        status: 'completed',
       });
     } catch(e) {
       console.warn('POS: DB save failed (non-blocking):', e.message);
