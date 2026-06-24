@@ -219,6 +219,44 @@
       }
       .orders-assistant-note strong { color: #4A3728; }
 
+      /* Payment detail block */
+      .rc-pay-detail {
+        grid-column: 1 / -1;
+        margin-top: .5rem;
+        border: 1px solid rgba(74,55,40,.1);
+        border-radius: 10px;
+        overflow: hidden;
+        font-size: .82rem;
+      }
+      .rc-pay-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: .42rem .85rem;
+        border-bottom: 1px solid rgba(74,55,40,.06);
+        color: #6b5c52;
+        gap: .5rem;
+      }
+      .rc-pay-row:last-child { border-bottom: none; }
+      .rc-pay-row strong { color: #2d1f14; }
+      .rc-pay-full { background: #f0fdf4; color: #15803d; }
+      .rc-pay-full strong { color: #15803d; }
+      .rc-pay-balance { background: #fff7ed; color: #b45309; }
+      .rc-pay-balance strong { color: #b45309; }
+      .rc-pay-pending { background: #fffbeb; color: #92400e; }
+      .rc-pay-method { background: #faf8f6; }
+      .rc-pay-ref { background: #f8f8f8; color: #9a8f86; }
+      .rc-payment-status {
+        display: inline-block;
+        padding: .2rem .6rem;
+        border-radius: 20px;
+        font-size: .75rem;
+        font-weight: 600;
+      }
+      .rc-payment-status.pending { background:#fff7e0; color:#b8860b; }
+      .rc-payment-status.partial  { background:#fff3e0; color:#e65100; }
+      .rc-payment-status.paid     { background:#e6f9ee; color:#15803d; }
+
       @media (max-width: 600px) {
         .reservation-card {
           grid-template-columns: 1fr;

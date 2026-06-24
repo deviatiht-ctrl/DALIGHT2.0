@@ -179,76 +179,78 @@ function closeSpecialDetail() {
   document.body.style.overflow = '';
 }
 
-function bookSpecialService(serviceId, serviceName, discountPercent, discountFixed, discountType) {
-  // Add to cart with discount info
-  const cart = JSON.parse(localStorage.getItem('dalight:serviceCart') || '[]');
-  
-  // Check if already in cart
-  const exists = cart.find(item => item.service_id === serviceId);
-  if (exists) {
-    alert('Ce service est déjà dans votre panier');
+async function bookSpecialService(serviceId, serviceName, discountPercent, discountFixed, discountType) {
+  if (!serviceId) {
+    alert('Service introuvable. Veuillez réessayer.');
     return;
   }
 
-  // Get service details from Supabase
-  window.dalightSupabase?.from('services')
+  // Check if already in cart
+  const cart = JSON.parse(localStorage.getItem('dalight:serviceCart') || '[]');
+  const exists = cart.find(item => item.service_id === serviceId);
+  if (exists) {
+    if (window.showToast) window.showToast('error', 'Déjà dans le panier', `${serviceName} est déjà ajouté.`);
+    else alert('Ce service est déjà dans votre panier');
+    closeSpecialDetail();
+    if (window.openCart) window.openCart();
+    return;
+  }
+
+  // Get Supabase client (attann li si pa prè)
+  const supabase = await getSupabaseClient();
+  if (!supabase) {
+    alert('Connexion impossible. Veuillez rafraîchir la page.');
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('services')
     .select('*')
     .eq('id', serviceId)
-    .single()
-    .then(({ data, error }) => {
-      if (error || !data) {
-        alert('Erreur lors du chargement du service');
-        return;
-      }
+    .single();
 
-      // Calculate discounted price
-      let finalPriceHtg = data.price_htg;
-      let finalPriceUsd = data.price_usd;
+  if (error || !data) {
+    alert('Erreur lors du chargement du service: ' + (error?.message || 'Service introuvable'));
+    return;
+  }
 
-      const fee = window.withFee || ((p) => Math.round(p * 1.03));
-      const feeUSD = window.withFeeUSD || ((p) => Math.round(p * 1.03 * 100) / 100);
-      if (discountType === 'percentage' && discountPercent > 0) {
-        finalPriceHtg = fee(data.price_htg * (1 - discountPercent / 100));
-        finalPriceUsd = feeUSD(data.price_usd * (1 - discountPercent / 100));
-      } else if (discountType === 'fixed' && discountFixed > 0) {
-        finalPriceHtg = fee(Math.max(0, data.price_htg - discountFixed));
-        finalPriceUsd = feeUSD(Math.max(0, data.price_usd - (discountFixed / (data.price_htg / data.price_usd))));
-      } else {
-        finalPriceHtg = fee(data.price_htg);
-        finalPriceUsd = feeUSD(data.price_usd);
-      }
+  // Calculate discounted price + fees
+  const fee = window.withFee || ((p) => Math.round(p * 1.03));
+  const feeUSD = window.withFeeUSD || ((p) => Math.round(p * 1.03 * 100) / 100);
+  let finalPriceHtg, finalPriceUsd;
 
-      const cartItem = {
-        id: Date.now().toString(),
-        service_id: serviceId,
-        name: serviceName,
-        description: data.description,
-        duration: data.duration,
-        price_htg: finalPriceHtg,
-        price_usd: finalPriceUsd,
-        original_price_htg: data.price_htg,
-        original_price_usd: data.price_usd,
-        discount_percent: discountType === 'percentage' ? discountPercent : 0,
-        discount_fixed: discountType === 'fixed' ? discountFixed : 0,
-        is_special: true
-      };
+  if (discountType === 'percentage' && discountPercent > 0) {
+    finalPriceHtg = fee(data.price_htg * (1 - discountPercent / 100));
+    finalPriceUsd = feeUSD(data.price_usd * (1 - discountPercent / 100));
+  } else if (discountType === 'fixed' && discountFixed > 0) {
+    finalPriceHtg = fee(Math.max(0, data.price_htg - discountFixed));
+    finalPriceUsd = feeUSD(Math.max(0, data.price_usd - (discountFixed / (data.price_htg / data.price_usd))));
+  } else {
+    finalPriceHtg = fee(data.price_htg);
+    finalPriceUsd = feeUSD(data.price_usd);
+  }
 
-      cart.push(cartItem);
-      localStorage.setItem('dalight:serviceCart', JSON.stringify(cart));
+  cart.push({
+    id: Date.now().toString(),
+    service_id: serviceId,
+    name: serviceName,
+    description: data.description,
+    duration: data.duration,
+    price_htg: finalPriceHtg,
+    price_usd: finalPriceUsd,
+    original_price_htg: data.price_htg,
+    original_price_usd: data.price_usd,
+    discount_percent: discountType === 'percentage' ? discountPercent : 0,
+    discount_fixed: discountType === 'fixed' ? discountFixed : 0,
+    is_special: true
+  });
+  localStorage.setItem('dalight:serviceCart', JSON.stringify(cart));
 
-      // Update cart UI
-      if (window.updateCartUI) window.updateCartUI();
+  if (window.updateCartUI) window.updateCartUI();
+  if (window.showToast) window.showToast('success', 'Ajouté au panier', `${serviceName} avec réduction a été ajouté.`);
 
-      // Show toast
-      if (window.showToast) {
-        window.showToast('success', 'Ajouté au panier', `${serviceName} avec réduction a été ajouté.`);
-      }
-
-      closeSpecialDetail();
-
-      // Open cart
-      if (window.openCart) window.openCart();
-    });
+  closeSpecialDetail();
+  if (window.openCart) window.openCart();
 }
 
 function formatDate(dateStr) {

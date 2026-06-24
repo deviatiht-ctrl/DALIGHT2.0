@@ -119,9 +119,58 @@ function renderCard(r) {
           </div>
           <div class="rc-meta" style="margin-top:0.25rem;">
             ${paymentStatusBadge}
-            <span>Total: ${totalAmount.toLocaleString()} HTG</span>
-            ${r.deposit_amount ? `<span>Acompte: ${depositAmount.toLocaleString()} HTG</span>` : ''}
+            <span>Total: <strong>${totalAmount.toLocaleString()} HTG</strong></span>
           </div>
+          ${(() => {
+            const pmLabel = r.payment_method
+              ? r.payment_method.charAt(0).toUpperCase() + r.payment_method.slice(1)
+              : null;
+            const ref = r.payment_reference || r.plop_transaction_id || null;
+            const balRef = r.balance_payment_reference || r.balance_plop_transaction_id || null;
+
+            let rows = '';
+
+            if (r.payment_status === 'fully_paid') {
+              rows += `<div class="rc-pay-row rc-pay-full">
+                <span>✓ Paiement complet versé</span>
+                <strong>${totalAmount.toLocaleString()} HTG</strong>
+              </div>`;
+            } else if (r.payment_status === 'deposit_paid' || r.payment_status === 'balance_pending') {
+              rows += `<div class="rc-pay-row">
+                <span>Acompte versé</span>
+                <strong>${depositAmount.toLocaleString()} HTG</strong>
+              </div>`;
+              if (balanceAmount > 0) {
+                rows += `<div class="rc-pay-row rc-pay-balance">
+                  <span>Solde restant</span>
+                  <strong>${balanceAmount.toLocaleString()} HTG</strong>
+                </div>`;
+              }
+              if (r.balance_paid_amount > 0) {
+                rows += `<div class="rc-pay-row rc-pay-full">
+                  <span>Solde payé</span>
+                  <strong>${Number(r.balance_paid_amount).toLocaleString()} HTG</strong>
+                </div>`;
+              }
+            } else {
+              rows += `<div class="rc-pay-row rc-pay-pending">
+                <span>En attente de confirmation</span>
+                <strong>—</strong>
+              </div>`;
+            }
+
+            if (pmLabel) rows += `<div class="rc-pay-row rc-pay-method">
+              <span>Méthode</span><span>${pmLabel}</span>
+            </div>`;
+            if (ref) rows += `<div class="rc-pay-row rc-pay-ref">
+              <span>Référence</span><span style="font-size:.72rem;font-family:monospace;">${escapeHtml(ref)}</span>
+            </div>`;
+            if (balRef && balRef !== ref) rows += `<div class="rc-pay-row rc-pay-ref">
+              <span>Réf. solde</span><span style="font-size:.72rem;font-family:monospace;">${escapeHtml(balRef)}</span>
+            </div>`;
+
+            return rows ? `<div class="rc-pay-detail">${rows}</div>` : '';
+          })()}
         </div>
         <span class="rc-status ${st.css}">${st.label}</span>
       </div>
