@@ -131,15 +131,16 @@ function buildCategoryFilter() {
   const cats = [...new Set(items.map(s => s.category).filter(Boolean))];
   bar.innerHTML = `<button class="cat-btn active" data-cat="all">Tous</button>` +
     cats.map(c => `<button class="cat-btn" data-cat="${esc(c)}">${esc(c)}</button>`).join('');
-
-  bar.addEventListener('click', e => {
-    const btn = e.target.closest('.cat-btn');
-    if (!btn) return;
-    bar.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    renderServiceGrid(btn.dataset.cat, document.getElementById('svc-search').value);
-  });
 }
+
+// Category filter event listener (single, not duplicated)
+document.getElementById('cat-filter').addEventListener('click', e => {
+  const btn = e.target.closest('.cat-btn');
+  if (!btn) return;
+  document.getElementById('cat-filter').querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderServiceGrid(btn.dataset.cat, document.getElementById('svc-search').value);
+});
 
 // Type filter event listener
 document.getElementById('type-filter').addEventListener('click', e => {
