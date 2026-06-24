@@ -126,7 +126,13 @@ function openSpecialDetail(id) {
           ${badge}
         </div>
       </div>
-      <button onclick="event.stopPropagation();bookSpecialService('${sv.service_id}','${esc(sv.service_name).replace(/'/g,'&#39;')}',${sv.discount_type==='percentage'?sv.discount_value:0},${sv.discount_type==='fixed'?sv.discount_value:0},'${sv.discount_type}')" style="flex-shrink:0;background:linear-gradient(135deg,#4A3728,#6B4F3B);color:#fff;border:none;border-radius:8px;padding:.45rem .8rem;font-size:.78rem;font-weight:600;cursor:pointer;">Réserver</button>
+      <button class="book-special-btn"
+        data-service-id="${sv.service_id || ''}"
+        data-service-name="${esc(sv.service_name)}"
+        data-discount-percent="${sv.discount_type==='percentage' ? sv.discount_value : 0}"
+        data-discount-fixed="${sv.discount_type==='fixed' ? sv.discount_value : 0}"
+        data-discount-type="${sv.discount_type || 'none'}"
+        style="flex-shrink:0;background:linear-gradient(135deg,#4A3728,#6B4F3B);color:#fff;border:none;border-radius:8px;padding:.45rem .8rem;font-size:.78rem;font-weight:600;cursor:pointer;">Réserver</button>
     </div>`;
   }).join('') : '<p style="color:rgba(74,55,40,.5);font-size:.88rem;text-align:center;padding:1.5rem 0;">Aucun service associé</p>';
 
@@ -167,6 +173,20 @@ function openSpecialDetail(id) {
       <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(74,55,40,.4);margin-bottom:.65rem;">Services avec réductions</div>
       <div style="display:flex;flex-direction:column;gap:.5rem;">${servicesHtml}</div>
     </div>`;
+
+  // Delegated event listener — evite onclick inline (safe pou non ki gen apostrophe)
+  box.addEventListener('click', e => {
+    const btn = e.target.closest('.book-special-btn');
+    if (!btn) return;
+    e.stopPropagation();
+    bookSpecialService(
+      btn.dataset.serviceId,
+      btn.dataset.serviceName,
+      Number(btn.dataset.discountPercent),
+      Number(btn.dataset.discountFixed),
+      btn.dataset.discountType
+    );
+  });
 
   overlay.appendChild(box);
   document.body.appendChild(overlay);
