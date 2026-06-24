@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/admin.css?v=202606241230">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     /* ── POS Layout ───────────────────────────────────── */
     .pos-shell {
@@ -371,6 +372,13 @@
       animation: shimmer 1.2s infinite;
     }
     @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* Lucide icons inline sizing */
+    .pm-btn svg, .choice-btn svg { width:13px;height:13px;vertical-align:middle;margin-right:4px;flex-shrink:0; }
+    .pos-btn svg  { width:15px;height:15px;vertical-align:middle;margin-right:5px;flex-shrink:0; }
+    .pos-order-title svg { width:16px;height:16px;vertical-align:middle;margin-right:5px; }
+    .btn-print svg, .btn-close-receipt svg { width:14px;height:14px;vertical-align:middle;margin-right:4px; }
+    .pos-empty svg { display:block;margin:0 auto .75rem;opacity:.3; }
   </style>
 </head>
 <body>
@@ -454,37 +462,37 @@
       <!-- Right: Order Panel -->
       <div class="pos-order">
         <div class="pos-order-header">
-          <span class="pos-order-title">🛒 Commande</span>
+          <span class="pos-order-title"><i data-lucide="shopping-cart"></i> Commande</span>
           <button class="pos-clear-btn" id="clear-order">Vider</button>
         </div>
 
         <div class="pos-items" id="order-items">
           <div class="pos-empty">
-            <div style="font-size:2rem;margin-bottom:.5rem;">🧴</div>
+            <i data-lucide="sparkles" style="width:2.5rem;height:2.5rem;"></i>
             Sélectionnez un service pour démarrer
           </div>
         </div>
 
         <div class="pos-client">
-          <input class="pos-input" id="client-name" type="text" placeholder="👤 Nom du client">
-          <input class="pos-input" id="client-phone" type="tel" placeholder="📞 Téléphone">
+          <input class="pos-input" id="client-name" type="text" placeholder="Nom du client">
+          <input class="pos-input" id="client-phone" type="tel" placeholder="Téléphone">
         </div>
 
         <div class="pos-pm">
           <div class="pos-pm-label">Méthode de paiement</div>
           <div class="pm-btns" id="pm-btns">
-            <button type="button" class="pm-btn active" data-pm="cash">💵 Cash</button>
-            <button type="button" class="pm-btn" data-pm="moncash">📱 MonCash</button>
-            <button type="button" class="pm-btn" data-pm="natcash">📱 NatCash</button>
-            <button type="button" class="pm-btn" data-pm="bank">🏦 Virement</button>
+            <button type="button" class="pm-btn active" data-pm="cash"><i data-lucide="banknote"></i> Cash</button>
+            <button type="button" class="pm-btn" data-pm="moncash"><i data-lucide="smartphone"></i> MonCash</button>
+            <button type="button" class="pm-btn" data-pm="natcash"><i data-lucide="smartphone"></i> NatCash</button>
+            <button type="button" class="pm-btn" data-pm="bank"><i data-lucide="landmark"></i> Virement</button>
           </div>
         </div>
 
         <div class="pos-choice">
           <div class="pos-pm-label">Type de paiement</div>
           <div class="choice-btns">
-            <button type="button" class="choice-btn active" data-choice="full">✓ Complet</button>
-            <button type="button" class="choice-btn" data-choice="deposit">⏳ Acompte</button>
+            <button type="button" class="choice-btn active" data-choice="full"><i data-lucide="check-circle"></i> Complet</button>
+            <button type="button" class="choice-btn" data-choice="deposit"><i data-lucide="timer"></i> Acompte</button>
           </div>
         </div>
 
@@ -495,8 +503,8 @@
         </div>
 
         <div class="pos-actions">
-          <button class="pos-btn pos-btn-secondary" id="btn-preview">👁 Aperçu reçu</button>
-          <button class="pos-btn pos-btn-primary" id="btn-confirm" disabled>✓ Confirmer &amp; Reçu</button>
+          <button class="pos-btn pos-btn-secondary" id="btn-preview"><i data-lucide="eye"></i> Aperçu reçu</button>
+          <button class="pos-btn pos-btn-primary" id="btn-confirm" disabled><i data-lucide="receipt"></i> Confirmer &amp; Reçu</button>
         </div>
       </div>
     </div>
@@ -507,8 +515,8 @@
     <div class="receipt-modal">
       <div id="receipt-content"></div>
       <div class="receipt-modal-actions">
-        <button class="btn-close-receipt" onclick="closeReceipt()">✕ Fermer</button>
-        <button class="btn-print" onclick="printReceipt()">🖨 Imprimer</button>
+        <button class="btn-close-receipt" onclick="closeReceipt()"><i data-lucide="x"></i> Fermer</button>
+        <button class="btn-print" onclick="printReceipt()"><i data-lucide="printer"></i> Imprimer</button>
       </div>
     </div>
   </div>
@@ -517,6 +525,7 @@
   <div class="receipt-print-area" id="print-area"></div>
 
   <script src="js/admin-core.js"></script>
-  <script src="js/pos.js?v=202606241230"></script>
+  <script src="js/pos.js?v=202606241300"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => { if(window.lucide) lucide.createIcons(); });</script>
 </body>
 </html>

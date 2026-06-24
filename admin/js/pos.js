@@ -136,6 +136,7 @@ function renderServiceGrid(cat = 'all', search = '') {
     </div>
   `).join('');
 
+  if (window.lucide) lucide.createIcons({ el: grid });
   grid.querySelectorAll('.svc-card').forEach(card => {
     card.addEventListener('click', () => {
       const svc = allServices.find(s => String(s.id) === String(card.dataset.id));
@@ -173,7 +174,8 @@ function renderOrder() {
   const previewBtn = document.getElementById('btn-preview');
 
   if (!orderItems.length) {
-    container.innerHTML = `<div class="pos-empty"><div style="font-size:2rem;margin-bottom:.5rem;">🧴</div>Sélectionnez un service pour démarrer</div>`;
+    container.innerHTML = `<div class="pos-empty"><i data-lucide="sparkles" style="width:2.5rem;height:2.5rem;"></i>Sélectionnez un service pour démarrer</div>`;
+    if (window.lucide) lucide.createIcons({ el: container });
     confirmBtn.disabled = true;
     updateTotals();
     return;
@@ -194,6 +196,7 @@ function renderOrder() {
     </div>
   `).join('');
 
+  if (window.lucide) lucide.createIcons({ el: container });
   container.querySelectorAll('[data-action]').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = Number(btn.dataset.id);
@@ -260,7 +263,7 @@ function buildReceiptHTML(data) {
     paymentMethod, paymentChoice,
   } = data;
 
-  const pmLabels = { cash: '💵 Cash', moncash: '📱 MonCash', natcash: '📱 NatCash', bank: '🏦 Virement bancaire' };
+  const pmLabels = { cash: 'Cash', moncash: 'MonCash', natcash: 'NatCash', bank: 'Virement bancaire' };
   const pmLabel = pmLabels[paymentMethod] || paymentMethod;
   const isDeposit = paymentChoice === 'deposit';
 
@@ -275,14 +278,14 @@ function buildReceiptHTML(data) {
 
   const paidBox = isDeposit ? `
     <div class="rcpt-paid-box">
-      <div class="paid-row"><span class="paid-label">Acompte versé (${pmLabel})</span><span class="paid-val">${fmtHTG(amountDue)}</span></div>
+      <div class="paid-row"><span class="paid-label">Acompte versé — ${pmLabel}</span><span class="paid-val">${fmtHTG(amountDue)}</span></div>
     </div>
     <div class="rcpt-balance-box">
       <div class="paid-row"><span class="paid-label">Solde restant à payer</span><span class="paid-val">${fmtHTG(balance)}</span></div>
     </div>
   ` : `
     <div class="rcpt-paid-box">
-      <div class="paid-row"><span class="paid-label">✓ Paiement complet (${pmLabel})</span><span class="paid-val">${fmtHTG(amountDue)}</span></div>
+      <div class="paid-row"><span class="paid-label">Paiement complet — ${pmLabel}</span><span class="paid-val">${fmtHTG(amountDue)}</span></div>
     </div>
   `;
 
@@ -324,9 +327,9 @@ function buildReceiptHTML(data) {
     <div class="rcpt-footer">
       <div class="rcpt-thankyou">Merci de votre visite !</div>
       <div class="rcpt-social">
-        📸 ${DALIGHT_INFO.instagram} · 👤 ${DALIGHT_INFO.facebook}
+        Instagram : ${DALIGHT_INFO.instagram} &nbsp;·&nbsp; Facebook : ${DALIGHT_INFO.facebook}
       </div>
-      <div style="margin-top:.25rem;">💬 WhatsApp : ${DALIGHT_INFO.whatsapp}</div>
+      <div style="margin-top:.25rem;">WhatsApp : ${DALIGHT_INFO.whatsapp}</div>
       <div style="margin-top:.5rem;font-size:.68rem;color:#d1d5db;">Ce reçu est votre preuve d'achat. Conservez-le.</div>
     </div>
   `;
@@ -358,6 +361,7 @@ function openReceipt(confirmed = false) {
   receiptData = buildReceiptData(confirmed);
   document.getElementById('receipt-content').innerHTML = buildReceiptHTML(receiptData);
   document.getElementById('receipt-overlay').classList.add('open');
+  if (window.lucide) lucide.createIcons();
 }
 
 window.closeReceipt = function () {
