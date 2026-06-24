@@ -19,26 +19,27 @@ const HEADSPA_DEPOSIT = 1000; // HTG fixe par service tête
 
 let sb = null;
 let allServices = [];
+let allProducts = [];
+let allFormations = [];
 let orderItems  = [];
 let selectedPM  = 'cash';
 let payChoice   = 'full';
 let receiptData = null;
+let currentType = 'services';
 
 /* ── Supabase init ───────────────────────────────────────── */
 async function initSupabase() {
   let tries = 0;
-  while (!window.adminCore?.getSb && tries < 50) {
+  while (!window.dalightAdminSupabase && !window.adminCore?.supabase && tries < 50) {
     await new Promise(r => setTimeout(r, 100));
     tries++;
   }
-  if (window.adminCore?.getSb) {
-    sb = window.adminCore.getSb();
-  } else {
-    // fallback: try global supabase
-    const url  = document.querySelector('meta[name="sb-url"]')?.content   || 'https://vchukdgaktswjjqsxxtu.supabase.co';
-    const key  = document.querySelector('meta[name="sb-key"]')?.content   || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjaHVrZGdha3Rzd2pqcXh4dHUiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc0NTgzMjA1MywiZXhwIjoyMDYxNDA4MDUzfQ.2D1ov5TcaHAq1gglqVWMqhpzHfBaBo3tNmZFt8ys0RQ';
-    sb = supabase.createClient(url, key);
+  sb = window.dalightAdminSupabase || window.adminCore?.supabase;
+  if (!sb) {
+    console.error('POS: Supabase client non disponible');
+    return;
   }
+  console.log('POS: Supabase client initialisé');
 }
 
 /* ── Helpers ─────────────────────────────────────────────── */
@@ -77,30 +78,57 @@ function calcDeposit(items) {
   return withFee(base);
 }
 
-/* ── Load Services ───────────────────────────────────────── */
-async function loadServices() {
+/* ── Load All Items ───────────────────────────────────────── */
+async function loadAllItems() {
   const grid = document.getElementById('svc-grid');
 
   try {
-    const { data, error } = await sb.from('services').select('*').eq('is_active', true).order('category').order('name');
-    if (error) throw error;
-
-    allServices = (data || []).map(s => ({
+    // Load services
+    const { data: svcData, error: svcErr } = await sb.from('services').select('*').eq('is_active', true).order('category').order('name');
+    if (svcErr) throw svcErr;
+    allServices = (svcData || []).map(s => ({
       ...s,
+      type: 'service',
       price_htg: withFee(s.price_htg || 0),
       price_usd: s.price_usd ? Math.round(Number(s.price_usd) * 1.03 * 100) / 100 : null,
+    }));
+
+    // Load products
+    const { data: prodData, error: prodErr } = await sb.from('products').select('*').eq('is_active', true).order('category').order('name');
+    if (prodErr) console.warn('POS: Erreur chargement produits', prodErr);
+    allProducts = (prodData || []).map(p => ({
+      ...p,
+      type: 'product',
+      price_htg: withFee(p.price_htg || 0),
+      price_usd: p.price_usd ? Math.round(Number(p.price_usd) * 1.03 * 100) / 100 : null,
+    }));
+
+    // Load formations
+    const { data: formationsData, error: formationsErr } = await sb.from('formations').select('*').eq('is_active', true).order('category').order('name');
+    if (formationsErr) console.warn('POS: Erreur chargement formations', formationsErr);
+    allFormations = (formationsData || []).map(f => ({
+      ...f,
+      type: 'formation',
+      price_htg: withFee(f.price_htg || 0),
+      price_usd: f.price_usd ? Math.round(Number(f.price_usd) * 1.03 * 100) / 100 : null,
     }));
 
     buildCategoryFilter();
     renderServiceGrid('all', '');
   } catch (e) {
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--admin-danger);">Erreur chargement services: ${esc(e.message)}</div>`;
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--admin-danger);">Erreur chargement: ${esc(e.message)}</div>`;
   }
 }
 
 function buildCategoryFilter() {
-  const cats = [...new Set(allServices.map(s => s.category).filter(Boolean))];
   const bar = document.getElementById('cat-filter');
+  let items = [];
+  if (currentType === 'services') items = allServices;
+  else if (currentType === 'products') items = allProducts;
+  else if (currentType === 'formations') items = allFormations;
+  else { bar.innerHTML = ''; return; }
+
+  const cats = [...new Set(items.map(s => s.category).filter(Boolean))];
   bar.innerHTML = `<button class="cat-btn active" data-cat="all">Tous</button>` +
     cats.map(c => `<button class="cat-btn" data-cat="${esc(c)}">${esc(c)}</button>`).join('');
 
@@ -113,23 +141,45 @@ function buildCategoryFilter() {
   });
 }
 
+// Type filter event listener
+document.getElementById('type-filter').addEventListener('click', e => {
+  const btn = e.target.closest('.cat-btn');
+  if (!btn) return;
+  document.getElementById('type-filter').querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentType = btn.dataset.type;
+  buildCategoryFilter();
+  renderServiceGrid('all', document.getElementById('svc-search').value);
+});
+
 function renderServiceGrid(cat = 'all', search = '') {
+  const grid = document.getElementById('svc-grid');
+
+  if (currentType === 'custom') {
+    renderCustomGrid();
+    return;
+  }
+
+  let items = [];
+  if (currentType === 'services') items = allServices;
+  else if (currentType === 'products') items = allProducts;
+  else if (currentType === 'formations') items = allFormations;
+
   const q = search.toLowerCase();
-  const filtered = allServices.filter(s => {
+  const filtered = items.filter(s => {
     const matchCat  = cat === 'all' || (s.category || '') === cat;
     const matchSearch = !q || s.name.toLowerCase().includes(q) || (s.category || '').toLowerCase().includes(q);
     return matchCat && matchSearch;
   });
 
-  const grid = document.getElementById('svc-grid');
   if (!filtered.length) {
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--admin-text-muted);">Aucun service trouvé</div>`;
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--admin-text-muted);">Aucun ${currentType === 'services' ? 'service' : currentType === 'products' ? 'produit' : 'formation'} trouvé</div>`;
     return;
   }
 
   grid.innerHTML = filtered.map(s => `
     <div class="svc-card" data-id="${s.id}">
-      <div class="svc-cat-tag">${esc(s.category || 'Service')}</div>
+      <div class="svc-cat-tag">${esc(s.category || (currentType === 'services' ? 'Service' : currentType === 'products' ? 'Produit' : 'Formation'))}</div>
       <div class="svc-name">${esc(s.name)}</div>
       <div class="svc-duration">${esc(s.duration || '')}</div>
       <div class="svc-price">${fmtHTG(s.price_htg)}<span class="svc-price-usd">${s.price_usd ? '· '+fmtUSD(s.price_usd) : ''}</span></div>
@@ -139,9 +189,45 @@ function renderServiceGrid(cat = 'all', search = '') {
   if (window.lucide) lucide.createIcons({ el: grid });
   grid.querySelectorAll('.svc-card').forEach(card => {
     card.addEventListener('click', () => {
-      const svc = allServices.find(s => String(s.id) === String(card.dataset.id));
-      if (svc) addToOrder(svc);
+      const item = items.find(s => String(s.id) === String(card.dataset.id));
+      if (item) addToOrder(item);
     });
+  });
+}
+
+function renderCustomGrid() {
+  const grid = document.getElementById('svc-grid');
+  grid.innerHTML = `
+    <div style="grid-column:1/-1;padding:1.5rem;background:#f8fafc;border-radius:12px;border:1px dashed var(--admin-border);">
+      <div style="font-weight:600;margin-bottom:.75rem;">Ajouter un article personnalisé</div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem;">
+        <input id="custom-name" type="text" placeholder="Nom de l'article" style="flex:1;min-width:150px;padding:.4rem .6rem;border:1px solid var(--admin-border);border-radius:6px;font-size:.85rem;">
+        <input id="custom-price" type="number" placeholder="Prix HTG" style="width:110px;padding:.4rem .6rem;border:1px solid var(--admin-border);border-radius:6px;font-size:.85rem;">
+      </div>
+      <button id="add-custom-btn" class="pm-btn" style="background:var(--admin-accent);color:#fff;border:none;padding:.4rem .8rem;font-size:.82rem;cursor:pointer;">+ Ajouter</button>
+    </div>
+  `;
+
+  if (window.lucide) lucide.createIcons({ el: grid });
+
+  document.getElementById('add-custom-btn').addEventListener('click', () => {
+    const name = document.getElementById('custom-name').value.trim();
+    const price = Number(document.getElementById('custom-price').value);
+    if (!name || !price || price <= 0) {
+      alert('Veuillez entrer un nom et un prix valide.');
+      return;
+    }
+    addToOrder({
+      id: `custom-${Date.now()}`,
+      name,
+      price_htg: withFee(price),
+      price_usd: null,
+      category: 'Custom',
+      duration: '',
+      type: 'custom',
+    });
+    document.getElementById('custom-name').value = '';
+    document.getElementById('custom-price').value = '';
   });
 }
 
@@ -427,5 +513,5 @@ setInterval(updateClock, 30000);
 (async () => {
   await initSupabase();
   if (window.adminCore?.init) window.adminCore.init();
-  await loadServices();
+  await loadAllItems();
 })();
