@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dalight-spa-v3';
+const CACHE_NAME = 'dalight-spa-v4';
 const urlsToCache = [
   '/',
   '/index.html',

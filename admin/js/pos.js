@@ -147,11 +147,14 @@ function buildCategoryFilter() {
 
 // Event listeners setup (call once after DOM ready)
 function setupEventListeners() {
+  console.log('POS: Setting up event listeners');
+
   // Category filter
   const catFilter = document.getElementById('cat-filter');
   if (catFilter && !catFilter.dataset.posListener) {
     catFilter.dataset.posListener = 'true';
     catFilter.addEventListener('click', e => {
+      console.log('POS: Category filter clicked');
       const btn = e.target.closest('.cat-btn');
       if (!btn) return;
       catFilter.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
@@ -165,6 +168,7 @@ function setupEventListeners() {
   if (typeFilter && !typeFilter.dataset.posListener) {
     typeFilter.dataset.posListener = 'true';
     typeFilter.addEventListener('click', e => {
+      console.log('POS: Type filter clicked, type:', e.target.closest('.cat-btn')?.dataset.type);
       const btn = e.target.closest('.cat-btn');
       if (!btn) return;
       typeFilter.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
@@ -180,6 +184,7 @@ function setupEventListeners() {
   if (searchInput && !searchInput.dataset.posListener) {
     searchInput.dataset.posListener = 'true';
     searchInput.addEventListener('input', e => {
+      console.log('POS: Search input:', e.target.value);
       renderServiceGrid('all', e.target.value);
     });
   }
