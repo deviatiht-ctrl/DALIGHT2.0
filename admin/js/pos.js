@@ -3,15 +3,17 @@
    ============================================================ */
 
 const DALIGHT_INFO = {
-  name:    'DALIGHT',
-  tagline: "L'Art du Bien-Être",
-  address: 'Delmas 65, Port-au-Prince, Haïti',
-  phone:   '+509 37 37 37 37',
-  email:   'info@dalightbeauty.com',
+  name:      'DALIGHT',
+  tagline:   "L'Art du Bien-Être",
+  address:   'Delmas 65, Faustin Premier Durandise #10, Port-au-Prince',
+  phone:     '+509 48 48 12 25',
+  email:     'laurorejeanclarens0@gmail.com',
   instagram: '@dalightbeauty',
-  facebook:  'DALIGHT Beauty & Spa',
-  whatsapp:  '+509 37 37 37 37',
-  logo:    '../assets/images/logodaligth.png?v=2',
+  facebook:  '@dalightbeauty',
+  tiktok:    '@dalightbeauty',
+  whatsapp:  '+509 48 48 12 25',
+  logo:      '../assets/images/logodaligth.png?v=2',
+  qr:        '../assets/images/qr.png',
 };
 
 const DEPOSIT_RATE = 0.5;     // 50 % pour les massages
@@ -464,10 +466,16 @@ function buildReceiptHTML(data) {
     <div class="rcpt-footer">
       <div class="rcpt-thankyou">Merci de votre visite !</div>
       <div class="rcpt-social">
-        Instagram : ${DALIGHT_INFO.instagram} &nbsp;·&nbsp; Facebook : ${DALIGHT_INFO.facebook}
+        <span>📸 ${DALIGHT_INFO.instagram}</span> &nbsp;·&nbsp;
+        <span>📘 ${DALIGHT_INFO.facebook}</span> &nbsp;·&nbsp;
+        <span>🎵 ${DALIGHT_INFO.tiktok}</span>
       </div>
-      <div style="margin-top:.25rem;">WhatsApp : ${DALIGHT_INFO.whatsapp}</div>
+      <div style="margin-top:.25rem;">WhatsApp / Tel : ${DALIGHT_INFO.whatsapp}</div>
       <div style="margin-top:.5rem;font-size:.68rem;color:#d1d5db;">Ce reçu est votre preuve d'achat. Conservez-le.</div>
+      <div class="rcpt-qr">
+        <img src="${DALIGHT_INFO.qr}" alt="QR Code" class="rcpt-qr-img" onerror="this.parentElement.style.display='none'">
+        <div class="rcpt-qr-label">Scannez-moi</div>
+      </div>
     </div>
   `;
 }
