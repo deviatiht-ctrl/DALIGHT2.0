@@ -58,7 +58,6 @@ const fmtUSD = n => '$' + Number(n).toFixed(2);
 const esc    = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
 function withFee(p) {
-  if (window.withFee) return window.withFee(p);
   return Math.round(Number(p) * 1.03);
 }
 
