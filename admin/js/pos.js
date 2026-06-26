@@ -105,32 +105,36 @@ async function loadAllItems() {
 
     // Load products (optional)
     try {
-      const { data: prodData, error: prodErr } = await sb.from('products').select('*').eq('is_active', true).order('category').order('name');
-      if (prodErr) console.warn('POS: Erreur chargement produits (table peut ne pas exister)', prodErr);
+      const { data: prodData, error: prodErr } = await sb.from('products').select('*').eq('is_active', true).order('name');
+      if (prodErr) throw prodErr;
       allProducts = (prodData || []).map(p => ({
         ...p,
         type: 'product',
+        category: p.category || p.category_name || 'Produit',
         price_htg: withFee(p.price_htg || 0),
         price_usd: p.price_usd ? Math.round(Number(p.price_usd) * 1.03 * 100) / 100 : null,
       }));
       console.log('POS: Produits chargés:', allProducts.length);
     } catch (e) {
       console.warn('POS: Products table error (ignoring):', e.message);
+      allProducts = [];
     }
 
     // Load formations (optional)
     try {
-      const { data: formationsData, error: formationsErr } = await sb.from('formations').select('*').eq('is_active', true).order('category').order('name');
-      if (formationsErr) console.warn('POS: Erreur chargement formations (table peut ne pas exister)', formationsErr);
+      const { data: formationsData, error: formationsErr } = await sb.from('formations').select('*').eq('is_active', true).order('name');
+      if (formationsErr) throw formationsErr;
       allFormations = (formationsData || []).map(f => ({
         ...f,
         type: 'formation',
+        category: f.category || f.category_name || 'Formation',
         price_htg: withFee(f.price_htg || 0),
         price_usd: f.price_usd ? Math.round(Number(f.price_usd) * 1.03 * 100) / 100 : null,
       }));
       console.log('POS: Formations chargées:', allFormations.length);
     } catch (e) {
       console.warn('POS: Formations table error (ignoring):', e.message);
+      allFormations = [];
     }
 
     buildCategoryFilter();
