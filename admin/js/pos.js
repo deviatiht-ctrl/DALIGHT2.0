@@ -39,6 +39,16 @@ async function initSupabase() {
     console.error('POS: Supabase client non disponible');
     return;
   }
+
+  // Force reinitialize if wrong URL
+  const correctUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co';
+  if (sb.supabaseUrl !== correctUrl) {
+    console.warn('POS: Wrong Supabase URL detected, reinitializing:', sb.supabaseUrl);
+    const { createClient } = supabase;
+    sb = createClient(correctUrl, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U');
+    window.dalightAdminSupabase = sb;
+  }
+
   console.log('POS: Supabase client initialisé, URL:', sb.supabaseUrl);
 }
 
