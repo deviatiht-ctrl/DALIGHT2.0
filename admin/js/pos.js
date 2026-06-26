@@ -39,7 +39,7 @@ async function initSupabase() {
     console.error('POS: Supabase client non disponible');
     return;
   }
-  console.log('POS: Supabase client initialisé');
+  console.log('POS: Supabase client initialisé, URL:', sb.supabaseUrl);
 }
 
 /* ── Helpers ─────────────────────────────────────────────── */
