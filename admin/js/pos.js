@@ -105,16 +105,17 @@ async function loadAllItems() {
     }));
     console.log('POS: Services chargés:', allServices.length);
 
-    // Load products (optional)
+    // Load products (optional) — uses `price` column (not price_htg)
     try {
-      const { data: prodData, error: prodErr } = await sb.from('products').select('*').eq('is_active', true).order('name');
+      const { data: prodData, error: prodErr } = await sb.from('products').select('id,name,description,price,sale_price,is_active,image_urls').eq('is_active', true).order('name');
       if (prodErr) throw prodErr;
       allProducts = (prodData || []).map(p => ({
         ...p,
         type: 'product',
-        category: p.category || p.category_name || 'Produit',
-        price_htg: withFee(p.price_htg || 0),
-        price_usd: p.price_usd ? Math.round(Number(p.price_usd) * 1.03 * 100) / 100 : null,
+        category: 'Produit',
+        duration: '',
+        price_htg: withFee(Number(p.sale_price || p.price) || 0),
+        price_usd: null,
       }));
       console.log('POS: Produits chargés:', allProducts.length);
     } catch (e) {
@@ -122,17 +123,28 @@ async function loadAllItems() {
       allProducts = [];
     }
 
-    // Load formations (optional)
+    // Load formations (optional) — uses price_inscription, price_blouse, price_cosmetique etc.
     try {
-      const { data: formationsData, error: formationsErr } = await sb.from('formations').select('*').eq('is_active', true).order('name');
+      const { data: formationsData, error: formationsErr } = await sb.from('formations')
+        .select('id,name,subtitle,duration,is_active,price_inscription,price_blouse,price_cosmetique,price_corporel,price_decoration,price_massage,order_index')
+        .eq('is_active', true).order('order_index');
       if (formationsErr) throw formationsErr;
-      allFormations = (formationsData || []).map(f => ({
-        ...f,
-        type: 'formation',
-        category: f.category || f.category_name || 'Formation',
-        price_htg: withFee(f.price_htg || 0),
-        price_usd: f.price_usd ? Math.round(Number(f.price_usd) * 1.03 * 100) / 100 : null,
-      }));
+      allFormations = (formationsData || []).map(f => {
+        const fraisInscription = Number(f.price_inscription) || 0;
+        const fraisBlouse      = Number(f.price_blouse)      || 0;
+        const participation    = Number(f.price_cosmetique || f.price_corporel || f.price_decoration || f.price_massage) || 0;
+        const total = fraisInscription + fraisBlouse + participation;
+        return {
+          ...f,
+          type: 'formation',
+          category: 'Formation',
+          price_htg: total,
+          price_usd: null,
+          frais_inscription: fraisInscription,
+          frais_blouse: fraisBlouse,
+          participation: participation,
+        };
+      });
       console.log('POS: Formations chargées:', allFormations.length);
     } catch (e) {
       console.warn('POS: Formations table error (ignoring):', e.message);
@@ -230,14 +242,27 @@ function renderServiceGrid(cat = 'all', search = '') {
     return;
   }
 
-  grid.innerHTML = filtered.map(s => `
-    <div class="svc-card" data-id="${s.id}">
+  grid.innerHTML = filtered.map(s => {
+    let priceBlock = '';
+    if (s.type === 'formation') {
+      priceBlock = `
+        <div class="svc-formation-fees">
+          ${s.frais_inscription ? `<div class="fee-row"><span>Inscription</span><span>${fmtHTG(s.frais_inscription)}</span></div>` : ''}
+          ${s.frais_blouse      ? `<div class="fee-row"><span>Blouse/Docs</span><span>${fmtHTG(s.frais_blouse)}</span></div>` : ''}
+          ${s.participation     ? `<div class="fee-row"><span>Participation</span><span>${fmtHTG(s.participation)}</span></div>` : ''}
+        </div>
+        <div class="svc-price">${s.price_htg ? 'Total : '+fmtHTG(s.price_htg) : '<em style="font-size:.7rem;color:#aaa;">Sur demande</em>'}</div>`;
+    } else {
+      priceBlock = `<div class="svc-price">${fmtHTG(s.price_htg)}<span class="svc-price-usd">${s.price_usd ? '· '+fmtUSD(s.price_usd) : ''}</span></div>`;
+    }
+    return `
+    <div class="svc-card${s.type === 'formation' ? ' svc-card--formation' : ''}" data-id="${s.id}">
       <div class="svc-cat-tag">${esc(s.category || (currentType === 'services' ? 'Service' : currentType === 'products' ? 'Produit' : 'Formation'))}</div>
       <div class="svc-name">${esc(s.name)}</div>
       <div class="svc-duration">${esc(s.duration || '')}</div>
-      <div class="svc-price">${fmtHTG(s.price_htg)}<span class="svc-price-usd">${s.price_usd ? '· '+fmtUSD(s.price_usd) : ''}</span></div>
-    </div>
-  `).join('');
+      ${priceBlock}
+    </div>`;
+  }).join('');
 
   if (window.lucide) lucide.createIcons({ el: grid });
   grid.querySelectorAll('.svc-card').forEach(card => {
