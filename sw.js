@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dalight-spa-v4';
+const CACHE_NAME = 'dalight-spa-v5';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -52,31 +52,40 @@ self.addEventListener('activate', (event) => {
 // Fetch event
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
-  
+  const path = url.pathname;
+
   // 1. NEVER cache Supabase API calls
   if (url.hostname.includes('supabase.co')) {
     event.respondWith(fetch(event.request));
     return;
   }
 
-  // 2. Network-First strategy for HTML and JS files to ensure latest version
-  if (event.request.mode === 'navigate' || 
-      event.request.url.endsWith('.html') || 
-      event.request.url.endsWith('.js')) {
+  // 2. NEVER cache admin pages and scripts — always network
+  if (path.startsWith('/admin/') || path.includes('/admin/')) {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // 3. Network-First for HTML and JS files (use pathname to handle ?v= query strings)
+  if (event.request.mode === 'navigate' ||
+      path.endsWith('.html') ||
+      path.endsWith('.js') ||
+      path.endsWith('.css')) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // Update cache with new version
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           return response;
         })
-        .catch(() => caches.match(event.request)) // Fallback to cache if offline
+        .catch(() => caches.match(event.request))
     );
     return;
   }
-  
-  // 3. Cache-First for assets (images, fonts, etc.)
+
+  // 4. Cache-First for static assets (images, fonts, etc.)
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
