@@ -69,7 +69,7 @@ serve(async (req: Request) => {
       })
 
       const data = await res.json().catch(() => ({ status: false, message: 'Réponse PLOP PLOP invalide' }))
-      return jsonResponse(data, res.status)
+      return jsonResponse({ ...data, plop_http_status: res.status })
     }
 
     // ── WITHDRAW (Retrait) ───────────────────────────────────────
@@ -135,7 +135,7 @@ serve(async (req: Request) => {
     })
 
     const data = await res.json().catch(() => ({ status: false, message: 'Réponse PLOP PLOP invalide' }))
-    return jsonResponse(data, res.status)
+    return jsonResponse({ ...data, plop_http_status: res.status })
   } catch (error: unknown) {
     console.error('PLOP payment error:', error)
     const message = error instanceof Error ? error.message : 'Erreur interne paiement'

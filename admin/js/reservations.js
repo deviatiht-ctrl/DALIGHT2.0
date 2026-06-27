@@ -136,12 +136,29 @@ function renderReservations() {
         <div style="font-weight: 500;">${formatDate(r.date)}</div>
         <div class="text-muted" style="font-size: 0.8rem;">${formatTime(r.time)}</div>
       </td>
-      <td>${r.location === 'Spa' ? '🏠 Au Spa' : '🚗 À domicile'}</td>
       <td>
-        <div style="font-size:0.8rem;">
-          ${r.payment_method ? ({'moncash':'📱 MonCash','natcash':'📱 NatCash','bank':'🏦 Banque'}[r.payment_method] || r.payment_method) : '<span class="text-muted">—</span>'}
+        <div style="display:flex;align-items:center;gap:.35rem;font-size:.85rem;">
+          ${r.location === 'Spa'
+            ? `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg> Au Spa`
+            : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg> Domicile`}
         </div>
-        ${r.payment_proof_url ? '<span style="color:#22c55e;font-size:0.75rem;">✓ Preuve</span>' : '<span style="color:#dc3545;font-size:0.75rem;">✕ Pas de preuve</span>'}
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:.35rem;font-size:.82rem;font-weight:500;">
+          ${r.payment_method === 'moncash' || r.payment_method === 'natcash'
+            ? `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>`
+            : r.payment_method === 'bank'
+            ? `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10h1v11M9 10h1v11M14 10h1v11M19 10h1v11"/></svg>`
+            : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>`}
+          ${{ moncash: 'MonCash', natcash: 'NatCash', bank: 'Banque' }[r.payment_method] || (r.payment_method || '—')}
+        </div>
+        ${['moncash','natcash'].includes(r.payment_method)
+          ? (r.plop_client_id
+              ? `<div style="font-size:.72rem;color:#0369a1;margin-top:.2rem;">ID: ${r.plop_client_id}</div>`
+              : `<div style="font-size:.72rem;color:#92400e;margin-top:.2rem;">Plop en attente</div>`)
+          : (r.payment_proof_url
+              ? `<div style="font-size:.72rem;color:#22c55e;margin-top:.2rem;">Preuve reçue</div>`
+              : '')}
       </td>
       <td>${getStatusBadge(r.status)}</td>
       <td>
@@ -183,210 +200,279 @@ function renderReservations() {
 
 window.openDetailModal = function(id) {
   const { formatDate, formatTime, getStatusBadge } = window.adminCore;
-  const reservation = allReservations.find(r => r.id === id);
-  if (!reservation) return;
-  
-  currentReservation = reservation;
-  
-  const modal = document.getElementById('detail-modal');
+  const r = allReservations.find(r => r.id === id);
+  if (!r) return;
+
+  currentReservation = r;
+
+  const modal   = document.getElementById('detail-modal');
   const content = document.getElementById('modal-content');
-  const footer = document.getElementById('modal-footer');
+  const footer  = document.getElementById('modal-footer');
 
-  // Payment method label
-  const payMethodLabels = { moncash: '📱 MonCash', natcash: '📱 NatCash', bank: '🏦 Compte Bancaire' };
-  const payMethodLabel = payMethodLabels[reservation.payment_method] || reservation.payment_method || 'Non spécifié';
+  // ── Helpers ──────────────────────────────────────────────────
+  const fmtHTG = n => n ? Number(n).toLocaleString('fr-FR') + ' HTG' : '—';
+  const ico = (path, size = 14, color = 'currentColor') =>
+    `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="${color}" stroke-width="2" width="${size}" height="${size}" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="${path}"/></svg>`;
 
-  // Payment proof(s) display - check both new array and old single field
-  let proofs = Array.isArray(reservation.payment_proofs) ? reservation.payment_proofs : [];
-  if (proofs.length === 0 && reservation.payment_proof_url) {
-    proofs = [reservation.payment_proof_url];
-  }
-  const proofHtml = proofs.length > 0 ? `
+  // ── Payment method ────────────────────────────────────────────
+  const _pm = (r.payment_method || '').toLowerCase();
+  const isMobilePay = ['moncash', 'natcash', 'kashpaw'].includes(_pm);
+  const methodMeta = {
+    moncash: { label: 'MonCash',         path: 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z' },
+    natcash: { label: 'NatCash',         path: 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z' },
+    kashpaw: { label: 'KashPaw',         path: 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z' },
+    bank:    { label: 'Compte Bancaire', path: 'M3 21h18M3 10h18M3 7l9-4 9 4M4 10h1v11M9 10h1v11M14 10h1v11M19 10h1v11' },
+  };
+  const mm = methodMeta[_pm] || { label: r.payment_method || 'Non spécifié', path: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' };
+
+  // ── Price ─────────────────────────────────────────────────────
+  const totalAmt   = parseFloat(r.total_amount || r.total_price || 0);
+  const depositAmt = parseFloat(r.deposit_amount || 0);
+  const isFull     = r.payment_choice === 'full';
+  const amtPaid    = isFull ? totalAmt : depositAmt;
+  const balance    = isFull ? 0 : Math.max(0, totalAmt - depositAmt);
+
+  const priceBlock = totalAmt > 0 ? `
+    <div style="margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--admin-border);display:grid;gap:.4rem;">
+      <div style="display:flex;justify-content:space-between;font-size:.83rem;">
+        <span style="color:var(--admin-text-muted);">Total service</span>
+        <span style="font-weight:600;">${fmtHTG(totalAmt)}</span>
+      </div>
+      ${!isFull ? `
+      <div style="display:flex;justify-content:space-between;font-size:.83rem;">
+        <span style="color:var(--admin-text-muted);">Acompte versé</span>
+        <span style="font-weight:600;color:#f59e0b;">${fmtHTG(amtPaid)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(245,158,11,.09);padding:.55rem .75rem;border-radius:8px;border:1px solid rgba(245,158,11,.25);margin-top:.1rem;">
+        <span style="color:#d97706;font-weight:600;font-size:.85rem;">Solde à payer</span>
+        <span style="font-weight:700;color:#d97706;font-size:1rem;">${fmtHTG(balance)}</span>
+      </div>` : `
+      <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(5,150,105,.08);padding:.55rem .75rem;border-radius:8px;border:1px solid rgba(5,150,105,.2);margin-top:.1rem;">
+        <span style="color:#059669;font-weight:600;font-size:.85rem;">Paiement complet reçu</span>
+        <span style="font-weight:700;color:#059669;font-size:1rem;">${fmtHTG(totalAmt)}</span>
+      </div>`}
+    </div>` : '';
+
+  // ── Payment proof ─────────────────────────────────────────────
+  // Show for bank always; for moncash/natcash only if it's a legacy (pre-Plop) reservation
+  // Legacy = moncash/natcash paid via manual screenshot (proof exists, no Plop reference)
+  const isLegacyMobilePay = isMobilePay && !r.payment_reference && !!r.payment_proof_url;
+  let proofs = Array.isArray(r.payment_proofs) ? r.payment_proofs : [];
+  if (proofs.length === 0 && r.payment_proof_url) proofs = [r.payment_proof_url];
+  const proofHtml = (!isMobilePay || isLegacyMobilePay) && proofs.length > 0 ? `
     <div>
-      <div class="text-muted mb-1">📸 Preuve(s) de paiement (${proofs.length})</div>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem;">
-        ${proofs.map((proof, index) => `
-          <div style="position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;">
-            <img src="${proof}" alt="Preuve de paiement ${index + 1}" 
-                 style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;"
-                 onclick="window.open('${proof}', '_blank')">
-            <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: white; padding: 0.25rem; font-size: 0.75rem; text-align: center;">
-              ${index === 0 ? 'Acompte' : index === 1 ? 'Paiement complet' : `Preuve ${index + 1}`}
+      <div style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--admin-text-muted);margin-bottom:.5rem;">
+        ${ico('M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z')}
+        Preuve(s) de paiement (${proofs.length})
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.6rem;">
+        ${proofs.map((p, i) => `
+          <div style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:1px solid var(--admin-border);">
+            <img src="${p}" alt="Preuve ${i+1}" style="width:100%;height:100%;object-fit:cover;cursor:pointer;" onclick="window.open('${p}','_blank')">
+            <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);color:#fff;padding:.2rem;font-size:.7rem;text-align:center;">
+              ${i === 0 ? 'Acompte' : i === 1 ? 'Paiement complet' : 'Preuve ' + (i+1)}
             </div>
-          </div>
-        `).join('')}
+          </div>`).join('')}
       </div>
-    </div>
-  ` : `
-    <div>
-      <div class="text-muted mb-1">📸 Preuve de paiement</div>
-      <div style="background:rgba(220,53,69,0.1);padding:0.75rem;border-radius:8px;color:#dc3545;font-size:0.85rem;">
-        ⚠️ Aucune preuve de paiement uploadée
-      </div>
-    </div>
-  `;
+    </div>` : '';
 
+  // ── Plop Plop section (moncash/natcash only, always shown) ────
+  const plopRow = (label, val, highlight = false) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;${highlight ? 'background:#e0f2fe;padding:.4rem .6rem;border-radius:6px;' : 'padding:.25rem 0;'}font-size:.82rem;margin-top:.3rem;">
+      <span style="color:${highlight ? '#0369a1' : 'var(--admin-text-muted)'};font-weight:${highlight ? '600' : '400'};">${label}</span>
+      <code style="font-size:.78rem;font-weight:${highlight ? '700' : '400'};color:${highlight ? '#0369a1' : 'inherit'};">${val}</code>
+    </div>`;
+
+  // ── Plop Plop section — all moncash/natcash except legacy screenshot ──
+  const plopHtml = isMobilePay && !isLegacyMobilePay ? `
+    <div style="background:#f0f9ff;border-radius:12px;padding:1rem;border:1px solid #bae6fd;">
+      <div style="display:flex;align-items:center;gap:.5rem;font-weight:600;color:#0369a1;margin-bottom:.6rem;font-size:.85rem;">
+        ${ico('M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1', 15, '#0369a1')}
+        Plop Plop — Vérification du paiement
+      </div>
+      ${r.payment_reference    ? plopRow('Référence', r.payment_reference) : ''}
+      ${r.plop_transaction_id  ? plopRow('ID Transaction', r.plop_transaction_id) : ''}
+      ${r.plop_client_id
+        ? plopRow('ID Client Plop Plop', r.plop_client_id, true)
+        : `<div style="display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:#92400e;background:#fef3c7;padding:.5rem .75rem;border-radius:6px;margin-top:.3rem;border:1px solid #fde68a;">
+            ${ico('M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z', 14, '#92400e')}
+            ID client Plop Plop non encore capturé
+          </div>`}
+      ${r.balance_payment_reference ? `
+        <div style="margin-top:.6rem;padding-top:.6rem;border-top:1px dashed #bae6fd;">
+          ${plopRow('Réf. solde restant', r.balance_payment_reference)}
+        </div>` : ''}
+      ${r.balance_plop_client_id ? plopRow('ID Client Plop (solde)', r.balance_plop_client_id, true) : ''}
+    </div>` : '';
+
+  // ── Content HTML ──────────────────────────────────────────────
   content.innerHTML = `
-    <div style="display: grid; gap: 1rem;">
-      <div class="d-flex justify-between align-center">
-        <span class="text-muted">Statut</span>
-        ${getStatusBadge(reservation.status)}
+    <div style="display:grid;gap:1rem;">
+
+      <!-- Status row -->
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:.8rem;color:var(--admin-text-muted);">Statut</span>
+        ${getStatusBadge(r.status)}
       </div>
-      
-      <hr style="border: none; border-top: 1px solid #e5e7eb;">
-      
-      <div>
-        <div class="text-muted mb-1">Client</div>
-        <div style="font-weight: 500;">${reservation.user_name || 'Non renseigné'}</div>
-        <div class="text-muted">${reservation.user_email}</div>
-        ${reservation.phone ? `<div style="margin-top:0.25rem;font-size:0.9rem;">📞 <strong>${reservation.phone}</strong></div>` : ''}
-      </div>
-      
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-        <div>
-          <div class="text-muted mb-1">Date</div>
-          <div style="font-weight: 500;">${formatDate(reservation.date)}</div>
+
+      <hr style="border:none;border-top:1px solid var(--admin-border);">
+
+      <!-- Client card -->
+      <div style="background:var(--admin-bg);border-radius:12px;padding:1rem;display:grid;gap:.65rem;">
+        <div style="display:flex;align-items:center;gap:.75rem;">
+          <div style="background:var(--admin-accent-light,rgba(201,162,39,.12));border-radius:10px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            ${ico('M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', 18, 'var(--admin-accent,#c9a227)')}
+          </div>
+          <div>
+            <div style="font-weight:600;font-size:.95rem;">${r.user_name || 'Client non renseigné'}</div>
+            <div style="font-size:.75rem;color:var(--admin-text-muted);">Client</div>
+          </div>
         </div>
-        <div>
-          <div class="text-muted mb-1">Heure</div>
-          <div style="font-weight: 500;">${formatTime(reservation.time)}</div>
+        <div style="display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:var(--admin-text-muted);">
+          ${ico('M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z')}
+          <span style="color:var(--admin-text);">${r.user_email || '—'}</span>
         </div>
+        ${r.phone ? `
+        <div style="display:flex;align-items:center;gap:.5rem;font-size:.88rem;">
+          ${ico('M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z', 14, 'var(--admin-accent,#c9a227)')}
+          <strong>${r.phone}</strong>
+        </div>` : ''}
       </div>
-      
-      <div>
-        <div class="text-muted mb-1">Service</div>
-        <div style="font-weight: 500;">${reservation.service}</div>
-      </div>
-      
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-        <div>
-          <div class="text-muted mb-1">Lieu</div>
-          <div style="font-weight: 500;">${reservation.location === 'Spa' ? '🏠 DALIGHT — Delmas 65' : '🚗 Service à domicile'}</div>
+
+      <!-- Date / Time / Service / Location -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+        <div style="background:var(--admin-bg);border-radius:10px;padding:.75rem;">
+          <div style="display:flex;align-items:center;gap:.35rem;font-size:.72rem;color:var(--admin-text-muted);margin-bottom:.3rem;">
+            ${ico('M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z')} Date
+          </div>
+          <div style="font-weight:600;font-size:.9rem;">${formatDate(r.date)}</div>
         </div>
-        <div>
-          <div class="text-muted mb-1">💳 Méthode de paiement</div>
-          <div style="font-weight: 500;">${payMethodLabel}</div>
+        <div style="background:var(--admin-bg);border-radius:10px;padding:.75rem;">
+          <div style="display:flex;align-items:center;gap:.35rem;font-size:.72rem;color:var(--admin-text-muted);margin-bottom:.3rem;">
+            ${ico('M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z')} Heure
+          </div>
+          <div style="font-weight:600;font-size:.9rem;">${formatTime(r.time)}</div>
+        </div>
+        <div style="background:var(--admin-bg);border-radius:10px;padding:.75rem;">
+          <div style="display:flex;align-items:center;gap:.35rem;font-size:.72rem;color:var(--admin-text-muted);margin-bottom:.3rem;">
+            ${ico('M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z')} Service
+          </div>
+          <div style="font-weight:600;font-size:.88rem;">${r.service || '—'}</div>
+        </div>
+        <div style="background:var(--admin-bg);border-radius:10px;padding:.75rem;">
+          <div style="display:flex;align-items:center;gap:.35rem;font-size:.72rem;color:var(--admin-text-muted);margin-bottom:.3rem;">
+            ${ico('M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z')} Lieu
+          </div>
+          <div style="font-weight:600;font-size:.88rem;">${r.location === 'Spa' ? 'DALIGHT — Delmas 65' : 'À domicile'}</div>
         </div>
       </div>
 
-      <!-- Payment Choice Display -->
-      <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-        <div class="text-muted mb-1" style="font-weight: 500;">💰 Choix de paiement</div>
-        <div style="font-weight: 600; color: ${reservation.payment_choice === 'full' ? '#059669' : '#f59e0b'}; font-size: 1.1rem;">
-          ${reservation.payment_choice === 'full' ? '✓ Paiement complet' : '⏳ Acompte (reste à payer)'}
+      <!-- Payment card -->
+      <div style="background:var(--admin-bg);border-radius:12px;padding:1rem;border:1px solid var(--admin-border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--admin-text-muted);">
+            ${ico('M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z')} Paiement
+          </div>
+          <div style="display:flex;align-items:center;gap:.4rem;font-weight:600;font-size:.9rem;">
+            ${ico(mm.path, 15)} ${mm.label}
+          </div>
         </div>
-        ${reservation.payment_choice === 'deposit' ? `
-          <div style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">
-            Le client a payé l'acompte et doit payer le reste à son arrivée au spa.
+        <div style="margin-top:.6rem;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:.78rem;color:var(--admin-text-muted);">Type</div>
+          <div style="display:inline-flex;align-items:center;gap:.35rem;padding:.25rem .6rem;border-radius:20px;font-size:.8rem;font-weight:600;
+            ${isFull
+              ? 'background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.2);'
+              : 'background:rgba(245,158,11,.1);color:#d97706;border:1px solid rgba(245,158,11,.2);'}">
+            ${isFull
+              ? ico('M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', 13, '#059669') + ' Paiement complet'
+              : ico('M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', 13, '#d97706') + ' Acompte'}
           </div>
-        ` : `
-          <div style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">
-            Le client a payé le montant complet.
-          </div>
-        `}
+        </div>
+        ${priceBlock}
       </div>
-      
-      ${reservation.id_type ? `
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-          <div>
-            <div class="text-muted mb-1">Type d'ID</div>
-            <div style="font-weight: 500;">${reservation.id_type}</div>
-          </div>
-          <div>
-            <div class="text-muted mb-1">Numéro d'ID</div>
-            <div style="font-weight: 500;">${reservation.id_number}</div>
-          </div>
-        </div>
-      ` : ''}
 
+      ${plopHtml}
       ${proofHtml}
 
-      ${(reservation.plop_transaction_id || reservation.plop_client_id || reservation.payment_reference) ? `
-        <div style="background:#f0f9ff;padding:1rem;border-radius:8px;border:1px solid #bae6fd;">
-          <div class="text-muted mb-1" style="font-weight:600;color:#0369a1;">🔗 Plop Plop — Vérification</div>
-          ${reservation.payment_reference ? `
-            <div style="font-size:0.82rem;margin-top:.5rem;display:flex;justify-content:space-between;">
-              <span style="color:#6b7280;">Référence</span>
-              <code style="font-size:.78rem;">${reservation.payment_reference}</code>
-            </div>` : ''}
-          ${reservation.plop_transaction_id ? `
-            <div style="font-size:0.82rem;margin-top:.35rem;display:flex;justify-content:space-between;">
-              <span style="color:#6b7280;">ID Transaction</span>
-              <code style="font-size:.78rem;">${reservation.plop_transaction_id}</code>
-            </div>` : ''}
-          ${reservation.plop_client_id ? `
-            <div style="font-size:0.82rem;margin-top:.35rem;display:flex;justify-content:space-between;background:#e0f2fe;padding:.4rem .6rem;border-radius:6px;">
-              <span style="color:#0369a1;font-weight:600;">ID Client Plop Plop</span>
-              <code style="font-size:.78rem;font-weight:700;color:#0369a1;">${reservation.plop_client_id}</code>
-            </div>` : '<div style="font-size:.8rem;color:#92400e;margin-top:.4rem;">⚠️ ID client Plop Plop non encore capturé</div>'}
-          ${reservation.balance_payment_reference ? `
-            <div style="font-size:0.82rem;margin-top:.5rem;padding-top:.5rem;border-top:1px dashed #bae6fd;">
-              <span style="color:#6b7280;">Réf. solde</span>
-              <code style="font-size:.78rem;margin-left:.5rem;">${reservation.balance_payment_reference}</code>
-            </div>` : ''}
-          ${reservation.balance_plop_client_id ? `
-            <div style="font-size:0.82rem;margin-top:.35rem;display:flex;justify-content:space-between;background:#e0f2fe;padding:.4rem .6rem;border-radius:6px;">
-              <span style="color:#0369a1;font-weight:600;">ID Client Plop (solde)</span>
-              <code style="font-size:.78rem;font-weight:700;color:#0369a1;">${reservation.balance_plop_client_id}</code>
-            </div>` : ''}
+      ${r.id_type ? `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+        <div style="background:var(--admin-bg);border-radius:10px;padding:.75rem;">
+          <div style="font-size:.72rem;color:var(--admin-text-muted);margin-bottom:.25rem;">Type d'ID</div>
+          <div style="font-weight:600;">${r.id_type}</div>
         </div>
-      ` : ''}
+        <div style="background:var(--admin-bg);border-radius:10px;padding:.75rem;">
+          <div style="font-size:.72rem;color:var(--admin-text-muted);margin-bottom:.25rem;">Numéro d'ID</div>
+          <div style="font-weight:600;">${r.id_number}</div>
+        </div>
+      </div>` : ''}
 
-      ${reservation.notes ? `
-        <div>
-          <div class="text-muted mb-1">Notes</div>
-          <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">${reservation.notes}</div>
-        </div>
-      ` : ''}
-      
-      <div class="text-muted" style="font-size: 0.8rem;">
-        Créé le ${formatDate(reservation.created_at)}
+      ${r.notes ? `
+      <div>
+        <div style="font-size:.78rem;color:var(--admin-text-muted);margin-bottom:.35rem;">Notes</div>
+        <div style="background:var(--admin-bg);padding:.85rem 1rem;border-radius:10px;border:1px solid var(--admin-border);font-size:.88rem;">${r.notes}</div>
+      </div>` : ''}
+
+      <div style="font-size:.75rem;color:var(--admin-text-muted);">
+        Créé le ${formatDate(r.created_at)}
       </div>
-    </div>
-  `;
-  
-  // Footer: automatic Brevo buttons + manual email buttons + action buttons
+    </div>`;
+
+  // ── Footer ────────────────────────────────────────────────────
   const automaticButtonsHtml = `
-    <div style="display:flex;gap:0.4rem;flex-wrap:wrap;width:100%;margin-bottom:0.75rem;padding-bottom:0.75rem;border-bottom:1px solid #e5e7eb;">
-      <span style="font-size:0.78rem;color:#6b7280;width:100%;margin-bottom:0.25rem;">🤖 Actions automatiques (Brevo)</span>
-      ${reservation.status === 'PENDING' ? `
-        <button class="btn btn-success btn-sm" onclick="autoConfirmReservation('${reservation.id}')">✓ Confirmer & Envoyer Email</button>
-        <button class="btn btn-secondary btn-sm" onclick="autoSetPending('${reservation.id}')">⏳ Remettre en attente</button>
-      ` : ''}
-      ${reservation.status === 'CONFIRMED' ? `
-        <button class="btn btn-success btn-sm" onclick="autoCompleteReservation('${reservation.id}')">🎉 Terminer & Envoyer Email</button>
-      ` : ''}
-    </div>
-  `;
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap;width:100%;margin-bottom:.75rem;padding-bottom:.75rem;border-bottom:1px solid var(--admin-border);">
+      <span style="font-size:.75rem;color:var(--admin-text-muted);width:100%;margin-bottom:.2rem;display:flex;align-items:center;gap:.3rem;">
+        ${ico('M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-2', 13)} Actions automatiques (Brevo)
+      </span>
+      ${r.status === 'PENDING' ? `
+        <button class="btn btn-success btn-sm" onclick="autoConfirmReservation('${r.id}')">Confirmer &amp; Email</button>
+        <button class="btn btn-secondary btn-sm" onclick="autoSetPending('${r.id}')">Remettre en attente</button>` : ''}
+      ${r.status === 'CONFIRMED' ? `
+        <button class="btn btn-success btn-sm" onclick="autoCompleteReservation('${r.id}')">Terminer &amp; Email</button>` : ''}
+    </div>`;
 
   const emailButtonsHtml = `
-    <div style="display:flex;gap:0.4rem;flex-wrap:wrap;width:100%;margin-bottom:0.75rem;padding-bottom:0.75rem;border-bottom:1px solid #e5e7eb;">
-      <span style="font-size:0.78rem;color:#6b7280;width:100%;margin-bottom:0.25rem;">📧 Emails manuels (mailto:)</span>
-      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${reservation.id}','confirmation')">✓ Confirmation</button>
-      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${reservation.id}','cancellation')">✕ Annulation</button>
-      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${reservation.id}','reminder')">⏰ Rappel</button>
-      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${reservation.id}','completion')">🎉 Terminé</button>
-      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${reservation.id}','custom')">✏️ Vide</button>
-    </div>
-  `;
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap;width:100%;margin-bottom:.75rem;padding-bottom:.75rem;border-bottom:1px solid var(--admin-border);">
+      <span style="font-size:.75rem;color:var(--admin-text-muted);width:100%;margin-bottom:.2rem;display:flex;align-items:center;gap:.3rem;">
+        ${ico('M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', 13)} Emails manuels
+      </span>
+      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${r.id}','confirmation')">Confirmation</button>
+      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${r.id}','cancellation')">Annulation</button>
+      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${r.id}','reminder')">Rappel</button>
+      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${r.id}','completion')">Terminé</button>
+      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${r.id}','custom')">Vide</button>
+    </div>`;
+
+  const plopVerifyHtml = isMobilePay && !isLegacyMobilePay ? `
+    <div style="width:100%;margin-bottom:.75rem;padding-bottom:.75rem;border-bottom:1px solid var(--admin-border);">
+      <button class="btn btn-sm" onclick="verifyReservationPayment('${r.id}')"
+        style="width:100%;background:#0369a1;color:#fff;border:none;display:flex;align-items:center;justify-content:center;gap:.4rem;padding:.55rem 1rem;border-radius:8px;font-weight:600;cursor:pointer;">
+        ${ico('M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1', 14, '#fff')}
+        Vérifier paiement Plop Plop
+      </button>
+      <div style="font-size:.72rem;text-align:center;margin-top:.3rem;${r.plop_client_id ? 'color:#059669;' : 'color:#92400e;'}">
+        ${r.plop_client_id
+          ? `Confirmé — ID client: ${r.plop_client_id}`
+          : r.payment_reference
+            ? `Réf: ${r.payment_reference} — non encore vérifié`
+            : `Aucune référence stockée — vous pouvez en entrer une manuellement`}
+      </div>
+    </div>` : '';
 
   let actions = `<button class="btn btn-secondary" onclick="closeModal()">Fermer</button>`;
-
-  if (reservation.status === 'PENDING') {
+  if (r.status === 'PENDING') {
     actions = `
-      <button class="btn btn-danger" onclick="updateStatus('${reservation.id}', 'CANCELLED'); closeModal();">Annuler</button>
-      <button class="btn btn-primary" onclick="updateStatus('${reservation.id}', 'CONFIRMED'); closeModal();">✓ Confirmer (sans email)</button>
-    `;
-  } else if (reservation.status === 'CONFIRMED') {
+      <button class="btn btn-danger" onclick="updateStatus('${r.id}','CANCELLED');closeModal();">Annuler</button>
+      <button class="btn btn-primary" onclick="updateStatus('${r.id}','CONFIRMED');closeModal();">Confirmer</button>`;
+  } else if (r.status === 'CONFIRMED') {
     actions = `
       <button class="btn btn-secondary" onclick="closeModal()">Fermer</button>
-      <button class="btn btn-primary" onclick="updateStatus('${reservation.id}', 'COMPLETED'); closeModal();">Marquer terminé (sans email)</button>
-    `;
+      <button class="btn btn-primary" onclick="updateStatus('${r.id}','COMPLETED');closeModal();">Marquer terminé</button>`;
   }
 
-  footer.innerHTML = automaticButtonsHtml + emailButtonsHtml + '<div style="display:flex;gap:0.5rem;justify-content:flex-end;width:100%;">' + actions + '</div>';
+  footer.innerHTML = plopVerifyHtml + automaticButtonsHtml + emailButtonsHtml +
+    '<div style="display:flex;gap:.5rem;justify-content:flex-end;width:100%;">' + actions + '</div>';
   footer.style.flexDirection = 'column';
-  footer.style.alignItems = 'stretch';
+  footer.style.alignItems    = 'stretch';
   modal.classList.add('active');
 };
 
@@ -394,6 +480,67 @@ window.closeModal = function() {
   const modal = document.getElementById('detail-modal');
   modal.classList.remove('active');
   currentReservation = null;
+};
+
+// ── Vérification paiement Plop Plop ─────────────────────────────────────────
+window.verifyReservationPayment = async function(id) {
+  const r = allReservations.find(r => r.id === id);
+  if (!r) return;
+
+  let refferenceId = r.payment_reference;
+  if (!refferenceId) {
+    refferenceId = prompt('Entrez la référence Plop Plop pour cette réservation\n(ex: DL12345678-FULL ou DL12345678-DEP) :');
+    if (!refferenceId?.trim()) return;
+    refferenceId = refferenceId.trim();
+  }
+
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    window.adminCore.showToast('Connexion Supabase non disponible.', 'error');
+    return;
+  }
+
+  window.adminCore.showToast('Vérification en cours…');
+
+  try {
+    const { data, error } = await supabase.functions.invoke('plop-payment', {
+      body: { action: 'verify', refference_id: refferenceId },
+    });
+
+    if (error) throw new Error(error.message || 'Erreur invocation Edge Function.');
+    if (!data) throw new Error('Réponse vide de Plop Plop.');
+
+    if (data.trans_status === 'ok') {
+      const updates = {
+        plop_client_id:     data.id_client     || null,
+        plop_transaction_id: data.id_transaction || null,
+        payment_status:     'fully_paid',
+      };
+
+      const { error: dbErr } = await supabase
+        .from('reservations')
+        .update(updates)
+        .eq('id', id);
+
+      if (dbErr) throw new Error('Erreur mise à jour DB: ' + dbErr.message);
+
+      const idx = allReservations.findIndex(r => r.id === id);
+      if (idx !== -1) Object.assign(allReservations[idx], updates);
+
+      window.adminCore.showToast('Paiement confirmé !', 'success');
+      openDetailModal(id);
+    } else {
+      const method = data.method || r.payment_method || '';
+      const tid    = data.id_transaction || '—';
+      window.adminCore.showToast(
+        `Paiement non confirmé (statut: ${data.trans_status || 'no'}) · ID trans: ${tid}`,
+        'error'
+      );
+    }
+  } catch (err) {
+    console.error('[verifyReservationPayment]', err);
+    window.adminCore.showToast('Erreur: ' + err.message, 'error');
+  }
 };
 
 // ============================================

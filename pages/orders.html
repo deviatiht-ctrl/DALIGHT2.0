@@ -24,11 +24,26 @@
     <script type="module" src="../js/orders.js" defer></script>
     <script type="module">
       import { initChatWidget } from '../js/chat-widget.js?v=5.0.0';
+      import { autoPollPlopPayments } from '../js/plop-payment.js?v=5.0.0';
+
       document.addEventListener('DOMContentLoaded', () => {
-        if (window.lucide) {
-          lucide.createIcons();
-        }
+        if (window.lucide) lucide.createIcons();
         initChatWidget();
+
+        // Auto-verify pending Plop Plop payments when client returns from payment redirect
+        (async () => {
+          let attempts = 0;
+          while (!window.dalightSupabase && attempts < 50) {
+            await new Promise(r => setTimeout(r, 200));
+            attempts++;
+          }
+          const sb = window.dalightSupabase;
+          if (sb) {
+            await autoPollPlopPayments(sb);
+            // Reload orders list if page already rendered any pending items
+            if (window.__reloadOrders) window.__reloadOrders();
+          }
+        })();
       });
     </script>
     <style>

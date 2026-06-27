@@ -49,3 +49,54 @@ export async function verifyPlopPayment(supabase, refferenceId) {
   if (error) throw new Error(error.message || 'Erreur vérification paiement PLOP PLOP.');
   return data;
 }
+
+/**
+ * Verify a Plop Plop payment and update the reservation in DB if confirmed.
+ * Returns the raw Plop verify response.
+ */
+export async function verifyAndUpdateReservation(supabase, refferenceId, reservationId) {
+  const data = await verifyPlopPayment(supabase, refferenceId);
+
+  if (data?.trans_status === 'ok') {
+    await supabase
+      .from('reservations')
+      .update({
+        plop_client_id:     data.id_client     || null,
+        plop_transaction_id: data.id_transaction || null,
+        payment_status:     'fully_paid',
+      })
+      .eq('id', reservationId);
+  }
+
+  return data;
+}
+
+/**
+ * Scan the current user's pending Plop reservations and auto-verify them.
+ * Call this on the orders/account page after the user returns from Plop Plop.
+ */
+export async function autoPollPlopPayments(supabase) {
+  if (!supabase?.from) return;
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: pending } = await supabase
+      .from('reservations')
+      .select('id, payment_reference, payment_method')
+      .eq('user_id', user.id)
+      .in('payment_method', ['moncash', 'natcash', 'kashpaw'])
+      .eq('payment_status', 'pending')
+      .not('payment_reference', 'is', null)
+      .is('plop_client_id', null);
+
+    if (!pending?.length) return;
+
+    await Promise.allSettled(
+      pending.map(r => verifyAndUpdateReservation(supabase, r.payment_reference, r.id))
+    );
+  } catch (err) {
+    console.warn('[plop] autoPollPlopPayments error:', err.message);
+  }
+}
