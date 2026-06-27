@@ -6,7 +6,7 @@
   <title>Point de Vente — DALIGHT Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/admin.css?v=202606241230">
+  <link rel="stylesheet" href="css/admin.css?v=202606271350">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
@@ -364,21 +364,18 @@
 
     /* ── Print ───────────────────────────────────────── */
     @media print {
-      @page { margin: 0; size: 80mm auto; }
       body > * { display: none !important; }
       .receipt-print-area { display: block !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
       #receipt-content {
-        max-width: 80mm;
         margin: 0 auto;
         padding: 2mm 3mm;
-        font-size: 11px;
         font-family: 'Inter', 'Segoe UI', sans-serif;
         color: #000;
         background: #fff;
       }
       .rcpt-header { text-align: center; margin-bottom: 2mm; }
       .rcpt-logo { max-width: 25mm; height: auto; margin-bottom: 1mm; }
-      .rcpt-brand { font-size: 14px; font-weight: 700; color: #000; margin-bottom: .5mm; }
+      .rcpt-brand { font-weight: 700; color: #000; margin-bottom: .5mm; }
       .rcpt-tagline { font-size: 9px; color: #666; margin-bottom: 1mm; }
       .rcpt-info { font-size: 9px; color: #666; line-height: 1.4; margin-bottom: 2mm; }
       .rcpt-divider { border-top: 1px dashed #000; margin: 2mm 0; }
@@ -390,16 +387,36 @@
       .rcpt-items td:last-child { text-align: right; font-weight: 600; }
       .rcpt-totals { margin-bottom: 2mm; }
       .rcpt-total-row { display: flex; justify-content: space-between; font-size: 9px; color: #666; }
-      .rcpt-total-row.grand { font-weight: 700; font-size: 11px; color: #000; padding-top: 1mm; border-top: 1px solid #000; margin-top: 1mm; }
+      .rcpt-total-row.grand { font-weight: 700; color: #000; padding-top: 1mm; border-top: 1px solid #000; margin-top: 1mm; }
       .rcpt-paid-box, .rcpt-balance-box { padding: 1.5mm; border-radius: 2px; margin-bottom: 2mm; font-size: 9px; }
       .rcpt-paid-box { background: #f0fdf4; border: 1px solid #bbf7d0; }
       .rcpt-balance-box { background: #fff7ed; border: 1px solid #fed7aa; }
       .rcpt-footer { text-align: center; font-size: 8px; color: #999; margin-top: 3mm; padding-top: 2mm; border-top: 1px dashed #ccc; line-height: 1.6; }
-      .rcpt-thankyou { font-size: 10px; font-weight: 600; color: #000; margin-bottom: .5mm; }
+      .rcpt-thankyou { font-weight: 600; color: #000; margin-bottom: .5mm; }
       .rcpt-social { font-weight: 600; color: #666; }
       .rcpt-qr { text-align: center; margin-top: 3mm; }
       .rcpt-qr-img { width: 20mm; height: 20mm; object-fit: contain; }
       .rcpt-qr-label { font-size: 8px; color: #999; margin-top: 1mm; }
+
+      /* 80mm (default) */
+      .paper-80mm #receipt-content { max-width: 80mm; font-size: 11px; }
+      .paper-80mm .rcpt-brand { font-size: 14px; }
+      .paper-80mm .rcpt-total-row.grand { font-size: 11px; }
+      .paper-80mm .rcpt-thankyou { font-size: 10px; }
+
+      /* 58mm (smaller) */
+      .paper-58mm #receipt-content { max-width: 58mm; font-size: 9px; }
+      .paper-58mm .rcpt-brand { font-size: 11px; }
+      .paper-58mm .rcpt-total-row.grand { font-size: 9px; }
+      .paper-58mm .rcpt-thankyou { font-size: 8px; }
+      .paper-58mm .rcpt-qr-img { width: 15mm; height: 15mm; }
+
+      /* A4 (large) */
+      .paper-a4 #receipt-content { max-width: 210mm; font-size: 12px; padding: 10mm 15mm; }
+      .paper-a4 .rcpt-brand { font-size: 24px; }
+      .paper-a4 .rcpt-total-row.grand { font-size: 16px; }
+      .paper-a4 .rcpt-thankyou { font-size: 14px; }
+      .paper-a4 .rcpt-qr-img { width: 40mm; height: 40mm; }
     }
     .receipt-print-area { display: none; }
 
@@ -526,11 +543,25 @@
           <input class="pos-input" id="client-phone" type="tel" placeholder="Téléphone">
         </div>
 
+        <div class="pos-client" style="border-top:1px solid var(--admin-border);">
+          <input class="pos-input" id="pos-date" type="date" style="flex:1;">
+          <select class="pos-input" id="pos-time" style="flex:1;">
+            <option value="">-- Choisir créneau --</option>
+          </select>
+        </div>
+
+        <div class="pos-client" style="border-top:1px solid var(--admin-border);">
+          <select class="pos-input" id="paper-size" style="flex:1;">
+            <option value="80mm">Papier 80mm (ticket)</option>
+            <option value="58mm">Papier 58mm (ticket petit)</option>
+            <option value="a4">Papier A4</option>
+          </select>
+        </div>
+
         <div class="pos-pm">
           <div class="pos-pm-label">Méthode de paiement</div>
           <div class="pm-btns" id="pm-btns">
-            <button type="button" class="pm-btn active" data-pm="cash"><i data-lucide="banknote"></i> Cash</button>
-            <button type="button" class="pm-btn" data-pm="moncash"><i data-lucide="smartphone"></i> MonCash</button>
+            <button type="button" class="pm-btn active" data-pm="moncash"><i data-lucide="smartphone"></i> MonCash</button>
             <button type="button" class="pm-btn" data-pm="natcash"><i data-lucide="smartphone"></i> NatCash</button>
             <button type="button" class="pm-btn" data-pm="bank"><i data-lucide="landmark"></i> Virement</button>
           </div>
@@ -572,8 +603,31 @@
   <!-- Hidden print area -->
   <div class="receipt-print-area" id="print-area"></div>
 
-  <script src="js/admin-core.js?v=202606261150"></script>
-  <script src="js/pos.js?v=202606261150"></script>
+  <!-- Plop Plop Payment Overlay -->
+  <div class="receipt-overlay" id="plop-overlay">
+    <div class="receipt-modal" style="max-width:500px;">
+      <div style="padding:1.5rem 1.75rem;">
+        <div style="text-align:center;margin-bottom:1.5rem;">
+          <div style="font-weight:700;font-size:1.1rem;color:#0369a1;">Paiement Plop Plop</div>
+          <div style="font-size:.85rem;color:#6b7280;margin-top:.25rem;">Redirection vers la page de paiement sécurisée</div>
+        </div>
+        <div style="background:#f0f9ff;padding:1rem;border-radius:8px;border:1px solid #bae6fd;margin-bottom:1rem;">
+          <div style="font-size:.8rem;color:#0369a1;font-weight:600;margin-bottom:.3rem;">Montant à payer</div>
+          <div style="font-size:1.3rem;font-weight:700;color:#0369a1;" id="plop-amount">0 HTG</div>
+        </div>
+        <div style="font-size:.78rem;color:#6b7280;line-height:1.6;margin-bottom:1rem;">
+          Vous allez être redirigé vers Plop Plop pour compléter le paiement. Une fois le paiement effectué, vous serez redirigé vers la page de confirmation.
+        </div>
+        <div style="display:flex;gap:.5rem;">
+          <button class="pos-btn pos-btn-secondary" onclick="closePlopOverlay()">Annuler</button>
+          <button class="pos-btn pos-btn-primary" id="btn-plop-pay">Confirmer & Rediriger</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/admin-core.js?v=202606271350"></script>
+  <script src="js/pos.js?v=202606271350"></script>
   <script>document.addEventListener('DOMContentLoaded', () => { if(window.lucide) lucide.createIcons(); });</script>
 </body>
 </html>

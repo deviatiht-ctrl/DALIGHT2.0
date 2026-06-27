@@ -1382,8 +1382,9 @@
 
       function renderResvPaymentCards() {
         const container = document.getElementById('resv-payment-methods-container');
-        if (!resvPaymentMethods.length) { container.innerHTML = '<p style="color:var(--marron-600);">Aucun mode configuré.</p>'; return; }
-        container.innerHTML = resvPaymentMethods.map(pm => {
+        const filteredMethods = resvPaymentMethods.filter(pm => pm.slug !== 'cash');
+        if (!filteredMethods.length) { container.innerHTML = '<p style="color:var(--marron-600);">Aucun mode configuré.</p>'; return; }
+        container.innerHTML = filteredMethods.map(pm => {
           const logoHtml = pm.logo_url
             ? `<span class="payment-icon"><img src="${pm.logo_url}" alt="${pm.name}" style="width:100%;height:100%;object-fit:contain;"></span>`
             : `<span class="payment-icon" style="font-size:1.4rem;">💳</span>`;

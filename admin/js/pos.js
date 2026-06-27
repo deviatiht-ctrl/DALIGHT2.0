@@ -19,12 +19,17 @@ const DALIGHT_INFO = {
 const DEPOSIT_RATE = 0.5;     // 50 % pour les massages
 const HEADSPA_DEPOSIT = 1000; // HTG fixe par service tête
 
+const ALL_SLOTS = [
+  '08:00', '09:00', '10:00', '11:00', '12:00',
+  '13:00', '14:00', '15:00', '16:00',
+];
+
 let sb = null;
 let allServices = [];
 let allProducts = [];
 let allFormations = [];
 let orderItems  = [];
-let selectedPM  = 'cash';
+let selectedPM  = 'moncash';
 let payChoice   = 'full';
 let receiptData = null;
 let currentType = 'services';
@@ -87,6 +92,67 @@ function calcDeposit(items) {
   });
   const base = Math.round(massageTotal * DEPOSIT_RATE) + headspaCount * HEADSPA_DEPOSIT;
   return withFee(base);
+}
+
+/* ── Date/Time Slots ───────────────────────────────────────── */
+function setMinimumDate() {
+  const dateField = document.getElementById('pos-date');
+  if (!dateField) return;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  dateField.min = today.toISOString().split('T')[0];
+}
+
+function renderTimeSlots(bookedTimes = []) {
+  const timeSelect = document.getElementById('pos-time');
+  if (!timeSelect) return;
+
+  const booked = bookedTimes.map(t => (t || '').slice(0, 5));
+  timeSelect.innerHTML = '<option value="">-- Choisir un créneau --</option>';
+
+  ALL_SLOTS.forEach(slot => {
+    const isBooked = booked.includes(slot);
+    const opt = document.createElement('option');
+    opt.value = slot;
+    opt.textContent = isBooked ? `${slot} — Indisponible` : slot;
+    opt.disabled = isBooked;
+    if (isBooked) opt.style.color = '#aaa';
+    timeSelect.appendChild(opt);
+  });
+}
+
+async function loadBookedSlots(date) {
+  const timeSelect = document.getElementById('pos-time');
+  if (!timeSelect) return;
+
+  timeSelect.innerHTML = '<option value="">Chargement...</option>';
+  timeSelect.disabled = true;
+
+  try {
+    const { data, error } = await sb
+      .from('reservations')
+      .select('time')
+      .eq('date', date)
+      .not('status', 'eq', 'CANCELLED');
+
+    if (error) throw error;
+    const bookedTimes = (data || []).map(r => r.time);
+    renderTimeSlots(bookedTimes);
+  } catch (e) {
+    console.warn('POS: Could not load booked slots:', e.message);
+    renderTimeSlots([]);
+  } finally {
+    timeSelect.disabled = false;
+  }
+}
+
+function initDateListeners() {
+  const dateField = document.getElementById('pos-date');
+  if (!dateField) return;
+  dateField.addEventListener('change', async () => {
+    if (!dateField.value) return;
+    await loadBookedSlots(dateField.value);
+  });
 }
 
 /* ── Load All Items ───────────────────────────────────────── */
@@ -422,7 +488,7 @@ document.getElementById('svc-search').addEventListener('input', e => {
 /* ── Receipt Builder ─────────────────────────────────────── */
 function buildReceiptHTML(data) {
   const {
-    receiptNo, dateTime, clientName, clientPhone,
+    receiptNo, dateTime, clientName, clientPhone, date, time,
     items, subtotal, deposit, amountDue, balance,
     paymentMethod, paymentChoice,
   } = data;
@@ -469,6 +535,7 @@ function buildReceiptHTML(data) {
     <div class="rcpt-meta">
       <span>Reçu N°</span><strong>${esc(receiptNo)}</strong>
       <span>Date</span><strong>${esc(dateTime)}</strong>
+      ${date ? `<span>Réservation</span><strong>${esc(date)} à ${esc(time || '--:--')}</strong>` : ''}
       ${clientName ? `<span>Client</span><strong>${esc(clientName)}</strong>` : ''}
       ${clientPhone ? `<span>Tél.</span><strong>${esc(clientPhone)}</strong>` : ''}
     </div>
@@ -528,6 +595,8 @@ function buildReceiptData(confirmed = false) {
     dateTime:      fmtDateTime(),
     clientName:    document.getElementById('client-name').value.trim(),
     clientPhone:   document.getElementById('client-phone').value.trim(),
+    date:          document.getElementById('pos-date').value || null,
+    time:          document.getElementById('pos-time').value || null,
     items:         orderItems,
     subtotal,
     deposit,
@@ -552,9 +621,14 @@ window.closeReceipt = function () {
 window.printReceipt = function () {
   const html = buildReceiptHTML({ ...receiptData, receiptNo: receiptData.receiptNo === 'APERÇU' ? genReceiptNo() : receiptData.receiptNo });
   const printArea = document.getElementById('print-area');
-  printArea.innerHTML = `<div id="receipt-content" style="max-width:400px;margin:0 auto;padding:1.5rem;font-family:Inter,sans-serif;">${html}</div>`;
+  const paperSize = document.getElementById('paper-size').value || '80mm';
+  printArea.innerHTML = `<div class="paper-${paperSize}" id="receipt-content" style="margin:0 auto;padding:1.5rem;font-family:Inter,sans-serif;">${html}</div>`;
   window.print();
   printArea.innerHTML = '';
+};
+
+window.closePlopOverlay = function () {
+  document.getElementById('plop-overlay').classList.remove('open');
 };
 
 document.getElementById('btn-preview').addEventListener('click', () => {
@@ -564,49 +638,130 @@ document.getElementById('btn-preview').addEventListener('click', () => {
 
 document.getElementById('btn-confirm').addEventListener('click', async () => {
   if (!orderItems.length) return;
-  openReceipt(true);
 
-  // Save the sale to pos_sales table
-  if (sb) {
-    try {
-      const clientName  = document.getElementById('client-name').value.trim() || 'Client POS';
-      const clientPhone = document.getElementById('client-phone').value.trim();
-      const subtotal    = orderItems.reduce((s, it) => s + it.price_htg * it.qty, 0);
-      const deposit     = calcDeposit(orderItems);
-      const isDeposit   = payChoice === 'deposit';
-      const amountDue   = isDeposit ? deposit : subtotal;
-      const balance     = isDeposit ? (subtotal - amountDue) : 0;
+  const posDate = document.getElementById('pos-date').value;
+  const posTime = document.getElementById('pos-time').value;
 
-      const { data: { user } } = await sb.auth.getUser();
+  // If MonCash/NatCash and has date/time, show Plop overlay first
+  if ((selectedPM === 'moncash' || selectedPM === 'natcash') && posDate && posTime) {
+    const subtotal = orderItems.reduce((s, it) => s + it.price_htg * it.qty, 0);
+    const deposit = calcDeposit(orderItems);
+    const amountDue = payChoice === 'deposit' ? deposit : subtotal;
 
-      await sb.from('pos_sales').insert({
-        receipt_no: receiptData.receiptNo,
-        client_name: clientName,
-        client_phone: clientPhone || null,
-        items: orderItems.map(it => ({
-          id: it.id,
-          name: it.name,
-          price_htg: it.price_htg,
-          price_usd: it.price_usd,
-          qty: it.qty,
-          category: it.category,
-          type: it.type || 'service',
-        })),
-        subtotal_htg: subtotal,
-        deposit_htg: amountDue,
-        amount_due_htg: amountDue,
-        balance_htg: balance,
-        payment_method: selectedPM,
-        payment_choice: payChoice,
-        admin_id: user?.id || null,
-        admin_email: user?.email || null,
-        status: 'completed',
-      });
-    } catch(e) {
-      console.warn('POS: DB save failed (non-blocking):', e.message);
-    }
+    document.getElementById('plop-amount').textContent = fmtHTG(amountDue);
+    document.getElementById('plop-overlay').classList.add('open');
+
+    document.getElementById('btn-plop-pay').onclick = async () => {
+      await processPOSSale(posDate, posTime);
+    };
+  } else {
+    // Bank or no date/time: direct confirm
+    await processPOSSale(posDate, posTime);
   }
 });
+
+async function processPOSSale(date, time) {
+  openReceipt(true);
+
+  const clientName  = document.getElementById('client-name').value.trim() || 'Client POS';
+  const clientPhone = document.getElementById('client-phone').value.trim();
+  const subtotal    = orderItems.reduce((s, it) => s + it.price_htg * it.qty, 0);
+  const deposit     = calcDeposit(orderItems);
+  const isDeposit   = payChoice === 'deposit';
+  const amountDue   = isDeposit ? deposit : subtotal;
+  const balance     = isDeposit ? (subtotal - amountDue) : 0;
+
+  const { data: { user } } = await sb.auth.getUser();
+
+  // Insert into pos_sales
+  await sb.from('pos_sales').insert({
+    receipt_no: receiptData.receiptNo,
+    client_name: clientName,
+    client_phone: clientPhone || null,
+    items: orderItems.map(it => ({
+      id: it.id,
+      name: it.name,
+      price_htg: it.price_htg,
+      price_usd: it.price_usd,
+      qty: it.qty,
+      category: it.category,
+      type: it.type || 'service',
+    })),
+    subtotal_htg: subtotal,
+    deposit_htg: amountDue,
+    amount_due_htg: amountDue,
+    balance_htg: balance,
+    payment_method: selectedPM,
+    payment_choice: payChoice,
+    admin_id: user?.id || null,
+    admin_email: user?.email || null,
+    status: 'completed',
+  });
+
+  // If date/time provided, also insert into reservations
+  if (date && time) {
+    const reservationNumber = 'DL' + Date.now().toString().slice(-8);
+    const paymentReference = `${reservationNumber}-${payChoice === 'full' ? 'FULL' : 'DEP'}`;
+
+    const reservationRecord = {
+      reservation_number: reservationNumber,
+      user_id: null,
+      user_email: null,
+      user_name: clientName,
+      phone: clientPhone || null,
+      service: orderItems.map(s => s.name).join(', '),
+      services: orderItems,
+      date: date,
+      time: time,
+      notes: null,
+      payment_method: selectedPM,
+      payment_proof_url: null,
+      deposit_amount: deposit,
+      total_amount: subtotal,
+      payment_status: selectedPM === 'bank' ? (isDeposit ? 'deposit_paid' : 'fully_paid') : 'pending',
+      payment_reference: paymentReference,
+      location: 'Spa',
+      status: 'PENDING',
+    };
+
+    const { data: insertData, error: insertError } = await sb.from('reservations').insert([reservationRecord]).select();
+
+    if (!insertError && insertData?.[0]) {
+      const savedReservation = insertData[0];
+
+      // If MonCash/NatCash, create Plop payment
+      if (selectedPM === 'moncash' || selectedPM === 'natcash') {
+        try {
+          const { createPlopPayment } = await import('../js/plop-payment.js?v=5.0.0');
+          const payment = await createPlopPayment(sb, {
+            refference_id: paymentReference,
+            montant: amountDue,
+            payment_method: selectedPM,
+            context_type: 'reservation',
+            context_id: savedReservation.id,
+          });
+
+          await sb.from('reservations').update({
+            plop_transaction_id: payment.transaction_id || null,
+          }).eq('id', savedReservation.id);
+
+          // Redirect to Plop Plop
+          window.location.href = payment.url;
+          return;
+        } catch (plopErr) {
+          console.error('POS: Plop payment error:', plopErr);
+          alert('Erreur création paiement Plop Plop: ' + plopErr.message);
+        }
+      }
+    } else if (insertError) {
+      console.warn('POS: Reservation insert failed (non-blocking):', insertError.message);
+    }
+  }
+
+  // Clear order for non-Plop cases
+  orderItems = [];
+  renderOrder();
+}
 
 /* ── Clock ───────────────────────────────────────────────── */
 function updateClock() {
@@ -621,5 +776,7 @@ setInterval(updateClock, 30000);
   await initSupabase();
   if (window.adminCore?.init) window.adminCore.init();
   setupEventListeners();
+  setMinimumDate();
+  initDateListeners();
   await loadAllItems();
 })();
