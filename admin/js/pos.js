@@ -631,9 +631,11 @@ window.closePlopOverlay = function () {
   document.getElementById('plop-overlay').classList.remove('open');
 };
 
-document.getElementById('btn-preview').addEventListener('click', () => {
+document.getElementById('btn-preview').addEventListener('click', async () => {
   if (!orderItems.length) { alert('Ajoutez au moins un service.'); return; }
-  openReceipt(false);
+  const posDate = document.getElementById('pos-date').value;
+  const posTime = document.getElementById('pos-time').value;
+  await processPOSSale(posDate, posTime);
 });
 
 document.getElementById('btn-confirm').addEventListener('click', async () => {
