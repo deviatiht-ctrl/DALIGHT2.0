@@ -655,7 +655,7 @@ document.getElementById('btn-confirm').addEventListener('click', async () => {
       await processPOSSale(posDate, posTime);
     };
   } else {
-    // Bank or no date/time: direct confirm
+    // Cash, Bank, or no date/time: direct confirm (no Plop redirect)
     await processPOSSale(posDate, posTime);
   }
 });
