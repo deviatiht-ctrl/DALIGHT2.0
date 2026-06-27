@@ -700,6 +700,7 @@ async function processPOSSale(date, time) {
 
   // If date/time provided, also insert into reservations
   if (date && time) {
+    console.log('POS: Creating reservation with date:', date, 'time:', time);
     const reservationNumber = 'DL' + Date.now().toString().slice(-8);
     const paymentReference = `${reservationNumber}-${payChoice === 'full' ? 'FULL' : 'DEP'}`;
 
@@ -724,7 +725,9 @@ async function processPOSSale(date, time) {
       status: 'PENDING',
     };
 
+    console.log('POS: Reservation record:', reservationRecord);
     const { data: insertData, error: insertError } = await sb.from('reservations').insert([reservationRecord]).select();
+    console.log('POS: Insert result - data:', insertData, 'error:', insertError);
 
     if (!insertError && insertData?.[0]) {
       const savedReservation = insertData[0];
