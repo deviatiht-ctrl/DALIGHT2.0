@@ -48,7 +48,7 @@
   <div class="admin-main">
     <header class="admin-header">
       <button class="btn-icon" id="mobile-menu-btn"><i data-lucide="menu"></i></button>
-      <h1 class="admin-page-title">📚 Cours — DALIGHT SCHOOL</h1>
+      <h1 class="admin-page-title"><i data-lucide="book-open"></i> Cours — DALIGHT SCHOOL</h1>
       <div style="display:flex;gap:.75rem;align-items:center;margin-left:auto;">
         <a href="school-students.html" class="btn btn-secondary btn-sm"><i data-lucide="users"></i> Étudiants</a>
         <a href="school-professors.html" class="btn btn-secondary btn-sm"><i data-lucide="user"></i> Professeurs</a>
@@ -97,19 +97,35 @@
   <script src="js/admin-core.js?v=202606271350"></script>
   <script>
     let allCourses = [], editingId = null;
-    let sb; // Set on DOMContentLoaded from admin-core.js
+    let sb;
 
-    document.addEventListener('DOMContentLoaded', () => { sb = window.dalightAdminSupabase; init(); });
+    function getSchoolAdminSupabase() {
+      if (window.dalightAdminSupabase) return window.dalightAdminSupabase;
+      if (window.adminCore?.supabase) return window.adminCore.supabase;
+      if (window.supabaseClient) return window.supabaseClient;
+      return null;
+    }
+
+    function startSchoolPage() {
+      sb = getSchoolAdminSupabase();
+      if (!sb) {
+        setTimeout(startSchoolPage, 100);
+        return;
+      }
+      init();
+    }
 
     async function init() {
-      if (!sb) return;
-
-      const [{ data: courses }, { data: enrollments }, { data: profs }] = await Promise.all([
-        sb.from('dalightschool_courses').select('*').order('name'),
-        sb.from('dalightschool_enrollments').select('course_id'),
-        sb.from('dalightschool_professors').select('name,course_id').eq('is_active', true),
-      ]);
-      allCourses = courses || [];
+      const grid = document.getElementById('courses-grid');
+      try {
+        const [{ data: courses, error: coursesError }, { data: enrollments, error: enrollmentsError }, { data: profs, error: profsError }] = await Promise.all([
+          sb.from('dalightschool_courses').select('*').order('name'),
+          sb.from('dalightschool_enrollments').select('course_id'),
+          sb.from('dalightschool_professors').select('name,course_id').eq('is_active', true),
+        ]);
+        const error = coursesError || enrollmentsError || profsError;
+        if (error) throw error;
+        allCourses = courses || [];
 
       // Stats
       document.getElementById('stats-row').innerHTML = `
@@ -117,7 +133,6 @@
         <div class="card" style="padding:1.1rem;display:flex;align-items:center;gap:.8rem;"><div style="width:40px;height:40px;border-radius:10px;background:#dcfce7;display:flex;align-items:center;justify-content:center;"><i data-lucide="users" style="color:#10b981;width:20px;height:20px;"></i></div><div><div style="font-size:1.4rem;font-weight:800;">${new Set((enrollments||[]).map(e=>e.course_id)).size}</div><div style="font-size:.75rem;color:var(--admin-text-muted);">Cours avec étudiants</div></div></div>
         <div class="card" style="padding:1.1rem;display:flex;align-items:center;gap:.8rem;"><div style="width:40px;height:40px;border-radius:10px;background:#ede9fe;display:flex;align-items:center;justify-content:center;"><i data-lucide="user" style="color:#8b5cf6;width:20px;height:20px;"></i></div><div><div style="font-size:1.4rem;font-weight:800;">${(profs||[]).length}</div><div style="font-size:.75rem;color:var(--admin-text-muted);">Professeurs actifs</div></div></div>`;
 
-      const grid = document.getElementById('courses-grid');
       if (!allCourses.length) {
         grid.innerHTML = `<div class="card" style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--admin-text-muted);"><i data-lucide="book-open" style="width:48px;height:48px;opacity:.3;display:block;margin:0 auto 1rem;"></i><h3 style="margin-bottom:.5rem;">Aucun cours créé</h3><p>Créez votre premier cours pour commencer.</p></div>`;
       } else {
@@ -139,8 +154,8 @@
               <div style="padding:1rem;">
                 <div style="font-size:.85rem;color:var(--admin-text-muted);margin-bottom:.75rem;">${c.description || 'Aucune description'}</div>
                 <div style="display:flex;gap:.5rem;flex-wrap:wrap;font-size:.78rem;">
-                  <span style="background:#e0e7ff;color:#4338ca;padding:.2rem .6rem;border-radius:99px;">👥 ${enrolled} étudiant(s)</span>
-                  <span style="background:#ede9fe;color:#5b21b6;padding:.2rem .6rem;border-radius:99px;">👨‍🏫 ${prof ? prof.name : 'Sans prof'}</span>
+                  <span style="background:#e0e7ff;color:#4338ca;padding:.2rem .6rem;border-radius:99px;display:inline-flex;align-items:center;gap:.3rem;"><i data-lucide="users" style="width:13px;height:13px;"></i>${enrolled} étudiant(s)</span>
+                  <span style="background:#ede9fe;color:#5b21b6;padding:.2rem .6rem;border-radius:99px;display:inline-flex;align-items:center;gap:.3rem;"><i data-lucide="user" style="width:13px;height:13px;"></i>${prof ? prof.name : 'Sans prof'}</span>
                 </div>
               </div>
               <div style="padding:.75rem 1rem;border-top:1px solid var(--admin-border);display:flex;gap:.5rem;">
@@ -152,6 +167,9 @@
       }
 
       lucide.createIcons();
+      } catch (error) {
+        grid.innerHTML = `<div class="card" style="grid-column:1/-1;padding:1.25rem;color:#b91c1c;background:#fee2e2;border:1px solid #fecaca;">Erreur DALIGHT SCHOOL: ${error.message}</div>`;
+      }
     }
 
     function openAddModal() {
@@ -177,6 +195,12 @@
     }
 
     function closeModal() { document.getElementById('modal-add').style.display = 'none'; }
+
+    window.openAddModal = openAddModal;
+    window.editCourse = editCourse;
+    window.closeModal = closeModal;
+    window.saveCourse = saveCourse;
+    window.deleteCourse = deleteCourse;
 
     async function saveCourse() {
       const name = document.getElementById('f-name').value.trim();
@@ -204,6 +228,7 @@
       else { window.adminCore.showToast('Cours supprimé.'); init(); }
     }
 
+    startSchoolPage();
   </script>
 </body>
 </html>

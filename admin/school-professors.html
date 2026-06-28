@@ -49,7 +49,7 @@
   <div class="admin-main">
     <header class="admin-header">
       <button class="btn-icon" id="mobile-menu-btn"><i data-lucide="menu"></i></button>
-      <h1 class="admin-page-title">👨‍🏫 Professeurs — DALIGHT SCHOOL</h1>
+      <h1 class="admin-page-title"><i data-lucide="user"></i> Professeurs — DALIGHT SCHOOL</h1>
       <button class="btn btn-primary" style="margin-left:auto;" onclick="openAddModal()"><i data-lucide="plus"></i> Nouveau professeur</button>
     </header>
 
@@ -99,22 +99,42 @@
     let allProfs = [], allCourses = [], editingId = null;
     let sb;
 
-    document.addEventListener('DOMContentLoaded', () => { sb = window.dalightAdminSupabase; init(); });
+    function getSchoolAdminSupabase() {
+      if (window.dalightAdminSupabase) return window.dalightAdminSupabase;
+      if (window.adminCore?.supabase) return window.adminCore.supabase;
+      if (window.supabaseClient) return window.supabaseClient;
+      return null;
+    }
+
+    function startSchoolPage() {
+      sb = getSchoolAdminSupabase();
+      if (!sb) {
+        setTimeout(startSchoolPage, 100);
+        return;
+      }
+      init();
+    }
 
     async function init() {
-      if (!sb) return;
-
-      const [{ data: profs }, { data: courses }] = await Promise.all([
-        sb.from('dalightschool_professors').select('*, course:dalightschool_courses(name,color)').order('name'),
-        sb.from('dalightschool_courses').select('*').order('name'),
-      ]);
-      allProfs   = profs   || [];
-      allCourses = courses || [];
+      const tbody = document.getElementById('profs-tbody');
+      try {
+        const [{ data: profs, error: profsError }, { data: courses, error: coursesError }] = await Promise.all([
+          sb.from('dalightschool_professors').select('*, course:dalightschool_courses(name,color)').order('name'),
+          sb.from('dalightschool_courses').select('*').order('name'),
+        ]);
+        const error = profsError || coursesError;
+        if (error) throw error;
+        allProfs   = profs   || [];
+        allCourses = courses || [];
 
       const sel = document.getElementById('f-course');
       allCourses.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.name; sel.appendChild(o); });
 
+      lucide.createIcons();
       renderTable();
+      } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="6" style="padding:1.25rem;color:#b91c1c;background:#fee2e2;">Erreur DALIGHT SCHOOL: ${error.message}</td></tr>`;
+      }
     }
 
     function renderTable() {
@@ -169,6 +189,15 @@
 
     function closeModal() { document.getElementById('modal-add').style.display = 'none'; }
 
+    window.openAddModal = openAddModal;
+    window.editProfessor = editProfessor;
+    window.closeModal = closeModal;
+    window.genProfCode = genProfCode;
+    window.saveProfessor = saveProfessor;
+    window.toggleActive = toggleActive;
+    window.copyCode = copyCode;
+    window.printCode = printCode;
+
     async function saveProfessor() {
       const name = document.getElementById('f-name').value.trim();
       const code = document.getElementById('f-code').value.trim().toUpperCase();
@@ -195,6 +224,7 @@
       w.document.write(`<html><body style="font-family:Inter,sans-serif;text-align:center;padding:2rem;"><h2 style="color:#4f46e5;">DALIGHT SCHOOL</h2><p>Professeur: <strong>${name}</strong></p><p style="font-size:1.5rem;font-weight:800;letter-spacing:.1em;background:#ede9fe;padding:.75rem 1.5rem;border-radius:8px;display:inline-block;">${code}</p><p style="font-size:.8rem;color:#666;">Portail: ${window.location.origin}/dalight-school/</p><script>window.print();<\/script></body></html>`);
     }
 
+    startSchoolPage();
   </script>
 </body>
 </html>
