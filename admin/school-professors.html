@@ -138,21 +138,30 @@
     }
 
     function renderTable() {
-      document.getElementById('profs-tbody').innerHTML = allProfs.length ? allProfs.map(p => `
+      document.getElementById('profs-tbody').innerHTML = allProfs.length ? allProfs.map(p => {
+        const courseHtml = p.course
+          ? '<span style="display:inline-flex;align-items:center;gap:.4rem;"><span style="width:8px;height:8px;border-radius:50%;background:' + p.course.color + ';display:inline-block;"></span>' + p.course.name + '</span>'
+          : '<span style="color:var(--admin-text-muted);font-size:.8rem;">Aucun</span>';
+        const statusBg = p.is_active ? '#dcfce7' : '#fee2e2';
+        const statusColor = p.is_active ? '#166534' : '#991b1b';
+        const statusText = p.is_active ? 'Actif' : 'Inactif';
+        const activeIcon = p.is_active ? 'user-x' : 'user-check';
+        return `
         <tr>
           <td style="font-weight:600;">${p.name}</td>
           <td><span class="code-box" onclick="copyCode('${p.code_acces}')" title="Copier">${p.code_acces}</span></td>
-          <td>${p.course ? `<span style="display:inline-flex;align-items:center;gap:.4rem;"><span style="width:8px;height:8px;border-radius:50%;background:${p.course.color};display:inline-block;"></span>${p.course.name}</span>` : '<span style="color:var(--admin-text-muted);font-size:.8rem;">Aucun</span>'}</td>
+          <td>${courseHtml}</td>
           <td style="font-size:.85rem;">${p.email||'—'}</td>
-          <td><span style="display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .6rem;border-radius:99px;font-size:.72rem;font-weight:600;background:${p.is_active?'#dcfce7':'#fee2e2'};color:${p.is_active?'#166534':'#991b1b'};">${p.is_active?'Actif':'Inactif'}</span></td>
+          <td><span style="display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .6rem;border-radius:99px;font-size:.72rem;font-weight:600;background:${statusBg};color:${statusColor};">${statusText}</span></td>
           <td>
             <div style="display:flex;gap:.4rem;">
               <button class="btn btn-icon btn-sm" onclick="editProfessor('${p.id}')"><i data-lucide="pencil"></i></button>
               <button class="btn btn-icon btn-sm" onclick="printCode('${p.name}','${p.code_acces}')"><i data-lucide="printer"></i></button>
-              <button class="btn btn-icon btn-sm btn-danger" onclick="toggleActive('${p.id}',${p.is_active})"><i data-lucide="${p.is_active?'user-x':'user-check'}"></i></button>
+              <button class="btn btn-icon btn-sm btn-danger" onclick="toggleActive('${p.id}',${p.is_active})"><i data-lucide="${activeIcon}"></i></button>
             </div>
           </td>
-        </tr>`).join('')
+        </tr>`;
+      }).join('')
         : '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--admin-text-muted);">Aucun professeur</td></tr>';
       lucide.createIcons();
     }
