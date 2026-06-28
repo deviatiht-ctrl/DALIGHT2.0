@@ -673,97 +673,106 @@ async function processPOSSale(date, time) {
   const amountDue   = isDeposit ? deposit : subtotal;
   const balance     = isDeposit ? (subtotal - amountDue) : 0;
 
-  const { data: { user } } = await sb.auth.getUser();
+  let userRecord = null;
+  try { const { data } = await sb.auth.getUser(); userRecord = data?.user; } catch(_) {}
 
-  // Insert into pos_sales
-  await sb.from('pos_sales').insert({
-    receipt_no: receiptData.receiptNo,
-    client_name: clientName,
-    client_phone: clientPhone || null,
-    items: orderItems.map(it => ({
-      id: it.id,
-      name: it.name,
-      price_htg: it.price_htg,
-      price_usd: it.price_usd,
-      qty: it.qty,
-      category: it.category,
-      type: it.type || 'service',
-    })),
-    subtotal_htg: subtotal,
-    deposit_htg: amountDue,
-    amount_due_htg: amountDue,
-    balance_htg: balance,
-    payment_method: selectedPM,
-    payment_choice: payChoice,
-    admin_id: user?.id || null,
-    admin_email: user?.email || null,
-    status: 'completed',
-  });
+  // ── 1. Save to pos_sales (non-blocking, best-effort) ──────────────────
+  try {
+    const { error: posErr } = await sb.from('pos_sales').insert({
+      receipt_no:      receiptData.receiptNo,
+      client_name:     clientName,
+      client_phone:    clientPhone || null,
+      items:           orderItems.map(it => ({
+        id: it.id, name: it.name,
+        price_htg: it.price_htg, price_usd: it.price_usd,
+        qty: it.qty, category: it.category, type: it.type || 'service',
+      })),
+      subtotal_htg:    subtotal,
+      deposit_htg:     amountDue,
+      amount_due_htg:  amountDue,
+      balance_htg:     balance,
+      payment_method:  selectedPM,
+      payment_choice:  payChoice,
+      admin_id:        userRecord?.id   || null,
+      admin_email:     userRecord?.email || null,
+      status:          'completed',
+    });
+    if (posErr) console.warn('POS: pos_sales insert warning:', posErr.message);
+  } catch (e) { console.warn('POS: pos_sales insert exception:', e.message); }
 
-  // If date/time provided, also insert into reservations
+  // ── 2. Save to reservations if date+time provided ─────────────────────
   if (date && time) {
-    console.log('POS: Creating reservation with date:', date, 'time:', time);
     const reservationNumber = 'DL' + Date.now().toString().slice(-8);
-    const paymentReference = `${reservationNumber}-${payChoice === 'full' ? 'FULL' : 'DEP'}`;
+    const paymentReference  = `${reservationNumber}-${payChoice === 'full' ? 'FULL' : 'DEP'}`;
+
+    // payment_status: cash/bank = paid immediately, plop = pending
+    let paymentStatus = 'pending';
+    if (selectedPM === 'cash')                                      paymentStatus = isDeposit ? 'deposit_paid' : 'fully_paid';
+    else if (selectedPM === 'bank')                                 paymentStatus = isDeposit ? 'deposit_paid' : 'fully_paid';
 
     const reservationRecord = {
       reservation_number: reservationNumber,
-      user_id: null,
-      user_email: null,
-      user_name: clientName,
-      phone: clientPhone || null,
-      service: orderItems.map(s => s.name).join(', '),
-      services: orderItems,
-      date: date,
-      time: time,
-      notes: null,
-      payment_method: selectedPM,
-      payment_proof_url: null,
-      deposit_amount: deposit,
-      total_amount: subtotal,
-      payment_status: selectedPM === 'bank' ? (isDeposit ? 'deposit_paid' : 'fully_paid') : 'pending',
-      payment_reference: paymentReference,
-      location: 'Spa',
-      status: 'PENDING',
+      user_id:            null,
+      user_email:         null,
+      user_name:          clientName,
+      phone:              clientPhone || null,
+      service:            orderItems.map(s => s.name).join(', '),
+      date:               date,
+      time:               time,
+      notes:              null,
+      payment_method:     selectedPM,
+      payment_proof_url:  null,
+      deposit_amount:     deposit,
+      total_amount:       subtotal,
+      payment_status:     paymentStatus,
+      payment_reference:  paymentReference,
+      location:           'Spa',
+      status:             'PENDING',
     };
 
-    console.log('POS: Reservation record:', reservationRecord);
-    const { data: insertData, error: insertError } = await sb.from('reservations').insert([reservationRecord]).select();
-    console.log('POS: Insert result - data:', insertData, 'error:', insertError);
+    try {
+      const { data: insertData, error: insertError } = await sb
+        .from('reservations')
+        .insert([reservationRecord])
+        .select();
 
-    if (!insertError && insertData?.[0]) {
-      const savedReservation = insertData[0];
+      if (insertError) {
+        console.error('POS: Reservation insert error:', insertError);
+        alert('Erreur sauvegarde réservation:\n' + (insertError.message || JSON.stringify(insertError)));
+      } else {
+        console.log('POS: Reservation saved:', insertData?.[0]?.id);
+        const savedReservation = insertData?.[0];
 
-      // If MonCash/NatCash, create Plop payment
-      if (selectedPM === 'moncash' || selectedPM === 'natcash') {
-        try {
-          const { createPlopPayment } = await import('../js/plop-payment.js?v=5.0.0');
-          const payment = await createPlopPayment(sb, {
-            refference_id: paymentReference,
-            montant: amountDue,
-            payment_method: selectedPM,
-            context_type: 'reservation',
-            context_id: savedReservation.id,
-          });
-
-          await sb.from('reservations').update({
-            plop_transaction_id: payment.transaction_id || null,
-          }).eq('id', savedReservation.id);
-
-          // Redirect to Plop Plop
-          window.location.href = payment.url;
-          return;
-        } catch (plopErr) {
-          console.error('POS: Plop payment error:', plopErr);
-          alert('Erreur création paiement Plop Plop: ' + plopErr.message);
+        // MonCash/NatCash → create Plop payment and redirect
+        if ((selectedPM === 'moncash' || selectedPM === 'natcash') && savedReservation) {
+          try {
+            const { createPlopPayment } = await import('../js/plop-payment.js?v=5.0.0');
+            const payment = await createPlopPayment(sb, {
+              refference_id:  paymentReference,
+              montant:        amountDue,
+              payment_method: selectedPM,
+              context_type:   'reservation',
+              context_id:     savedReservation.id,
+            });
+            if (payment?.transaction_id) {
+              await sb.from('reservations')
+                .update({ plop_transaction_id: payment.transaction_id })
+                .eq('id', savedReservation.id);
+            }
+            if (payment?.url) { window.location.href = payment.url; return; }
+          } catch (plopErr) {
+            console.error('POS: Plop payment error:', plopErr);
+            alert('Erreur Plop Plop: ' + plopErr.message);
+          }
         }
       }
-    } else if (insertError) {
-      console.warn('POS: Reservation insert failed (non-blocking):', insertError.message);
+    } catch (e) {
+      console.error('POS: Reservation exception:', e);
+      alert('Erreur inattendue réservation: ' + e.message);
     }
   }
 
-  // Clear order for non-Plop cases
+  // Clear order
   orderItems = [];
   renderOrder();
 }
