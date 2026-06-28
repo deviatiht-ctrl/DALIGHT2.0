@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Examens — DALIGHT SCHOOL</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/school.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="school-shell">
+  <header class="school-header">
+    <div class="school-header-logo"><div class="logo-dot"></div>DALIGHT SCHOOL</div>
+    <div class="school-header-title">Examens en ligne</div>
+    <div class="school-header-actions">
+      <div class="header-avatar" id="header-avatar">?</div>
+      <button class="sc-btn sc-btn-secondary sc-btn-sm" onclick="schoolLogout()">Déconnexion</button>
+    </div>
+  </header>
+  <aside class="school-sidebar">
+    <div class="school-sidebar-section">
+      <div class="school-sidebar-section-title">Mon cours</div>
+      <a href="index.html" class="sc-nav-item"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Tableau de bord</a>
+      <a href="materials.html" class="sc-nav-item"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>Documents</a>
+      <a href="assignments.html" class="sc-nav-item"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>Devoirs</a>
+      <a href="exams.html" class="sc-nav-item active"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Examens</a>
+      <a href="grades.html" class="sc-nav-item"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Notes</a>
+    </div>
+  </aside>
+  <main class="school-main">
+    <div class="sc-page-header">
+      <div><h1>📋 Examens</h1><p>Créez et gérez les examens en ligne pour vos étudiants</p></div>
+      <button class="sc-btn sc-btn-primary" onclick="openCreateExam()">+ Créer un examen</button>
+    </div>
+    <div id="exams-list" style="display:flex;flex-direction:column;gap:1rem;">
+      <div class="sc-skeleton" style="height:120px;"></div>
+    </div>
+  </main>
+</div>
+
+<!-- Create Exam Modal -->
+<div class="sc-modal-overlay" id="modal-exam" style="overflow-y:auto;">
+  <div class="sc-modal" style="max-width:680px;width:100%;">
+    <div class="sc-modal-header">
+      <div class="sc-modal-title">Créer un examen</div>
+      <button class="sc-modal-close" onclick="closeExamModal()">×</button>
+    </div>
+    <div class="sc-modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="sc-form-group" style="grid-column:1/-1">
+          <label class="sc-label">Titre <span>*</span></label>
+          <input class="sc-input" id="ex-title" placeholder="Ex: Examen final T1">
+        </div>
+        <div class="sc-form-group" style="grid-column:1/-1">
+          <label class="sc-label">Instructions</label>
+          <textarea class="sc-textarea" id="ex-instructions" placeholder="Instructions pour les étudiants…" style="min-height:70px;"></textarea>
+        </div>
+        <div class="sc-form-group">
+          <label class="sc-label">Durée (minutes)</label>
+          <input class="sc-input" id="ex-duration" type="number" value="60" min="5">
+        </div>
+        <div class="sc-form-group">
+          <label class="sc-label">Activer maintenant</label>
+          <select class="sc-select" id="ex-active">
+            <option value="false">Non (brouillon)</option>
+            <option value="true">Oui (visible aux étudiants)</option>
+          </select>
+        </div>
+        <div class="sc-form-group">
+          <label class="sc-label">Date de début (optionnel)</label>
+          <input class="sc-input" id="ex-start" type="datetime-local">
+        </div>
+        <div class="sc-form-group">
+          <label class="sc-label">Date de fin (optionnel)</label>
+          <input class="sc-input" id="ex-end" type="datetime-local">
+        </div>
+      </div>
+
+      <hr class="sc-divider">
+
+      <!-- Questions builder -->
+      <div class="sc-section-title">Questions</div>
+      <div id="questions-builder" style="display:flex;flex-direction:column;gap:1rem;"></div>
+      <button class="sc-btn sc-btn-secondary" style="margin-top:.75rem;" onclick="addQuestion()">+ Ajouter une question</button>
+    </div>
+    <div class="sc-modal-footer">
+      <button class="sc-btn sc-btn-secondary" onclick="closeExamModal()">Annuler</button>
+      <button class="sc-btn sc-btn-primary" id="btn-save-exam" onclick="saveExam()">Enregistrer l'examen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Results Modal -->
+<div class="sc-modal-overlay" id="modal-results">
+  <div class="sc-modal" style="max-width:600px;">
+    <div class="sc-modal-header">
+      <div class="sc-modal-title" id="results-title">Résultats</div>
+      <button class="sc-modal-close" onclick="document.getElementById('modal-results').classList.remove('open')">×</button>
+    </div>
+    <div class="sc-modal-body" id="results-body"></div>
+  </div>
+</div>
+
+<script src="../js/school-core.js"></script>
+<script>
+  const session = requireSchoolSession('professor');
+  if (!session) throw new Error('Not logged in');
+  const sb = window.schoolSb;
+  document.getElementById('header-avatar').textContent = schoolInitials(session.name);
+
+  let questionCount = 0;
+
+  function openCreateExam() {
+    questionCount = 0;
+    document.getElementById('ex-title').value = '';
+    document.getElementById('ex-instructions').value = '';
+    document.getElementById('ex-duration').value = 60;
+    document.getElementById('ex-active').value = 'false';
+    document.getElementById('ex-start').value = '';
+    document.getElementById('ex-end').value   = '';
+    document.getElementById('questions-builder').innerHTML = '';
+    addQuestion();
+    document.getElementById('modal-exam').classList.add('open');
+  }
+
+  function closeExamModal() { document.getElementById('modal-exam').classList.remove('open'); }
+
+  function addQuestion() {
+    questionCount++;
+    const idx = questionCount;
+    const div = document.createElement('div');
+    div.className = 'sc-question';
+    div.id = `q-${idx}`;
+    div.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
+        <div class="sc-question-num">Question ${idx}</div>
+        <button onclick="this.closest('.sc-question').remove()" style="background:none;border:none;color:var(--sc-red);cursor:pointer;font-size:1.1rem;">×</button>
+      </div>
+      <div class="sc-form-group">
+        <input class="sc-input" placeholder="Texte de la question…" data-field="text">
+      </div>
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;">
+        <label style="font-size:.78rem;font-weight:600;color:var(--sc-muted);">Type:</label>
+        <select class="sc-select" data-field="type" style="width:auto;flex:1;" onchange="toggleQType(this,${idx})">
+          <option value="mcq">QCM (choix multiple)</option>
+          <option value="text">Réponse libre</option>
+          <option value="truefalse">Vrai / Faux</option>
+        </select>
+        <label style="font-size:.78rem;font-weight:600;color:var(--sc-muted);">Points:</label>
+        <input class="sc-input" type="number" value="1" min="1" data-field="points" style="width:70px;">
+      </div>
+      <div data-options-container="${idx}">
+        <div style="display:flex;flex-direction:column;gap:.35rem;" id="options-${idx}">
+          ${['A','B','C','D'].map((l,i) => `
+            <div style="display:flex;align-items:center;gap:.5rem;">
+              <input type="radio" name="correct-${idx}" value="${i}" style="flex-shrink:0;">
+              <input class="sc-input" placeholder="Option ${l}…" data-option="${i}" style="flex:1;">
+            </div>`).join('')}
+        </div>
+        <div style="font-size:.72rem;color:var(--sc-muted);margin-top:.3rem;">Sélectionnez le bouton radio de la bonne réponse</div>
+      </div>`;
+    document.getElementById('questions-builder').appendChild(div);
+  }
+
+  function toggleQType(sel, idx) {
+    const container = document.getElementById(`options-${idx}`);
+    const parent    = sel.closest('.sc-question').querySelector('[data-options-container]');
+    if (sel.value === 'text') {
+      parent.style.display = 'none';
+    } else if (sel.value === 'truefalse') {
+      parent.style.display = '';
+      container.innerHTML = `
+        <div style="display:flex;gap:.75rem;">
+          <label style="display:flex;align-items:center;gap:.4rem;"><input type="radio" name="correct-${idx}" value="0"> Vrai</label>
+          <label style="display:flex;align-items:center;gap:.4rem;"><input type="radio" name="correct-${idx}" value="1"> Faux</label>
+        </div>`;
+    } else {
+      parent.style.display = '';
+      container.innerHTML = ['A','B','C','D'].map((l,i) => `
+        <div style="display:flex;align-items:center;gap:.5rem;">
+          <input type="radio" name="correct-${idx}" value="${i}" style="flex-shrink:0;">
+          <input class="sc-input" placeholder="Option ${l}…" data-option="${i}" style="flex:1;">
+        </div>`).join('');
+    }
+  }
+
+  async function saveExam() {
+    const title = document.getElementById('ex-title').value.trim();
+    if (!title) { showSchoolToast('Le titre est requis.', 'warning'); return; }
+
+    // Build questions array
+    const qs = [];
+    document.querySelectorAll('#questions-builder .sc-question').forEach((qEl, qi) => {
+      const text    = qEl.querySelector('[data-field="text"]').value.trim();
+      const type    = qEl.querySelector('[data-field="type"]').value;
+      const points  = parseFloat(qEl.querySelector('[data-field="points"]').value) || 1;
+      const options = type !== 'text'
+        ? [...qEl.querySelectorAll('[data-option]')].map(i => i.value.trim()).filter(Boolean)
+        : [];
+      const correctEl = qEl.querySelector(`input[name^="correct-"]:checked`);
+      const correct   = correctEl ? parseInt(correctEl.value) : 0;
+      if (text) qs.push({ id: qi+1, text, type, options, correct, points });
+    });
+
+    if (!qs.length) { showSchoolToast('Ajoutez au moins une question.', 'warning'); return; }
+
+    const btn = document.getElementById('btn-save-exam');
+    btn.disabled = true; btn.textContent = 'Enregistrement…';
+
+    const { error } = await sb.from('dalightschool_exams').insert({
+      course_id:        session.course_id,
+      title,
+      instructions:     document.getElementById('ex-instructions').value.trim() || null,
+      questions:        qs,
+      duration_minutes: parseInt(document.getElementById('ex-duration').value) || 60,
+      is_active:        document.getElementById('ex-active').value === 'true',
+      start_at:         document.getElementById('ex-start').value || null,
+      end_at:           document.getElementById('ex-end').value   || null,
+    });
+
+    if (error) { showSchoolToast('Erreur: ' + error.message, 'error'); }
+    else { showSchoolToast('Examen créé !', 'success'); closeExamModal(); loadExams(); }
+    btn.disabled = false; btn.textContent = 'Enregistrer l\'examen';
+  }
+
+  async function toggleExamActive(id, current) {
+    await sb.from('dalightschool_exams').update({ is_active: !current }).eq('id', id);
+    loadExams();
+  }
+
+  async function viewResults(examId, examTitle) {
+    document.getElementById('results-title').textContent = `Résultats — ${examTitle}`;
+    document.getElementById('results-body').innerHTML = '<div class="sc-skeleton" style="height:200px;"></div>';
+    document.getElementById('modal-results').classList.add('open');
+
+    const { data: results } = await sb
+      .from('dalightschool_exam_results')
+      .select('*, student:dalightschool_students(name)')
+      .eq('exam_id', examId)
+      .eq('is_submitted', true)
+      .order('score', { ascending: false });
+
+    if (!results?.length) {
+      document.getElementById('results-body').innerHTML = '<div class="sc-empty"><h3>Aucun résultat</h3><p>Aucun étudiant n\'a encore complété cet examen.</p></div>';
+      return;
+    }
+
+    const avg = results.reduce((s, r) => s + (r.score || 0), 0) / results.length;
+    document.getElementById('results-body').innerHTML = `
+      <div style="background:var(--sc-bg);padding:.75rem;border-radius:8px;margin-bottom:1rem;text-align:center;">
+        <div style="font-size:.75rem;color:var(--sc-muted);">Moyenne de classe</div>
+        <div style="font-size:1.8rem;font-weight:800;color:${schoolScoreColor(avg,100)};">${avg.toFixed(1)}%</div>
+        <div style="font-size:.78rem;color:var(--sc-muted);">${results.length} soumission(s)</div>
+      </div>
+      <div class="sc-table-wrap">
+        <table class="sc-table">
+          <thead><tr><th>Étudiant</th><th style="text-align:right;">Score</th><th style="text-align:right;">Date</th></tr></thead>
+          <tbody>${results.map(r => `
+            <tr>
+              <td style="font-weight:500;">${r.student?.name || '—'}</td>
+              <td style="text-align:right;font-weight:700;color:${schoolScoreColor(r.score||0,100)};">${r.score != null ? r.score+'%' : '—'}</td>
+              <td style="text-align:right;font-size:.78rem;color:var(--sc-muted);">${schoolFmtDate(r.submitted_at)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  async function deleteExam(id, title) {
+    if (!confirm(`Supprimer l'examen "${title}" ?`)) return;
+    await sb.from('dalightschool_exams').delete().eq('id', id);
+    showSchoolToast('Examen supprimé.'); loadExams();
+  }
+
+  async function loadExams() {
+    if (!session.course_id) {
+      document.getElementById('exams-list').innerHTML = '<div class="sc-empty"><h3>Aucun cours assigné</h3></div>';
+      return;
+    }
+
+    const { data: exams } = await sb.from('dalightschool_exams').select('*').eq('course_id', session.course_id).order('created_at', { ascending: false });
+    const list = document.getElementById('exams-list');
+
+    if (!exams?.length) {
+      list.innerHTML = `<div class="sc-empty"><svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><h3>Aucun examen créé</h3><p>Créez votre premier examen en ligne.</p></div>`;
+      return;
+    }
+
+    list.innerHTML = exams.map((e, i) => `
+      <div class="sc-card" style="animation:slideUp .25s ease;animation-delay:${i*0.06}s">
+        <div style="display:flex;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
+          <div style="flex:1;min-width:200px;">
+            <div style="font-weight:700;font-size:1rem;">${e.title}</div>
+            <div style="font-size:.78rem;color:var(--sc-muted);margin-top:.2rem;">${e.questions?.length||0} questions · ${e.duration_minutes} min · Créé: ${schoolFmtDate(e.created_at)}</div>
+            ${e.instructions ? `<div style="font-size:.8rem;color:var(--sc-muted);margin-top:.35rem;">${e.instructions.slice(0,80)}…</div>` : ''}
+          </div>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
+            <span class="sc-badge ${e.is_active ? 'sc-badge-green' : 'sc-badge-gray'}">${e.is_active ? '● Actif' : '○ Brouillon'}</span>
+            <button class="sc-btn sc-btn-secondary sc-btn-sm" onclick="toggleExamActive('${e.id}',${e.is_active})">${e.is_active ? 'Désactiver' : 'Activer'}</button>
+            <button class="sc-btn sc-btn-secondary sc-btn-sm" onclick="viewResults('${e.id}','${e.title.replace(/'/g,"\\'")}')">Résultats</button>
+            <button class="sc-btn sc-btn-danger sc-btn-sm" onclick="deleteExam('${e.id}','${e.title.replace(/'/g,"\\'")}')">Supprimer</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  loadExams();
+</script>
+</body>
+</html>

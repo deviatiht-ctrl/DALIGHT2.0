@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DALIGHT SCHOOL — Connexion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/school.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="sc-login-bg">
+    <!-- Animated orbs -->
+    <div class="sc-login-orb" style="width:400px;height:400px;background:#818cf8;top:-120px;left:-100px;"></div>
+    <div class="sc-login-orb" style="width:300px;height:300px;background:#a78bfa;bottom:-80px;right:-60px;"></div>
+    <div class="sc-login-orb" style="width:200px;height:200px;background:#06b6d4;top:40%;right:10%;"></div>
+
+    <div class="sc-login-card">
+      <!-- Brand -->
+      <div class="sc-login-brand">
+        <div class="sc-login-brand-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 14l9-5-9-5-9 5 9 5z"/>
+            <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
+            <path d="M12 14V2"/>
+          </svg>
+        </div>
+        <h1>DALIGHT SCHOOL</h1>
+        <p>Plateforme d'apprentissage en ligne</p>
+      </div>
+
+      <!-- Role Selector -->
+      <div class="sc-role-grid" id="role-grid">
+        <button class="sc-role-btn active" data-role="student" onclick="selectRole('student', this)">
+          <div class="rb-icon">🎓</div>
+          Étudiant
+        </button>
+        <button class="sc-role-btn" data-role="professor" onclick="selectRole('professor', this)">
+          <div class="rb-icon">👨‍🏫</div>
+          Professeur
+        </button>
+      </div>
+
+      <!-- Code Input -->
+      <div class="sc-form-group">
+        <label class="sc-label" id="code-label">Code étudiant <span>*</span></label>
+        <input
+          class="sc-code-input"
+          id="access-code"
+          type="text"
+          placeholder="ETU-2026-0001"
+          maxlength="20"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+        >
+        <div id="login-error" class="sc-login-error" style="display:none;"></div>
+      </div>
+
+      <!-- Submit -->
+      <button class="sc-btn sc-btn-primary" style="width:100%;justify-content:center;padding:.85rem;" onclick="doLogin()" id="btn-login">
+        <span id="btn-login-text">Accéder à mon espace</span>
+        <span id="btn-login-spinner" class="sc-spinner" style="display:none;"></span>
+      </button>
+
+      <!-- Help -->
+      <p style="text-align:center;font-size:.78rem;color:var(--sc-muted);margin-top:1.25rem;line-height:1.6;">
+        Votre code d'accès vous a été fourni par l'administration DALIGHT.<br>
+        Contactez <strong>admin@dalight.ht</strong> si vous avez perdu votre code.
+      </p>
+
+      <!-- Admin link -->
+      <div style="text-align:center;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--sc-border);">
+        <a href="../admin/school-courses.html" style="font-size:.8rem;color:var(--sc-primary);font-weight:600;">
+          Administration →
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/school-core.js"></script>
+  <script>
+    let selectedRole = 'student';
+
+    // If already logged in, redirect
+    const session = getSchoolSession();
+    if (session) {
+      window.location.href = session.role === 'student' ? 'student/index.html' : 'professor/index.html';
+    }
+
+    function selectRole(role, el) {
+      selectedRole = role;
+      document.querySelectorAll('.sc-role-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      const codeLabel = document.getElementById('code-label');
+      const codeInput = document.getElementById('access-code');
+      if (role === 'student') {
+        codeLabel.innerHTML = 'Code étudiant <span>*</span>';
+        codeInput.placeholder = 'ETU-2026-0001';
+      } else {
+        codeLabel.innerHTML = 'Code professeur <span>*</span>';
+        codeInput.placeholder = 'PROF-BIO-001';
+      }
+      document.getElementById('access-code').value = '';
+      document.getElementById('login-error').style.display = 'none';
+    }
+
+    document.getElementById('access-code').addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+
+    async function doLogin() {
+      const code  = document.getElementById('access-code').value.trim();
+      const btnText    = document.getElementById('btn-login-text');
+      const btnSpinner = document.getElementById('btn-login-spinner');
+      const errBox     = document.getElementById('login-error');
+
+      if (!code) {
+        errBox.textContent = 'Veuillez entrer votre code d\'accès.';
+        errBox.style.display = 'block';
+        return;
+      }
+
+      btnText.style.display    = 'none';
+      btnSpinner.style.display = 'inline-block';
+      document.getElementById('btn-login').disabled = true;
+      errBox.style.display = 'none';
+
+      const session = await schoolLogin(code, selectedRole);
+
+      if (!session) {
+        errBox.textContent = selectedRole === 'student'
+          ? 'Code étudiant invalide ou compte désactivé.'
+          : 'Code professeur invalide ou compte désactivé.';
+        errBox.style.display = 'block';
+        btnText.style.display    = 'inline';
+        btnSpinner.style.display = 'none';
+        document.getElementById('btn-login').disabled = false;
+        document.getElementById('access-code').focus();
+        return;
+      }
+
+      window.location.href = selectedRole === 'student' ? 'student/index.html' : 'professor/index.html';
+    }
+  </script>
+</body>
+</html>

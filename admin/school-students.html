@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Étudiants — DALIGHT SCHOOL Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css?v=202606271350">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .school-badge { display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .65rem;border-radius:99px;font-size:.72rem;font-weight:600; }
+    .sb-green  { background:#dcfce7;color:#166534; }
+    .sb-red    { background:#fee2e2;color:#991b1b; }
+    .sb-blue   { background:#dbeafe;color:#1e40af; }
+    .sb-purple { background:#ede9fe;color:#5b21b6; }
+    .code-box  { font-family:monospace;background:#f1f5f9;padding:.3rem .6rem;border-radius:6px;font-size:.85rem;font-weight:700;letter-spacing:.06em;cursor:pointer; }
+    .code-box:hover { background:#e0e7ff;color:#4338ca; }
+  </style>
+</head>
+<body>
+  <!-- Sidebar (standard admin) -->
+  <aside class="admin-sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="sidebar-logo">
+        <img src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" onerror="this.style.display='none'">
+        <div class="sidebar-logo-text">DALIGHT<span>Administration</span></div>
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Principal</div>
+        <a href="dashboard.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Dashboard</a>
+        <a href="reservations.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Réservations<span class="badge" id="pending-count">0</span></a>
+        <a href="pos.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>Caisse / POS</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title" style="color:#4f46e5;">🎓 DALIGHT SCHOOL</div>
+        <a href="school-courses.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/></svg>Cours</a>
+        <a href="school-students.html" class="nav-item active"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>Étudiants</a>
+        <a href="school-professors.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>Professeurs</a>
+        <a href="../dalight-school/index.html" target="_blank" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>Portail School</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="user-avatar">A</div>
+        <div class="sidebar-user-info"><div class="sidebar-user-name" id="user-name">Admin</div><div class="sidebar-user-role">Administrateur</div></div>
+      </div>
+      <button class="btn-logout" id="logout-btn">Déconnexion</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="admin-main">
+    <header class="admin-header">
+      <button class="btn-icon" id="mobile-menu-btn"><i data-lucide="menu"></i></button>
+      <h1 class="admin-page-title">🎓 Étudiants — DALIGHT SCHOOL</h1>
+      <div style="display:flex;gap:.75rem;align-items:center;margin-left:auto;">
+        <button class="btn btn-secondary btn-sm" onclick="exportCSV()"><i data-lucide="download"></i> Exporter</button>
+        <button class="btn btn-primary" onclick="openAddModal()"><i data-lucide="plus"></i> Nouvel étudiant</button>
+      </div>
+    </header>
+
+    <div class="admin-content">
+      <!-- Stats -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem;" id="stats-row"></div>
+
+      <!-- Search -->
+      <div class="card" style="padding:1rem;margin-bottom:1rem;">
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+          <input class="form-control" id="search-input" placeholder="Rechercher par nom, code…" style="flex:1;min-width:200px;" oninput="renderTable()">
+          <select class="form-control" id="filter-course" style="min-width:180px;" onchange="renderTable()">
+            <option value="">Tous les cours</option>
+          </select>
+          <select class="form-control" id="filter-status" style="min-width:120px;" onchange="renderTable()">
+            <option value="">Tout</option>
+            <option value="active">Actif</option>
+            <option value="inactive">Inactif</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table class="admin-table" id="students-table">
+          <thead><tr><th>Nom</th><th>Code d'accès</th><th>Cours inscrits</th><th>Statut</th><th>Créé le</th><th>Actions</th></tr></thead>
+          <tbody id="students-tbody"><tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--admin-text-muted);">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" id="modal-add" style="display:none;">
+    <div class="modal" style="max-width:520px;">
+      <div class="modal-header"><h2 id="modal-title">Nouvel étudiant</h2><button class="btn-icon" onclick="closeModal()"><i data-lucide="x"></i></button></div>
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Nom complet <span style="color:red">*</span></label><input class="form-control" id="f-name" placeholder="Ex: Jean Dupont"></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-control" id="f-email" type="email" placeholder="jean@exemple.com"></div>
+        <div class="form-group">
+          <label class="form-label">Code d'accès <span style="color:red">*</span></label>
+          <div style="display:flex;gap:.5rem;">
+            <input class="form-control" id="f-code" placeholder="ETU-2026-0001" style="flex:1;font-family:monospace;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">
+            <button class="btn btn-secondary" onclick="generateCode()" type="button">Générer</button>
+          </div>
+          <div style="font-size:.75rem;color:var(--admin-text-muted);margin-top:.3rem;">Ce code sera donné à l'étudiant pour se connecter au portail.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Inscrire aux cours</label>
+          <div id="course-checkboxes" style="display:flex;flex-direction:column;gap:.4rem;padding:.5rem;background:var(--admin-bg);border-radius:8px;max-height:150px;overflow-y:auto;"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Notes internes</label><textarea class="form-control" id="f-notes" rows="2" placeholder="Observations…"></textarea></div>
+        <div class="form-group" style="display:flex;align-items:center;gap:.5rem;">
+          <input type="checkbox" id="f-active" checked style="width:16px;height:16px;">
+          <label for="f-active" style="font-size:.875rem;font-weight:500;">Compte actif</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+        <button class="btn btn-primary" id="btn-save" onclick="saveStudent()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/admin-core.js?v=202606271350"></script>
+  <script>
+    let allStudents   = [];
+    let allCourses    = [];
+    let allEnrollments = [];
+    let editingId     = null;
+    let sb;
+
+    async function init() {
+      await window.adminCore.initAdminCore();
+      sb = window.dalightAdminSupabase;
+
+      const [{ data: students }, { data: courses }, { data: enr }] = await Promise.all([
+        sb.from('dalightschool_students').select('*').order('name'),
+        sb.from('dalightschool_courses').select('*').order('name'),
+        sb.from('dalightschool_enrollments').select('*'),
+      ]);
+
+      allStudents    = students || [];
+      allCourses     = courses  || [];
+      allEnrollments = enr     || [];
+
+      // Stats
+      const statsRow = document.getElementById('stats-row');
+      statsRow.innerHTML = `
+        <div class="card" style="padding:1.1rem;display:flex;align-items:center;gap:.8rem;"><div style="width:40px;height:40px;border-radius:10px;background:#e0e7ff;display:flex;align-items:center;justify-content:center;"><i data-lucide="users" style="color:#4f46e5;width:20px;height:20px;"></i></div><div><div style="font-size:1.4rem;font-weight:800;">${allStudents.length}</div><div style="font-size:.75rem;color:var(--admin-text-muted);">Total étudiants</div></div></div>
+        <div class="card" style="padding:1.1rem;display:flex;align-items:center;gap:.8rem;"><div style="width:40px;height:40px;border-radius:10px;background:#dcfce7;display:flex;align-items:center;justify-content:center;"><i data-lucide="check-circle" style="color:#10b981;width:20px;height:20px;"></i></div><div><div style="font-size:1.4rem;font-weight:800;">${allStudents.filter(s=>s.is_active).length}</div><div style="font-size:.75rem;color:var(--admin-text-muted);">Actifs</div></div></div>
+        <div class="card" style="padding:1.1rem;display:flex;align-items:center;gap:.8rem;"><div style="width:40px;height:40px;border-radius:10px;background:#ede9fe;display:flex;align-items:center;justify-content:center;"><i data-lucide="book-open" style="color:#8b5cf6;width:20px;height:20px;"></i></div><div><div style="font-size:1.4rem;font-weight:800;">${allCourses.length}</div><div style="font-size:.75rem;color:var(--admin-text-muted);">Cours disponibles</div></div></div>`;
+
+      // Course filter select
+      const filter = document.getElementById('filter-course');
+      allCourses.forEach(c => { const opt = document.createElement('option'); opt.value = c.id; opt.textContent = c.name; filter.appendChild(opt); });
+
+      lucide.createIcons();
+      renderTable();
+    }
+
+    function renderTable() {
+      const q   = document.getElementById('search-input').value.toLowerCase();
+      const cId = document.getElementById('filter-course').value;
+      const st  = document.getElementById('filter-status').value;
+
+      let list = allStudents.filter(s => {
+        const matchQ  = !q || s.name.toLowerCase().includes(q) || s.code_acces.toLowerCase().includes(q);
+        const matchC  = !cId || allEnrollments.some(e => e.student_id === s.id && e.course_id === cId);
+        const matchSt = !st || (st === 'active' ? s.is_active : !s.is_active);
+        return matchQ && matchC && matchSt;
+      });
+
+      const tbody = document.getElementById('students-tbody');
+      if (!list.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--admin-text-muted);">Aucun résultat</td></tr>'; return; }
+
+      tbody.innerHTML = list.map(s => {
+        const courses = allEnrollments.filter(e => e.student_id === s.id).map(e => allCourses.find(c => c.id === e.course_id)).filter(Boolean);
+        return `
+          <tr>
+            <td><div style="font-weight:600;">${s.name}</div><div style="font-size:.75rem;color:var(--admin-text-muted);">${s.email||''}</div></td>
+            <td><span class="code-box" onclick="copyCode('${s.code_acces}')" title="Cliquer pour copier">${s.code_acces}</span></td>
+            <td>${courses.map(c=>`<span class="school-badge sb-blue">${c.name}</span>`).join(' ') || '<span style="color:var(--admin-text-muted);font-size:.8rem;">Aucun</span>'}</td>
+            <td><span class="school-badge ${s.is_active ? 'sb-green' : 'sb-red'}">${s.is_active ? 'Actif' : 'Inactif'}</span></td>
+            <td style="font-size:.8rem;color:var(--admin-text-muted);">${new Date(s.created_at).toLocaleDateString('fr-FR')}</td>
+            <td>
+              <div style="display:flex;gap:.4rem;">
+                <button class="btn btn-icon btn-sm" onclick="editStudent('${s.id}')" title="Modifier"><i data-lucide="pencil"></i></button>
+                <button class="btn btn-icon btn-sm" onclick="printCode('${s.name}','${s.code_acces}')" title="Imprimer le code"><i data-lucide="printer"></i></button>
+                <button class="btn btn-icon btn-sm btn-danger" onclick="toggleActive('${s.id}',${s.is_active})" title="${s.is_active ? 'Désactiver' : 'Activer'}"><i data-lucide="${s.is_active ? 'user-x' : 'user-check'}"></i></button>
+              </div>
+            </td>
+          </tr>`;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function generateCode() {
+      const n = String(allStudents.length + 1).padStart(4, '0');
+      const y = new Date().getFullYear();
+      document.getElementById('f-code').value = `ETU-${y}-${n}`;
+    }
+
+    function openAddModal() {
+      editingId = null;
+      document.getElementById('modal-title').textContent = 'Nouvel étudiant';
+      document.getElementById('f-name').value  = '';
+      document.getElementById('f-email').value = '';
+      document.getElementById('f-code').value  = '';
+      document.getElementById('f-notes').value = '';
+      document.getElementById('f-active').checked = true;
+      generateCode();
+      renderCourseCheckboxes([]);
+      document.getElementById('modal-add').style.display = 'flex';
+    }
+
+    function editStudent(id) {
+      const s = allStudents.find(x => x.id === id);
+      if (!s) return;
+      editingId = id;
+      document.getElementById('modal-title').textContent = 'Modifier l\'étudiant';
+      document.getElementById('f-name').value  = s.name;
+      document.getElementById('f-email').value = s.email || '';
+      document.getElementById('f-code').value  = s.code_acces;
+      document.getElementById('f-notes').value = s.notes || '';
+      document.getElementById('f-active').checked = s.is_active;
+      const enrolled = allEnrollments.filter(e => e.student_id === id).map(e => e.course_id);
+      renderCourseCheckboxes(enrolled);
+      document.getElementById('modal-add').style.display = 'flex';
+    }
+
+    function renderCourseCheckboxes(checkedIds) {
+      document.getElementById('course-checkboxes').innerHTML = allCourses.map(c => `
+        <label style="display:flex;align-items:center;gap:.5rem;font-size:.875rem;cursor:pointer;">
+          <input type="checkbox" value="${c.id}" ${checkedIds.includes(c.id) ? 'checked' : ''} style="width:15px;height:15px;">
+          <span style="width:10px;height:10px;border-radius:50%;background:${c.color};display:inline-block;"></span>
+          ${c.name}
+        </label>`).join('') || '<div style="font-size:.8rem;color:var(--admin-text-muted);">Aucun cours créé</div>';
+    }
+
+    function closeModal() { document.getElementById('modal-add').style.display = 'none'; }
+
+    async function saveStudent() {
+      const name  = document.getElementById('f-name').value.trim();
+      const code  = document.getElementById('f-code').value.trim().toUpperCase();
+      if (!name || !code) { alert('Nom et code requis.'); return; }
+
+      const btn = document.getElementById('btn-save');
+      btn.disabled = true; btn.textContent = 'Enregistrement…';
+
+      const payload = {
+        name, code_acces: code,
+        email:     document.getElementById('f-email').value.trim() || null,
+        notes:     document.getElementById('f-notes').value.trim() || null,
+        is_active: document.getElementById('f-active').checked,
+        updated_at: new Date().toISOString(),
+      };
+
+      let studentId = editingId;
+      let error;
+      if (editingId) {
+        ({ error } = await sb.from('dalightschool_students').update(payload).eq('id', editingId));
+      } else {
+        const { data, error: err } = await sb.from('dalightschool_students').insert(payload).select().single();
+        error = err; studentId = data?.id;
+      }
+
+      if (error) { alert('Erreur: ' + error.message); btn.disabled = false; btn.textContent = 'Enregistrer'; return; }
+
+      // Sync enrollments
+      if (studentId) {
+        const checked = [...document.querySelectorAll('#course-checkboxes input:checked')].map(i => i.value);
+        await sb.from('dalightschool_enrollments').delete().eq('student_id', studentId);
+        if (checked.length) await sb.from('dalightschool_enrollments').insert(checked.map(cId => ({ student_id: studentId, course_id: cId })));
+      }
+
+      closeModal();
+      init();
+    }
+
+    async function toggleActive(id, current) {
+      await sb.from('dalightschool_students').update({ is_active: !current }).eq('id', id);
+      init();
+    }
+
+    function copyCode(code) {
+      navigator.clipboard.writeText(code).then(() => window.adminCore.showToast('Code copié: ' + code));
+    }
+
+    function printCode(name, code) {
+      const w = window.open('', '_blank', 'width=400,height=300');
+      w.document.write(`<html><body style="font-family:Inter,sans-serif;text-align:center;padding:2rem;">
+        <h2 style="color:#4f46e5;">DALIGHT SCHOOL</h2>
+        <p style="font-size:1rem;">Étudiant: <strong>${name}</strong></p>
+        <p style="font-size:1.5rem;font-weight:800;letter-spacing:.1em;background:#e0e7ff;padding:.75rem 1.5rem;border-radius:8px;display:inline-block;">${code}</strong></p>
+        <p style="font-size:.8rem;color:#666;">Portail: ${window.location.origin}/dalight-school/</p>
+        <script>window.print();<\/script>
+      </body></html>`);
+    }
+
+    function exportCSV() {
+      const rows = [['Nom','Code d\'accès','Email','Actif','Créé le']];
+      allStudents.forEach(s => rows.push([s.name, s.code_acces, s.email||'', s.is_active?'Oui':'Non', new Date(s.created_at).toLocaleDateString('fr-FR')]));
+      const csv = rows.map(r => r.join(',')).join('\n');
+      const a = document.createElement('a');
+      a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+      a.download = 'etudiants_dalight_school.csv';
+      a.click();
+    }
+
+    init();
+  </script>
+</body>
+</html>

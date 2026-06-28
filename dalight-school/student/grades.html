@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mes Notes — DALIGHT SCHOOL</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/school.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="school-shell">
+  <header class="school-header">
+    <div class="school-header-logo"><div class="logo-dot"></div>DALIGHT SCHOOL</div>
+    <div class="school-header-title">Mes Notes & Résultats</div>
+    <div class="school-header-actions">
+      <div class="header-avatar" id="header-avatar">?</div>
+      <button class="sc-btn sc-btn-secondary sc-btn-sm" onclick="schoolLogout()">Déconnexion</button>
+    </div>
+  </header>
+  <aside class="school-sidebar">
+    <div class="school-sidebar-section">
+      <div class="school-sidebar-section-title">Navigation</div>
+      <a href="index.html" class="sc-nav-item">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Tableau de bord
+      </a>
+      <a href="grades.html" class="sc-nav-item active">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Mes Notes
+      </a>
+    </div>
+  </aside>
+  <main class="school-main">
+    <div class="sc-page-header">
+      <div><h1>Mes Notes</h1><p>Toutes tes évaluations et ta moyenne générale</p></div>
+    </div>
+    <!-- Overall average card -->
+    <div id="avg-card" class="sc-card" style="margin-bottom:2rem;background:linear-gradient(135deg,#4f46e5,#8b5cf6);color:#fff;border:none;">
+      <div style="font-size:.85rem;opacity:.8;">Moyenne générale</div>
+      <div id="overall-avg" style="font-size:3rem;font-weight:800;line-height:1;margin:.25rem 0;">—</div>
+      <div id="overall-label" style="font-size:.9rem;opacity:.8;"></div>
+    </div>
+    <!-- Grades by course -->
+    <div id="grades-content">
+      <div class="sc-skeleton" style="height:200px;margin-bottom:1rem;"></div>
+      <div class="sc-skeleton" style="height:200px;animation-delay:.1s"></div>
+    </div>
+  </main>
+</div>
+<script src="../js/school-core.js"></script>
+<script>
+  const session = requireSchoolSession('student');
+  if (!session) throw new Error('Not logged in');
+  const sb = window.schoolSb;
+  document.getElementById('header-avatar').textContent = schoolInitials(session.name);
+
+  async function loadGrades() {
+    const { data: enrollments } = await sb
+      .from('dalightschool_enrollments')
+      .select('*, course:dalightschool_courses(*)')
+      .eq('student_id', session.id);
+    const courses = (enrollments || []).map(e => e.course).filter(Boolean);
+
+    const { data: grades } = await sb
+      .from('dalightschool_grades')
+      .select('*')
+      .eq('student_id', session.id)
+      .order('created_at', { ascending: false });
+
+    const { data: submissions } = await sb
+      .from('dalightschool_submissions')
+      .select('*, assignment:dalightschool_assignments(title,max_score,course_id)')
+      .eq('student_id', session.id)
+      .not('grade', 'is', null);
+
+    const { data: examResults } = await sb
+      .from('dalightschool_exam_results')
+      .select('*, exam:dalightschool_exams(title,course_id)')
+      .eq('student_id', session.id)
+      .eq('is_submitted', true)
+      .not('score', 'is', null);
+
+    // Build all grades per course
+    const allGrades = [];
+    const byCourseFn = (courseId) => {
+      const manual  = (grades || []).filter(g => g.course_id === courseId).map(g => ({ title: g.title || 'Note', grade: g.grade, max: g.max_grade || 100, type: g.type, date: g.created_at }));
+      const subGrades = (submissions || []).filter(s => s.assignment?.course_id === courseId).map(s => ({ title: s.assignment.title, grade: s.grade, max: s.assignment.max_score || 100, type: 'devoir', date: s.graded_at || s.submitted_at }));
+      const examGrades = (examResults || []).filter(r => r.exam?.course_id === courseId).map(r => ({ title: r.exam.title, grade: r.score, max: 100, type: 'examen', date: r.submitted_at }));
+      return [...manual, ...subGrades, ...examGrades];
+    };
+
+    const typeLabel = { exam: 'Examen', assignment: 'Devoir', attendance: 'Présence', final: 'Final', manual: 'Note', devoir: 'Devoir', examen: 'Examen' };
+
+    const courseCards = courses.map((c, i) => {
+      const cGrades = byCourseFn(c.id);
+      const avg = cGrades.length ? (cGrades.reduce((s, g) => s + (g.grade/g.max)*100, 0) / cGrades.length) : null;
+      allGrades.push(...cGrades);
+      const rows = cGrades.map(g => `
+        <tr>
+          <td style="font-weight:500;">${g.title}</td>
+          <td><span class="sc-badge sc-badge-gray">${typeLabel[g.type]||g.type}</span></td>
+          <td style="text-align:right;font-weight:700;color:${schoolScoreColor(g.grade,g.max)};">${g.grade}<span style="color:var(--sc-muted);font-weight:400;">/${g.max}</span></td>
+          <td style="text-align:right;font-size:.78rem;color:var(--sc-muted);">${schoolFmtDate(g.date)}</td>
+        </tr>`).join('');
+      return `
+        <div class="sc-card" style="margin-bottom:1.25rem;padding:0;overflow:hidden;animation:slideUp .3s ease;animation-delay:${i*0.07}s">
+          <div style="background:linear-gradient(135deg,${c.color},${c.color}bb);padding:1rem 1.25rem;color:#fff;display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:.75rem;opacity:.75;">Cours</div>
+              <div style="font-weight:700;font-size:1rem;">${c.name}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:.75rem;opacity:.75;">Moyenne</div>
+              <div style="font-size:1.5rem;font-weight:800;">${avg != null ? avg.toFixed(1)+'%' : '—'}</div>
+            </div>
+          </div>
+          ${cGrades.length ? `
+            <div class="sc-table-wrap" style="border:none;border-radius:0;">
+              <table class="sc-table">
+                <thead><tr><th>Évaluation</th><th>Type</th><th style="text-align:right;">Note</th><th style="text-align:right;">Date</th></tr></thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>` : `<div style="padding:1.25rem;color:var(--sc-muted);font-size:.875rem;">Aucune note pour ce cours.</div>`}
+        </div>`;
+    }).join('');
+
+    const overallAvg = allGrades.length ? (allGrades.reduce((s, g) => s + (g.grade/g.max)*100, 0) / allGrades.length) : null;
+    document.getElementById('overall-avg').textContent = overallAvg != null ? overallAvg.toFixed(1) + '%' : '—';
+    document.getElementById('overall-label').textContent = overallAvg != null
+      ? (overallAvg >= 90 ? '🏆 Excellent !' : overallAvg >= 75 ? '⭐ Bien' : overallAvg >= 60 ? '📚 Passable' : '⚠️ À améliorer')
+      : 'Aucune note enregistrée';
+
+    document.getElementById('grades-content').innerHTML = courseCards || '<div class="sc-empty"><h3>Aucun cours inscrit</h3></div>';
+  }
+
+  loadGrades();
+</script>
+</body>
+</html>

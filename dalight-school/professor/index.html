@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Espace Professeur — DALIGHT SCHOOL</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/school.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="school-shell">
+
+  <!-- Header -->
+  <header class="school-header">
+    <div class="school-header-logo"><div class="logo-dot"></div>DALIGHT SCHOOL</div>
+    <div class="school-header-title" id="header-title">Espace Professeur</div>
+    <div class="school-header-actions">
+      <div class="header-avatar" id="header-avatar">?</div>
+      <button class="sc-btn sc-btn-secondary sc-btn-sm" onclick="schoolLogout()">Déconnexion</button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside class="school-sidebar" id="sidebar">
+    <div class="school-sidebar-section">
+      <div class="school-sidebar-section-title">Mon cours</div>
+      <a href="index.html" class="sc-nav-item active">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Tableau de bord
+      </a>
+      <a href="materials.html" class="sc-nav-item">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+        Documents
+      </a>
+      <a href="assignments.html" class="sc-nav-item">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>
+        Devoirs
+      </a>
+      <a href="exams.html" class="sc-nav-item">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Examens
+      </a>
+      <a href="grades.html" class="sc-nav-item">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Notes
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="school-main">
+    <div id="main-content">
+      <div class="sc-skeleton" style="height:120px;margin-bottom:1.5rem;"></div>
+      <div class="sc-skeleton" style="height:300px;"></div>
+    </div>
+  </main>
+</div>
+
+<!-- Add Assignment Modal -->
+<div class="sc-modal-overlay" id="modal-assignment">
+  <div class="sc-modal">
+    <div class="sc-modal-header">
+      <div class="sc-modal-title">Nouveau devoir</div>
+      <button class="sc-modal-close" onclick="closeModal('modal-assignment')">×</button>
+    </div>
+    <div class="sc-modal-body">
+      <div class="sc-form-group">
+        <label class="sc-label">Titre <span>*</span></label>
+        <input class="sc-input" id="assign-title" placeholder="Titre du devoir">
+      </div>
+      <div class="sc-form-group">
+        <label class="sc-label">Instructions</label>
+        <textarea class="sc-textarea" id="assign-instructions" placeholder="Décrivez le devoir…"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="sc-form-group">
+          <label class="sc-label">Date limite</label>
+          <input class="sc-input" id="assign-due" type="datetime-local">
+        </div>
+        <div class="sc-form-group">
+          <label class="sc-label">Note max</label>
+          <input class="sc-input" id="assign-max" type="number" value="100" min="1">
+        </div>
+      </div>
+    </div>
+    <div class="sc-modal-footer">
+      <button class="sc-btn sc-btn-secondary" onclick="closeModal('modal-assignment')">Annuler</button>
+      <button class="sc-btn sc-btn-primary" onclick="saveAssignment()">Créer le devoir</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/school-core.js"></script>
+<script>
+  const session = requireSchoolSession('professor');
+  if (!session) throw new Error('Not logged in');
+  const sb = window.schoolSb;
+
+  document.getElementById('header-avatar').textContent  = schoolInitials(session.name);
+  document.getElementById('header-title').textContent   = `Professeur — ${session.name.split(' ')[0]}`;
+
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  async function loadDashboard() {
+    const main = document.getElementById('main-content');
+
+    if (!session.course_id) {
+      main.innerHTML = `<div class="sc-empty"><svg width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 14l9-5-9-5-9 5 9 5z"/></svg><h3>Aucun cours assigné</h3><p>Contactez l'administrateur pour être assigné à un cours.</p></div>`;
+      return;
+    }
+
+    const course = session.course;
+
+    // Load data in parallel
+    const [{ data: enrollments }, { data: docs }, { data: assignments }, { data: exams }, { data: submissions }] = await Promise.all([
+      sb.from('dalightschool_enrollments').select('*, student:dalightschool_students(*)').eq('course_id', session.course_id),
+      sb.from('dalightschool_documents').select('*').eq('course_id', session.course_id).order('created_at', { ascending: false }),
+      sb.from('dalightschool_assignments').select('*').eq('course_id', session.course_id).eq('is_active', true).order('due_date'),
+      sb.from('dalightschool_exams').select('*').eq('course_id', session.course_id).order('created_at', { ascending: false }),
+      sb.from('dalightschool_submissions').select('*').not('grade', 'is', null),
+    ]);
+
+    const students  = (enrollments || []).map(e => e.student).filter(Boolean);
+    const pendingSubs = (await sb.from('dalightschool_submissions').select('*').in('assignment_id', (assignments||[]).map(a=>a.id)).is('grade', null)).data || [];
+
+    const studentRows = students.slice(0,5).map(s => `
+      <tr>
+        <td><div style="display:flex;align-items:center;gap:.6rem;">${schoolAvatarHTML(s.name, s.avatar_url, 30, course?.color||'#4f46e5')}<span style="font-weight:500;">${s.name}</span></div></td>
+        <td><code style="font-size:.78rem;background:var(--sc-bg);padding:.15rem .4rem;border-radius:4px;">${s.code_acces}</code></td>
+        <td><span class="sc-badge sc-badge-green">Actif</span></td>
+      </tr>`).join('');
+
+    main.innerHTML = `
+      <!-- Course Banner -->
+      <div style="background:linear-gradient(135deg,${course?.color||'#4f46e5'},${course?.color||'#4f46e5'}cc);border-radius:20px;padding:1.75rem 2rem;color:#fff;margin-bottom:2rem;animation:slideUp .3s ease;">
+        <div style="font-size:.8rem;opacity:.7;">Votre cours</div>
+        <div style="font-size:1.6rem;font-weight:800;">${course?.name||'—'}</div>
+        <div style="font-size:.9rem;opacity:.8;">${course?.description||''}</div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem;">
+          <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:99px;font-size:.75rem;">👥 ${students.length} étudiants</span>
+          <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:99px;font-size:.75rem;">📄 ${(docs||[]).length} documents</span>
+          <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:99px;font-size:.75rem;">📝 ${(assignments||[]).length} devoirs</span>
+          <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:99px;font-size:.75rem;">📋 ${(exams||[]).length} examens</span>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="sc-stats">
+        <div class="sc-stat"><div class="sc-stat-icon" style="background:#e0e7ff;"><svg width="22" height="22" fill="none" stroke="#4f46e5" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div><div><div class="sc-stat-value">${students.length}</div><div class="sc-stat-label">Étudiants</div></div></div>
+        <div class="sc-stat" style="animation-delay:.05s"><div class="sc-stat-icon" style="background:#fef3c7;"><svg width="22" height="22" fill="none" stroke="#f59e0b" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div><div class="sc-stat-value">${pendingSubs.length}</div><div class="sc-stat-label">Devoirs à noter</div></div></div>
+        <div class="sc-stat" style="animation-delay:.1s"><div class="sc-stat-icon" style="background:#dcfce7;"><svg width="22" height="22" fill="none" stroke="#10b981" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg></div><div><div class="sc-stat-value">${(docs||[]).length}</div><div class="sc-stat-label">Documents</div></div></div>
+        <div class="sc-stat" style="animation-delay:.15s"><div class="sc-stat-icon" style="background:#ede9fe;"><svg width="22" height="22" fill="none" stroke="#8b5cf6" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg></div><div><div class="sc-stat-value">${(assignments||[]).length}</div><div class="sc-stat-label">Devoirs actifs</div></div></div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="sc-section-title">⚡ Actions rapides</div>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:2rem;">
+        <a href="materials.html" class="sc-btn sc-btn-secondary">📄 Gérer les documents</a>
+        <a href="assignments.html" class="sc-btn sc-btn-secondary">📝 Corriger les devoirs</a>
+        <a href="exams.html" class="sc-btn sc-btn-secondary">📋 Gérer les examens</a>
+        <a href="grades.html" class="sc-btn sc-btn-secondary">⭐ Saisir des notes</a>
+        <button class="sc-btn sc-btn-primary" onclick="document.getElementById('modal-assignment').classList.add('open')">+ Nouveau devoir</button>
+      </div>
+
+      <!-- Students -->
+      <div class="sc-section-title">👥 Mes étudiants (${students.length})</div>
+      <div class="sc-table-wrap" style="margin-bottom:2rem;">
+        <table class="sc-table">
+          <thead><tr><th>Nom</th><th>Code d'accès</th><th>Statut</th></tr></thead>
+          <tbody>${studentRows || '<tr><td colspan="3" style="text-align:center;color:var(--sc-muted);padding:2rem;">Aucun étudiant inscrit</td></tr>'}</tbody>
+        </table>
+      </div>
+      ${students.length > 5 ? `<a href="grades.html" style="font-size:.85rem;color:var(--sc-primary);">Voir tous les étudiants →</a>` : ''}
+    `;
+  }
+
+  async function saveAssignment() {
+    const title = document.getElementById('assign-title').value.trim();
+    if (!title) { showSchoolToast('Le titre est requis.', 'warning'); return; }
+
+    const { error } = await sb.from('dalightschool_assignments').insert({
+      course_id:    session.course_id,
+      title,
+      instructions: document.getElementById('assign-instructions').value.trim() || null,
+      due_date:     document.getElementById('assign-due').value || null,
+      max_score:    parseInt(document.getElementById('assign-max').value) || 100,
+      is_active:    true,
+    });
+
+    if (error) { showSchoolToast('Erreur: ' + error.message, 'error'); return; }
+    showSchoolToast('Devoir créé avec succès !', 'success');
+    closeModal('modal-assignment');
+    loadDashboard();
+  }
+
+  loadDashboard();
+</script>
+</body>
+</html>

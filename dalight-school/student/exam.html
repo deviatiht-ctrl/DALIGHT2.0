@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Examen — DALIGHT SCHOOL</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/school.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="exam-wrapper">
+  <!-- Timer bar -->
+  <div class="sc-exam-timer" id="exam-timer" style="display:none;">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    Temps restant: <span id="timer-display">--:--</span>
+    <span style="margin-left:auto;font-size:.8rem;font-weight:400;" id="progress-info"></span>
+  </div>
+
+  <div style="max-width:720px;margin:0 auto;padding:2rem 1rem;" id="exam-container">
+    <div class="sc-skeleton" style="height:100px;margin-bottom:1.5rem;"></div>
+    <div class="sc-skeleton" style="height:300px;"></div>
+  </div>
+</div>
+
+<script src="../js/school-core.js"></script>
+<script>
+  const session = requireSchoolSession('student');
+  if (!session) throw new Error('Not logged in');
+
+  const sb = window.schoolSb;
+  const params = new URLSearchParams(location.search);
+  const examId = params.get('id');
+  if (!examId) { window.location.href = 'index.html'; }
+
+  let exam       = null;
+  let answers    = {};
+  let timerInt   = null;
+  let resultId   = null;
+
+  async function loadExam() {
+    const container = document.getElementById('exam-container');
+
+    const [{ data: e }, { data: existing }] = await Promise.all([
+      sb.from('dalightschool_exams').select('*').eq('id', examId).single(),
+      sb.from('dalightschool_exam_results').select('*').eq('exam_id', examId).eq('student_id', session.id).single(),
+    ]);
+
+    if (!e) { container.innerHTML = '<div class="sc-empty"><h3>Examen introuvable</h3></div>'; return; }
+    exam = e;
+
+    // Already submitted
+    if (existing?.is_submitted) {
+      showResultsPage(existing);
+      return;
+    }
+
+    // Start or resume
+    if (!existing) {
+      const { data: created } = await sb.from('dalightschool_exam_results').insert({
+        exam_id:    examId,
+        student_id: session.id,
+        answers:    {},
+        started_at: new Date().toISOString(),
+      }).select().single();
+      resultId = created?.id;
+    } else {
+      resultId = existing.id;
+      answers  = existing.answers || {};
+    }
+
+    // Show exam
+    document.getElementById('exam-timer').style.display = 'flex';
+    startTimer(e.duration_minutes * 60);
+
+    const questions = e.questions || [];
+    container.innerHTML = `
+      <div style="margin-bottom:2rem;">
+        <h1 style="font-size:1.4rem;font-weight:800;">${e.title}</h1>
+        ${e.instructions ? `<div style="font-size:.9rem;color:var(--sc-muted);margin-top:.4rem;">${e.instructions}</div>` : ''}
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.75rem;">
+          <span class="sc-badge sc-badge-primary">📋 ${questions.length} questions</span>
+          <span class="sc-badge sc-badge-gray">⏱ ${e.duration_minutes} min</span>
+          <span class="sc-badge sc-badge-gray">👤 ${session.name}</span>
+        </div>
+      </div>
+      <div id="questions-area"></div>
+      <div style="margin-top:2rem;text-align:right;">
+        <button class="sc-btn sc-btn-primary sc-btn-lg" onclick="submitExam()">Soumettre l'examen →</button>
+      </div>`;
+
+    renderQuestions(questions);
+  }
+
+  function renderQuestions(questions) {
+    document.getElementById('questions-area').innerHTML = questions.map((q, qi) => {
+      const ans = answers[q.id];
+      if (q.type === 'text') {
+        return `
+          <div class="sc-question" style="animation-delay:${qi*0.06}s">
+            <div class="sc-question-num">Question ${qi+1} · ${q.points} pt(s)</div>
+            <div class="sc-question-text">${q.text}</div>
+            <textarea class="sc-textarea" id="ans-${q.id}" placeholder="Votre réponse…" onchange="saveAnswer(${q.id},this.value)">${ans||''}</textarea>
+          </div>`;
+      } else if (q.type === 'truefalse') {
+        return `
+          <div class="sc-question" style="animation-delay:${qi*0.06}s">
+            <div class="sc-question-num">Question ${qi+1} · ${q.points} pt(s)</div>
+            <div class="sc-question-text">${q.text}</div>
+            ${['Vrai','Faux'].map((label,i) => `
+              <div class="sc-option ${ans==i?'selected':''}" onclick="selectOption(${q.id},${i},this)">
+                <input type="radio" name="q-${q.id}" ${ans==i?'checked':''} style="margin:0;flex-shrink:0;"> ${label}
+              </div>`).join('')}
+          </div>`;
+      } else {
+        return `
+          <div class="sc-question" style="animation-delay:${qi*0.06}s">
+            <div class="sc-question-num">Question ${qi+1} · ${q.points} pt(s)</div>
+            <div class="sc-question-text">${q.text}</div>
+            ${(q.options||[]).map((opt,i) => `
+              <div class="sc-option ${ans==i?'selected':''}" onclick="selectOption(${q.id},${i},this)">
+                <input type="radio" name="q-${q.id}" ${ans==i?'checked':''} style="margin:0;flex-shrink:0;"> <strong>${['A','B','C','D'][i]}.</strong> ${opt}
+              </div>`).join('')}
+          </div>`;
+      }
+    }).join('');
+    updateProgress();
+  }
+
+  function selectOption(qId, value, el) {
+    el.closest('.sc-question').querySelectorAll('.sc-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    saveAnswer(qId, value);
+  }
+
+  function saveAnswer(qId, value) {
+    answers[qId] = value;
+    updateProgress();
+    sb.from('dalightschool_exam_results').update({ answers }).eq('id', resultId);
+  }
+
+  function updateProgress() {
+    const total     = exam.questions.length;
+    const answered  = Object.keys(answers).length;
+    document.getElementById('progress-info').textContent = `${answered}/${total} répondues`;
+  }
+
+  function startTimer(seconds) {
+    let remaining = seconds;
+    const display = document.getElementById('timer-display');
+    const timerEl = document.getElementById('exam-timer');
+
+    timerInt = setInterval(() => {
+      remaining--;
+      const m = String(Math.floor(remaining / 60)).padStart(2, '0');
+      const s = String(remaining % 60).padStart(2, '0');
+      display.textContent = `${m}:${s}`;
+      if (remaining <= 300) timerEl.classList.add('urgent');
+      if (remaining <= 0)   { clearInterval(timerInt); submitExam(true); }
+    }, 1000);
+  }
+
+  async function submitExam(autoSubmit = false) {
+    if (!autoSubmit && !confirm('Soumettre l\'examen ? Cette action est irréversible.')) return;
+
+    clearInterval(timerInt);
+
+    // Calculate score
+    let score = 0, totalPoints = 0;
+    exam.questions.forEach(q => {
+      totalPoints += q.points || 1;
+      const ans = answers[q.id];
+      if (q.type !== 'text' && ans != null && parseInt(ans) === q.correct) {
+        score += q.points || 1;
+      }
+    });
+    const pct = Math.round((score / Math.max(totalPoints, 1)) * 100);
+
+    await sb.from('dalightschool_exam_results').update({
+      answers,
+      score:        pct,
+      submitted_at: new Date().toISOString(),
+      is_submitted: true,
+    }).eq('id', resultId);
+
+    // Add grade
+    await sb.from('dalightschool_grades').insert({
+      student_id: session.id,
+      course_id:  exam.course_id,
+      type:       'exam',
+      title:      exam.title,
+      grade:      pct,
+      max_grade:  100,
+    });
+
+    showResultsPage({ score: pct, submitted_at: new Date().toISOString() });
+  }
+
+  function showResultsPage(result) {
+    document.getElementById('exam-timer').style.display = 'none';
+    const color = schoolScoreColor(result.score, 100);
+    const msg   = result.score >= 90 ? '🏆 Excellent !' : result.score >= 75 ? '⭐ Bien !' : result.score >= 60 ? '📚 Passable' : '⚠️ À retravailler';
+    document.getElementById('exam-container').innerHTML = `
+      <div style="text-align:center;padding:3rem 1rem;animation:scaleIn .4s ease;">
+        <div style="font-size:5rem;margin-bottom:1rem;">${result.score >= 75 ? '🎉' : '📝'}</div>
+        <h1 style="font-size:1.5rem;font-weight:800;margin-bottom:.5rem;">Examen soumis !</h1>
+        <div style="font-size:4rem;font-weight:800;color:${color};margin:.5rem 0;">${result.score}%</div>
+        <div style="font-size:1rem;color:var(--sc-muted);margin-bottom:2rem;">${msg}</div>
+        <a href="index.html" class="sc-btn sc-btn-primary sc-btn-lg">← Retour au tableau de bord</a>
+      </div>`;
+  }
+
+  loadExam();
+</script>
+</body>
+</html>

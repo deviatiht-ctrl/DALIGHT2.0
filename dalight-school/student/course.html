@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cours — DALIGHT SCHOOL</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/school.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="school-shell">
+
+  <!-- Header -->
+  <header class="school-header">
+    <div class="school-header-logo">
+      <div class="logo-dot"></div>
+      DALIGHT SCHOOL
+    </div>
+    <div class="school-header-title" id="course-name-header">Cours</div>
+    <div class="school-header-actions">
+      <a href="index.html" class="sc-btn sc-btn-secondary sc-btn-sm">← Retour</a>
+      <button class="sc-btn sc-btn-secondary sc-btn-sm" onclick="schoolLogout()">Déconnexion</button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside class="school-sidebar" id="sidebar">
+    <div class="school-sidebar-section">
+      <div class="school-sidebar-section-title">Navigation</div>
+      <a href="index.html" class="sc-nav-item">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Tableau de bord
+      </a>
+      <a href="grades.html" class="sc-nav-item">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Mes Notes
+      </a>
+    </div>
+    <div class="school-sidebar-section">
+      <div class="school-sidebar-section-title">Sections</div>
+      <a href="#documents" class="sc-nav-item" onclick="scrollTo('documents')">📄 Documents</a>
+      <a href="#assignments" class="sc-nav-item" onclick="scrollTo('assignments')">📝 Devoirs</a>
+      <a href="#exams" class="sc-nav-item" onclick="scrollTo('exams')">📋 Examens</a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="school-main" id="main-content">
+    <div class="sc-skeleton" style="height:120px;margin-bottom:1.5rem;"></div>
+    <div class="sc-skeleton" style="height:300px;"></div>
+  </main>
+</div>
+
+<!-- Submit Assignment Modal -->
+<div class="sc-modal-overlay" id="submit-modal">
+  <div class="sc-modal">
+    <div class="sc-modal-header">
+      <div class="sc-modal-title">Remettre le devoir</div>
+      <button class="sc-modal-close" onclick="closeSubmitModal()">×</button>
+    </div>
+    <div class="sc-modal-body">
+      <div class="sc-form-group">
+        <label class="sc-label">Titre du devoir</label>
+        <div id="submit-assignment-title" style="font-weight:600;padding:.5rem;background:var(--sc-bg);border-radius:6px;"></div>
+      </div>
+      <div class="sc-form-group">
+        <label class="sc-label">Réponse écrite <span style="color:var(--sc-muted);font-weight:400;">(optionnel si fichier)</span></label>
+        <textarea class="sc-textarea" id="submit-text" placeholder="Écrivez votre réponse ici..."></textarea>
+      </div>
+      <div class="sc-form-group">
+        <label class="sc-label">Fichier (PDF, image)</label>
+        <div class="sc-upload-zone" onclick="document.getElementById('submit-file').click()">
+          <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto .5rem;display:block;opacity:.4"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          <div id="submit-file-name">Cliquez ou glissez votre fichier ici</div>
+        </div>
+        <input type="file" id="submit-file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none" onchange="onFileSelect(this)">
+      </div>
+    </div>
+    <div class="sc-modal-footer">
+      <button class="sc-btn sc-btn-secondary" onclick="closeSubmitModal()">Annuler</button>
+      <button class="sc-btn sc-btn-primary" id="btn-submit-assign" onclick="submitAssignment()">Remettre</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/school-core.js"></script>
+<script>
+  const session = requireSchoolSession('student');
+  if (!session) throw new Error('Not logged in');
+
+  const sb = window.schoolSb;
+  const params = new URLSearchParams(location.search);
+  const courseId = params.get('id');
+  if (!courseId) { window.location.href = 'index.html'; }
+
+  let currentAssignmentId = null;
+
+  async function loadCourse() {
+    const main = document.getElementById('main-content');
+
+    const [{ data: course }, { data: docs }, { data: assignments }, { data: exams }, { data: submissions }, { data: results }] = await Promise.all([
+      sb.from('dalightschool_courses').select('*').eq('id', courseId).single(),
+      sb.from('dalightschool_documents').select('*').eq('course_id', courseId).eq('is_visible', true).order('created_at', { ascending: false }),
+      sb.from('dalightschool_assignments').select('*').eq('course_id', courseId).eq('is_active', true).order('due_date'),
+      sb.from('dalightschool_exams').select('*').eq('course_id', courseId).order('created_at', { ascending: false }),
+      sb.from('dalightschool_submissions').select('*').eq('student_id', session.id),
+      sb.from('dalightschool_exam_results').select('*').eq('student_id', session.id),
+    ]);
+
+    if (!course) { main.innerHTML = '<div class="sc-empty"><h3>Cours introuvable</h3></div>'; return; }
+
+    document.title = `${course.name} — DALIGHT SCHOOL`;
+    document.getElementById('course-name-header').textContent = course.name;
+
+    const submittedMap = Object.fromEntries((submissions || []).map(s => [s.assignment_id, s]));
+    const resultMap    = Object.fromEntries((results || []).map(r => [r.exam_id, r]));
+
+    const fileTypeIcon = t => {
+      const m = { pdf: '📄', video: '🎬', image: '🖼️', link: '🔗', doc: '📝' };
+      return m[t] || '📄';
+    };
+
+    const docRows = (docs || []).map(d => `
+      <a href="${d.file_url || '#'}" target="_blank" class="sc-doc-row" style="cursor:pointer;">
+        <div class="sc-doc-icon" style="background:${course.color}22;font-size:1.3rem;">${fileTypeIcon(d.file_type)}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:.9rem;">${d.title}</div>
+          <div style="font-size:.75rem;color:var(--sc-muted);">${d.description || ''} · ${schoolFmtDate(d.created_at)}</div>
+        </div>
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+      </a>`).join('') || '<div style="color:var(--sc-muted);font-size:.875rem;padding:.5rem;">Aucun document disponible.</div>';
+
+    const assignRows = (assignments || []).map(a => {
+      const sub = submittedMap[a.id];
+      const overdue = a.due_date && !sub && new Date(a.due_date) < new Date();
+      return `
+        <div class="sc-card" style="padding:1.1rem;">
+          <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
+            <div style="flex:1;min-width:200px;">
+              <div style="font-weight:600;">${a.title}</div>
+              <div style="font-size:.78rem;color:var(--sc-muted);margin-top:.2rem;">${a.instructions ? a.instructions.slice(0,100)+'…' : ''} · À rendre: ${schoolFmtDate(a.due_date)}</div>
+            </div>
+            ${sub
+              ? `<span class="sc-badge sc-badge-green">✓ Remis${sub.grade != null ? ' · ' + sub.grade + '/' + (a.max_score||100) : ''}</span>`
+              : overdue
+                ? `<span class="sc-badge sc-badge-red">En retard</span><button class="sc-btn sc-btn-primary sc-btn-sm" onclick="openSubmitModal('${a.id}','${a.title.replace(/'/g,"\\'")}')">Remettre</button>`
+                : `<button class="sc-btn sc-btn-primary sc-btn-sm" onclick="openSubmitModal('${a.id}','${a.title.replace(/'/g,"\\'")}')">Remettre</button>`
+            }
+          </div>
+          ${sub?.feedback ? `<div style="margin-top:.75rem;padding:.6rem;background:#f0fdf4;border-radius:6px;font-size:.8rem;color:#166534;"><strong>Feedback:</strong> ${sub.feedback}</div>` : ''}
+        </div>`;
+    }).join('') || '<div style="color:var(--sc-muted);font-size:.875rem;padding:.5rem;">Aucun devoir pour le moment.</div>';
+
+    const examRows = (exams || []).map(e => {
+      const res = resultMap[e.id];
+      const now = new Date();
+      const available = e.is_active && (!e.start_at || new Date(e.start_at) <= now) && (!e.end_at || new Date(e.end_at) >= now);
+      return `
+        <div class="sc-card" style="padding:1.1rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
+          <div style="flex:1;min-width:200px;">
+            <div style="font-weight:600;">${e.title}</div>
+            <div style="font-size:.78rem;color:var(--sc-muted);margin-top:.2rem;">Durée: ${e.duration_minutes} min · ${e.questions?.length||0} questions</div>
+          </div>
+          ${res?.is_submitted
+            ? `<span class="sc-badge sc-badge-green">✓ Complété · ${res.score != null ? res.score + '%' : ''}</span>`
+            : available
+              ? `<a href="exam.html?id=${e.id}" class="sc-btn sc-btn-primary sc-btn-sm">Commencer l'examen →</a>`
+              : `<span class="sc-badge sc-badge-gray">${!e.is_active ? 'Inactif' : 'Terminé'}</span>`
+          }
+        </div>`;
+    }).join('') || '<div style="color:var(--sc-muted);font-size:.875rem;padding:.5rem;">Aucun examen pour le moment.</div>';
+
+    main.innerHTML = `
+      <!-- Course Header -->
+      <div style="background:linear-gradient(135deg,${course.color},${course.color}cc);border-radius:20px;padding:1.75rem 2rem;color:#fff;margin-bottom:2rem;animation:slideUp .3s ease;">
+        <div style="font-size:.8rem;opacity:.7;margin-bottom:.25rem;">Code: ${course.code}</div>
+        <div style="font-size:1.6rem;font-weight:800;">${course.name}</div>
+        <div style="font-size:.9rem;opacity:.8;margin-top:.25rem;">${course.description || ''}</div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem;">
+          <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:99px;font-size:.75rem;">📄 ${(docs||[]).length} documents</span>
+          <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:99px;font-size:.75rem;">📝 ${(assignments||[]).length} devoirs</span>
+          <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:99px;font-size:.75rem;">📋 ${(exams||[]).length} examens</span>
+        </div>
+      </div>
+
+      <!-- Documents -->
+      <div id="documents" class="sc-section-title">📄 Documents du cours</div>
+      <div style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:2rem;">${docRows}</div>
+
+      <!-- Assignments -->
+      <div id="assignments" class="sc-section-title">📝 Devoirs</div>
+      <div style="display:flex;flex-direction:column;gap:.75rem;margin-bottom:2rem;">${assignRows}</div>
+
+      <!-- Exams -->
+      <div id="exams" class="sc-section-title">📋 Examens en ligne</div>
+      <div style="display:flex;flex-direction:column;gap:.75rem;">${examRows}</div>
+    `;
+  }
+
+  function openSubmitModal(assignId, title) {
+    currentAssignmentId = assignId;
+    document.getElementById('submit-assignment-title').textContent = title;
+    document.getElementById('submit-text').value = '';
+    document.getElementById('submit-file-name').textContent = 'Cliquez ou glissez votre fichier ici';
+    document.getElementById('submit-modal').classList.add('open');
+  }
+
+  function closeSubmitModal() {
+    document.getElementById('submit-modal').classList.remove('open');
+    currentAssignmentId = null;
+  }
+
+  function onFileSelect(input) {
+    if (input.files[0]) {
+      document.getElementById('submit-file-name').textContent = input.files[0].name;
+    }
+  }
+
+  async function submitAssignment() {
+    const text = document.getElementById('submit-text').value.trim();
+    const file = document.getElementById('submit-file').files[0];
+    if (!text && !file) { showSchoolToast('Veuillez écrire une réponse ou joindre un fichier.', 'warning'); return; }
+
+    const btn = document.getElementById('btn-submit-assign');
+    btn.disabled = true; btn.textContent = 'Envoi…';
+
+    let fileUrl = null;
+    if (file) {
+      const ext = file.name.split('.').pop();
+      const path = `${session.id}/${currentAssignmentId}.${ext}`;
+      const { error: upErr } = await schoolSb.storage.from('school-submissions').upload(path, file, { upsert: true });
+      if (!upErr) {
+        const { data: urlData } = schoolSb.storage.from('school-submissions').getPublicUrl(path);
+        fileUrl = urlData?.publicUrl || null;
+      }
+    }
+
+    const { error } = await sb.from('dalightschool_submissions').upsert({
+      assignment_id: currentAssignmentId,
+      student_id:    session.id,
+      text_content:  text || null,
+      file_url:      fileUrl,
+      submitted_at:  new Date().toISOString(),
+    }, { onConflict: 'assignment_id,student_id' });
+
+    if (error) {
+      showSchoolToast('Erreur lors de la soumission: ' + error.message, 'error');
+    } else {
+      showSchoolToast('Devoir remis avec succès !', 'success');
+      closeSubmitModal();
+      loadCourse();
+    }
+
+    btn.disabled = false; btn.textContent = 'Remettre';
+  }
+
+  loadCourse();
+</script>
+</body>
+</html>
