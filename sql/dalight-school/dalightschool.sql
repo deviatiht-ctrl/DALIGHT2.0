@@ -1,10 +1,12 @@
 -- =====================================================
--- DALIGHT SCHOOL — SQL Setup
+-- DALIGHT SCHOOL — SQL Setup (idempotent — safe to re-run)
 -- Prefix: dalightschool_
 -- Run this in Supabase SQL Editor
 -- =====================================================
 
--- ── Cours ────────────────────────────────────────────
+-- ── 1. TABLES ─────────────────────────────────────────
+-- (CREATE TABLE IF NOT EXISTS = pas d'erreur si déjà existant)
+
 CREATE TABLE IF NOT EXISTS dalightschool_courses (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name        TEXT NOT NULL,
@@ -17,7 +19,6 @@ CREATE TABLE IF NOT EXISTS dalightschool_courses (
   updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ── Etudiants ─────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS dalightschool_students (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   code_acces  TEXT UNIQUE NOT NULL,
@@ -30,7 +31,6 @@ CREATE TABLE IF NOT EXISTS dalightschool_students (
   updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ── Professeurs ───────────────────────────────────────
 CREATE TABLE IF NOT EXISTS dalightschool_professors (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   code_acces  TEXT UNIQUE NOT NULL,
@@ -44,7 +44,6 @@ CREATE TABLE IF NOT EXISTS dalightschool_professors (
   updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ── Inscriptions (etudiant <-> cours) ─────────────────
 CREATE TABLE IF NOT EXISTS dalightschool_enrollments (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   student_id  UUID NOT NULL REFERENCES dalightschool_students(id) ON DELETE CASCADE,
@@ -53,21 +52,19 @@ CREATE TABLE IF NOT EXISTS dalightschool_enrollments (
   UNIQUE(student_id, course_id)
 );
 
--- ── Documents de cours ────────────────────────────────
 CREATE TABLE IF NOT EXISTS dalightschool_documents (
-  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  course_id      UUID NOT NULL REFERENCES dalightschool_courses(id) ON DELETE CASCADE,
-  title          TEXT NOT NULL,
-  description    TEXT,
-  file_url       TEXT,
-  file_type      TEXT DEFAULT 'pdf',  -- pdf, video, image, link, doc
-  size_bytes     BIGINT,
-  uploaded_by    UUID REFERENCES dalightschool_professors(id),
-  is_visible     BOOLEAN DEFAULT true,
-  created_at     TIMESTAMPTZ DEFAULT NOW()
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  course_id   UUID NOT NULL REFERENCES dalightschool_courses(id) ON DELETE CASCADE,
+  title       TEXT NOT NULL,
+  description TEXT,
+  file_url    TEXT,
+  file_type   TEXT DEFAULT 'pdf',
+  size_bytes  BIGINT,
+  uploaded_by UUID REFERENCES dalightschool_professors(id) ON DELETE SET NULL,
+  is_visible  BOOLEAN DEFAULT true,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ── Devoirs ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS dalightschool_assignments (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   course_id    UUID NOT NULL REFERENCES dalightschool_courses(id) ON DELETE CASCADE,
@@ -79,7 +76,6 @@ CREATE TABLE IF NOT EXISTS dalightschool_assignments (
   created_at   TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ── Soumissions de devoirs ────────────────────────────
 CREATE TABLE IF NOT EXISTS dalightschool_submissions (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   assignment_id UUID NOT NULL REFERENCES dalightschool_assignments(id) ON DELETE CASCADE,
@@ -93,7 +89,6 @@ CREATE TABLE IF NOT EXISTS dalightschool_submissions (
   UNIQUE(assignment_id, student_id)
 );
 
--- ── Examens ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS dalightschool_exams (
   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   course_id        UUID NOT NULL REFERENCES dalightschool_courses(id) ON DELETE CASCADE,
@@ -107,7 +102,6 @@ CREATE TABLE IF NOT EXISTS dalightschool_exams (
   created_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ── Resultats d'examens ───────────────────────────────
 CREATE TABLE IF NOT EXISTS dalightschool_exam_results (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   exam_id      UUID NOT NULL REFERENCES dalightschool_exams(id) ON DELETE CASCADE,
@@ -120,23 +114,21 @@ CREATE TABLE IF NOT EXISTS dalightschool_exam_results (
   UNIQUE(exam_id, student_id)
 );
 
--- ── Notes générales ───────────────────────────────────
 CREATE TABLE IF NOT EXISTS dalightschool_grades (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   student_id  UUID NOT NULL REFERENCES dalightschool_students(id) ON DELETE CASCADE,
   course_id   UUID NOT NULL REFERENCES dalightschool_courses(id) ON DELETE CASCADE,
-  type        TEXT NOT NULL DEFAULT 'manual', -- exam, assignment, attendance, final, manual
+  type        TEXT NOT NULL DEFAULT 'manual',
   title       TEXT,
   grade       NUMERIC NOT NULL,
   max_grade   NUMERIC DEFAULT 100,
   notes       TEXT,
-  graded_by   UUID REFERENCES dalightschool_professors(id),
+  graded_by   UUID REFERENCES dalightschool_professors(id) ON DELETE SET NULL,
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
--- =====================================================
--- RLS Policies
--- =====================================================
+-- ── 2. RLS ACTIVATION ─────────────────────────────────
+-- (ENABLE RLS est idempotent — pas d'erreur si déjà activé)
 
 ALTER TABLE dalightschool_courses       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dalightschool_students      ENABLE ROW LEVEL SECURITY;
@@ -149,49 +141,122 @@ ALTER TABLE dalightschool_exams         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dalightschool_exam_results  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dalightschool_grades        ENABLE ROW LEVEL SECURITY;
 
--- Allow anon read on all (portals use anon key with code_acces check in JS)
-CREATE POLICY "anon read courses"       ON dalightschool_courses       FOR SELECT TO anon USING (true);
-CREATE POLICY "anon read students"      ON dalightschool_students      FOR SELECT TO anon USING (true);
-CREATE POLICY "anon read professors"    ON dalightschool_professors    FOR SELECT TO anon USING (true);
-CREATE POLICY "anon read enrollments"   ON dalightschool_enrollments   FOR SELECT TO anon USING (true);
-CREATE POLICY "anon read documents"     ON dalightschool_documents     FOR SELECT TO anon USING (is_visible = true);
-CREATE POLICY "anon read assignments"   ON dalightschool_assignments   FOR SELECT TO anon USING (is_active = true);
-CREATE POLICY "anon read submissions"   ON dalightschool_submissions   FOR SELECT TO anon USING (true);
-CREATE POLICY "anon read exams"         ON dalightschool_exams         FOR SELECT TO anon USING (true);
-CREATE POLICY "anon read exam_results"  ON dalightschool_exam_results  FOR SELECT TO anon USING (true);
-CREATE POLICY "anon read grades"        ON dalightschool_grades        FOR SELECT TO anon USING (true);
+-- ── 3. POLICIES ───────────────────────────────────────
+-- DROP IF EXISTS avant chaque CREATE pour éviter "policy already exists"
 
--- Allow anon insert/update where needed (submissions, exam results)
-CREATE POLICY "anon insert submissions"      ON dalightschool_submissions   FOR INSERT TO anon WITH CHECK (true);
-CREATE POLICY "anon update submissions"      ON dalightschool_submissions   FOR UPDATE TO anon USING (true);
-CREATE POLICY "anon insert exam_results"     ON dalightschool_exam_results  FOR INSERT TO anon WITH CHECK (true);
-CREATE POLICY "anon update exam_results"     ON dalightschool_exam_results  FOR UPDATE TO anon USING (true);
+-- courses
+DROP POLICY IF EXISTS "anon read courses"  ON dalightschool_courses;
+DROP POLICY IF EXISTS "auth all courses"   ON dalightschool_courses;
+CREATE POLICY "anon read courses" ON dalightschool_courses FOR SELECT TO anon USING (true);
+CREATE POLICY "auth all courses"  ON dalightschool_courses FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
--- Authenticated (admin) can do everything
-CREATE POLICY "auth all courses"       ON dalightschool_courses       FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "auth all students"      ON dalightschool_students      FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "auth all professors"    ON dalightschool_professors    FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "auth all enrollments"   ON dalightschool_enrollments   FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "auth all documents"     ON dalightschool_documents     FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "auth all assignments"   ON dalightschool_assignments   FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "auth all submissions"   ON dalightschool_submissions   FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "auth all exams"         ON dalightschool_exams         FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "auth all exam_results"  ON dalightschool_exam_results  FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "auth all grades"        ON dalightschool_grades        FOR ALL TO authenticated USING (true) WITH CHECK (true);
+-- students
+DROP POLICY IF EXISTS "anon read students" ON dalightschool_students;
+DROP POLICY IF EXISTS "auth all students"  ON dalightschool_students;
+CREATE POLICY "anon read students" ON dalightschool_students FOR SELECT TO anon USING (true);
+CREATE POLICY "auth all students"  ON dalightschool_students FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
--- Professors insert documents, assignments, exams, grades (via anon)
-CREATE POLICY "anon insert documents"   ON dalightschool_documents  FOR INSERT TO anon WITH CHECK (true);
-CREATE POLICY "anon update documents"   ON dalightschool_documents  FOR UPDATE TO anon USING (true);
-CREATE POLICY "anon delete documents"   ON dalightschool_documents  FOR DELETE TO anon USING (true);
+-- professors
+DROP POLICY IF EXISTS "anon read professors" ON dalightschool_professors;
+DROP POLICY IF EXISTS "auth all professors"  ON dalightschool_professors;
+CREATE POLICY "anon read professors" ON dalightschool_professors FOR SELECT TO anon USING (true);
+CREATE POLICY "auth all professors"  ON dalightschool_professors FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- enrollments
+DROP POLICY IF EXISTS "anon read enrollments" ON dalightschool_enrollments;
+DROP POLICY IF EXISTS "auth all enrollments"  ON dalightschool_enrollments;
+CREATE POLICY "anon read enrollments" ON dalightschool_enrollments FOR SELECT TO anon USING (true);
+CREATE POLICY "auth all enrollments"  ON dalightschool_enrollments FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- documents
+DROP POLICY IF EXISTS "anon read documents"   ON dalightschool_documents;
+DROP POLICY IF EXISTS "anon insert documents" ON dalightschool_documents;
+DROP POLICY IF EXISTS "anon update documents" ON dalightschool_documents;
+DROP POLICY IF EXISTS "anon delete documents" ON dalightschool_documents;
+DROP POLICY IF EXISTS "auth all documents"    ON dalightschool_documents;
+CREATE POLICY "anon read documents"   ON dalightschool_documents FOR SELECT TO anon USING (is_visible = true);
+CREATE POLICY "anon insert documents" ON dalightschool_documents FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY "anon update documents" ON dalightschool_documents FOR UPDATE TO anon USING (true);
+CREATE POLICY "anon delete documents" ON dalightschool_documents FOR DELETE TO anon USING (true);
+CREATE POLICY "auth all documents"    ON dalightschool_documents FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- assignments
+DROP POLICY IF EXISTS "anon read assignments"   ON dalightschool_assignments;
+DROP POLICY IF EXISTS "anon insert assignments" ON dalightschool_assignments;
+DROP POLICY IF EXISTS "anon update assignments" ON dalightschool_assignments;
+DROP POLICY IF EXISTS "auth all assignments"    ON dalightschool_assignments;
+CREATE POLICY "anon read assignments"   ON dalightschool_assignments FOR SELECT TO anon USING (is_active = true);
 CREATE POLICY "anon insert assignments" ON dalightschool_assignments FOR INSERT TO anon WITH CHECK (true);
 CREATE POLICY "anon update assignments" ON dalightschool_assignments FOR UPDATE TO anon USING (true);
-CREATE POLICY "anon insert exams"       ON dalightschool_exams       FOR INSERT TO anon WITH CHECK (true);
-CREATE POLICY "anon update exams"       ON dalightschool_exams       FOR UPDATE TO anon USING (true);
-CREATE POLICY "anon insert grades"      ON dalightschool_grades      FOR INSERT TO anon WITH CHECK (true);
-CREATE POLICY "anon update grades"      ON dalightschool_grades      FOR UPDATE TO anon USING (true);
+CREATE POLICY "auth all assignments"    ON dalightschool_assignments FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
--- =====================================================
--- Storage buckets (run separately in Supabase dashboard if needed)
--- =====================================================
--- INSERT INTO storage.buckets (id, name, public) VALUES ('school-documents', 'school-documents', true) ON CONFLICT DO NOTHING;
--- INSERT INTO storage.buckets (id, name, public) VALUES ('school-submissions', 'school-submissions', true) ON CONFLICT DO NOTHING;
+-- submissions
+DROP POLICY IF EXISTS "anon read submissions"   ON dalightschool_submissions;
+DROP POLICY IF EXISTS "anon insert submissions" ON dalightschool_submissions;
+DROP POLICY IF EXISTS "anon update submissions" ON dalightschool_submissions;
+DROP POLICY IF EXISTS "auth all submissions"    ON dalightschool_submissions;
+CREATE POLICY "anon read submissions"   ON dalightschool_submissions FOR SELECT TO anon USING (true);
+CREATE POLICY "anon insert submissions" ON dalightschool_submissions FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY "anon update submissions" ON dalightschool_submissions FOR UPDATE TO anon USING (true);
+CREATE POLICY "auth all submissions"    ON dalightschool_submissions FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- exams
+DROP POLICY IF EXISTS "anon read exams"   ON dalightschool_exams;
+DROP POLICY IF EXISTS "anon insert exams" ON dalightschool_exams;
+DROP POLICY IF EXISTS "anon update exams" ON dalightschool_exams;
+DROP POLICY IF EXISTS "auth all exams"    ON dalightschool_exams;
+CREATE POLICY "anon read exams"   ON dalightschool_exams FOR SELECT TO anon USING (true);
+CREATE POLICY "anon insert exams" ON dalightschool_exams FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY "anon update exams" ON dalightschool_exams FOR UPDATE TO anon USING (true);
+CREATE POLICY "auth all exams"    ON dalightschool_exams FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- exam_results
+DROP POLICY IF EXISTS "anon read exam_results"   ON dalightschool_exam_results;
+DROP POLICY IF EXISTS "anon insert exam_results" ON dalightschool_exam_results;
+DROP POLICY IF EXISTS "anon update exam_results" ON dalightschool_exam_results;
+DROP POLICY IF EXISTS "auth all exam_results"    ON dalightschool_exam_results;
+CREATE POLICY "anon read exam_results"   ON dalightschool_exam_results FOR SELECT TO anon USING (true);
+CREATE POLICY "anon insert exam_results" ON dalightschool_exam_results FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY "anon update exam_results" ON dalightschool_exam_results FOR UPDATE TO anon USING (true);
+CREATE POLICY "auth all exam_results"    ON dalightschool_exam_results FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- grades
+DROP POLICY IF EXISTS "anon read grades"   ON dalightschool_grades;
+DROP POLICY IF EXISTS "anon insert grades" ON dalightschool_grades;
+DROP POLICY IF EXISTS "anon update grades" ON dalightschool_grades;
+DROP POLICY IF EXISTS "auth all grades"    ON dalightschool_grades;
+CREATE POLICY "anon read grades"   ON dalightschool_grades FOR SELECT TO anon USING (true);
+CREATE POLICY "anon insert grades" ON dalightschool_grades FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY "anon update grades" ON dalightschool_grades FOR UPDATE TO anon USING (true);
+CREATE POLICY "auth all grades"    ON dalightschool_grades FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- ── 4. STORAGE BUCKETS ────────────────────────────────
+-- (ON CONFLICT DO NOTHING = pas d'erreur si déjà existant)
+
+INSERT INTO storage.buckets (id, name, public)
+  VALUES ('school-documents', 'school-documents', true)
+  ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO storage.buckets (id, name, public)
+  VALUES ('school-submissions', 'school-submissions', true)
+  ON CONFLICT (id) DO NOTHING;
+
+-- Storage policies
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE policyname = 'school-documents public read' AND tablename = 'objects'
+  ) THEN
+    CREATE POLICY "school-documents public read"
+      ON storage.objects FOR SELECT TO public
+      USING (bucket_id IN ('school-documents', 'school-submissions'));
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE policyname = 'school-documents anon upload' AND tablename = 'objects'
+  ) THEN
+    CREATE POLICY "school-documents anon upload"
+      ON storage.objects FOR INSERT TO anon
+      WITH CHECK (bucket_id IN ('school-documents', 'school-submissions'));
+  END IF;
+END $$;
