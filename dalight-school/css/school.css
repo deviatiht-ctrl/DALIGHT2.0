@@ -522,7 +522,21 @@ input, select, textarea { font-family: inherit; }
   .sc-courses-grid { grid-template-columns: 1fr; }
   .sc-stats { grid-template-columns: 1fr 1fr; }
   .school-header-logo { width: auto; }
+  .mobile-menu-btn { display: flex !important; }
+  .header-left { display: flex; align-items: center; gap: .75rem; }
+  .header-right { display: flex; align-items: center; gap: .75rem; }
+  .page-title h1 { font-size: 1.25rem; }
+  .page-title p { font-size: .85rem; }
+  .sc-page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  .sc-page-header button { width: 100%; }
 }
+
+/* ── Header Layout ─────────────────────────────────────── */
+.header-left { display: flex; align-items: center; gap: 1rem; }
+.header-right { display: flex; align-items: center; gap: .75rem; }
+.mobile-menu-btn { display: none; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: transparent; cursor: pointer; border-radius: 8px; color: var(--sc-text); transition: background .15s; }
+.mobile-menu-btn:hover { background: var(--sc-bg); }
+.page-title { flex: 1; }
 
 /* ── Color helpers ─────────────────────────────────────── */
 .text-primary { color: var(--sc-primary); }

@@ -14,9 +14,13 @@
 
   <!-- Header -->
   <header class="school-header">
-    <div class="school-header-logo"><div class="logo-dot"></div>DALIGHT SCHOOL</div>
-    <div class="school-header-title" id="header-title">Espace Professeur</div>
-    <div class="school-header-actions">
+    <div class="header-left">
+      <button class="mobile-menu-btn" onclick="toggleSidebar()">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <div class="school-header-logo"><div class="logo-dot"></div>DALIGHT SCHOOL</div>
+    </div>
+    <div class="header-right">
       <div class="header-avatar" id="header-avatar">?</div>
       <button class="sc-btn sc-btn-secondary sc-btn-sm" onclick="schoolLogout()">Déconnexion</button>
     </div>
@@ -100,6 +104,10 @@
 
   document.getElementById('header-avatar').textContent  = schoolInitials(session.name);
   document.getElementById('header-title').textContent   = `Professeur — ${session.name.split(' ')[0]}`;
+
+  function toggleSidebar() {
+    document.querySelector('.school-sidebar').classList.toggle('open');
+  }
 
   function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 

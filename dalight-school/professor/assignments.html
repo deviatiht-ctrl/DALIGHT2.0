@@ -12,9 +12,13 @@
 <body>
 <div class="school-shell">
   <header class="school-header">
-    <div class="school-header-logo"><div class="logo-dot"></div>DALIGHT SCHOOL</div>
-    <div class="school-header-title">Devoirs &amp; Corrections</div>
-    <div class="school-header-actions">
+    <div class="header-left">
+      <button class="mobile-menu-btn" onclick="toggleSidebar()">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <div class="school-header-logo"><div class="logo-dot"></div>DALIGHT SCHOOL</div>
+    </div>
+    <div class="header-right">
       <div class="header-avatar" id="header-avatar">?</div>
       <button class="sc-btn sc-btn-secondary sc-btn-sm" onclick="schoolLogout()">Déconnexion</button>
     </div>
@@ -31,7 +35,7 @@
   </aside>
   <main class="school-main">
     <div class="sc-page-header">
-      <div><h1><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:text-bottom;margin-right:.3rem;"><path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>Devoirs</h1><p>Voir les soumissions et noter les travaux des étudiants</p></div>
+      <div class="page-title"><h1><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:text-bottom;margin-right:.3rem;"><path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>Devoirs</h1><p>Voir les soumissions et noter les travaux des étudiants</p></div>
     </div>
     <div id="assignments-content">
       <div class="sc-skeleton" style="height:200px;margin-bottom:1rem;"></div>
@@ -81,6 +85,10 @@
   if (!session) throw new Error('Not logged in');
   const sb = window.schoolSb;
   document.getElementById('header-avatar').textContent = schoolInitials(session.name);
+
+  function toggleSidebar() {
+    document.querySelector('.school-sidebar').classList.toggle('open');
+  }
 
   let currentSubId = null;
   let currentStudentId = null;
