@@ -80,9 +80,9 @@
         <h1 style="font-size:1.4rem;font-weight:800;">${e.title}</h1>
         ${e.instructions ? `<div style="font-size:.9rem;color:var(--sc-muted);margin-top:.4rem;">${e.instructions}</div>` : ''}
         <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.75rem;">
-          <span class="sc-badge sc-badge-primary">📋 ${questions.length} questions</span>
-          <span class="sc-badge sc-badge-gray">⏱ ${e.duration_minutes} min</span>
-          <span class="sc-badge sc-badge-gray">👤 ${session.name}</span>
+          <span class="sc-badge sc-badge-primary"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:text-bottom;margin-right:.2rem;"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>${questions.length} questions</span>
+          <span class="sc-badge sc-badge-gray"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:text-bottom;margin-right:.2rem;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${e.duration_minutes} min</span>
+          <span class="sc-badge sc-badge-gray"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:text-bottom;margin-right:.2rem;"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${session.name}</span>
         </div>
       </div>
       <div id="questions-area"></div>
@@ -200,10 +200,11 @@
   function showResultsPage(result) {
     document.getElementById('exam-timer').style.display = 'none';
     const color = schoolScoreColor(result.score, 100);
-    const msg   = result.score >= 90 ? '🏆 Excellent !' : result.score >= 75 ? '⭐ Bien !' : result.score >= 60 ? '📚 Passable' : '⚠️ À retravailler';
+    const msg   = result.score >= 90 ? 'Excellent !' : result.score >= 75 ? 'Bien !' : result.score >= 60 ? 'Passable' : 'À retravailler';
+    const icon  = result.score >= 75 ? '<svg width="80" height="80" fill="none" stroke="var(--sc-green)" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>' : '<svg width="80" height="80" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>';
     document.getElementById('exam-container').innerHTML = `
       <div style="text-align:center;padding:3rem 1rem;animation:scaleIn .4s ease;">
-        <div style="font-size:5rem;margin-bottom:1rem;">${result.score >= 75 ? '🎉' : '📝'}</div>
+        <div style="margin-bottom:1rem;">${icon}</div>
         <h1 style="font-size:1.5rem;font-weight:800;margin-bottom:.5rem;">Examen soumis !</h1>
         <div style="font-size:4rem;font-weight:800;color:${color};margin:.5rem 0;">${result.score}%</div>
         <div style="font-size:1rem;color:var(--sc-muted);margin-bottom:2rem;">${msg}</div>

@@ -37,7 +37,7 @@
       <div><h1>Mes Notes</h1><p>Toutes tes évaluations et ta moyenne générale</p></div>
     </div>
     <!-- Overall average card -->
-    <div id="avg-card" class="sc-card" style="margin-bottom:2rem;background:linear-gradient(135deg,#4f46e5,#8b5cf6);color:#fff;border:none;">
+    <div id="avg-card" class="sc-card" style="margin-bottom:2rem;background:linear-gradient(135deg,var(--sc-primary),var(--sc-purple));color:#fff;border:none;">
       <div style="font-size:.85rem;opacity:.8;">Moyenne générale</div>
       <div id="overall-avg" style="font-size:3rem;font-weight:800;line-height:1;margin:.25rem 0;">—</div>
       <div id="overall-label" style="font-size:.9rem;opacity:.8;"></div>
@@ -129,7 +129,7 @@
     const overallAvg = allGrades.length ? (allGrades.reduce((s, g) => s + (g.grade/g.max)*100, 0) / allGrades.length) : null;
     document.getElementById('overall-avg').textContent = overallAvg != null ? overallAvg.toFixed(1) + '%' : '—';
     document.getElementById('overall-label').textContent = overallAvg != null
-      ? (overallAvg >= 90 ? '🏆 Excellent !' : overallAvg >= 75 ? '⭐ Bien' : overallAvg >= 60 ? '📚 Passable' : '⚠️ À améliorer')
+      ? (overallAvg >= 90 ? 'Excellent !' : overallAvg >= 75 ? 'Bien' : overallAvg >= 60 ? 'Passable' : 'À améliorer')
       : 'Aucune note enregistrée';
 
     document.getElementById('grades-content').innerHTML = courseCards || '<div class="sc-empty"><h3>Aucun cours inscrit</h3></div>';

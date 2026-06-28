@@ -31,7 +31,7 @@
   </aside>
   <main class="school-main">
     <div class="sc-page-header">
-      <div><h1>📄 Documents</h1><p>Gérez les ressources pédagogiques de votre cours</p></div>
+      <div><h1><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:text-bottom;margin-right:.3rem;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>Documents</h1><p>Gérez les ressources pédagogiques de votre cours</p></div>
       <button class="sc-btn sc-btn-primary" onclick="openAddModal()">+ Ajouter un document</button>
     </div>
     <div id="docs-grid" style="display:flex;flex-direction:column;gap:.75rem;">
@@ -61,11 +61,11 @@
       <div class="sc-form-group">
         <label class="sc-label">Type</label>
         <select class="sc-select" id="doc-type">
-          <option value="pdf">📄 PDF</option>
-          <option value="video">🎬 Vidéo</option>
-          <option value="image">🖼️ Image</option>
-          <option value="link">🔗 Lien externe</option>
-          <option value="doc">📝 Document Word</option>
+          <option value="pdf">PDF</option>
+          <option value="video">Vidéo</option>
+          <option value="image">Image</option>
+          <option value="link">Lien externe</option>
+          <option value="doc">Document Word</option>
         </select>
       </div>
       <div id="url-section" class="sc-form-group" style="display:none;">
@@ -103,7 +103,16 @@
   function openAddModal()  { document.getElementById('modal-add').classList.add('open'); }
   function closeAddModal() { document.getElementById('modal-add').classList.remove('open'); }
 
-  const fileTypeIcon = t => ({ pdf:'📄', video:'🎬', image:'🖼️', link:'🔗', doc:'📝' }[t] || '📄');
+  const fileTypeIcon = t => {
+    const icons = {
+      pdf: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>',
+      video: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><path d="M7 2v20"/><path d="M17 2v20"/><path d="M2 12h20"/><path d="M2 7h20"/><path d="M2 17h20"/></svg>',
+      image: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>',
+      link: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>',
+      doc: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>'
+    };
+    return icons[t] || icons.doc;
+  };
   const fileTypeBg   = t => ({ pdf:'#fee2e2', video:'#ede9fe', image:'#dcfce7', link:'#dbeafe', doc:'#fef3c7' }[t] || '#f1f5f9');
   const fileTypeCol  = t => ({ pdf:'#991b1b', video:'#5b21b6', image:'#166534', link:'#1e40af', doc:'#92400e' }[t] || '#374151');
 

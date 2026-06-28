@@ -40,9 +40,9 @@
     </div>
     <div class="school-sidebar-section">
       <div class="school-sidebar-section-title">Sections</div>
-      <a href="#documents" class="sc-nav-item" onclick="scrollTo('documents')">📄 Documents</a>
-      <a href="#assignments" class="sc-nav-item" onclick="scrollTo('assignments')">📝 Devoirs</a>
-      <a href="#exams" class="sc-nav-item" onclick="scrollTo('exams')">📋 Examens</a>
+      <a href="#documents" class="sc-nav-item" onclick="scrollTo('documents')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg> Documents</a>
+      <a href="#assignments" class="sc-nav-item" onclick="scrollTo('assignments')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg> Devoirs</a>
+      <a href="#exams" class="sc-nav-item" onclick="scrollTo('exams')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg> Examens</a>
     </div>
   </aside>
 
@@ -118,8 +118,14 @@
     const resultMap    = Object.fromEntries((results || []).map(r => [r.exam_id, r]));
 
     const fileTypeIcon = t => {
-      const m = { pdf: '📄', video: '🎬', image: '🖼️', link: '🔗', doc: '📝' };
-      return m[t] || '📄';
+      const icons = {
+        pdf: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>',
+        video: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><path d="M7 2v20"/><path d="M17 2v20"/><path d="M2 12h20"/><path d="M2 7h20"/><path d="M2 17h20"/></svg>',
+        image: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>',
+        link: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>',
+        doc: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>'
+      };
+      return icons[t] || icons.doc;
     };
 
     const docRows = (docs || []).map(d => `
@@ -143,7 +149,7 @@
               <div style="font-size:.78rem;color:var(--sc-muted);margin-top:.2rem;">${a.instructions ? a.instructions.slice(0,100)+'…' : ''} · À rendre: ${schoolFmtDate(a.due_date)}</div>
             </div>
             ${sub
-              ? `<span class="sc-badge sc-badge-green">✓ Remis${sub.grade != null ? ' · ' + sub.grade + '/' + (a.max_score||100) : ''}</span>`
+              ? `<span class="sc-badge sc-badge-green"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="display:inline;vertical-align:text-bottom;margin-right:.2rem;"><path d="M20 6L9 17l-5-5"/></svg>Remis${sub.grade != null ? ' · ' + sub.grade + '/' + (a.max_score||100) : ''}</span>`
               : overdue
                 ? `<span class="sc-badge sc-badge-red">En retard</span><button class="sc-btn sc-btn-primary sc-btn-sm" onclick="openSubmitModal('${a.id}','${a.title.replace(/'/g,"\\'")}')">Remettre</button>`
                 : `<button class="sc-btn sc-btn-primary sc-btn-sm" onclick="openSubmitModal('${a.id}','${a.title.replace(/'/g,"\\'")}')">Remettre</button>`
@@ -179,22 +185,22 @@
         <div style="font-size:1.6rem;font-weight:800;">${course.name}</div>
         <div style="font-size:.9rem;opacity:.8;margin-top:.25rem;">${course.description || ''}</div>
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem;">
-          <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:99px;font-size:.75rem;">📄 ${(docs||[]).length} documents</span>
-          <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:99px;font-size:.75rem;">📝 ${(assignments||[]).length} devoirs</span>
-          <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:99px;font-size:.75rem;">📋 ${(exams||[]).length} examens</span>
+          <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:99px;font-size:.75rem;display:inline-flex;align-items:center;gap:.3rem;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg> ${(docs||[]).length} documents</span>
+          <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:99px;font-size:.75rem;display:inline-flex;align-items:center;gap:.3rem;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg> ${(assignments||[]).length} devoirs</span>
+          <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:99px;font-size:.75rem;display:inline-flex;align-items:center;gap:.3rem;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg> ${(exams||[]).length} examens</span>
         </div>
       </div>
 
       <!-- Documents -->
-      <div id="documents" class="sc-section-title">📄 Documents du cours</div>
+      <div id="documents" class="sc-section-title"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg> Documents du cours</div>
       <div style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:2rem;">${docRows}</div>
 
       <!-- Assignments -->
-      <div id="assignments" class="sc-section-title">📝 Devoirs</div>
+      <div id="assignments" class="sc-section-title"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg> Devoirs</div>
       <div style="display:flex;flex-direction:column;gap:.75rem;margin-bottom:2rem;">${assignRows}</div>
 
       <!-- Exams -->
-      <div id="exams" class="sc-section-title">📋 Examens en ligne</div>
+      <div id="exams" class="sc-section-title"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg> Examens en ligne</div>
       <div style="display:flex;flex-direction:column;gap:.75rem;">${examRows}</div>
     `;
   }

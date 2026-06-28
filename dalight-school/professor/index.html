@@ -139,10 +139,10 @@
         <div style="font-size:1.6rem;font-weight:800;">${course?.name||'—'}</div>
         <div style="font-size:.9rem;opacity:.8;">${course?.description||''}</div>
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem;">
-          <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:99px;font-size:.75rem;">👥 ${students.length} étudiants</span>
-          <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:99px;font-size:.75rem;">📄 ${(docs||[]).length} documents</span>
-          <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:99px;font-size:.75rem;">📝 ${(assignments||[]).length} devoirs</span>
-          <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:99px;font-size:.75rem;">📋 ${(exams||[]).length} examens</span>
+          <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:99px;font-size:.75rem;display:inline-flex;align-items:center;gap:.3rem;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>${students.length} étudiants</span>
+          <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:99px;font-size:.75rem;display:inline-flex;align-items:center;gap:.3rem;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>${(docs||[]).length} documents</span>
+          <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:99px;font-size:.75rem;display:inline-flex;align-items:center;gap:.3rem;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>${(assignments||[]).length} devoirs</span>
+          <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:99px;font-size:.75rem;display:inline-flex;align-items:center;gap:.3rem;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>${(exams||[]).length} examens</span>
         </div>
       </div>
 
@@ -155,17 +155,17 @@
       </div>
 
       <!-- Quick Actions -->
-      <div class="sc-section-title">⚡ Actions rapides</div>
+      <div class="sc-section-title"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Actions rapides</div>
       <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:2rem;">
-        <a href="materials.html" class="sc-btn sc-btn-secondary">📄 Gérer les documents</a>
-        <a href="assignments.html" class="sc-btn sc-btn-secondary">📝 Corriger les devoirs</a>
-        <a href="exams.html" class="sc-btn sc-btn-secondary">📋 Gérer les examens</a>
-        <a href="grades.html" class="sc-btn sc-btn-secondary">⭐ Saisir des notes</a>
+        <a href="materials.html" class="sc-btn sc-btn-secondary"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:text-bottom;margin-right:.3rem;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>Gérer les documents</a>
+        <a href="assignments.html" class="sc-btn sc-btn-secondary"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:text-bottom;margin-right:.3rem;"><path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>Corriger les devoirs</a>
+        <a href="exams.html" class="sc-btn sc-btn-secondary"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:text-bottom;margin-right:.3rem;"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Gérer les examens</a>
+        <a href="grades.html" class="sc-btn sc-btn-secondary"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:text-bottom;margin-right:.3rem;"><path d="M12 14l9-5-9-5-9 5 9 5z"/><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>Saisir des notes</a>
         <button class="sc-btn sc-btn-primary" onclick="document.getElementById('modal-assignment').classList.add('open')">+ Nouveau devoir</button>
       </div>
 
       <!-- Students -->
-      <div class="sc-section-title">👥 Mes étudiants (${students.length})</div>
+      <div class="sc-section-title"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg> Mes étudiants (${students.length})</div>
       <div class="sc-table-wrap" style="margin-bottom:2rem;">
         <table class="sc-table">
           <thead><tr><th>Nom</th><th>Code d'accès</th><th>Statut</th></tr></thead>

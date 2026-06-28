@@ -5,24 +5,24 @@
 
 /* ── Variables ───────────────────────────────────────── */
 :root {
-  --sc-primary:    #4f46e5;
-  --sc-primary-d:  #3730a3;
-  --sc-primary-l:  #e0e7ff;
+  --sc-primary:    #c9a227;
+  --sc-primary-d:  #b8941f;
+  --sc-primary-l:  #fef3c7;
   --sc-secondary:  #06b6d4;
   --sc-purple:     #8b5cf6;
   --sc-pink:       #ec4899;
   --sc-green:      #10b981;
   --sc-amber:      #f59e0b;
   --sc-red:        #ef4444;
-  --sc-bg:         #f0f4ff;
+  --sc-bg:         #fffbeb;
   --sc-surface:    #ffffff;
   --sc-border:     #e2e8f0;
   --sc-text:       #1e1b4b;
   --sc-muted:      #64748b;
   --sc-radius:     14px;
   --sc-radius-sm:  8px;
-  --sc-shadow:     0 4px 24px rgba(79,70,229,.08);
-  --sc-shadow-lg:  0 12px 40px rgba(79,70,229,.14);
+  --sc-shadow:     0 4px 24px rgba(201,162,39,.08);
+  --sc-shadow-lg:  0 12px 40px rgba(201,162,39,.14);
   --sidebar-w:     260px;
   --header-h:      64px;
 }

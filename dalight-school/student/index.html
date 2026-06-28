@@ -18,7 +18,7 @@
       <div class="logo-dot"></div>
       DALIGHT SCHOOL
     </div>
-    <div class="school-header-title" id="header-greeting">Bonjour 👋</div>
+    <div class="school-header-title" id="header-greeting">Bonjour <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:text-bottom;"><path d="M12 14l9-5-9-5-9 5 9 5z"/><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/><path d="M12 14V2"/></svg></div>
     <div class="school-header-actions">
       <div class="header-avatar" id="header-avatar" title="Mon compte">?</div>
       <button class="sc-btn sc-btn-secondary sc-btn-sm" onclick="schoolLogout()">Déconnexion</button>
@@ -108,7 +108,7 @@
 
   const sb = window.schoolSb;
 
-  document.getElementById('header-greeting').textContent = `Bonjour, ${session.name.split(' ')[0]} 👋`;
+  document.getElementById('header-greeting').textContent = `Bonjour, ${session.name.split(' ')[0]}`;
   document.getElementById('header-avatar').textContent   = schoolInitials(session.name);
   document.getElementById('welcome-name').textContent    = session.name;
 
@@ -182,7 +182,7 @@
 
       const assignList = document.getElementById('assignments-list');
       if (!pending.length) {
-        assignList.innerHTML = `<div class="sc-card-flat" style="text-align:center;color:var(--sc-muted);padding:1.5rem;"><span style="font-size:1.5rem;">✅</span><br>Tous les devoirs sont à jour !</div>`;
+        assignList.innerHTML = `<div class="sc-card-flat" style="text-align:center;color:var(--sc-muted);padding:1.5rem;"><svg width="32" height="32" fill="none" stroke="var(--sc-green)" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg><br>Tous les devoirs sont à jour !</div>`;
       } else {
         assignList.innerHTML = pending.slice(0,5).map(a => {
           const courseObj = courses.find(c => c.id === a.course_id);
