@@ -74,7 +74,7 @@ function openAddModal() {
   ['f-name','f-desc','f-code'].forEach(function(id) { document.getElementById(id).value = ''; });
   document.getElementById('f-color').value = '#4f46e5';
   document.getElementById('f-active').checked = true;
-  document.getElementById('modal-add').style.display = 'flex';
+  document.getElementById('modal-add').classList.add('active');
 }
 
 function editCourse(id) {
@@ -87,10 +87,10 @@ function editCourse(id) {
   document.getElementById('f-code').value  = c.code;
   document.getElementById('f-color').value = c.color || '#4f46e5';
   document.getElementById('f-active').checked = c.is_active;
-  document.getElementById('modal-add').style.display = 'flex';
+  document.getElementById('modal-add').classList.add('active');
 }
 
-function closeModal() { document.getElementById('modal-add').style.display = 'none'; }
+function closeModal() { document.getElementById('modal-add').classList.remove('active'); }
 
 async function saveCourse() {
   var name = document.getElementById('f-name').value.trim();

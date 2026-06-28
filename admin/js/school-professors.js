@@ -71,7 +71,7 @@ function openAddModal() {
   document.getElementById('f-course').value = '';
   document.getElementById('f-active').checked = true;
   genProfCode();
-  document.getElementById('modal-add').style.display = 'flex';
+  document.getElementById('modal-add').classList.add('active');
 }
 
 function editProfessor(id) {
@@ -85,10 +85,10 @@ function editProfessor(id) {
   document.getElementById('f-bio').value    = p.bio || '';
   document.getElementById('f-course').value = p.course_id || '';
   document.getElementById('f-active').checked = p.is_active;
-  document.getElementById('modal-add').style.display = 'flex';
+  document.getElementById('modal-add').classList.add('active');
 }
 
-function closeModal() { document.getElementById('modal-add').style.display = 'none'; }
+function closeModal() { document.getElementById('modal-add').classList.remove('active'); }
 
 async function saveProfessor() {
   var name = document.getElementById('f-name').value.trim();

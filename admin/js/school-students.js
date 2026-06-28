@@ -93,7 +93,7 @@ function openAddModal() {
   document.getElementById('f-active').checked = true;
   generateCode();
   renderCourseCheckboxes([]);
-  document.getElementById('modal-add').style.display = 'flex';
+  document.getElementById('modal-add').classList.add('active');
 }
 
 function editStudent(id) {
@@ -107,7 +107,7 @@ function editStudent(id) {
   document.getElementById('f-notes').value = s.notes || '';
   document.getElementById('f-active').checked = s.is_active;
   renderCourseCheckboxes(allEnrollments.filter(function(e) { return e.student_id === id; }).map(function(e) { return e.course_id; }));
-  document.getElementById('modal-add').style.display = 'flex';
+  document.getElementById('modal-add').classList.add('active');
 }
 
 function renderCourseCheckboxes(checkedIds) {
@@ -119,7 +119,7 @@ function renderCourseCheckboxes(checkedIds) {
   }).join('') : '<div style="font-size:.8rem;color:var(--admin-text-muted);">Aucun cours créé</div>';
 }
 
-function closeModal() { document.getElementById('modal-add').style.display = 'none'; }
+function closeModal() { document.getElementById('modal-add').classList.remove('active'); }
 
 async function saveStudent() {
   var name = document.getElementById('f-name').value.trim();
