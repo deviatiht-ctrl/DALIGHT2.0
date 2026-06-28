@@ -96,86 +96,73 @@
 
   <script src="js/admin-core.js?v=202606271350"></script>
   <script>
-    let allProfs = [], allCourses = [], editingId = null;
-    let sb;
+    var allProfs = [], allCourses = [], editingId = null, sb;
 
-    function getSchoolAdminSupabase() {
-      if (window.dalightAdminSupabase) return window.dalightAdminSupabase;
-      if (window.adminCore?.supabase) return window.adminCore.supabase;
-      if (window.supabaseClient) return window.supabaseClient;
-      return null;
+    function getSB() {
+      return window.dalightAdminSupabase || (window.adminCore && window.adminCore.supabase) || null;
     }
 
-    function startSchoolPage() {
-      sb = getSchoolAdminSupabase();
-      if (!sb) {
-        setTimeout(startSchoolPage, 100);
-        return;
-      }
+    (function startSchoolPage() {
+      sb = getSB();
+      if (!sb) { setTimeout(startSchoolPage, 100); return; }
       init();
-    }
+    })();
 
     async function init() {
-      const tbody = document.getElementById('profs-tbody');
+      var tbody = document.getElementById('profs-tbody');
       try {
-        const [{ data: profs, error: profsError }, { data: courses, error: coursesError }] = await Promise.all([
+        var res = await Promise.all([
           sb.from('dalightschool_professors').select('*, course:dalightschool_courses(name,color)').order('name'),
-          sb.from('dalightschool_courses').select('*').order('name'),
+          sb.from('dalightschool_courses').select('*').order('name')
         ]);
-        const error = profsError || coursesError;
-        if (error) throw error;
-        allProfs   = profs   || [];
-        allCourses = courses || [];
+        var err = res[0].error || res[1].error;
+        if (err) throw err;
+        allProfs   = res[0].data || [];
+        allCourses = res[1].data || [];
 
-      const sel = document.getElementById('f-course');
-      allCourses.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.name; sel.appendChild(o); });
+        var sel = document.getElementById('f-course');
+        while (sel.options.length > 1) sel.remove(1);
+        allCourses.forEach(function(c) { var o = document.createElement('option'); o.value = c.id; o.textContent = c.name; sel.appendChild(o); });
 
-      lucide.createIcons();
-      renderTable();
-      } catch (error) {
-        tbody.innerHTML = `<tr><td colspan="6" style="padding:1.25rem;color:#b91c1c;background:#fee2e2;">Erreur DALIGHT SCHOOL: ${error.message}</td></tr>`;
+        lucide.createIcons();
+        renderTable();
+      } catch(e) {
+        tbody.innerHTML = '<tr><td colspan="6" style="padding:1.25rem;color:#b91c1c;background:#fee2e2;">Erreur: ' + e.message + '</td></tr>';
       }
     }
 
     function renderTable() {
-      document.getElementById('profs-tbody').innerHTML = allProfs.length ? allProfs.map(p => {
-        const courseHtml = p.course
+      document.getElementById('profs-tbody').innerHTML = allProfs.length ? allProfs.map(function(p) {
+        var ch = p.course
           ? '<span style="display:inline-flex;align-items:center;gap:.4rem;"><span style="width:8px;height:8px;border-radius:50%;background:' + p.course.color + ';display:inline-block;"></span>' + p.course.name + '</span>'
           : '<span style="color:var(--admin-text-muted);font-size:.8rem;">Aucun</span>';
-        const statusBg = p.is_active ? '#dcfce7' : '#fee2e2';
-        const statusColor = p.is_active ? '#166534' : '#991b1b';
-        const statusText = p.is_active ? 'Actif' : 'Inactif';
-        const activeIcon = p.is_active ? 'user-x' : 'user-check';
-        return `
-        <tr>
-          <td style="font-weight:600;">${p.name}</td>
-          <td><span class="code-box" onclick="copyCode('${p.code_acces}')" title="Copier">${p.code_acces}</span></td>
-          <td>${courseHtml}</td>
-          <td style="font-size:.85rem;">${p.email||'—'}</td>
-          <td><span style="display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .6rem;border-radius:99px;font-size:.72rem;font-weight:600;background:${statusBg};color:${statusColor};">${statusText}</span></td>
-          <td>
-            <div style="display:flex;gap:.4rem;">
-              <button class="btn btn-icon btn-sm" onclick="editProfessor('${p.id}')"><i data-lucide="pencil"></i></button>
-              <button class="btn btn-icon btn-sm" onclick="printCode('${p.name}','${p.code_acces}')"><i data-lucide="printer"></i></button>
-              <button class="btn btn-icon btn-sm btn-danger" onclick="toggleActive('${p.id}',${p.is_active})"><i data-lucide="${activeIcon}"></i></button>
-            </div>
-          </td>
-        </tr>`;
-      }).join('')
-        : '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--admin-text-muted);">Aucun professeur</td></tr>';
+        var bg  = p.is_active ? '#dcfce7' : '#fee2e2';
+        var clr = p.is_active ? '#166534' : '#991b1b';
+        var st  = p.is_active ? 'Actif' : 'Inactif';
+        var ai  = p.is_active ? 'user-x' : 'user-check';
+        return '<tr>' +
+          '<td style="font-weight:600;">' + p.name + '</td>' +
+          '<td><span class="code-box" onclick="copyCode(\'' + p.code_acces + '\')" title="Copier">' + p.code_acces + '</span></td>' +
+          '<td>' + ch + '</td>' +
+          '<td style="font-size:.85rem;">' + (p.email||'—') + '</td>' +
+          '<td><span style="display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .6rem;border-radius:99px;font-size:.72rem;font-weight:600;background:' + bg + ';color:' + clr + ';">' + st + '</span></td>' +
+          '<td><div style="display:flex;gap:.4rem;">' +
+            '<button class="btn btn-icon btn-sm" onclick="editProfessor(\'' + p.id + '\')"><i data-lucide="pencil"></i></button>' +
+            '<button class="btn btn-icon btn-sm" onclick="printCode(\'' + p.name.replace(/'/g,"\\x27") + '\',\'' + p.code_acces + '\')"><i data-lucide="printer"></i></button>' +
+            '<button class="btn btn-icon btn-sm btn-danger" onclick="toggleActive(\'' + p.id + '\',' + p.is_active + ')"><i data-lucide="' + ai + '"></i></button>' +
+          '</div></td></tr>';
+      }).join('') : '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--admin-text-muted);">Aucun professeur</td></tr>';
       lucide.createIcons();
     }
 
     function genProfCode() {
-      const n = String(allProfs.length + 1).padStart(3, '0');
-      document.getElementById('f-code').value = `PROF-DS-${n}`;
+      document.getElementById('f-code').value = 'PROF-DS-' + String(allProfs.length + 1).padStart(3, '0');
     }
 
     function openAddModal() {
       editingId = null;
       document.getElementById('modal-title').textContent = 'Nouveau professeur';
-      ['f-name','f-email','f-bio'].forEach(id => document.getElementById(id).value = '');
-      document.getElementById('f-code').value = '';
+      ['f-name','f-email','f-bio','f-code'].forEach(function(id) { document.getElementById(id).value = ''; });
       document.getElementById('f-course').value = '';
       document.getElementById('f-active').checked = true;
       genProfCode();
@@ -183,7 +170,7 @@
     }
 
     function editProfessor(id) {
-      const p = allProfs.find(x => x.id === id);
+      var p = allProfs.find(function(x) { return x.id === id; });
       if (!p) return;
       editingId = id;
       document.getElementById('modal-title').textContent = 'Modifier le professeur';
@@ -198,42 +185,41 @@
 
     function closeModal() { document.getElementById('modal-add').style.display = 'none'; }
 
-    window.openAddModal = openAddModal;
-    window.editProfessor = editProfessor;
-    window.closeModal = closeModal;
-    window.genProfCode = genProfCode;
-    window.saveProfessor = saveProfessor;
-    window.toggleActive = toggleActive;
-    window.copyCode = copyCode;
-    window.printCode = printCode;
-
     async function saveProfessor() {
-      const name = document.getElementById('f-name').value.trim();
-      const code = document.getElementById('f-code').value.trim().toUpperCase();
+      var name = document.getElementById('f-name').value.trim();
+      var code = document.getElementById('f-code').value.trim().toUpperCase();
       if (!name || !code) { alert('Nom et code requis.'); return; }
-
-      const btn = document.getElementById('btn-save');
+      var btn = document.getElementById('btn-save');
       btn.disabled = true; btn.textContent = 'Enregistrement…';
-
-      const payload = { name, code_acces: code, email: document.getElementById('f-email').value.trim()||null, bio: document.getElementById('f-bio').value.trim()||null, course_id: document.getElementById('f-course').value||null, is_active: document.getElementById('f-active').checked, updated_at: new Date().toISOString() };
-
-      const { error } = editingId
+      var payload = { name: name, code_acces: code, email: document.getElementById('f-email').value.trim()||null, bio: document.getElementById('f-bio').value.trim()||null, course_id: document.getElementById('f-course').value||null, is_active: document.getElementById('f-active').checked, updated_at: new Date().toISOString() };
+      var r = editingId
         ? await sb.from('dalightschool_professors').update(payload).eq('id', editingId)
         : await sb.from('dalightschool_professors').insert(payload);
-
-      if (error) { alert('Erreur: ' + error.message); }
-      else { closeModal(); init(); window.adminCore.showToast('Professeur enregistré !'); }
+      if (r.error) { alert('Erreur: ' + r.error.message); }
+      else { closeModal(); init(); if (window.adminCore) window.adminCore.showToast('Professeur enregistré !'); }
       btn.disabled = false; btn.textContent = 'Enregistrer';
     }
 
-    async function toggleActive(id, cur) { await sb.from('dalightschool_professors').update({ is_active: !cur }).eq('id', id); init(); }
-    function copyCode(code) { navigator.clipboard.writeText(code).then(() => window.adminCore.showToast('Code copié: ' + code)); }
-    function printCode(name, code) {
-      const w = window.open('', '_blank', 'width=400,height=300');
-      w.document.write(`<html><body style="font-family:Inter,sans-serif;text-align:center;padding:2rem;"><h2 style="color:#4f46e5;">DALIGHT SCHOOL</h2><p>Professeur: <strong>${name}</strong></p><p style="font-size:1.5rem;font-weight:800;letter-spacing:.1em;background:#ede9fe;padding:.75rem 1.5rem;border-radius:8px;display:inline-block;">${code}</p><p style="font-size:.8rem;color:#666;">Portail: ${window.location.origin}/dalight-school/</p><script>window.print();<\/script></body></html>`);
+    async function toggleActive(id, cur) {
+      await sb.from('dalightschool_professors').update({ is_active: !cur }).eq('id', id);
+      init();
     }
 
-    startSchoolPage();
+    function copyCode(code) {
+      navigator.clipboard.writeText(code).then(function() { if (window.adminCore) window.adminCore.showToast('Code copié: ' + code); });
+    }
+
+    function printCode(name, code) {
+      var w = window.open('', '_blank', 'width=400,height=300');
+      var html = '<html><body onload="print()" style="font-family:Inter,sans-serif;text-align:center;padding:2rem;">' +
+        '<h2 style="color:#4f46e5;">DALIGHT SCHOOL</h2>' +
+        '<p>Professeur: <strong>' + name + '</strong></p>' +
+        '<p style="font-size:1.5rem;font-weight:800;letter-spacing:.1em;background:#ede9fe;padding:.75rem 1.5rem;border-radius:8px;display:inline-block;">' + code + '</p>' +
+        '<p style="font-size:.8rem;color:#666;">Portail: ' + window.location.origin + '/dalight-school/</p>' +
+        '</body></html>';
+      w.document.write(html);
+      w.document.close();
+    }
   </script>
 </body>
 </html>
