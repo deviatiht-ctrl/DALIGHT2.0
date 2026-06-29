@@ -2322,7 +2322,25 @@ function loadCartData() {
         if (oldProofError) oldProofError.remove();
 
         const selectedPaymentConfig = resvPaymentMethods.find(p => p.slug === paymentMethod.value) || selectedResvPM;
-        const requiresManualProof = isBankPayment(paymentMethod.value) && (selectedPaymentConfig?.requires_proof ?? true);
+        const isPlop = isAutomaticPlopPayment(paymentMethod.value);
+        const isManual = !isPlop;
+
+        // Block non-PLOP methods that don't require proof (e.g. cash) — not allowed online
+        if (isManual && selectedPaymentConfig && selectedPaymentConfig.requires_proof === false) {
+          const paymentContainer = document.querySelector('.payment-methods');
+          const oldErr = document.getElementById('payment-method-error');
+          if (oldErr) oldErr.remove();
+          const msg = document.createElement('div');
+          msg.id = 'payment-method-error';
+          msg.className = 'error-text';
+          msg.style.cssText = 'margin-top:.75rem;padding:.75rem 1rem;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;color:#991b1b;font-size:.9rem;';
+          msg.innerHTML = '<strong>Rezèvasyon pa konfime.</strong><br>Metòd peman sa a pa disponib pou rezèvasyon sou entènèt. Tanpri chwazi MonCash, NatCash, oswa vèsman bankè pou konfime rezervasyon ou.';
+          if (paymentContainer) paymentContainer.insertAdjacentElement('afterend', msg);
+          return;
+        }
+
+        // All manual non-PLOP methods must have proof uploaded
+        const requiresManualProof = isManual && (selectedPaymentConfig?.requires_proof !== false);
 
         if (requiresManualProof && !proofFile) {
           if (uploadZone) {
@@ -2330,7 +2348,8 @@ function loadCartData() {
             const msg = document.createElement('div');
             msg.id = 'proof-error';
             msg.className = 'error-text';
-            msg.textContent = 'Tanpri upload prèv peman an.';
+            msg.style.cssText = 'margin-top:.75rem;padding:.75rem 1rem;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;color:#991b1b;font-size:.9rem;';
+            msg.innerHTML = '<strong>Rezèvasyon pa konfime.</strong><br>Ou dwe telechaje prèv peman depoze ou a anvan nou ka konfime rezèvasyon ou. Tanpri fè peman an epi upload resi a.';
             uploadZone.insertAdjacentElement('afterend', msg);
           }
           return;
@@ -2396,7 +2415,7 @@ function loadCartData() {
             payment_proof_url: proofUrl,
             deposit_amount: calcDeposit(cartServices),
             total_amount: totalAmount,
-            payment_status: isAutomaticPlopPayment(paymentMethod.value) ? 'pending' : (!proofUrl ? 'pending' : (formData.paymentChoice === 'full' ? 'fully_paid' : 'deposit_paid')),
+            payment_status: isPlop ? 'pending' : (formData.paymentChoice === 'full' ? 'fully_paid' : 'deposit_paid'),
             location: 'Spa',
             status: 'PENDING'
           };
