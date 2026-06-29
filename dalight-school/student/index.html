@@ -52,7 +52,7 @@
   <main class="school-main">
 
     <!-- Welcome Banner -->
-    <div id="welcome-banner" style="background:linear-gradient(135deg,#4f46e5,#8b5cf6);border-radius:20px;padding:1.75rem 2rem;color:#fff;margin-bottom:2rem;animation:slideUp .4s ease;position:relative;overflow:hidden;">
+    <div id="welcome-banner" style="background:linear-gradient(135deg,var(--sc-primary),var(--sc-primary-d));border-radius:20px;padding:1.5rem 1.25rem;color:#fff;margin-bottom:2rem;animation:slideUp .4s ease;position:relative;overflow:hidden;">
       <div style="position:absolute;right:-20px;top:-20px;width:160px;height:160px;background:rgba(255,255,255,.07);border-radius:50%;"></div>
       <div style="position:absolute;right:60px;bottom:-40px;width:100px;height:100px;background:rgba(255,255,255,.05);border-radius:50%;"></div>
       <div style="font-size:.8rem;opacity:.8;margin-bottom:.25rem;">Bienvenue sur DALIGHT SCHOOL</div>
@@ -112,7 +112,6 @@
 
   const sb = window.schoolSb;
 
-  document.getElementById('header-greeting').textContent = `Bonjour, ${session.name.split(' ')[0]}`;
   document.getElementById('header-avatar').textContent   = schoolInitials(session.name);
   document.getElementById('welcome-name').textContent    = session.name;
 

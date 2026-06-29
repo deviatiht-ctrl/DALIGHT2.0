@@ -51,6 +51,9 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event
 self.addEventListener('fetch', (event) => {
+  // 0. Only handle GET requests — POST/PUT/DELETE cannot be cached
+  if (event.request.method !== 'GET') return;
+
   const url = new URL(event.request.url);
   const path = url.pathname;
 

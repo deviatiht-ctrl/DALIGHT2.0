@@ -70,12 +70,13 @@ input, select, textarea { font-family: inherit; }
   border-bottom: 1px solid var(--sc-border);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 1.5rem;
   gap: 1rem;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 1px 8px rgba(79,70,229,.06);
+  box-shadow: 0 1px 8px rgba(201,162,39,.06);
 }
 .school-header-logo {
   display: flex;
@@ -84,7 +85,6 @@ input, select, textarea { font-family: inherit; }
   font-weight: 800;
   font-size: 1.1rem;
   color: var(--sc-primary);
-  width: calc(var(--sidebar-w) - 1.5rem);
 }
 .school-header-logo .logo-dot {
   width: 10px;
@@ -517,18 +517,34 @@ input, select, textarea { font-family: inherit; }
 @media (max-width: 768px) {
   .school-shell { grid-template-columns: 1fr; }
   .school-sidebar { display: none; }
-  .school-sidebar.open { display: block; position: fixed; top: var(--header-h); left: 0; bottom: 0; width: var(--sidebar-w); z-index: 200; box-shadow: 4px 0 20px rgba(0,0,0,.12); }
-  .school-main { padding: 1rem; }
+  .school-sidebar.open {
+    display: block;
+    position: fixed;
+    top: var(--header-h);
+    left: 0; bottom: 0;
+    width: min(var(--sidebar-w), 85vw);
+    z-index: 200;
+    box-shadow: 4px 0 20px rgba(0,0,0,.18);
+    overflow-y: auto;
+  }
+  .school-main { padding: .875rem; }
   .sc-courses-grid { grid-template-columns: 1fr; }
-  .sc-stats { grid-template-columns: 1fr 1fr; }
-  .school-header-logo { width: auto; }
+  .sc-stats { grid-template-columns: 1fr 1fr; gap: .625rem; }
+  .sc-stat { padding: .75rem; }
+  .sc-stat-value { font-size: 1.4rem; }
+  .school-header { padding: 0 .875rem; }
+  .school-header-logo { font-size: .9rem; }
   .mobile-menu-btn { display: flex !important; }
-  .header-left { display: flex; align-items: center; gap: .75rem; }
-  .header-right { display: flex; align-items: center; gap: .75rem; }
-  .page-title h1 { font-size: 1.25rem; }
-  .page-title p { font-size: .85rem; }
-  .sc-page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
-  .sc-page-header button { width: 100%; }
+  .header-left { display: flex; align-items: center; gap: .5rem; }
+  .header-right { display: flex; align-items: center; gap: .5rem; }
+  .header-right .sc-btn-sm { font-size: .75rem; padding: .35rem .65rem; }
+  .page-title h1 { font-size: 1.15rem; }
+  .page-title p { font-size: .82rem; }
+  .sc-page-header { flex-direction: column; align-items: flex-start; gap: .875rem; }
+  .sc-page-header > button { width: 100%; }
+  .sc-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .sc-card { padding: 1rem; }
+  .sc-modal { margin: .5rem; width: calc(100% - 1rem); max-height: 92vh; overflow-y: auto; }
 }
 
 /* ── Header Layout ─────────────────────────────────────── */
