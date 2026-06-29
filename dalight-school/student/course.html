@@ -116,7 +116,6 @@
     if (!course) { main.innerHTML = '<div class="sc-empty"><h3>Cours introuvable</h3></div>'; return; }
 
     document.title = `${course.name} — DALIGHT SCHOOL`;
-    document.getElementById('course-name-header').textContent = course.name;
 
     const submittedMap = Object.fromEntries((submissions || []).map(s => [s.assignment_id, s]));
     const resultMap    = Object.fromEntries((results || []).map(r => [r.exam_id, r]));
