@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
     <script type="module" src="../js/main.js?v=5.0.0"></script>
-    <script type="module" src="../js/giveaway.js" defer></script>
+    <script type="module" src="../js/giveaway.js?v=202607011100" defer></script>
     <script type="module" src="../js/chat-widget.js?v=5.0.0" defer></script>
     <script type="module">
       import { initChatWidget } from '../js/chat-widget.js?v=5.0.0';
@@ -75,6 +75,23 @@
           <i data-lucide="gift" style="width:80px;height:80px;color:var(--text-muted);margin-bottom:1rem;"></i>
           <h2 style="margin-bottom:0.5rem;">Aucun concours actif</h2>
           <p style="color:var(--text-muted);">Revenez bientôt pour de nouveaux concours!</p>
+        </div>
+
+        <div id="find-link-section" style="margin-top:3rem;display:none;">
+          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+            <i data-lucide="link" style="width:24px;height:24px;color:#667eea;"></i>
+            <h2 style="font-size:1.5rem;font-weight:700;margin:0;">Retrouver mon lien de vote</h2>
+          </div>
+          <p style="color:var(--text-muted);margin-bottom:1.5rem;font-size:0.95rem;">Entrez votre email pour recevoir votre lien de vote personnalisé.</p>
+          <div class="glass-card" style="padding:1.5rem;border-radius:16px;max-width:500px;">
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <input type="email" id="find-link-email" placeholder="votre@email.com" style="flex:1;min-width:220px;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:0.95rem;">
+              <button onclick="retrieveReferralLink()" style="padding:0.75rem 1.25rem;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;font-weight:600;">
+                Rechercher
+              </button>
+            </div>
+            <div id="find-link-result" style="margin-top:1rem;display:none;"></div>
+          </div>
         </div>
 
         <div id="leaderboard-section" style="margin-top:3rem;display:none;">
