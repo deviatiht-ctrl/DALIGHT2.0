@@ -8,6 +8,7 @@ let currentEmployee = null;
 let currentBadgeEmployee = null;
 let scanner = null;
 let employeePhotoFile = null;
+let photoCropper = null;
 let currentTab = 'employees';
 
 const PHOTO_BUCKET = 'employees-photos';
@@ -158,12 +159,58 @@ window.onEmployeePhotoSelected = function(input) {
     const reader = new FileReader();
     reader.onload = function(e) {
       const preview = document.getElementById('emp-photo-preview');
+      const cropperContainer = document.getElementById('emp-photo-cropper-container');
+      const cropperImage = document.getElementById('emp-photo-cropper-image');
+
       preview.querySelector('img').src = e.target.result;
-      preview.style.display = 'block';
+      preview.style.display = 'none'; // Hide small preview while cropping
+      cropperImage.src = e.target.result;
+      cropperContainer.style.display = 'block';
+
+      if (photoCropper) {
+        photoCropper.destroy();
+      }
+      photoCropper = new Cropper(cropperImage, {
+        aspectRatio: 1,
+        viewMode: 1,
+        autoCropArea: 0.8,
+        responsive: true,
+        guides: true,
+        background: false,
+        cropBoxResizable: true,
+        cropBoxMovable: true,
+      });
     };
     reader.readAsDataURL(input.files[0]);
   }
 };
+
+window.rotatePhotoCropper = function(deg) {
+  if (photoCropper) photoCropper.rotate(deg);
+};
+
+window.resetPhotoCropper = function() {
+  if (photoCropper) photoCropper.reset();
+};
+
+function getCroppedPhotoFile() {
+  return new Promise((resolve) => {
+    if (!photoCropper) {
+      resolve(employeePhotoFile);
+      return;
+    }
+    photoCropper.getCroppedCanvas({
+      width: 400,
+      height: 400,
+      fillColor: '#fff',
+      imageSmoothingEnabled: true,
+      imageSmoothingQuality: 'high',
+    }).toBlob((blob) => {
+      const file = new File([blob], employeePhotoFile.name.replace(/\.[^.]+$/, '') + '_cropped.png', { type: 'image/png' });
+      resolve(file);
+    }, 'image/png');
+  });
+}
 
 window.openEmployeeModal = function(employee = null) {
   currentEmployee = employee;
@@ -177,6 +224,15 @@ window.openEmployeeModal = function(employee = null) {
   document.getElementById('emp-nif').value = employee?.nif || '';
   document.getElementById('emp-photo').value = '';
   employeePhotoFile = null;
+
+  if (photoCropper) {
+    photoCropper.destroy();
+    photoCropper = null;
+  }
+  const cropperContainer = document.getElementById('emp-photo-cropper-container');
+  const cropperImage = document.getElementById('emp-photo-cropper-image');
+  if (cropperContainer) cropperContainer.style.display = 'none';
+  if (cropperImage) cropperImage.src = '';
 
   const preview = document.getElementById('emp-photo-preview');
   if (employee?.photo_url) {
@@ -196,6 +252,12 @@ window.closeEmployeeModal = function() {
   modal.classList.remove('active');
   modal.style.display = 'none';
   currentEmployee = null;
+  if (photoCropper) {
+    photoCropper.destroy();
+    photoCropper = null;
+  }
+  const cropperContainer = document.getElementById('emp-photo-cropper-container');
+  if (cropperContainer) cropperContainer.style.display = 'none';
 };
 
 window.editEmployee = function(id) {
@@ -263,7 +325,8 @@ window.saveEmployee = async function() {
     let photoUrl = currentEmployee?.photo_url || null;
     if (employeePhotoFile) {
       try {
-        photoUrl = await uploadEmployeePhoto(employeePhotoFile);
+        const fileToUpload = await getCroppedPhotoFile();
+        photoUrl = await uploadEmployeePhoto(fileToUpload);
       } catch (uploadErr) {
         console.error('Photo upload error:', uploadErr);
         const uploadMsg = uploadErr?.message || uploadErr?.error?.message || 'Erreur upload';
@@ -1092,11 +1155,11 @@ function renderAttendanceTable(dateStr) {
       badgeClass = 'badge-warning';
     }
     return `
-      <tr>
+      <tr style="cursor:pointer;" onclick="openEmployeeAttendanceModal('${log.employee_id}', '${log.log_date}')">
         <td>
           <div class="user-cell">
-            <div class="user-avatar" style="width:32px;height:32px;font-size:.75rem;">
-              ${emp.photo_url ? `<img src="${emp.photo_url}" alt="${esc(emp.full_name)}">` : getInitials(emp.full_name)}
+            <div class="user-avatar" style="width:28px;height:28px;font-size:.65rem;flex-shrink:0;">
+              ${emp.photo_url ? `<img src="${emp.photo_url}" alt="${esc(emp.full_name)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : getInitials(emp.full_name)}
             </div>
             <div>
               <div style="font-weight:500;font-size:.85rem;">${esc(emp.full_name || 'Employé')}</div>
@@ -1149,6 +1212,125 @@ window.exportAttendance = function() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+};
+
+let currentEmployeeAttendanceId = null;
+
+window.openEmployeeAttendanceModal = function(employeeId, selectedDate) {
+  const employee = allEmployees.find(e => e.id === employeeId);
+  if (!employee) return;
+  currentEmployeeAttendanceId = employeeId;
+
+  const modal = document.getElementById('employee-attendance-modal');
+  const name = document.getElementById('employee-attendance-name');
+  const meta = document.getElementById('employee-attendance-meta');
+  const avatar = document.getElementById('employee-attendance-avatar');
+  const title = document.getElementById('employee-attendance-title');
+  const tbody = document.getElementById('employee-attendance-table');
+
+  title.textContent = `Détails de ${esc(employee.full_name)}`;
+  name.textContent = employee.full_name || 'Employé';
+  meta.innerHTML = `
+    ${employee.position ? `<div>${esc(employee.position)}</div>` : ''}
+    ${employee.employee_number ? `<div>#${esc(employee.employee_number)}</div>` : ''}
+    ${employee.nif ? `<div>NIF: ${esc(employee.nif)}</div>` : ''}
+    ${employee.email ? `<div>${esc(employee.email)}</div>` : ''}
+    ${employee.phone ? `<div>${esc(employee.phone)}</div>` : ''}
+  `;
+  avatar.innerHTML = employee.photo_url
+    ? `<img src="${employee.photo_url}" alt="${esc(employee.full_name)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+    : getInitials(employee.full_name);
+
+  const { start, end } = getAttendanceFilters();
+  let employeeLogs = allAttendance.filter(l => l.employee_id === employeeId);
+  if (start && end) {
+    employeeLogs = employeeLogs.filter(l => l.log_date >= start && l.log_date <= end);
+  }
+  employeeLogs.sort((a, b) => (a.log_date > b.log_date ? -1 : 1));
+
+  if (employeeLogs.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted" style="padding:2rem;">Aucune présence trouvée</td></tr>`;
+  } else {
+    tbody.innerHTML = employeeLogs.map(log => {
+      const duration = calculateDuration(log.entry_time, log.exit_time);
+      let status = '—';
+      let badgeClass = 'badge-secondary';
+      if (log.entry_time && log.exit_time) {
+        status = 'Journée complète';
+        badgeClass = 'badge-success';
+      } else if (log.entry_time) {
+        status = 'Présent';
+        badgeClass = 'badge-warning';
+      }
+      const isSelected = selectedDate && log.log_date === selectedDate;
+      return `
+        <tr style="${isSelected ? 'background:#f0f9ff;' : ''}">
+          <td>${new Date(log.log_date).toLocaleDateString('fr-FR')}</td>
+          <td>${log.entry_time || '—'}</td>
+          <td>${log.exit_time || '—'}</td>
+          <td>${duration}</td>
+          <td><span class="badge ${badgeClass}">${status}</span></td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  modal.classList.add('active');
+  modal.style.display = 'flex';
+};
+
+window.closeEmployeeAttendanceModal = function() {
+  const modal = document.getElementById('employee-attendance-modal');
+  modal.classList.remove('active');
+  modal.style.display = 'none';
+  currentEmployeeAttendanceId = null;
+};
+
+window.exportEmployeeAttendanceReport = function() {
+  if (!currentEmployeeAttendanceId) return;
+  const employee = allEmployees.find(e => e.id === currentEmployeeAttendanceId);
+  if (!employee) return;
+
+  const { start, end } = getAttendanceFilters();
+  let employeeLogs = allAttendance.filter(l => l.employee_id === currentEmployeeAttendanceId);
+  if (start && end) {
+    employeeLogs = employeeLogs.filter(l => l.log_date >= start && l.log_date <= end);
+  }
+  employeeLogs.sort((a, b) => (a.log_date > b.log_date ? -1 : 1));
+
+  const headers = ['Date', 'Entrée', 'Sortie', 'Durée', 'Statut'];
+  const rows = employeeLogs.map(log => {
+    const duration = calculateDuration(log.entry_time, log.exit_time);
+    const status = log.entry_time && log.exit_time ? 'Journée complète' : log.entry_time ? 'Présent' : '—';
+    return [log.log_date, log.entry_time || '', log.exit_time || '', duration, status];
+  });
+
+  const csv = [
+    ['Rapport de présence'],
+    ['Employé', employee.full_name || ''],
+    ['Poste', employee.position || ''],
+    ['Numéro', employee.employee_number || ''],
+    ['NIF', employee.nif || ''],
+    ['Email', employee.email || ''],
+    ['Téléphone', employee.phone || ''],
+    [],
+    headers,
+    ...rows
+  ]
+    .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const fileName = `rapport_${esc(employee.full_name).replace(/\s+/g, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.csv`;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Rapport exporté', 'success');
 };
 
 function updateStats() {
