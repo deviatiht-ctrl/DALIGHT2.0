@@ -17,7 +17,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
     <script type="module" src="../js/main.js?v=5.0.0"></script>
-    <script type="module" src="../js/giveaway.js?v=202607011100" defer></script>
+    <style>
+      @media (max-width: 900px) {
+        .giveaway-main-layout { grid-template-columns: 1fr !important; }
+      }
+      .giveaway-info-card { width: 100%; }
+      .giveaway-info-card .giveaway-image { height: 160px; background-size: cover; background-position: center; position: relative; }
+      .giveaway-info-card .giveaway-body { padding: 1.25rem; }
+      .giveaway-info-card .giveaway-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary); }
+      .giveaway-info-card .giveaway-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5; }
+      .giveaway-info-card .giveaway-dates { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.35rem; }
+      .giveaway-info-card .giveaway-socials { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+      .giveaway-info-card .giveaway-btn { width: 100%; padding: 0.75rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+    </style>
+    <script type="module" src="../js/giveaway.js?v=202607011115" defer></script>
     <script type="module" src="../js/chat-widget.js?v=5.0.0" defer></script>
     <script type="module">
       import { initChatWidget } from '../js/chat-widget.js?v=5.0.0';
@@ -77,30 +90,33 @@
           <p style="color:var(--text-muted);">Revenez bientôt pour de nouveaux concours!</p>
         </div>
 
-        <div id="find-link-section" style="margin-top:3rem;display:none;">
-          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
-            <i data-lucide="link" style="width:24px;height:24px;color:#667eea;"></i>
-            <h2 style="font-size:1.5rem;font-weight:700;margin:0;">Retrouver mon lien de vote</h2>
-          </div>
-          <p style="color:var(--text-muted);margin-bottom:1.5rem;font-size:0.95rem;">Entrez votre email pour recevoir votre lien de vote personnalisé.</p>
-          <div class="glass-card" style="padding:1.5rem;border-radius:16px;max-width:500px;">
-            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-              <input type="email" id="find-link-email" placeholder="votre@email.com" style="flex:1;min-width:220px;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:0.95rem;">
-              <button onclick="retrieveReferralLink()" style="padding:0.75rem 1.25rem;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;font-weight:600;">
-                Rechercher
-              </button>
+        <div class="giveaway-main-layout" style="display:grid;grid-template-columns:minmax(300px,380px) 1fr;gap:2rem;align-items:start;">
+          <div>
+            <div id="find-link-section" style="display:none;margin-bottom:2rem;">
+              <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+                <i data-lucide="link" style="width:24px;height:24px;color:#667eea;"></i>
+                <h2 style="font-size:1.25rem;font-weight:700;margin:0;">Retrouver mon lien</h2>
+              </div>
+              <div class="glass-card" style="padding:1.25rem;border-radius:16px;">
+                <input type="email" id="find-link-email" placeholder="votre@email.com" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:0.9rem;margin-bottom:0.75rem;">
+                <button onclick="retrieveReferralLink()" style="width:100%;padding:0.75rem;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;font-weight:600;">
+                  Rechercher
+                </button>
+                <div id="find-link-result" style="margin-top:1rem;display:none;"></div>
+              </div>
             </div>
-            <div id="find-link-result" style="margin-top:1rem;display:none;"></div>
-          </div>
-        </div>
 
-        <div id="leaderboard-section" style="margin-top:3rem;display:none;">
-          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;">
-            <i data-lucide="trophy" style="width:24px;height:24px;color:#667eea;"></i>
-            <h2 style="font-size:1.5rem;font-weight:700;margin:0;">Classement des participants</h2>
+            <div id="giveaway-info-card" style="display:none;"></div>
           </div>
-          <p style="color:var(--text-muted);margin-bottom:1.5rem;font-size:0.95rem;">Les participants avec le plus de votes apparaissent en haut du classement.</p>
-          <div id="leaderboard-container" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem;">
+
+          <div id="leaderboard-section" style="display:none;">
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;">
+              <i data-lucide="trophy" style="width:24px;height:24px;color:#667eea;"></i>
+              <h2 style="font-size:1.5rem;font-weight:700;margin:0;">Classement des participants</h2>
+            </div>
+            <p style="color:var(--text-muted);margin-bottom:1.5rem;font-size:0.95rem;">Les participants avec le plus de votes apparaissent en haut du classement.</p>
+            <div id="leaderboard-container" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+            </div>
           </div>
         </div>
       </section>

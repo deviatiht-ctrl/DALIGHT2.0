@@ -36,91 +36,98 @@ async function loadActiveGiveaways() {
 
     const container = document.getElementById('giveaways-container');
     const noGiveaways = document.getElementById('no-giveaways');
+    const infoCard = document.getElementById('giveaway-info-card');
+    const mainLayout = document.querySelector('.giveaway-main-layout');
+    const findLinkSection = document.getElementById('find-link-section');
 
     if (!data || data.length === 0) {
       container.style.display = 'none';
       noGiveaways.style.display = 'block';
+      if (mainLayout) mainLayout.style.display = 'none';
       return;
     }
 
     noGiveaways.style.display = 'none';
-    container.style.display = 'grid';
-
-    const findLinkSection = document.getElementById('find-link-section');
+    container.style.display = 'none';
+    if (mainLayout) mainLayout.style.display = 'grid';
     if (findLinkSection) findLinkSection.style.display = 'block';
+    if (infoCard) infoCard.style.display = 'block';
 
-    container.innerHTML = data.map(g => {
-      const startDate = new Date(g.start_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-      const endDate = new Date(g.end_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-      
-      return `
-        <div class="glass-card" style="overflow:hidden;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);display:flex;flex-direction:column;width:100%;">
-          ${g.flyer_url ? `
-            <div style="height:180px;background:url('${g.flyer_url}') center/cover no-repeat;position:relative;">
-              <div style="position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(to top,rgba(0,0,0,0.5),transparent);"></div>
-            </div>
-          ` : `
-            <div style="height:180px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);display:flex;align-items:center;justify-content:center;">
-              <i data-lucide="gift" style="width:60px;height:60px;color:white;opacity:0.5;"></i>
-            </div>
-          `}
-          <div style="padding:1.25rem;">
-            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
-              <i data-lucide="trophy" style="width:18px;height:18px;color:#667eea;"></i>
-              <span style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:#667eea;">Concours</span>
-            </div>
-            <h3 style="font-size:1.25rem;font-weight:700;margin-bottom:0.5rem;color:var(--text-primary);line-height:1.3;">${g.title}</h3>
-            <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1rem;line-height:1.5;">${g.description || ''}</p>
-            
-            ${g.rules ? `
-              <div style="margin-bottom:1rem;padding:0.75rem;background:#f8f9fa;border-radius:8px;border-left:3px solid #667eea;">
-                <div style="font-size:0.8rem;color:var(--text-muted);white-space:pre-line;">${g.rules}</div>
-              </div>
-            ` : ''}
-            
-            <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem;display:flex;flex-direction:column;gap:0.35rem;">
-              <div style="display:flex;align-items:center;gap:0.5rem;">
-                <i data-lucide="calendar" style="width:14px;height:14px;"></i>
-                <span><strong>Début:</strong> ${startDate}</span>
-              </div>
-              <div style="display:flex;align-items:center;gap:0.5rem;">
-                <i data-lucide="flag" style="width:14px;height:14px;"></i>
-                <span><strong>Fin:</strong> ${endDate}</span>
-              </div>
-            </div>
-            
-            <div style="margin-bottom:1rem;padding:0.75rem;background:#f8f9fa;border-radius:8px;">
-              <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.03em;">Suivez-nous</div>
-              <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.85rem;">
-                <div style="display:flex;align-items:center;gap:0.5rem;">
-                  <i class="fa-brands fa-instagram" style="width:16px;height:16px;color:#E1306C;font-size:1rem;"></i>
-                  <span>@dalightbeauty</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:0.5rem;">
-                  <i class="fa-brands fa-facebook-f" style="width:16px;height:16px;color:#1877F2;font-size:1rem;"></i>
-                  <span>DALIGHT Beauty</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:0.5rem;">
-                  <i class="fa-brands fa-tiktok" style="width:16px;height:16px;color:#000000;font-size:1rem;"></i>
-                  <span>@dalightbeauty</span>
-                </div>
-              </div>
-            </div>
-            
-            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;">
-              ${Array.isArray(g.instagram_urls) && g.instagram_urls.length > 0 ? g.instagram_urls.map((url, i) => `<a href="${url}" target="_blank" class="btn" style="flex:1;min-width:110px;padding:0.5rem;background:#E1306C;color:white;border:none;border-radius:6px;text-align:center;text-decoration:none;font-size:0.8rem;font-weight:500;display:flex;align-items:center;justify-content:center;gap:0.4rem;"><i class="fa-brands fa-instagram" style="font-size:0.9rem;"></i> IG ${i + 1}</a>`).join('') : (g.instagram_url ? `<a href="${g.instagram_url}" target="_blank" class="btn" style="flex:1;min-width:110px;padding:0.5rem;background:#E1306C;color:white;border:none;border-radius:6px;text-align:center;text-decoration:none;font-size:0.8rem;font-weight:500;display:flex;align-items:center;justify-content:center;gap:0.4rem;"><i class="fa-brands fa-instagram" style="font-size:0.9rem;"></i> Instagram</a>` : '')}
-              ${Array.isArray(g.facebook_urls) && g.facebook_urls.length > 0 ? g.facebook_urls.map((url, i) => `<a href="${url}" target="_blank" class="btn" style="flex:1;min-width:110px;padding:0.5rem;background:#1877F2;color:white;border:none;border-radius:6px;text-align:center;text-decoration:none;font-size:0.8rem;font-weight:500;display:flex;align-items:center;justify-content:center;gap:0.4rem;"><i class="fa-brands fa-facebook-f" style="font-size:0.9rem;"></i> FB ${i + 1}</a>`).join('') : (g.facebook_url ? `<a href="${g.facebook_url}" target="_blank" class="btn" style="flex:1;min-width:110px;padding:0.5rem;background:#1877F2;color:white;border:none;border-radius:6px;text-align:center;text-decoration:none;font-size:0.8rem;font-weight:500;display:flex;align-items:center;justify-content:center;gap:0.4rem;"><i class="fa-brands fa-facebook-f" style="font-size:0.9rem;"></i> Facebook</a>` : '')}
-              ${Array.isArray(g.tiktok_urls) && g.tiktok_urls.length > 0 ? g.tiktok_urls.map((url, i) => `<a href="${url}" target="_blank" class="btn" style="flex:1;min-width:110px;padding:0.5rem;background:#000000;color:white;border:none;border-radius:6px;text-align:center;text-decoration:none;font-size:0.8rem;font-weight:500;display:flex;align-items:center;justify-content:center;gap:0.4rem;"><i class="fa-brands fa-tiktok" style="font-size:0.9rem;"></i> TikTok ${i + 1}</a>`).join('') : (g.tiktok_url ? `<a href="${g.tiktok_url}" target="_blank" class="btn" style="flex:1;min-width:110px;padding:0.5rem;background:#000000;color:white;border:none;border-radius:6px;text-align:center;text-decoration:none;font-size:0.8rem;font-weight:500;display:flex;align-items:center;justify-content:center;gap:0.4rem;"><i class="fa-brands fa-tiktok" style="font-size:0.9rem;"></i> TikTok</a>` : '')}
-              ${Array.isArray(g.twitter_urls) && g.twitter_urls.length > 0 ? g.twitter_urls.map((url, i) => `<a href="${url}" target="_blank" class="btn" style="flex:1;min-width:110px;padding:0.5rem;background:#1DA1F2;color:white;border:none;border-radius:6px;text-align:center;text-decoration:none;font-size:0.8rem;font-weight:500;display:flex;align-items:center;justify-content:center;gap:0.4rem;"><i class="fa-brands fa-x-twitter" style="font-size:0.9rem;"></i> X ${i + 1}</a>`).join('') : (g.twitter_url ? `<a href="${g.twitter_url}" target="_blank" class="btn" style="flex:1;min-width:110px;padding:0.5rem;background:#1DA1F2;color:white;border:none;border-radius:6px;text-align:center;text-decoration:none;font-size:0.8rem;font-weight:500;display:flex;align-items:center;justify-content:center;gap:0.4rem;"><i class="fa-brands fa-x-twitter" style="font-size:0.9rem;"></i> Twitter</a>` : '')}
-            </div>
-            
-            <button onclick="openRegistrationModal('${g.id}')" class="btn" style="width:100%;padding:0.75rem;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:8px;font-size:0.95rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;">
-              <i data-lucide="user-plus" style="width:18px;height:18px;"></i> Participer
-            </button>
+    const g = data[0];
+    const startDate = new Date(g.start_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const endDate = new Date(g.end_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    const socials = [];
+    if (Array.isArray(g.instagram_urls) && g.instagram_urls.length > 0) {
+      g.instagram_urls.forEach((url, i) => socials.push({ icon: 'fa-instagram', color: '#E1306C', url, label: `IG ${i + 1}` }));
+    } else if (g.instagram_url) {
+      socials.push({ icon: 'fa-instagram', color: '#E1306C', url: g.instagram_url, label: 'Instagram' });
+    }
+    if (Array.isArray(g.facebook_urls) && g.facebook_urls.length > 0) {
+      g.facebook_urls.forEach((url, i) => socials.push({ icon: 'fa-facebook-f', color: '#1877F2', url, label: `FB ${i + 1}` }));
+    } else if (g.facebook_url) {
+      socials.push({ icon: 'fa-facebook-f', color: '#1877F2', url: g.facebook_url, label: 'Facebook' });
+    }
+    if (Array.isArray(g.tiktok_urls) && g.tiktok_urls.length > 0) {
+      g.tiktok_urls.forEach((url, i) => socials.push({ icon: 'fa-tiktok', color: '#000000', url, label: `TikTok ${i + 1}` }));
+    } else if (g.tiktok_url) {
+      socials.push({ icon: 'fa-tiktok', color: '#000000', url: g.tiktok_url, label: 'TikTok' });
+    }
+    if (Array.isArray(g.twitter_urls) && g.twitter_urls.length > 0) {
+      g.twitter_urls.forEach((url, i) => socials.push({ icon: 'fa-x-twitter', color: '#1DA1F2', url, label: `X ${i + 1}` }));
+    } else if (g.twitter_url) {
+      socials.push({ icon: 'fa-x-twitter', color: '#1DA1F2', url: g.twitter_url, label: 'Twitter' });
+    }
+
+    const socialsHTML = socials.length > 0 ? `
+      <div class="giveaway-socials">
+        ${socials.map(s => `
+          <a href="${s.url}" target="_blank" style="flex:1;min-width:110px;padding:0.5rem;background:${s.color};color:white;border-radius:6px;text-align:center;text-decoration:none;font-size:0.75rem;font-weight:500;display:flex;align-items:center;justify-content:center;gap:0.4rem;">
+            <i class="fa-brands ${s.icon}" style="font-size:0.85rem;"></i> ${s.label}
+          </a>
+        `).join('')}
+      </div>
+    ` : '';
+
+    if (infoCard) {
+      infoCard.className = 'glass-card giveaway-info-card';
+      infoCard.innerHTML = `
+        ${g.flyer_url ? `
+          <div class="giveaway-image" style="background-image:url('${g.flyer_url}');border-radius:16px 16px 0 0;">
+            <div style="position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(to top,rgba(0,0,0,0.5),transparent);"></div>
           </div>
+        ` : `
+          <div class="giveaway-image" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:16px 16px 0 0;display:flex;align-items:center;justify-content:center;">
+            <i data-lucide="gift" style="width:50px;height:50px;color:white;opacity:0.5;"></i>
+          </div>
+        `}
+        <div class="giveaway-body">
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+            <i data-lucide="trophy" style="width:16px;height:16px;color:#667eea;"></i>
+            <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:#667eea;">Concours</span>
+          </div>
+          <h3 class="giveaway-title">${g.title}</h3>
+          <p class="giveaway-desc">${g.description || ''}</p>
+          
+          ${g.rules ? `
+            <div style="margin-bottom:1rem;padding:0.75rem;background:#f8f9fa;border-radius:8px;border-left:3px solid #667eea;">
+              <div style="font-size:0.75rem;color:var(--text-muted);white-space:pre-line;">${g.rules}</div>
+            </div>
+          ` : ''}
+          
+          <div class="giveaway-dates">
+            <div><i data-lucide="calendar" style="width:12px;height:12px;vertical-align:-2px;margin-right:0.3rem;"></i> <strong>Début:</strong> ${startDate}</div>
+            <div><i data-lucide="flag" style="width:12px;height:12px;vertical-align:-2px;margin-right:0.3rem;"></i> <strong>Fin:</strong> ${endDate}</div>
+          </div>
+          
+          ${socialsHTML}
+          
+          <button onclick="openRegistrationModal('${g.id}')" class="giveaway-btn">
+            <i data-lucide="user-plus" style="width:16px;height:16px;"></i> Participer
+          </button>
         </div>
       `;
-    }).join('');
+    }
 
     if (window.lucide) {
       lucide.createIcons();
