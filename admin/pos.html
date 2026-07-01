@@ -214,6 +214,7 @@
       transition: all .12s;
     }
     .pm-btn.active { background: var(--admin-accent); color: #fff; border-color: var(--admin-accent); }
+    .pm-btn.active span { color: #fff !important; }
     .pm-btn:hover:not(.active) { border-color: var(--admin-accent); color: var(--admin-accent); }
 
     /* Payment choice */
@@ -452,6 +453,7 @@
         <a href="dashboard.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Dashboard</a>
         <a href="reservations.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Réservations<span class="badge" id="pending-count">0</span></a>
         <a href="pos.html" class="nav-item active"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>Caisse / POS</a>
+        <a href="employees.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Employés &amp; Présence</a>
         <a href="retraits.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Retraits &amp; Revenus</a>
       </div>
       <div class="nav-section">
@@ -569,8 +571,8 @@
           <div class="pos-pm-label">Méthode de paiement</div>
           <div class="pm-btns" id="pm-btns">
             <button type="button" class="pm-btn active" data-pm="cash"><i data-lucide="banknote"></i> Cash</button>
-            <button type="button" class="pm-btn" data-pm="moncash"><i data-lucide="smartphone"></i> MonCash</button>
-            <button type="button" class="pm-btn" data-pm="natcash"><i data-lucide="smartphone"></i> NatCash</button>
+            <button type="button" class="pm-btn" data-pm="moncash"><i data-lucide="smartphone"></i> MonCash <span style="font-size:.65rem;color:#0369a1;font-weight:700;">(Plop Plop)</span></button>
+            <button type="button" class="pm-btn" data-pm="natcash"><i data-lucide="smartphone"></i> NatCash <span style="font-size:.65rem;color:#0369a1;font-weight:700;">(Plop Plop)</span></button>
             <button type="button" class="pm-btn" data-pm="bank"><i data-lucide="landmark"></i> Virement</button>
           </div>
         </div>
@@ -635,7 +637,7 @@
   </div>
 
   <script src="js/admin-core.js?v=202606271350"></script>
-  <script src="js/pos.js?v=202606271350"></script>
+  <script src="js/pos.js?v=202606301300"></script>
   <script>document.addEventListener('DOMContentLoaded', () => { if(window.lucide) lucide.createIcons(); });</script>
 </body>
 </html>

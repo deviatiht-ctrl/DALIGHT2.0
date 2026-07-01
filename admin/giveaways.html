@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Concours / Giveaways — DALIGHT Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css?v=202606271350">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <aside class="admin-sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="sidebar-logo">
+        <img src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" onerror="this.style.display='none'">
+        <div class="sidebar-logo-text">DALIGHT<span>Administration</span></div>
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Principal</div>
+        <a href="dashboard.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Dashboard</a>
+        <a href="reservations.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Réservations<span class="badge" id="pending-count">0</span></a>
+        <a href="pos.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>Caisse / POS</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Marketing</div>
+        <a href="giveaways.html" class="nav-item active"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>Concours / Giveaways</a>
+        <a href="posts.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>Posts & Vidéos</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">E-Commerce</div>
+        <a href="products.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>Produits</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Utilisateurs</div>
+        <a href="clients.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>Clients</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Système</div>
+        <a href="settings.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Paramètres</a>
+        <a href="../index.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>Voir le site</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="user-avatar">A</div>
+        <div class="sidebar-user-info"><div class="sidebar-user-name" id="user-name">Admin</div><div class="sidebar-user-role">Administrateur</div></div>
+      </div>
+      <button class="btn-logout" id="logout-btn">Déconnexion</button>
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-header">
+      <div class="header-left">
+        <button class="mobile-menu-btn" id="mobile-menu-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <h1 class="page-title">Concours / Giveaways</h1>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-primary" onclick="openGiveawayModal()"><i data-lucide="plus"></i> Nouveau concours</button>
+      </div>
+    </header>
+
+    <div class="admin-content">
+      <!-- Stats row -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem;" id="stats-row">
+        <div class="glass-card stat-card">
+          <div class="stat-icon gold">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value" id="total-giveaways">0</div>
+            <div class="stat-label">Concours totaux</div>
+          </div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-icon green">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value" id="active-giveaways">0</div>
+            <div class="stat-label">Concours actifs</div>
+          </div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-icon blue">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value" id="total-participants">0</div>
+            <div class="stat-label">Participants totaux</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Giveaways grid -->
+      <div id="giveaways-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:1.5rem;"></div>
+    </div>
+  </div>
+
+  <!-- Modal pour ajouter/éditer un concours -->
+  <div class="modal-overlay" id="modal-giveaway">
+    <div class="modal" style="max-width:600px;">
+      <div class="modal-header"><h3 class="modal-title" id="modal-title">Nouveau concours</h3><button class="modal-close" onclick="closeGiveawayModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Titre du concours <span style="color:red">*</span></label><input class="form-control" id="g-title" placeholder="Ex: Gagnez un soin Head Spa gratuit!"></div>
+        <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="g-description" rows="3" placeholder="Description du concours…"></textarea></div>
+        <div class="form-group"><label class="form-label">Règles du concours</label><textarea class="form-control" id="g-rules" rows="4" placeholder="1. Abonnez-vous à notre page Instagram&#10;2. Taggez au moins 3 amis&#10;3. Partagez le post"></textarea></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="form-group">
+            <label class="form-label">Date de début <span style="color:red">*</span></label>
+            <input class="form-control" id="g-start-date" type="datetime-local">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date de fin <span style="color:red">*</span></label>
+            <input class="form-control" id="g-end-date" type="datetime-local">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Flyer (image)</label>
+          <input class="form-control" id="g-flyer-file" type="file" accept="image/*" onchange="previewFlyer(this)">
+          <div id="flyer-preview" style="margin-top:0.5rem;max-height:200px;overflow:hidden;border-radius:8px;display:none;">
+            <img id="flyer-preview-img" style="width:100%;height:auto;object-fit:cover;">
+          </div>
+          <input type="hidden" id="g-flyer-url">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Liens Instagram (un par ligne)</label>
+          <textarea class="form-control" id="g-instagram-urls" rows="2" placeholder="https://instagram.com/p/...&#10;https://instagram.com/p/..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Liens Facebook (un par ligne)</label>
+          <textarea class="form-control" id="g-facebook-urls" rows="2" placeholder="https://facebook.com/...&#10;https://facebook.com/..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Liens TikTok (un par ligne)</label>
+          <textarea class="form-control" id="g-tiktok-urls" rows="2" placeholder="https://tiktok.com/...&#10;https://tiktok.com/..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Liens Twitter/X (un par ligne)</label>
+          <textarea class="form-control" id="g-twitter-urls" rows="2" placeholder="https://twitter.com/...&#10;https://twitter.com/..."></textarea>
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:.5rem;">
+          <input type="checkbox" id="g-active" style="width:16px;height:16px;">
+          <label for="g-active" style="font-size:.875rem;font-weight:500;">Concours actif (visible sur le site)</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeGiveawayModal()">Annuler</button>
+        <button class="btn btn-primary" id="btn-save-giveaway" onclick="saveGiveaway()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal pour voir les participants -->
+  <div class="modal-overlay" id="modal-participants">
+    <div class="modal" style="max-width:900px;">
+      <div class="modal-header"><h3 class="modal-title" id="participants-title">Participants</h3><button class="modal-close" onclick="closeParticipantsModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Email</th>
+                <th>Instagram</th>
+                <th>Abonné IG</th>
+                <th>Tags</th>
+                <th>Votes</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="participants-table">
+              <tr><td colspan="7" class="text-center">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeParticipantsModal()">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal pour voir les votes d'un participant -->
+  <div class="modal-overlay" id="modal-votes">
+    <div class="modal" style="max-width:900px;">
+      <div class="modal-header"><h3 class="modal-title" id="votes-title">Votes</h3><button class="modal-close" onclick="closeVotesModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Instagram votant</th>
+                <th>Abonné</th>
+                <th>Like</th>
+                <th>Commentaire</th>
+                <th>Vérifié</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="votes-table">
+              <tr><td colspan="7" class="text-center">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeVotesModal()">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/admin-core.js?v=202606271350"></script>
+  <script src="js/giveaways.js?v=20260630"></script>
+</body>
+</html>

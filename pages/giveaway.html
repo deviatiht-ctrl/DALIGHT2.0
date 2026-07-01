@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Concours · DALIGHT</title>
+    <link rel="icon" href="../assets/images/logodaligth.png?v=2" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/style.css?v=5.0.0" />
+    <link rel="stylesheet" href="../css/responsive.css?v=5.0.0" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js"></script>
+    <script type="module" src="../js/main.js?v=5.0.0"></script>
+    <script type="module" src="../js/giveaway.js" defer></script>
+    <script type="module" src="../js/chat-widget.js?v=5.0.0" defer></script>
+    <script type="module">
+      import { initChatWidget } from '../js/chat-widget.js?v=5.0.0';
+      document.addEventListener('DOMContentLoaded', () => {
+        if (window.lucide) {
+          lucide.createIcons();
+        }
+        initChatWidget();
+      });
+    </script>
+  </head>
+  <body data-page="giveaway">
+    <header class="site-header internal">
+      <nav class="top-nav">
+        <a class="brand" href="../index.html">
+          <img class="brand-logo" src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" />
+          <div>
+            <strong>DALIGHT</strong>
+            <small>L'Art du Bien-Être</small>
+          </div>
+        </a>
+        <button class="nav-toggle" aria-label="Ouvrir la navigation">
+        <span></span>
+        <span></span><span></span>
+      </button>
+        <div class="nav-links">
+          <a href="../index.html">Accueil</a>
+          <a href="./services.html">Services</a>
+          <a href="./services.html">Réservation</a>
+          <a href="./giveaway.html" class="active">Concours</a>
+          <a href="./login.html" class="mobile-auth-link" style="color:var(--gold-500);"><i data-lucide="user" style="width:16px;height:16px;display:inline-block;margin-right:4px;vertical-align:-3px;"></i> Connexion</a>
+        <a href="../admin/dashboard.html" class="admin-link">Admin</a>
+        </div>
+        <div class="nav-cta" id="nav-cta">
+          <!-- Auth button will be inserted here by JavaScript -->
+        </div>
+      </nav>
+    </header>
+
+    <main class="page-shell fade-in">
+      <section class="hero-section" style="text-align:center;padding:4rem 2rem;background:linear-gradient(135deg,rgba(102,126,234,0.1) 0%,rgba(118,75,162,0.1) 100%);">
+        <h1 style="font-size:2.5rem;margin-bottom:1rem;">Concours & Giveaways</h1>
+        <p style="font-size:1.1rem;color:var(--text-muted);max-width:600px;margin:0 auto;">Participez à nos concours et gagnez des soins exceptionnels!</p>
+      </section>
+
+      <section class="container" style="padding:2rem;">
+        <div id="giveaways-container" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:2rem;">
+          <div style="grid-column:1/-1;text-align:center;padding:3rem;">
+            <div class="loading-spinner"></div>
+            <p>Chargement des concours...</p>
+          </div>
+        </div>
+
+        <div id="no-giveaways" style="display:none;text-align:center;padding:4rem;">
+          <i data-lucide="gift" style="width:80px;height:80px;color:var(--text-muted);margin-bottom:1rem;"></i>
+          <h2 style="margin-bottom:0.5rem;">Aucun concours actif</h2>
+          <p style="color:var(--text-muted);">Revenez bientôt pour de nouveaux concours!</p>
+        </div>
+
+        <div id="leaderboard-section" style="margin-top:3rem;display:none;">
+          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;">
+            <i data-lucide="trophy" style="width:24px;height:24px;color:#667eea;"></i>
+            <h2 style="font-size:1.5rem;font-weight:700;margin:0;">Classement des participants</h2>
+          </div>
+          <p style="color:var(--text-muted);margin-bottom:1.5rem;font-size:0.95rem;">Les participants avec le plus de votes apparaissent en haut du classement.</p>
+          <div id="leaderboard-container" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem;">
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal d'inscription -->
+    <div class="modal-overlay" id="registration-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;padding:1rem;">
+      <div class="modal" style="background:white;border-radius:16px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;padding:2rem;position:relative;">
+        <button onclick="closeRegistrationModal()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-muted);">&times;</button>
+        <h2 id="modal-giveaway-title" style="margin-bottom:0.5rem;">Inscription au concours</h2>
+        <p id="modal-giveaway-description" style="color:var(--text-muted);margin-bottom:1.5rem;"></p>
+        
+        <form id="registration-form" onsubmit="submitRegistration(event)">
+          <input type="hidden" id="reg-giveaway-id">
+          
+          <div style="margin-bottom:1rem;">
+            <label style="display:block;margin-bottom:0.5rem;font-weight:500;">Prénom <span style="color:red">*</span></label>
+            <input type="text" id="reg-first-name" required style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
+          </div>
+          
+          <div style="margin-bottom:1rem;">
+            <label style="display:block;margin-bottom:0.5rem;font-weight:500;">Nom <span style="color:red">*</span></label>
+            <input type="text" id="reg-last-name" required style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
+          </div>
+          
+          <div style="margin-bottom:1rem;">
+            <label style="display:block;margin-bottom:0.5rem;font-weight:500;">Email <span style="color:red">*</span></label>
+            <input type="email" id="reg-email" required style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
+          </div>
+          
+          <div style="margin-bottom:1rem;">
+            <label style="display:block;margin-bottom:0.5rem;font-weight:500;">Téléphone</label>
+            <input type="tel" id="reg-phone" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
+          </div>
+          
+          <div style="margin-bottom:1rem;">
+            <label style="display:block;margin-bottom:0.5rem;font-weight:500;">Adresse</label>
+            <textarea id="reg-address" rows="2" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:1rem;"></textarea>
+          </div>
+          
+          <div style="margin-bottom:1rem;">
+            <label style="display:block;margin-bottom:0.5rem;font-weight:500;">Nom d'utilisateur Instagram</label>
+            <input type="text" id="reg-instagram" placeholder="@votre_compte" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
+          </div>
+          
+          <div style="margin-bottom:1rem;">
+            <label style="display:block;margin-bottom:0.5rem;font-weight:500;">Nom d'utilisateur Facebook</label>
+            <input type="text" id="reg-facebook" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
+          </div>
+          
+          <div style="margin-bottom:1rem;">
+            <label style="display:block;margin-bottom:0.5rem;font-weight:500;">Nom d'utilisateur TikTok</label>
+            <input type="text" id="reg-tiktok" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
+          </div>
+          
+          <div style="margin-bottom:1.5rem;">
+            <label style="display:flex;align-items:start;gap:0.5rem;cursor:pointer;">
+              <input type="checkbox" id="reg-subscribed-instagram" style="margin-top:0.25rem;">
+              <span style="font-size:0.9rem;">J'ai abonné à la page Instagram @dalightbeauty</span>
+            </label>
+          </div>
+          
+          <div style="margin-bottom:1.5rem;">
+            <label style="display:flex;align-items:start;gap:0.5rem;cursor:pointer;">
+              <input type="checkbox" id="reg-subscribed-facebook" style="margin-top:0.25rem;">
+              <span style="font-size:0.9rem;">J'ai abonné à la page Facebook DALIGHT</span>
+            </label>
+          </div>
+          
+          <div style="margin-bottom:1.5rem;">
+            <label style="display:flex;align-items:start;gap:0.5rem;cursor:pointer;">
+              <input type="checkbox" id="reg-subscribed-tiktok" style="margin-top:0.25rem;">
+              <span style="font-size:0.9rem;">J'ai abonné à la page TikTok @dalightbeauty</span>
+            </label>
+          </div>
+          
+          <div style="margin-bottom:1.5rem;">
+            <label style="display:block;margin-bottom:0.5rem;font-weight:500;">Combien d'amis avez-vous taggués? <span style="color:red">*</span></label>
+            <input type="number" id="reg-tagged-friends" required min="0" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
+          </div>
+          
+          <div id="reg-rules" style="margin-bottom:1.5rem;padding:1rem;background:#f5f5f5;border-radius:8px;font-size:0.9rem;"></div>
+          
+          <button type="submit" class="btn" style="width:100%;padding:1rem;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;">
+            S'inscrire au concours
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal de succès après inscription -->
+    <div class="modal-overlay" id="success-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;padding:1rem;">
+      <div class="modal" style="background:white;border-radius:16px;max-width:480px;width:100%;padding:2rem;position:relative;text-align:center;">
+        <button onclick="closeSuccessModal()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-muted);">&times;</button>
+        <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;">
+          <i data-lucide="party-popper" style="width:32px;height:32px;color:white;"></i>
+        </div>
+        <h2 style="margin-bottom:0.5rem;">Inscription réussie!</h2>
+        <p style="color:var(--text-muted);margin-bottom:1.5rem;">Bonne chance! Partagez votre lien pour obtenir plus de votes.</p>
+        
+        <div style="margin-bottom:1.5rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;font-size:0.85rem;">
+            <span style="font-weight:600;">Vos votes</span>
+            <span id="success-vote-count" style="font-weight:700;color:#667eea;">0 votes</span>
+          </div>
+          <div style="width:100%;height:10px;background:#e9ecef;border-radius:999px;overflow:hidden;">
+            <div id="success-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#667eea 0%,#764ba2 100%);border-radius:999px;transition:width 1s ease;"></div>
+          </div>
+          <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem;">Objectif: 100 votes pour augmenter vos chances de gagner</p>
+        </div>
+        
+        <div style="margin-bottom:1.5rem;text-align:left;">
+          <label style="display:block;font-size:0.8rem;font-weight:600;margin-bottom:0.5rem;color:var(--text-muted);">Votre lien de parrainage</label>
+          <div style="display:flex;gap:0.5rem;">
+            <input type="text" id="success-referral-link" readonly style="flex:1;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:0.85rem;background:#f8f9fa;">
+            <button onclick="copyReferralLink()" style="padding:0.75rem 1rem;background:#667eea;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.85rem;display:flex;align-items:center;gap:0.3rem;">
+              <i data-lucide="copy" style="width:16px;height:16px;"></i> Copier
+            </button>
+          </div>
+        </div>
+        
+        <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;">
+          <a id="success-share-whatsapp" href="#" target="_blank" style="padding:0.6rem 1rem;background:#25D366;color:white;border-radius:8px;text-decoration:none;font-size:0.85rem;display:flex;align-items:center;gap:0.3rem;">
+            <i class="fa-brands fa-whatsapp" style="font-size:1rem;"></i> WhatsApp
+          </a>
+          <a id="success-share-facebook" href="#" target="_blank" style="padding:0.6rem 1rem;background:#1877F2;color:white;border-radius:8px;text-decoration:none;font-size:0.85rem;display:flex;align-items:center;gap:0.3rem;">
+            <i class="fa-brands fa-facebook-f" style="font-size:1rem;"></i> Facebook
+          </a>
+          <a id="success-share-twitter" href="#" target="_blank" style="padding:0.6rem 1rem;background:#1DA1F2;color:white;border-radius:8px;text-decoration:none;font-size:0.85rem;display:flex;align-items:center;gap:0.3rem;">
+            <i class="fa-brands fa-x-twitter" style="font-size:1rem;"></i> Twitter
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de vote -->
+    <div class="modal-overlay" id="vote-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;padding:1rem;">
+      <div class="modal" style="background:white;border-radius:16px;max-width:450px;width:100%;max-height:90vh;overflow-y:auto;padding:2rem;position:relative;">
+        <button onclick="closeVoteModal()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-muted);">&times;</button>
+        <h2 style="margin-bottom:0.5rem;">Voter pour ce participant</h2>
+        <p id="vote-participant-name" style="color:var(--text-muted);margin-bottom:1.5rem;"></p>
+        
+        <form id="vote-form" onsubmit="submitVote(event)">
+          <input type="hidden" id="vote-participant-id">
+          
+          <div style="margin-bottom:1.5rem;padding:1rem;background:#f8f9fa;border-radius:8px;">
+            <h4 style="font-size:0.9rem;font-weight:600;margin-bottom:0.75rem;">Pour valider votre vote:</h4>
+            <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.85rem;margin-bottom:1rem;">
+              <a href="https://www.instagram.com/dalightbeauty" target="_blank" style="display:flex;align-items:center;gap:0.5rem;color:#E1306C;text-decoration:none;font-weight:500;">
+                <i class="fa-brands fa-instagram" style="font-size:1rem;"></i> Suivre @dalightbeauty sur Instagram
+              </a>
+              <a href="https://facebook.com/dalightbeauty" target="_blank" style="display:flex;align-items:center;gap:0.5rem;color:#1877F2;text-decoration:none;font-weight:500;">
+                <i class="fa-brands fa-facebook-f" style="font-size:1rem;"></i> Suivre DALIGHT sur Facebook
+              </a>
+              <a href="https://www.tiktok.com/@dalightbeauty" target="_blank" style="display:flex;align-items:center;gap:0.5rem;color:#000000;text-decoration:none;font-weight:500;">
+                <i class="fa-brands fa-tiktok" style="font-size:1rem;"></i> Suivre @dalightbeauty sur TikTok
+              </a>
+            </div>
+            <p style="font-size:0.75rem;color:var(--text-muted);margin:0;">Votre vote sera vérifié manuellement par notre équipe.</p>
+          </div>
+          
+          <div style="margin-bottom:1rem;">
+            <label style="display:block;margin-bottom:0.5rem;font-weight:500;">Votre nom d'utilisateur Instagram <span style="color:red">*</span></label>
+            <input type="text" id="voter-instagram" placeholder="@votre_compte" required style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
+          </div>
+          
+          <div style="margin-bottom:1rem;">
+            <label style="display:flex;align-items:start;gap:0.5rem;cursor:pointer;">
+              <input type="checkbox" id="voter-subscribed-instagram" required style="margin-top:0.25rem;">
+              <span style="font-size:0.9rem;">J'ai suivi/abonné au compte Instagram @dalightbeauty</span>
+            </label>
+          </div>
+          
+          <div style="margin-bottom:1rem;">
+            <label style="display:flex;align-items:start;gap:0.5rem;cursor:pointer;">
+              <input type="checkbox" id="voter-liked-post" style="margin-top:0.25rem;">
+              <span style="font-size:0.9rem;">J'ai aimé (like) le post du concours</span>
+            </label>
+          </div>
+          
+          <div style="margin-bottom:1.5rem;">
+            <label style="display:flex;align-items:start;gap:0.5rem;cursor:pointer;">
+              <input type="checkbox" id="voter-commented-post" style="margin-top:0.25rem;">
+              <span style="font-size:0.9rem;">J'ai commenté le post du concours</span>
+            </label>
+          </div>
+          
+          <button type="submit" class="btn" style="width:100%;padding:1rem;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;">
+            <i data-lucide="heart" style="width:18px;height:18px;"></i> Valider mon vote
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <img src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" />
+          <p>L'art de la renaissance par le soin du cuir chevelu.</p>
+        </div>
+        <div class="footer-links">
+          <h4>Navigation</h4>
+          <a href="../index.html">Accueil</a>
+          <a href="./services.html">Services</a>
+          <a href="./giveaway.html">Concours</a>
+        </div>
+        <div class="footer-links">
+          <h4>Contact</h4>
+          <a href="tel:+50947477221">+509 4747 7221</a>
+          <a href="mailto:dalightbeauty15mai@gmail.com">dalightbeauty15mai@gmail.com</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 DALIGHT. Tous droits réservés.</p>
+      </div>
+    </footer>
+  </body>
+</html>

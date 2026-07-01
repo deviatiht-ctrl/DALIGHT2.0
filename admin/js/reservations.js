@@ -228,9 +228,10 @@ window.openDetailModal = function(id) {
   // ── Price ─────────────────────────────────────────────────────
   const totalAmt   = parseFloat(r.total_amount || r.total_price || 0);
   const depositAmt = parseFloat(r.deposit_amount || 0);
-  const isFull     = r.payment_choice === 'full';
-  const amtPaid    = isFull ? totalAmt : depositAmt;
-  const balance    = isFull ? 0 : Math.max(0, totalAmt - depositAmt);
+  const balancePaid = parseFloat(r.balance_amount_paid || 0);
+  const isFull     = r.payment_choice === 'full' || r.payment_status === 'fully_paid';
+  const amtPaid    = isFull ? totalAmt : depositAmt + balancePaid;
+  const balance    = isFull ? 0 : Math.max(0, totalAmt - depositAmt - balancePaid);
 
   const priceBlock = totalAmt > 0 ? `
     <div style="margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--admin-border);display:grid;gap:.4rem;">
@@ -458,19 +459,32 @@ window.openDetailModal = function(id) {
       </div>
     </div>` : '';
 
-  let actions = `<button class="btn btn-secondary" onclick="closeModal()">Fermer</button>`;
+  const showBalanceBtn = balance > 0 && !isFull && r.status !== 'CANCELLED';
+
+  let actions = `
+    <button class="btn btn-secondary" onclick="closeModal()">Fermer</button>
+    <button class="btn btn-secondary" onclick="printReservationDetail('${r.id}')" style="display:flex;align-items:center;gap:.35rem;">
+      ${ico('M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z', 14)} Imprimer
+    </button>
+    ${showBalanceBtn ? `<button class="btn btn-primary" onclick="openBalanceModal('${r.id}')" style="display:flex;align-items:center;gap:.35rem;">
+      ${ico('M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', 14)} Payer le solde
+    </button>` : ''}
+  `;
   if (r.status === 'PENDING') {
     actions = `
       <button class="btn btn-danger" onclick="updateStatus('${r.id}','CANCELLED');closeModal();">Annuler</button>
+      <button class="btn btn-secondary" onclick="printReservationDetail('${r.id}')">${ico('M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z', 14)} Imprimer</button>
       <button class="btn btn-primary" onclick="updateStatus('${r.id}','CONFIRMED');closeModal();">Confirmer</button>`;
   } else if (r.status === 'CONFIRMED') {
     actions = `
       <button class="btn btn-secondary" onclick="closeModal()">Fermer</button>
-      <button class="btn btn-primary" onclick="updateStatus('${r.id}','COMPLETED');closeModal();">Marquer terminé</button>`;
+      <button class="btn btn-secondary" onclick="printReservationDetail('${r.id}')">${ico('M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z', 14)} Imprimer</button>
+      <button class="btn btn-primary" onclick="updateStatus('${r.id}','COMPLETED');closeModal();">Marquer terminé</button>
+      ${showBalanceBtn ? `<button class="btn btn-primary" onclick="openBalanceModal('${r.id}')">${ico('M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', 14)} Payer solde</button>` : ''}`;
   }
 
   footer.innerHTML = plopVerifyHtml + automaticButtonsHtml + emailButtonsHtml +
-    '<div style="display:flex;gap:.5rem;justify-content:flex-end;width:100%;">' + actions + '</div>';
+    '<div style="display:flex;gap:.5rem;justify-content:flex-end;flex-wrap:wrap;width:100%;">' + actions + '</div>';
   footer.style.flexDirection = 'column';
   footer.style.alignItems    = 'stretch';
   modal.classList.add('active');
@@ -480,6 +494,244 @@ window.closeModal = function() {
   const modal = document.getElementById('detail-modal');
   modal.classList.remove('active');
   currentReservation = null;
+};
+
+// ── Print reservation detail ────────────────────────────────────────────────
+window.printReservationDetail = function(id) {
+  const r = allReservations.find(r => r.id === id);
+  if (!r) return;
+
+  const fmtHTG = n => n ? Number(n).toLocaleString('fr-FR') + ' HTG' : '—';
+  const totalAmt = parseFloat(r.total_amount || r.total_price || 0);
+  const depositAmt = parseFloat(r.deposit_amount || 0);
+  const isFull = r.payment_choice === 'full' || r.payment_status === 'fully_paid';
+  const balancePaid = parseFloat(r.balance_amount_paid || 0);
+  const balance = isFull ? 0 : Math.max(0, totalAmt - depositAmt - balancePaid);
+  const amtPaid = isFull ? totalAmt : depositAmt + balancePaid;
+
+  const printHtml = `
+    <div style="max-width:210mm;margin:0 auto;padding:10mm;font-family:Inter,sans-serif;color:#1a1a1a;">
+      <div style="text-align:center;margin-bottom:8mm;">
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#4A3728;">DALIGHT</div>
+        <div style="font-size:10px;color:#7a7068;letter-spacing:2px;text-transform:uppercase;">L'Art du Bien-Être</div>
+        <div style="font-size:9px;color:#6b7280;margin-top:4px;line-height:1.5;">
+          Delmas 65, Faustin Premier Durandise #10<br>
+          Port-au-Prince • +509 47 47 72 21
+        </div>
+      </div>
+      <hr style="border:none;border-top:1px dashed #d1d5db;margin:5mm 0;">
+      <div style="font-size:10px;color:#6b7280;margin-bottom:6px;">Reçu #${r.reservation_number || r.id}</div>
+      <div style="font-size:10px;color:#6b7280;margin-bottom:6px;">Date: ${new Date().toLocaleDateString('fr-FR')}</div>
+      <hr style="border:none;border-top:1px dashed #d1d5db;margin:5mm 0;">
+      <div style="margin-bottom:6mm;">
+        <div style="font-size:11px;font-weight:700;margin-bottom:3px;">Client</div>
+        <div style="font-size:10px;">${r.user_name || 'Client'}</div>
+        <div style="font-size:10px;color:#6b7280;">${r.user_email || '—'}</div>
+        <div style="font-size:10px;color:#6b7280;">${r.phone || '—'}</div>
+      </div>
+      <div style="margin-bottom:6mm;">
+        <div style="font-size:11px;font-weight:700;margin-bottom:3px;">Service / Rituel</div>
+        <div style="font-size:10px;">${r.service || '—'}</div>
+        <div style="font-size:10px;color:#6b7280;">${formatDate(r.date)} à ${formatTime(r.time)} — ${r.location === 'Spa' ? 'Au Spa' : 'À domicile'}</div>
+      </div>
+      <hr style="border:none;border-top:1px dashed #d1d5db;margin:5mm 0;">
+      <div style="font-size:10px;display:flex;justify-content:space-between;margin-bottom:3px;"><span>Total service</span><span>${fmtHTG(totalAmt)}</span></div>
+      <div style="font-size:10px;display:flex;justify-content:space-between;margin-bottom:3px;"><span>Acompte / Payé</span><span>${fmtHTG(amtPaid)}</span></div>
+      ${balance > 0 ? `<div style="font-size:11px;display:flex;justify-content:space-between;margin-top:4px;font-weight:700;color:#92400e;"><span>SOLDE RESTANT</span><span>${fmtHTG(balance)}</span></div>` : `<div style="font-size:11px;display:flex;justify-content:space-between;margin-top:4px;font-weight:700;color:#059669;"><span>PAIEMENT COMPLET</span><span>${fmtHTG(totalAmt)}</span></div>`}
+      <hr style="border:none;border-top:1px dashed #d1d5db;margin:5mm 0;">
+      <div style="font-size:10px;display:flex;justify-content:space-between;margin-bottom:3px;"><span>Méthode de paiement</span><span>${(r.payment_method || '—').toUpperCase()}</span></div>
+      ${r.balance_payment_method ? `<div style="font-size:10px;display:flex;justify-content:space-between;margin-bottom:3px;"><span>Méthode solde</span><span>${r.balance_payment_method.toUpperCase()}</span></div>` : ''}
+      <div style="font-size:10px;display:flex;justify-content:space-between;margin-bottom:3px;"><span>Statut</span><span>${r.status}</span></div>
+      <div style="text-align:center;font-size:9px;color:#9ca3af;margin-top:10mm;line-height:1.6;">
+        Merci pour votre confiance!<br>
+        @dalightbeauty
+      </div>
+    </div>
+  `;
+
+  const printArea = document.getElementById('print-area');
+  printArea.innerHTML = printHtml;
+  window.print();
+  printArea.innerHTML = '';
+};
+
+// ── Print all reservations list ─────────────────────────────────────────────
+window.printReservationsList = function() {
+  const { formatDate, formatTime, getStatusBadge } = window.adminCore;
+  const searchInput = document.getElementById('search-input');
+  const dateFilter = document.getElementById('date-filter');
+
+  let filtered = [...allReservations];
+  if (currentFilter !== 'all') filtered = filtered.filter(r => r.status === currentFilter);
+  if (searchInput && searchInput.value) {
+    const q = searchInput.value.toLowerCase();
+    filtered = filtered.filter(r =>
+      (r.user_email && r.user_email.toLowerCase().includes(q)) ||
+      (r.user_name && r.user_name.toLowerCase().includes(q)) ||
+      (r.service && r.service.toLowerCase().includes(q))
+    );
+  }
+  if (dateFilter && dateFilter.value) filtered = filtered.filter(r => r.date === dateFilter.value);
+
+  const rows = filtered.map(r => `
+    <tr>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;font-size:9px;">${r.user_name || 'Client'}</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;font-size:9px;">${r.service || '—'}</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;font-size:9px;">${formatDate(r.date)} ${formatTime(r.time)}</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;font-size:9px;">${r.location === 'Spa' ? 'Au Spa' : 'Domicile'}</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;font-size:9px;">${r.payment_method || '—'} (${r.payment_choice === 'full' ? 'Complet' : 'Acompte'})</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;font-size:9px;">${r.status}</td>
+    </tr>
+  `).join('');
+
+  const printHtml = `
+    <div style="max-width:297mm;margin:0 auto;padding:10mm;font-family:Inter,sans-serif;color:#1a1a1a;">
+      <div style="text-align:center;margin-bottom:8mm;">
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#4A3728;">DALIGHT</div>
+        <div style="font-size:10px;color:#7a7068;letter-spacing:2px;text-transform:uppercase;">Liste des réservations</div>
+      </div>
+      <div style="font-size:9px;color:#6b7280;margin-bottom:4mm;">
+        Filtre: ${currentFilter === 'all' ? 'Toutes' : currentFilter} — ${dateFilter && dateFilter.value ? 'Date: ' + dateFilter.value : 'Toutes les dates'} — Imprimé le ${new Date().toLocaleDateString('fr-FR')}
+      </div>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:6px;border-bottom:2px solid #1a1a1a;font-size:9px;">Client</th>
+            <th style="text-align:left;padding:6px;border-bottom:2px solid #1a1a1a;font-size:9px;">Rituel</th>
+            <th style="text-align:left;padding:6px;border-bottom:2px solid #1a1a1a;font-size:9px;">Date & Heure</th>
+            <th style="text-align:left;padding:6px;border-bottom:2px solid #1a1a1a;font-size:9px;">Lieu</th>
+            <th style="text-align:left;padding:6px;border-bottom:2px solid #1a1a1a;font-size:9px;">Paiement</th>
+            <th style="text-align:left;padding:6px;border-bottom:2px solid #1a1a1a;font-size:9px;">Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows || '<tr><td colspan="6" style="text-align:center;padding:10px;font-size:9px;">Aucune réservation</td></tr>'}
+        </tbody>
+      </table>
+      <div style="font-size:9px;color:#6b7280;margin-top:5mm;">Total: ${filtered.length} réservation${filtered.length > 1 ? 's' : ''}</div>
+    </div>
+  `;
+
+  const printArea = document.getElementById('print-area');
+  printArea.innerHTML = printHtml;
+  window.print();
+  printArea.innerHTML = '';
+};
+
+// ── Balance payment ─────────────────────────────────────────────────────────
+let balanceReservationId = null;
+let selectedBalancePM = 'cash';
+
+window.openBalanceModal = function(id) {
+  const r = allReservations.find(r => r.id === id);
+  if (!r) return;
+
+  balanceReservationId = id;
+  selectedBalancePM = 'cash';
+  document.querySelectorAll('.balance-pm-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.pm === 'cash'));
+  document.getElementById('balance-reference').value = '';
+
+  const totalAmt = parseFloat(r.total_amount || r.total_price || 0);
+  const depositAmt = parseFloat(r.deposit_amount || 0);
+  const balancePaid = parseFloat(r.balance_amount_paid || 0);
+  const balance = Math.max(0, totalAmt - depositAmt - balancePaid);
+
+  document.getElementById('balance-info').innerHTML = `
+    <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:.75rem 1rem;">
+      <div style="font-size:.78rem;color:#92400e;margin-bottom:.25rem;">Solde à payer</div>
+      <div style="font-size:1.4rem;font-weight:700;color:#b45309;">${balance.toLocaleString('fr-FR')} HTG</div>
+      <div style="font-size:.75rem;color:#92400e;margin-top:.25rem;">
+        Total: ${totalAmt.toLocaleString('fr-FR')} HTG — Déjà payé: ${(depositAmt + balancePaid).toLocaleString('fr-FR')} HTG
+      </div>
+    </div>
+  `;
+
+  document.getElementById('balance-modal').style.display = 'flex';
+};
+
+window.closeBalanceModal = function() {
+  document.getElementById('balance-modal').style.display = 'none';
+  balanceReservationId = null;
+};
+
+window.selectBalancePM = function(pm) {
+  selectedBalancePM = pm;
+  document.querySelectorAll('.balance-pm-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.pm === pm);
+  });
+};
+
+window.processBalancePayment = async function() {
+  if (!balanceReservationId) return;
+  const r = allReservations.find(r => r.id === balanceReservationId);
+  if (!r) return;
+
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    window.adminCore.showToast('Connexion Supabase non disponible.', 'error');
+    return;
+  }
+
+  const totalAmt = parseFloat(r.total_amount || r.total_price || 0);
+  const depositAmt = parseFloat(r.deposit_amount || 0);
+  const balancePaid = parseFloat(r.balance_amount_paid || 0);
+  const balance = Math.max(0, totalAmt - depositAmt - balancePaid);
+  const reference = document.getElementById('balance-reference').value.trim() || `${r.reservation_number || 'DL' + Date.now().toString().slice(-8)}-SOLDE`;
+
+  try {
+    // Mobile payment: create Plop Plop payment for balance
+    if (selectedBalancePM === 'moncash' || selectedBalancePM === 'natcash') {
+      const { createPlopPayment } = await import('../js/plop-payment.js?v=5.0.0');
+      const payment = await createPlopPayment(supabase, {
+        refference_id: reference,
+        montant: balance,
+        payment_method: selectedBalancePM,
+        context_type: 'reservation_balance',
+        context_id: r.id,
+      });
+
+      if (payment?.transaction_id) {
+        await supabase.from('reservations').update({
+          balance_amount_paid: balancePaid + balance,
+          balance_payment_method: selectedBalancePM,
+          balance_payment_reference: reference,
+          balance_plop_transaction_id: payment.transaction_id,
+          payment_status: 'fully_paid',
+          payment_choice: 'full',
+        }).eq('id', r.id);
+      }
+      if (payment?.url) { window.location.href = payment.url; return; }
+    } else {
+      // Cash or bank: mark balance paid immediately
+      await supabase.from('reservations').update({
+        balance_amount_paid: balancePaid + balance,
+        balance_payment_method: selectedBalancePM,
+        balance_payment_reference: reference,
+        payment_status: 'fully_paid',
+        payment_choice: 'full',
+      }).eq('id', r.id);
+    }
+
+    // Update local data
+    const idx = allReservations.findIndex(res => res.id === r.id);
+    if (idx !== -1) {
+      allReservations[idx].balance_amount_paid = balancePaid + balance;
+      allReservations[idx].balance_payment_method = selectedBalancePM;
+      allReservations[idx].balance_payment_reference = reference;
+      allReservations[idx].payment_status = 'fully_paid';
+      allReservations[idx].payment_choice = 'full';
+    }
+
+    closeBalanceModal();
+    closeModal();
+    renderReservations();
+    window.adminCore.showToast('Solde payé avec succès', 'success');
+    // Print receipt after balance payment
+    printReservationDetail(r.id);
+  } catch (err) {
+    console.error('Error processing balance payment:', err);
+    window.adminCore.showToast('Erreur lors du paiement du solde', 'error');
+  }
 };
 
 // ── Vérification paiement Plop Plop ─────────────────────────────────────────
