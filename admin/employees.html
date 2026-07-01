@@ -220,6 +220,27 @@
           </div>
           <div id="scan-result" style="margin-top:1rem;min-height:80px;"></div>
         </div>
+
+        <!-- Manual Entry Form -->
+        <div class="glass-card" style="margin-top:1.5rem;">
+          <h3 class="card-title mb-2">Entrée manuelle (badge perdu)</h3>
+          <p class="card-subtitle mb-2">Si l'employé a oublié son badge, enregistrez manuellement l'entrée ou la sortie.</p>
+          <div class="admin-filters" style="margin-bottom:1rem;">
+            <div class="filter-group" style="flex:1;">
+              <label>Rechercher employé</label>
+              <input type="text" id="manual-employee-search" class="form-input" placeholder="Nom, numéro ou NIF..." oninput="searchEmployeeForManualEntry()">
+            </div>
+            <div class="filter-group">
+              <label>Action</label>
+              <select id="manual-action" class="form-input">
+                <option value="entry">Entrée</option>
+                <option value="exit">Sortie</option>
+              </select>
+            </div>
+          </div>
+          <div id="manual-employee-results" style="margin-bottom:1rem;max-height:200px;overflow-y:auto;"></div>
+          <button class="btn btn-primary" id="btn-manual-entry" onclick="submitManualEntry()" disabled>Enregistrer</button>
+        </div>
       </div>
 
       <!-- Attendance Tab -->
@@ -421,6 +442,6 @@
       }
     })();
   </script>
-  <script src="js/employees.js?v=202606302500"></script>
+  <script src="js/employees.js?v=202606302700"></script>
 </body>
 </html>

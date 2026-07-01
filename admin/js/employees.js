@@ -461,6 +461,10 @@ window.downloadQR = async function(format) {
 // QR SCANNER & ATTENDANCE
 // ============================================
 
+let lastScanTime = 0;
+let lastScanQrData = null;
+const SCAN_DEBOUNCE_MS = 2000; // Ignore same QR scan within 2 seconds
+
 window.startScanner = function() {
   const btnStart = document.getElementById('btn-start-scan');
   const btnStop = document.getElementById('btn-stop-scan');
@@ -497,8 +501,166 @@ window.stopScanner = function() {
   }).catch(err => console.error('Stop scanner error:', err));
 };
 
+// ============================================
+// MANUAL ENTRY (BADGE LOST)
+// ============================================
+
+let selectedManualEmployee = null;
+
+window.searchEmployeeForManualEntry = function() {
+  const query = document.getElementById('manual-employee-search').value.trim().toLowerCase();
+  const resultsDiv = document.getElementById('manual-employee-results');
+  const btn = document.getElementById('btn-manual-entry');
+
+  if (!query) {
+    resultsDiv.innerHTML = '';
+    selectedManualEmployee = null;
+    btn.disabled = true;
+    return;
+  }
+
+  const matches = allEmployees.filter(e =>
+    e.full_name?.toLowerCase().includes(query) ||
+    e.employee_number?.toLowerCase().includes(query) ||
+    e.nif?.toLowerCase().includes(query)
+  );
+
+  if (matches.length === 0) {
+    resultsDiv.innerHTML = '<div class="text-muted" style="padding:0.5rem;">Aucun employé trouvé</div>';
+    selectedManualEmployee = null;
+    btn.disabled = true;
+    return;
+  }
+
+  resultsDiv.innerHTML = matches.map(e => `
+    <div class="emp-card" style="cursor:pointer;margin-bottom:0.5rem;" onclick="selectManualEmployee('${e.id}')">
+      <div class="emp-avatar">${esc(e.full_name?.charAt(0) || '?')}</div>
+      <div class="emp-info">
+        <div class="emp-name">${esc(e.full_name)}</div>
+        <div class="emp-meta">${esc(e.position)} • ${esc(e.employee_number || '')}</div>
+        ${e.nif ? `<div class="emp-meta">NIF: ${esc(e.nif)}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+};
+
+window.selectManualEmployee = function(id) {
+  selectedManualEmployee = allEmployees.find(e => e.id === id);
+  const resultsDiv = document.getElementById('manual-employee-results');
+  const btn = document.getElementById('btn-manual-entry');
+
+  if (!selectedManualEmployee) return;
+
+  resultsDiv.innerHTML = `
+    <div class="emp-card" style="background:#e0f2fe;border-color:#0ea5e9;">
+      <div class="emp-avatar">${esc(selectedManualEmployee.full_name?.charAt(0) || '?')}</div>
+      <div class="emp-info">
+        <div class="emp-name">${esc(selectedManualEmployee.full_name)}</div>
+        <div class="emp-meta">${esc(selectedManualEmployee.position)} • ${esc(selectedManualEmployee.employee_number || '')}</div>
+        ${selectedManualEmployee.nif ? `<div class="emp-meta">NIF: ${esc(selectedManualEmployee.nif)}</div>` : ''}
+      </div>
+    </div>
+  `;
+  btn.disabled = false;
+};
+
+window.submitManualEntry = async function() {
+  if (!selectedManualEmployee) return;
+
+  const action = document.getElementById('manual-action').value;
+  const supabase = getSupabaseClient();
+  if (!supabase) return;
+
+  const today = new Date().toISOString().split('T')[0];
+  const now = new Date().toISOString();
+
+  try {
+    if (action === 'entry') {
+      const { data: existing } = await supabase
+        .from('attendance_logs')
+        .select('*')
+        .eq('employee_id', selectedManualEmployee.id)
+        .eq('date', today)
+        .eq('type', 'entry')
+        .maybeSingle();
+
+      if (existing) {
+        showToast('Entrée déjà enregistrée aujourd\'hui', 'warning');
+        return;
+      }
+
+      const { error } = await supabase.from('attendance_logs').insert({
+        employee_id: selectedManualEmployee.id,
+        date: today,
+        type: 'entry',
+        timestamp: now,
+        method: 'manual'
+      });
+
+      if (error) throw error;
+      showToast(`Entrée enregistrée pour ${esc(selectedManualEmployee.full_name)}`, 'success');
+    } else {
+      const { data: entry } = await supabase
+        .from('attendance_logs')
+        .select('*')
+        .eq('employee_id', selectedManualEmployee.id)
+        .eq('date', today)
+        .eq('type', 'entry')
+        .maybeSingle();
+
+      if (!entry) {
+        showToast('Aucune entrée trouvée pour aujourd\'hui', 'error');
+        return;
+      }
+
+      const { data: existingExit } = await supabase
+        .from('attendance_logs')
+        .select('*')
+        .eq('employee_id', selectedManualEmployee.id)
+        .eq('date', today)
+        .eq('type', 'exit')
+        .maybeSingle();
+
+      if (existingExit) {
+        showToast('Sortie déjà enregistrée aujourd\'hui', 'warning');
+        return;
+      }
+
+      const { error } = await supabase.from('attendance_logs').insert({
+        employee_id: selectedManualEmployee.id,
+        date: today,
+        type: 'exit',
+        timestamp: now,
+        method: 'manual'
+      });
+
+      if (error) throw error;
+      showToast(`Sortie enregistrée pour ${esc(selectedManualEmployee.full_name)}`, 'success');
+    }
+
+    document.getElementById('manual-employee-search').value = '';
+    document.getElementById('manual-employee-results').innerHTML = '';
+    document.getElementById('btn-manual-entry').disabled = true;
+    selectedManualEmployee = null;
+    await loadAttendance();
+  } catch (err) {
+    console.error('Manual entry error:', err);
+    showToast('Erreur: ' + (err?.message || err), 'error');
+  }
+};
+
 async function onScanSuccess(qrData) {
   if (!scanner) return;
+
+  const now = Date.now();
+  // Debounce: ignore same QR scan within 2 seconds
+  if (qrData === lastScanQrData && (now - lastScanTime) < SCAN_DEBOUNCE_MS) {
+    console.log('Ignoring duplicate scan');
+    return;
+  }
+
+  lastScanTime = now;
+  lastScanQrData = qrData;
   await scanner.pause();
 
   const employee = allEmployees.find(e => e.qr_data === qrData);
@@ -506,7 +668,9 @@ async function onScanSuccess(qrData) {
 
   if (!employee) {
     result.innerHTML = `<div class="alert alert-error">Badge non reconnu</div>`;
-    setTimeout(() => scanner.resume(), 2000);
+    setTimeout(() => {
+      if (scanner) scanner.resume();
+    }, 2000);
     return;
   }
 
@@ -514,6 +678,10 @@ async function onScanSuccess(qrData) {
     const log = await recordAttendance(employee);
     const action = log.exit_time ? 'sortie' : 'entrée';
     const time = log.exit_time || log.entry_time;
+
+    // Show BONJOUR popup
+    showBonjourPopup(employee, action, time);
+
     result.innerHTML = `
       <div class="alert alert-success" style="display:flex;align-items:center;gap:1rem;justify-content:center;">
         <div class="emp-avatar" style="width:56px;height:56px;">
@@ -545,6 +713,7 @@ async function onScanSuccess(qrData) {
     }
   }
 
+  // Auto-restart scanner after 3 seconds
   setTimeout(() => {
     if (scanner) scanner.resume();
   }, 3000);
@@ -552,6 +721,72 @@ async function onScanSuccess(qrData) {
 
 function onScanError(err) {
   // ignore frequent errors
+}
+
+function showBonjourPopup(employee, action, time) {
+  // Remove existing popup if any
+  const existing = document.getElementById('bonjour-popup');
+  if (existing) existing.remove();
+
+  const popup = document.createElement('div');
+  popup.id = 'bonjour-popup';
+  popup.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    z-index: 10000;
+    text-align: center;
+    min-width: 320px;
+    animation: popupSlideIn 0.3s ease-out;
+  `;
+
+  const actionText = action === 'entrée' ? '👋 BONJOUR' : '👋 AU REVOIR';
+  const actionSub = action === 'entrée' ? 'Bienvenue au travail' : 'Bonne journée';
+
+  popup.innerHTML = `
+    <div style="font-size: 2rem; margin-bottom: 0.5rem;">${actionText}</div>
+    <div class="emp-avatar" style="width:80px;height:80px;margin:0 auto 1rem;font-size:1.5rem;background:rgba(255,255,255,0.2);border:3px solid rgba(255,255,255,0.5);">
+      ${employee.photo_url ? `<img src="${employee.photo_url}" alt="${esc(employee.full_name)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : getInitials(employee.full_name)}
+    </div>
+    <div style="font-weight:700;font-size:1.4rem;margin-bottom:0.25rem;">${esc(employee.full_name)}</div>
+    <div style="font-size:0.95rem;opacity:0.9;margin-bottom:0.25rem;">${esc(employee.position)}</div>
+    ${employee.employee_number ? `<div style="font-size:0.85rem;opacity:0.8;">#${esc(employee.employee_number)}</div>` : ''}
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.3);">
+      <div style="font-size:0.9rem;">${actionSub}</div>
+      <div style="font-size:1.2rem;font-weight:600;">${time}</div>
+    </div>
+  `;
+
+  // Add animation keyframes
+  if (!document.getElementById('bonjour-popup-styles')) {
+    const style = document.createElement('style');
+    style.id = 'bonjour-popup-styles';
+    style.textContent = `
+      @keyframes popupSlideIn {
+        from { opacity: 0; transform: translate(-50%, -40%); }
+        to { opacity: 1; transform: translate(-50%, -50%); }
+      }
+      @keyframes popupSlideOut {
+        from { opacity: 1; transform: translate(-50%, -50%); }
+        to { opacity: 0; transform: translate(-50%, -40%); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  document.body.appendChild(popup);
+
+  // Auto-remove after 2.5 seconds
+  setTimeout(() => {
+    popup.style.animation = 'popupSlideOut 0.3s ease-in forwards';
+    setTimeout(() => popup.remove(), 300);
+  }, 2500);
 }
 
 async function recordAttendance(employee) {
@@ -627,7 +862,7 @@ async function loadAttendanceRange(start, end) {
   try {
     const { data, error } = await supabase
       .from('attendance_logs')
-      .select('*, presence_employees:employee_id(full_name, photo_url, position)')
+      .select('*, presence_employees:employee_id(full_name, photo_url, position, employee_number, nif)')
       .gte('log_date', start)
       .lte('log_date', end)
       .order('entry_time', { ascending: true });
@@ -808,6 +1043,8 @@ function renderAttendanceTable(dateStr) {
             <div>
               <div style="font-weight:500;font-size:.85rem;">${esc(emp.full_name || 'Employé')}</div>
               <div class="text-muted" style="font-size:.75rem;">${esc(emp.position || '')}</div>
+              ${emp.employee_number ? `<div class="text-muted" style="font-size:.75rem;">#${esc(emp.employee_number)}</div>` : ''}
+              ${emp.nif ? `<div class="text-muted" style="font-size:.75rem;">NIF: ${esc(emp.nif)}</div>` : ''}
             </div>
           </div>
         </td>
