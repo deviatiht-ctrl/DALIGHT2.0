@@ -667,7 +667,8 @@ async function onScanSuccess(qrData) {
   const result = document.getElementById('scan-result');
 
   if (!employee) {
-    result.innerHTML = `<div class="alert alert-error">Badge non reconnu</div>`;
+    showScanResultPopup('error', null, 'ERREUR', 'Badge non reconnu', null);
+    if (result) result.innerHTML = `<div class="alert alert-error">Badge non reconnu</div>`;
     setTimeout(() => {
       if (scanner) scanner.resume();
     }, 2000);
@@ -678,11 +679,12 @@ async function onScanSuccess(qrData) {
     const log = await recordAttendance(employee);
     const action = log.exit_time ? 'sortie' : 'entrée';
     const time = log.exit_time || log.entry_time;
+    const title = action === 'entrée' ? 'BONJOUR' : 'AU REVOIR';
+    const message = action === 'entrée' ? 'Bienvenue au travail' : 'Bonne journée';
 
-    // Show BONJOUR popup
-    showBonjourPopup(employee, action, time);
+    showScanResultPopup('success', employee, title, message, time);
 
-    result.innerHTML = `
+    if (result) result.innerHTML = `
       <div class="alert alert-success" style="display:flex;align-items:center;gap:1rem;justify-content:center;">
         <div class="emp-avatar" style="width:56px;height:56px;">
           ${employee.photo_url ? `<img src="${employee.photo_url}" alt="${esc(employee.full_name)}">` : getInitials(employee.full_name)}
@@ -697,7 +699,8 @@ async function onScanSuccess(qrData) {
   } catch (err) {
     console.error('Attendance error:', err);
     if (err.code === 'DAY_COMPLETED') {
-      result.innerHTML = `
+      showScanResultPopup('warning', employee, 'JOURNÉE TERMINÉE', err.message, null);
+      if (result) result.innerHTML = `
         <div class="alert alert-warning" style="display:flex;align-items:center;gap:1rem;justify-content:center;">
           <div class="emp-avatar" style="width:56px;height:56px;">
             ${employee.photo_url ? `<img src="${employee.photo_url}" alt="${esc(employee.full_name)}">` : getInitials(employee.full_name)}
@@ -709,7 +712,8 @@ async function onScanSuccess(qrData) {
         </div>
       `;
     } else {
-      result.innerHTML = `<div class="alert alert-error">Erreur: ${esc(err.message)}</div>`;
+      showScanResultPopup('error', employee, 'ERREUR', err.message, null);
+      if (result) result.innerHTML = `<div class="alert alert-error">Erreur: ${esc(err.message)}</div>`;
     }
   }
 
@@ -723,70 +727,124 @@ function onScanError(err) {
   // ignore frequent errors
 }
 
-function showBonjourPopup(employee, action, time) {
+function showScanResultPopup(type, employee, title, message, time) {
   // Remove existing popup if any
-  const existing = document.getElementById('bonjour-popup');
+  const existing = document.getElementById('scan-result-popup');
+  const existingBackdrop = document.getElementById('scan-popup-backdrop');
   if (existing) existing.remove();
+  if (existingBackdrop) existingBackdrop.remove();
+
+  const isSuccess = type === 'success';
+  const isWarning = type === 'warning';
+  const isError = type === 'error';
+
+  // Backdrop overlay
+  const backdrop = document.createElement('div');
+  backdrop.id = 'scan-popup-backdrop';
+  backdrop.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 99998;
+    animation: scanBackdropFadeIn 0.3s ease-out;
+  `;
 
   const popup = document.createElement('div');
-  popup.id = 'bonjour-popup';
+  popup.id = 'scan-result-popup';
   popup.style.cssText = `
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: ${isSuccess ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : isWarning ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'};
     color: white;
-    padding: 2rem;
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    z-index: 10000;
+    padding: 2.5rem 2rem;
+    border-radius: 24px;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+    z-index: 99999;
     text-align: center;
-    min-width: 320px;
-    animation: popupSlideIn 0.3s ease-out;
+    min-width: 340px;
+    max-width: 90vw;
+    animation: scanPopupSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
   `;
 
-  const actionText = action === 'entrée' ? '👋 BONJOUR' : '👋 AU REVOIR';
-  const actionSub = action === 'entrée' ? 'Bienvenue au travail' : 'Bonne journée';
+  let bodyHtml = '';
+  if (employee) {
+    bodyHtml = `
+      <div class="emp-avatar" style="width:90px;height:90px;margin:0 auto 1rem;font-size:1.8rem;background:rgba(255,255,255,0.25);border:3px solid rgba(255,255,255,0.6);">
+        ${employee.photo_url ? `<img src="${employee.photo_url}" alt="${esc(employee.full_name)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : getInitials(employee.full_name)}
+      </div>
+      <div style="font-weight:700;font-size:1.5rem;margin-bottom:0.25rem;">${esc(employee.full_name || 'Employé')}</div>
+      ${employee.position ? `<div style="font-size:0.95rem;opacity:0.9;margin-bottom:0.25rem;">${esc(employee.position)}</div>` : ''}
+      ${employee.employee_number ? `<div style="font-size:0.85rem;opacity:0.8;">#${esc(employee.employee_number)}</div>` : ''}
+    `;
+  }
 
   popup.innerHTML = `
-    <div style="font-size: 2rem; margin-bottom: 0.5rem;">${actionText}</div>
-    <div class="emp-avatar" style="width:80px;height:80px;margin:0 auto 1rem;font-size:1.5rem;background:rgba(255,255,255,0.2);border:3px solid rgba(255,255,255,0.5);">
-      ${employee.photo_url ? `<img src="${employee.photo_url}" alt="${esc(employee.full_name)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : getInitials(employee.full_name)}
-    </div>
-    <div style="font-weight:700;font-size:1.4rem;margin-bottom:0.25rem;">${esc(employee.full_name)}</div>
-    <div style="font-size:0.95rem;opacity:0.9;margin-bottom:0.25rem;">${esc(employee.position)}</div>
-    ${employee.employee_number ? `<div style="font-size:0.85rem;opacity:0.8;">#${esc(employee.employee_number)}</div>` : ''}
+    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">${isSuccess ? '👋' : isWarning ? '⚠️' : '❌'}</div>
+    <div style="font-weight:800;font-size:1.8rem;margin-bottom:0.5rem;">${esc(title)}</div>
+    ${bodyHtml}
     <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.3);">
-      <div style="font-size:0.9rem;">${actionSub}</div>
-      <div style="font-size:1.2rem;font-weight:600;">${time}</div>
+      <div style="font-size:1rem;opacity:0.95;">${esc(message)}</div>
+      ${time ? `<div style="font-size:1.3rem;font-weight:700;margin-top:0.5rem;">${esc(time)}</div>` : ''}
     </div>
+    <div style="margin-top:1rem;font-size:0.75rem;opacity:0.7;">Cliquez pour fermer</div>
   `;
 
   // Add animation keyframes
-  if (!document.getElementById('bonjour-popup-styles')) {
+  if (!document.getElementById('scan-popup-styles')) {
     const style = document.createElement('style');
-    style.id = 'bonjour-popup-styles';
+    style.id = 'scan-popup-styles';
     style.textContent = `
-      @keyframes popupSlideIn {
-        from { opacity: 0; transform: translate(-50%, -40%); }
-        to { opacity: 1; transform: translate(-50%, -50%); }
+      @keyframes scanBackdropFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
       }
-      @keyframes popupSlideOut {
-        from { opacity: 1; transform: translate(-50%, -50%); }
-        to { opacity: 0; transform: translate(-50%, -40%); }
+      @keyframes scanBackdropFadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+      @keyframes scanPopupSlideIn {
+        from { opacity: 0; transform: translate(-50%, -45%) scale(0.9); }
+        to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      }
+      @keyframes scanPopupSlideOut {
+        from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        to { opacity: 0; transform: translate(-50%, -45%) scale(0.9); }
       }
     `;
     document.head.appendChild(style);
   }
 
+  document.body.appendChild(backdrop);
   document.body.appendChild(popup);
 
-  // Auto-remove after 2.5 seconds
+  let dismissed = false;
+  function dismiss() {
+    if (dismissed) return;
+    dismissed = true;
+    popup.style.animation = 'scanPopupSlideOut 0.3s ease-in forwards';
+    backdrop.style.animation = 'scanBackdropFadeOut 0.3s ease-in forwards';
+    setTimeout(() => {
+      popup.remove();
+      backdrop.remove();
+    }, 300);
+  }
+
+  popup.addEventListener('click', dismiss);
+  backdrop.addEventListener('click', dismiss);
+
+  // Auto-remove after 2.5 seconds (or 3.5 seconds for errors to read them)
+  const displayMs = isError ? 3500 : 2500;
   setTimeout(() => {
-    popup.style.animation = 'popupSlideOut 0.3s ease-in forwards';
-    setTimeout(() => popup.remove(), 300);
-  }, 2500);
+    if (!dismissed) dismiss();
+  }, displayMs);
 }
 
 async function recordAttendance(employee) {
