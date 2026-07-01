@@ -192,12 +192,13 @@ function formatCurrency(amount, currency = 'USD') {
 function getStatusBadge(status) {
   const statusMap = {
     'PENDING': { class: 'pending', text: 'En attente' },
+    'AWAITING_PAYMENT': { class: 'awaiting', text: 'Paiement en attente' },
     'CONFIRMED': { class: 'confirmed', text: 'Confirmé' },
     'COMPLETED': { class: 'completed', text: 'Terminé' },
     'CANCELLED': { class: 'cancelled', text: 'Annulé' },
     'NO_SHOW': { class: 'cancelled', text: 'Absent' }
   };
-  
+
   const info = statusMap[status] || { class: 'pending', text: status };
   return `<span class="status-badge ${info.class}">${info.text}</span>`;
 }
@@ -757,10 +758,21 @@ function buildStatusUpdateEmailHTML(data, config, logoUrl, newStatus) {
 async function updatePendingBadge() {
   const badge = document.getElementById('pending-count');
   if (!badge) return;
-  
+
   const reservations = await fetchReservations({ status: 'PENDING' });
   const count = reservations.length;
-  
+
+  badge.textContent = count;
+  badge.style.display = count > 0 ? 'inline' : 'none';
+}
+
+async function updateAwaitingPaymentBadge() {
+  const badge = document.getElementById('awaiting-payment-count');
+  if (!badge) return;
+
+  const reservations = await fetchReservations({ status: 'AWAITING_PAYMENT' });
+  const count = reservations.length;
+
   badge.textContent = count;
   badge.style.display = count > 0 ? 'inline' : 'none';
 }
@@ -776,6 +788,7 @@ async function initAdminCore() {
   initSidebar();
   initLogout();
   updatePendingBadge();
+  updateAwaitingPaymentBadge();
   initRealtimeNotifications();
   
   return session;
@@ -895,6 +908,7 @@ function initRealtimeNotifications() {
         });
         showInPageNotificationCard(title, body, 'reservations.html');
         updatePendingBadge();
+        updateAwaitingPaymentBadge();
       })
     .subscribe();
 
@@ -936,6 +950,7 @@ window.adminCore = {
   getReservationById,
   sendStatusUpdateEmail,
   updatePendingBadge,
+  updateAwaitingPaymentBadge,
   formatDate,
   formatTime,
   formatCurrency,

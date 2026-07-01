@@ -58,11 +58,11 @@ CREATE POLICY "Users can insert their own reservations"
   TO authenticated
   WITH CHECK (user_id = auth.uid() OR user_id IS NULL);
 
--- Users can update their own pending reservations
+-- Users can update their own pending or awaiting-payment reservations
 CREATE POLICY "Users can update their own reservations"
   ON reservations FOR UPDATE
   TO authenticated
-  USING (user_id = auth.uid() AND status = 'PENDING')
+  USING (user_id = auth.uid() AND status IN ('PENDING', 'AWAITING_PAYMENT'))
   WITH CHECK (user_id = auth.uid());
 
 -- 7. Create policies for admins (service_role)

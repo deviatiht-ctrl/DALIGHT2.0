@@ -531,27 +531,64 @@ function updateMetrics(reservations = []) {
   }
 }
 
+function showPaymentFailedPopup(reservationNumber) {
+  const existing = document.getElementById('payment-failed-popup');
+  if (existing) existing.remove();
+
+  const popup = document.createElement('div');
+  popup.id = 'payment-failed-popup';
+  popup.innerHTML = `
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:99998;animation:fadeIn 0.25s ease-out;"></div>
+    <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:2rem;border-radius:16px;box-shadow:0 25px 60px rgba(0,0,0,0.3);z-index:99999;max-width:420px;width:90vw;text-align:center;animation:slideIn 0.35s cubic-bezier(0.175,0.885,0.32,1.275);">
+      <div style="width:64px;height:64px;background:#fef2f2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      </div>
+      <h3 style="margin:0 0 .5rem;color:#1f2937;font-size:1.25rem;">Réservation non confirmée</h3>
+      <p style="margin:0 0 1.25rem;color:#6b7280;font-size:.95rem;line-height:1.5;">
+        La réservation <strong>#${escapeHtml(reservationNumber || '')}</strong> n'a pas été confirmée car le paiement n'a pas été effectué.<br>
+        Veuillez réessayer avec MonCash ou NatCash pour réserver votre créneau.
+      </p>
+      <button onclick="document.getElementById('payment-failed-popup').remove()" style="background:#dc2626;color:#fff;border:none;padding:.75rem 1.5rem;border-radius:10px;font-weight:600;cursor:pointer;">Compris</button>
+    </div>
+    <style>
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes slideIn { from { opacity: 0; transform: translate(-50%, -45%) scale(0.95); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+    </style>
+  `;
+  document.body.appendChild(popup);
+}
+
 async function verifyPendingPlopPayments(reservations) {
   const pending = reservations.filter(
     r => r.payment_status === 'pending' && r.payment_reference && !r.plop_client_id
   );
   if (!pending.length) return;
 
+  let showedPopup = false;
+
   for (const r of pending) {
     try {
       const result = await verifyPlopPayment(supabase, r.payment_reference);
-      if (!result || result.trans_status !== 'ok') continue;
+      if (result && result.trans_status === 'ok') {
+        const isFullPayment = r.payment_reference.endsWith('-FULL');
+        const updates = {
+          status: 'CONFIRMED',
+          payment_status: isFullPayment ? 'fully_paid' : 'deposit_paid',
+          plop_transaction_id: result.id_transaction || r.plop_transaction_id || null,
+          plop_client_id: result.id_client || null,
+        };
 
-      const isFullPayment = r.payment_reference.endsWith('-FULL');
-      const updates = {
-        payment_status: isFullPayment ? 'fully_paid' : 'deposit_paid',
-        plop_transaction_id: result.id_transaction || r.plop_transaction_id || null,
-        plop_client_id: result.id_client || null,
-      };
-
-      await supabase.from('reservations').update(updates).eq('id', r.id);
-
-      Object.assign(r, updates);
+        await supabase.from('reservations').update(updates).eq('id', r.id);
+        Object.assign(r, updates);
+      } else if (result && (result.trans_status === 'failed' || result.trans_status === 'cancelled' || result.trans_status === 'expired' || result.status === false)) {
+        // Payment failed/cancelled/expired — cancel the reservation and show popup once
+        await supabase.from('reservations').update({ status: 'CANCELLED', payment_status: 'failed' }).eq('id', r.id);
+        Object.assign(r, { status: 'CANCELLED', payment_status: 'failed' });
+        if (!showedPopup) {
+          showPaymentFailedPopup(r.reservation_number);
+          showedPopup = true;
+        }
+      }
     } catch (_) {}
   }
 }

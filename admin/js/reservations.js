@@ -181,6 +181,18 @@ function renderReservations() {
               </svg>
             </button>
           ` : ''}
+          ${r.status === 'AWAITING_PAYMENT' ? `
+            <button class="btn btn-icon btn-secondary btn-sm" onclick="verifyReservationPayment('${r.id}')" title="Vérifier paiement">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+              </svg>
+            </button>
+            <button class="btn btn-icon btn-danger btn-sm" onclick="updateStatus('${r.id}', 'CANCELLED')" title="Annuler">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          ` : ''}
           ${r.status === 'CONFIRMED' ? `
             <button class="btn btn-icon btn-success btn-sm" onclick="updateStatus('${r.id}', 'COMPLETED')" title="Marquer terminé">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16">
@@ -475,6 +487,11 @@ window.openDetailModal = function(id) {
       <button class="btn btn-danger" onclick="updateStatus('${r.id}','CANCELLED');closeModal();">Annuler</button>
       <button class="btn btn-secondary" onclick="printReservationDetail('${r.id}')">${ico('M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z', 14)} Imprimer</button>
       <button class="btn btn-primary" onclick="updateStatus('${r.id}','CONFIRMED');closeModal();">Confirmer</button>`;
+  } else if (r.status === 'AWAITING_PAYMENT') {
+    actions = `
+      <button class="btn btn-danger" onclick="updateStatus('${r.id}','CANCELLED');closeModal();">Annuler</button>
+      <button class="btn btn-secondary" onclick="printReservationDetail('${r.id}')">${ico('M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z', 14)} Imprimer</button>
+      <button class="btn btn-primary" onclick="verifyReservationPayment('${r.id}');closeModal();" style="background:#0369a1;border:none;">Vérifier paiement</button>`;
   } else if (r.status === 'CONFIRMED') {
     actions = `
       <button class="btn btn-secondary" onclick="closeModal()">Fermer</button>
@@ -763,10 +780,12 @@ window.verifyReservationPayment = async function(id) {
     if (!data) throw new Error('Réponse vide de Plop Plop.');
 
     if (data.trans_status === 'ok') {
+      const isFullPayment = refferenceId.endsWith('-FULL');
       const updates = {
+        status: 'CONFIRMED',
         plop_client_id:     data.id_client     || null,
         plop_transaction_id: data.id_transaction || null,
-        payment_status:     'fully_paid',
+        payment_status:     isFullPayment ? 'fully_paid' : 'deposit_paid',
       };
 
       const { error: dbErr } = await supabase
@@ -779,7 +798,10 @@ window.verifyReservationPayment = async function(id) {
       const idx = allReservations.findIndex(r => r.id === id);
       if (idx !== -1) Object.assign(allReservations[idx], updates);
 
-      window.adminCore.showToast('Paiement confirmé !', 'success');
+      window.adminCore.showToast('Paiement confirmé ! Réservation confirmée.', 'success');
+      window.adminCore.updatePendingBadge();
+      window.adminCore.updateAwaitingPaymentBadge();
+      renderReservations();
       openDetailModal(id);
     } else {
       const method = data.method || r.payment_method || '';

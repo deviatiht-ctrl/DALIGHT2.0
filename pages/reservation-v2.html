@@ -2176,7 +2176,7 @@ function loadCartData() {
               .from('reservations')
               .select('time, service_id')
               .eq('date', date)
-              .in('status', ['pending', 'confirmed', 'PENDING', 'CONFIRMED']),
+              .in('status', ['confirmed', 'CONFIRMED', 'completed', 'COMPLETED']),
             supabaseClient
               .from('availability_exceptions')
               .select('time_slot, is_blocked, service_type')
@@ -2334,7 +2334,7 @@ function loadCartData() {
           msg.id = 'payment-method-error';
           msg.className = 'error-text';
           msg.style.cssText = 'margin-top:.75rem;padding:.75rem 1rem;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;color:#991b1b;font-size:.9rem;';
-          msg.innerHTML = '<strong>Rezèvasyon pa konfime.</strong><br>Metòd peman sa a pa disponib pou rezèvasyon sou entènèt. Tanpri chwazi MonCash, NatCash, oswa vèsman bankè pou konfime rezervasyon ou.';
+          msg.innerHTML = '<strong>Rezèvasyon pa konfime.</strong><br>Metòd peman sa a pa disponib pou rezèvasyon sou entènèt. Tanpri chwazi MonCash oswa NatCash pou konfime rezervasyon ou.';
           if (paymentContainer) paymentContainer.insertAdjacentElement('afterend', msg);
           return;
         }
@@ -2352,6 +2352,20 @@ function loadCartData() {
             msg.innerHTML = '<strong>Rezèvasyon pa konfime.</strong><br>Ou dwe telechaje prèv peman depoze ou a anvan nou ka konfime rezèvasyon ou. Tanpri fè peman an epi upload resi a.';
             uploadZone.insertAdjacentElement('afterend', msg);
           }
+          return;
+        }
+
+        // For automatic online reservations, only PLOP automatic payments are allowed
+        if (isManual && selectedPaymentConfig?.requires_proof) {
+          const paymentContainer = document.querySelector('.payment-methods');
+          const oldErr = document.getElementById('payment-method-error');
+          if (oldErr) oldErr.remove();
+          const msg = document.createElement('div');
+          msg.id = 'payment-method-error';
+          msg.className = 'error-text';
+          msg.style.cssText = 'margin-top:.75rem;padding:.75rem 1rem;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;color:#991b1b;font-size:.9rem;';
+          msg.innerHTML = '<strong>Rezèvasyon pa konfime.</strong><br>Vèsman bankè ak screenshot pa ka verifye otomatikman sou entènèt. Tanpri chwazi MonCash oswa NatCash pou rezèvasyon ou ka fèt imedyatman.';
+          if (paymentContainer) paymentContainer.insertAdjacentElement('afterend', msg);
           return;
         }
 
@@ -2417,7 +2431,7 @@ function loadCartData() {
             total_amount: totalAmount,
             payment_status: isPlop ? 'pending' : (formData.paymentChoice === 'full' ? 'fully_paid' : 'deposit_paid'),
             location: 'Spa',
-            status: 'PENDING'
+            status: isPlop ? 'AWAITING_PAYMENT' : 'PENDING'
           };
 
           console.log('💾 Saving to Supabase:', reservationRecord);

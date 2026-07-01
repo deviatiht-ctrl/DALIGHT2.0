@@ -6,7 +6,7 @@
   <title>Réservations - DALIGHT Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/admin.css?v=202606211733">
+  <link rel="stylesheet" href="css/admin.css?v=202607011000">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     /* Print styles */
@@ -47,6 +47,7 @@
           </svg>
           Réservations
           <span class="badge" id="pending-count">0</span>
+          <span class="badge" id="awaiting-payment-count" style="display:none;background:#9333ea;color:#fff;">0</span>
         </a>
         <a href="pos.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>Caisse / POS</a>
         <a href="employees.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Employés &amp; Présence</a>
@@ -161,6 +162,7 @@
           <div class="d-flex gap-2" style="flex-wrap: wrap;">
             <button class="btn btn-secondary filter-btn active" data-status="all">Toutes</button>
             <button class="btn btn-secondary filter-btn" data-status="PENDING">En attente</button>
+            <button class="btn btn-secondary filter-btn" data-status="AWAITING_PAYMENT">Paiement en attente</button>
             <button class="btn btn-secondary filter-btn" data-status="CONFIRMED">Confirmées</button>
             <button class="btn btn-secondary filter-btn" data-status="COMPLETED">Terminées</button>
             <button class="btn btn-secondary filter-btn" data-status="CANCELLED">Annulées</button>
@@ -557,20 +559,20 @@
     </div>
   </div>
 
-  <script src="js/admin-core.js?v=202606211733"></script>
+  <script src="js/admin-core.js?v=202607011000"></script>
   <script>
     // Ensure Supabase is available globally before reservations.js runs
     (function() {
       const SUPABASE_URL = 'https://rbwoiejztrkghfkpxquo.supabase.co';
       const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U';
-      
+
       // Create client if not already available
       if (!window.dalightAdminSupabase && !window.supabaseClient && typeof supabase !== 'undefined') {
         window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         window.dalightAdminSupabase = window.supabaseClient;
         console.log('—S& Supabase initialized from reservations.html');
       }
-      
+
       // Ensure adminCore exists
       if (!window.adminCore) {
         window.adminCore = {
@@ -584,7 +586,7 @@
       }
     })();
   </script>
-  <script src="js/reservations.js?v=202606301300"></script>
+  <script src="js/reservations.js?v=202607011000"></script>
 </body>
 </html>
 

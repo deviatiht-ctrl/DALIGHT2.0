@@ -141,6 +141,8 @@ class ReservationModel {
         return const Color(0xFF2563EB);
       case 'CANCELLED':
         return const Color(0xFFDC2626);
+      case 'AWAITING_PAYMENT':
+        return const Color(0xFF9333EA);
       default:
         return const Color(0xFFD97706);
     }
@@ -154,6 +156,8 @@ class ReservationModel {
         return 'Terminée';
       case 'CANCELLED':
         return 'Annulée';
+      case 'AWAITING_PAYMENT':
+        return 'Paiement en attente';
       default:
         return 'En attente';
     }

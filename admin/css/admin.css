@@ -574,6 +574,15 @@ body::before {
   background: var(--admin-warning);
 }
 
+.status-badge.awaiting {
+  background: rgba(147, 51, 234, 0.12);
+  color: #9333ea;
+}
+
+.status-badge.awaiting::before {
+  background: #9333ea;
+}
+
 .status-badge.confirmed {
   background: rgba(96, 165, 250, 0.15);
   color: var(--admin-info);
