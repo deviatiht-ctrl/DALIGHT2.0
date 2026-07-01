@@ -698,7 +698,7 @@ window.processBalancePayment = async function() {
   try {
     // Mobile payment: create Plop Plop payment for balance
     if (selectedBalancePM === 'moncash' || selectedBalancePM === 'natcash') {
-      const { createPlopPayment } = await import('../js/plop-payment.js?v=5.0.0');
+      const { createPlopPayment } = await import('../../js/plop-payment.js?v=5.0.0');
       const payment = await createPlopPayment(supabase, {
         refference_id: reference,
         montant: balance,

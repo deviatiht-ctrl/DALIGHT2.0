@@ -727,7 +727,7 @@ async function processPOSSale(date, time) {
       payment_status:     paymentStatus,
       payment_reference:  paymentReference,
       location:           'Spa',
-      status:             'PENDING',
+      status:             (selectedPM === 'moncash' || selectedPM === 'natcash') ? 'AWAITING_PAYMENT' : 'PENDING',
     };
 
     try {
@@ -746,7 +746,7 @@ async function processPOSSale(date, time) {
         // MonCash/NatCash → create Plop payment and redirect
         if ((selectedPM === 'moncash' || selectedPM === 'natcash') && savedReservation) {
           try {
-            const { createPlopPayment } = await import('../js/plop-payment.js?v=5.0.0');
+            const { createPlopPayment } = await import('../../js/plop-payment.js?v=5.0.0');
             const payment = await createPlopPayment(sb, {
               refference_id:  paymentReference,
               montant:        amountDue,
