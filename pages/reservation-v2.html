@@ -1251,6 +1251,13 @@
               <div style="padding:.75rem;color:var(--marron-600);font-size:.9rem;">Chargement des modes de paiement...</div>
             </div>
 
+            <!-- Autre méthode de paiement -->
+            <div class="form-group full-width" id="resv-other-payment-box" style="display:none;margin-top:1rem;">
+              <label for="other-payment-name">Précisez le mode de paiement utilisé <span style="color:#dc2626;">*</span></label>
+              <input type="text" id="other-payment-name" placeholder="Ex: Taptap Send, Western Union, Unitransfer, etc." style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;font-size:0.95rem;">
+              <small style="color:var(--marron-600);font-size:0.8rem;">Entrez le nom exact du service de transfert utilisé.</small>
+            </div>
+
             <!-- Détail dynamique du mode sélectionné -->
             <div id="resv-payment-detail-box" class="payment-details" style="display:none;margin-top:1rem;">
               <h5 id="resv-pm-title"></h5>
@@ -1384,7 +1391,7 @@
         const container = document.getElementById('resv-payment-methods-container');
         const filteredMethods = resvPaymentMethods.filter(pm => pm.slug !== 'cash');
         if (!filteredMethods.length) { container.innerHTML = '<p style="color:var(--marron-600);">Aucun mode configuré.</p>'; return; }
-        container.innerHTML = filteredMethods.map(pm => {
+        const methodsHtml = filteredMethods.map(pm => {
           const logoHtml = pm.logo_url
             ? `<span class="payment-icon"><img src="${pm.logo_url}" alt="${pm.name}" style="width:100%;height:100%;object-fit:contain;"></span>`
             : `<span class="payment-icon" style="font-size:1.4rem;">💳</span>`;
@@ -1396,6 +1403,14 @@
             </div>
           </label>`;
         }).join('');
+        const otherHtml = `<label class="payment-method" onclick="selectResvPM('other',this)" data-slug="other">
+          <input type="radio" name="payment_method" value="other">
+          <span class="payment-icon" style="font-size:1.4rem;">📝</span>
+          <div><strong>Autre paiement</strong>
+            <p style="margin:0;font-size:.8rem;color:var(--marron-600);">Taptap Send, Western Union, Unitransfer, etc.</p>
+          </div>
+        </label>`;
+        container.innerHTML = methodsHtml + otherHtml;
       }
 
       window.selectResvPM = function(slug, el) {
@@ -1403,30 +1418,38 @@
         document.querySelectorAll('#resv-payment-methods-container .payment-method').forEach(e => e.classList.remove('selected'));
         el?.classList.add('selected');
         const pm = selectedResvPM;
-        if (pm) {
-          const isBank = isBankPayment(pm.slug);
-          const detailBox = document.getElementById('resv-payment-detail-box');
-          if (detailBox) {
-            if (isBank) {
-              document.getElementById('resv-pm-title').textContent = pm.name;
-              document.getElementById('resv-pm-account-name').textContent = pm.account_name || '—';
-              document.getElementById('resv-pm-account-number').textContent = pm.account_number || '—';
-              document.getElementById('resv-pm-instructions').textContent = pm.instructions || '';
-              detailBox.style.display = 'block';
-            } else {
-              detailBox.style.display = 'none';
-            }
+        const isOther = slug === 'other';
+        const isBank = isBankPayment(slug);
+        const isManual = !isAutomaticPlopPayment(slug);
+        const detailBox = document.getElementById('resv-payment-detail-box');
+        const otherBox = document.getElementById('resv-other-payment-box');
+        if (detailBox) {
+          if (isBank && pm) {
+            document.getElementById('resv-pm-title').textContent = pm.name;
+            document.getElementById('resv-pm-account-name').textContent = pm.account_name || '—';
+            document.getElementById('resv-pm-account-number').textContent = pm.account_number || '—';
+            document.getElementById('resv-pm-instructions').textContent = pm.instructions || '';
+            detailBox.style.display = 'block';
+          } else {
+            detailBox.style.display = 'none';
           }
-          const requiresManualProof = isBank && pm.requires_proof;
-          const proofSection = document.getElementById('resv-proof-section');
-          if (proofSection) proofSection.style.display = requiresManualProof ? 'block' : 'none';
-          const proofInput = document.getElementById('payment-proof');
-          if (proofInput) proofInput.required = requiresManualProof;
-          const star = document.getElementById('resv-proof-required-star');
-          if (star) star.style.display = requiresManualProof ? 'inline' : 'none';
         }
+        if (otherBox) {
+          otherBox.style.display = isOther ? 'block' : 'none';
+          const otherInput = document.getElementById('other-payment-name');
+          if (otherInput) otherInput.required = isOther;
+          if (!isOther && otherInput) otherInput.value = '';
+        }
+        const requiresManualProof = (isBank || isOther) && (isOther || pm?.requires_proof !== false);
+        const proofSection = document.getElementById('resv-proof-section');
+        if (proofSection) proofSection.style.display = requiresManualProof ? 'block' : 'none';
+        const proofInput = document.getElementById('payment-proof');
+        if (proofInput) proofInput.required = requiresManualProof;
+        const star = document.getElementById('resv-proof-required-star');
+        if (star) star.style.display = requiresManualProof ? 'inline' : 'none';
         formData.payment_method = slug;
         formData.payment_method_id = pm?.id || null;
+        formData.is_other_payment = isOther;
       };
 
 function loadCartData() {
@@ -2324,6 +2347,26 @@ function loadCartData() {
         const selectedPaymentConfig = resvPaymentMethods.find(p => p.slug === paymentMethod.value) || selectedResvPM;
         const isPlop = isAutomaticPlopPayment(paymentMethod.value);
         const isManual = !isPlop;
+        const isOther = paymentMethod.value === 'other';
+        const otherPaymentName = isOther ? document.getElementById('other-payment-name')?.value.trim() : '';
+
+        // Validate custom payment name for "Other" payment
+        if (isOther && !otherPaymentName) {
+          const otherBox = document.getElementById('resv-other-payment-box');
+          const otherInput = document.getElementById('other-payment-name');
+          if (otherInput) otherInput.classList.add('field-error');
+          const oldErr = document.getElementById('other-payment-error');
+          if (oldErr) oldErr.remove();
+          const msg = document.createElement('div');
+          msg.id = 'other-payment-error';
+          msg.className = 'error-text';
+          msg.style.cssText = 'margin-top:.5rem;padding:.75rem 1rem;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;color:#991b1b;font-size:.9rem;';
+          msg.innerHTML = '<strong>Rezèvasyon pa konfime.</strong><br>Tanpri ekri non metòd peman ou itilize a (Taptap Send, Western Union, Unitransfer, etc.).';
+          if (otherBox) otherBox.appendChild(msg);
+          return;
+        }
+        document.getElementById('other-payment-name')?.classList.remove('field-error');
+        document.getElementById('other-payment-error')?.remove();
 
         // Block non-PLOP methods that don't require proof (e.g. cash) — not allowed online
         if (isManual && selectedPaymentConfig && selectedPaymentConfig.requires_proof === false) {
@@ -2334,13 +2377,13 @@ function loadCartData() {
           msg.id = 'payment-method-error';
           msg.className = 'error-text';
           msg.style.cssText = 'margin-top:.75rem;padding:.75rem 1rem;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;color:#991b1b;font-size:.9rem;';
-          msg.innerHTML = '<strong>Rezèvasyon pa konfime.</strong><br>Metòd peman sa a pa disponib pou rezèvasyon sou entènèt. Tanpri chwazi MonCash, NatCash oswa Vèsman bankè ak prèv peman.';
+          msg.innerHTML = '<strong>Rezèvasyon pa konfime.</strong><br>Metòd peman sa a pa disponib pou rezèvasyon sou entènèt. Tanpri chwazi MonCash, NatCash, Vèsman bankè oswa yon lòt metòd ak prèv peman.';
           if (paymentContainer) paymentContainer.insertAdjacentElement('afterend', msg);
           return;
         }
 
-        // All manual non-PLOP methods (including bank transfer) must have proof uploaded
-        const requiresManualProof = isManual && (selectedPaymentConfig?.requires_proof !== false);
+        // All manual non-PLOP methods (including bank transfer and other) must have proof uploaded
+        const requiresManualProof = isManual && (isOther || selectedPaymentConfig?.requires_proof !== false);
 
         if (requiresManualProof && !proofFile) {
           if (uploadZone) {
@@ -2411,7 +2454,7 @@ function loadCartData() {
             date: formData.date,
             time: formData.time,
             notes: formData.notes || null,
-            payment_method: paymentMethod.value,
+            payment_method: isOther ? `other:${otherPaymentName}` : paymentMethod.value,
             payment_proof_url: proofUrl,
             deposit_amount: calcDeposit(cartServices),
             total_amount: totalAmount,
@@ -2465,7 +2508,7 @@ function loadCartData() {
           // 5. SEND EMAILS
           try {
             const savedReservation = insertData[0];
-            const { clientConfirmationEmail, adminNotificationEmail } = await import('../js/email-templates.js?v=5.0.0');
+            const { clientConfirmationEmail, adminNotificationEmail } = await import('../js/email-templates.js?v=5.0.1');
 
             // Send confirmation email to client
             const clientHtml = clientConfirmationEmail(savedReservation);

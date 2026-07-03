@@ -122,9 +122,12 @@ function renderCard(r) {
             <span>Total: <strong>${totalAmount.toLocaleString()} HTG</strong></span>
           </div>
           ${(() => {
-            const pmLabel = r.payment_method
-              ? r.payment_method.charAt(0).toUpperCase() + r.payment_method.slice(1)
-              : null;
+            const formatPaymentMethod = (pm) => {
+              if (!pm) return null;
+              if (pm.startsWith('other:')) return pm.slice(6);
+              return pm.charAt(0).toUpperCase() + pm.slice(1);
+            };
+            const pmLabel = formatPaymentMethod(r.payment_method);
             const ref = r.payment_reference || r.plop_transaction_id || null;
             const balRef = r.balance_payment_reference || r.balance_plop_transaction_id || null;
 

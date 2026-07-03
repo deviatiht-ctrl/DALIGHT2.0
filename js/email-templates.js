@@ -25,6 +25,13 @@ const safeFormatDate = (dateStr) => {
   });
 };
 
+const formatPaymentMethod = (pm) => {
+  if (!pm) return '—';
+  if (String(pm).startsWith('other:')) return String(pm).slice(6);
+  const labels = { moncash: 'MonCash', natcash: 'NatCash', bank: 'Virement bancaire' };
+  return labels[pm] || pm;
+};
+
 const BASE_STYLES = `
   body { font-family: 'Montserrat', sans-serif; background-color: #f5f3f0; margin: 0; padding: 20px; }
   .container { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(74,55,40,0.1); }
@@ -96,6 +103,10 @@ export function clientConfirmationEmail(reservation) {
           <span class="detail-label">Total</span>
           <span class="detail-value">${reservation.total_amount?.toLocaleString() || '—'} HTG</span>
         </div>
+        <div class="detail-row">
+          <span class="detail-label">Méthode de paiement</span>
+          <span class="detail-value">${formatPaymentMethod(reservation.payment_method)}</span>
+        </div>
       </div>
 
       <p class="message">Votre réservation est actuellement en attente de confirmation. Vous recevrez un email dès que notre équipe aura validé votre rendez-vous.</p>
@@ -147,6 +158,10 @@ export function adminNotificationEmail(reservation) {
         <div class="detail-row">
           <span class="detail-label">Téléphone</span>
           <span class="detail-value">${reservation.phone || '—'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Méthode de paiement</span>
+          <span class="detail-value">${formatPaymentMethod(reservation.payment_method)}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Service</span>

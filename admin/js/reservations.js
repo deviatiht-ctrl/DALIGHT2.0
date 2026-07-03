@@ -6,6 +6,13 @@ let allReservations = [];
 let currentFilter = 'all';
 let currentReservation = null;
 
+function formatPaymentMethod(pm) {
+  if (!pm) return '—';
+  if (String(pm).startsWith('other:')) return String(pm).slice(6);
+  const labels = { moncash: 'MonCash', natcash: 'NatCash', bank: 'Banque' };
+  return labels[pm] || pm;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   await new Promise(resolve => setTimeout(resolve, 100));
   
@@ -150,7 +157,7 @@ function renderReservations() {
             : r.payment_method === 'bank'
             ? `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10h1v11M9 10h1v11M14 10h1v11M19 10h1v11"/></svg>`
             : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>`}
-          ${{ moncash: 'MonCash', natcash: 'NatCash', bank: 'Banque' }[r.payment_method] || (r.payment_method || '—')}
+          ${formatPaymentMethod(r.payment_method)}
         </div>
         ${['moncash','natcash'].includes(r.payment_method)
           ? (r.plop_client_id
@@ -227,7 +234,9 @@ window.openDetailModal = function(id) {
     `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="${color}" stroke-width="2" width="${size}" height="${size}" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="${path}"/></svg>`;
 
   // ── Payment method ────────────────────────────────────────────
-  const _pm = (r.payment_method || '').toLowerCase();
+  const _pmRaw = r.payment_method || '';
+  const _pm = _pmRaw.toLowerCase();
+  const isOther = _pmRaw.startsWith('other:');
   const isMobilePay = ['moncash', 'natcash', 'kashpaw'].includes(_pm);
   const methodMeta = {
     moncash: { label: 'MonCash',         path: 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z' },
@@ -235,7 +244,7 @@ window.openDetailModal = function(id) {
     kashpaw: { label: 'KashPaw',         path: 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z' },
     bank:    { label: 'Compte Bancaire', path: 'M3 21h18M3 10h18M3 7l9-4 9 4M4 10h1v11M9 10h1v11M14 10h1v11M19 10h1v11' },
   };
-  const mm = methodMeta[_pm] || { label: r.payment_method || 'Non spécifié', path: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' };
+  const mm = methodMeta[_pm] || { label: isOther ? formatPaymentMethod(_pmRaw) : (r.payment_method || 'Non spécifié'), path: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' };
 
   // ── Price ─────────────────────────────────────────────────────
   const totalAmt   = parseFloat(r.total_amount || r.total_price || 0);
@@ -556,8 +565,8 @@ window.printReservationDetail = function(id) {
       <div style="font-size:10px;display:flex;justify-content:space-between;margin-bottom:3px;"><span>Acompte / Payé</span><span>${fmtHTG(amtPaid)}</span></div>
       ${balance > 0 ? `<div style="font-size:11px;display:flex;justify-content:space-between;margin-top:4px;font-weight:700;color:#92400e;"><span>SOLDE RESTANT</span><span>${fmtHTG(balance)}</span></div>` : `<div style="font-size:11px;display:flex;justify-content:space-between;margin-top:4px;font-weight:700;color:#059669;"><span>PAIEMENT COMPLET</span><span>${fmtHTG(totalAmt)}</span></div>`}
       <hr style="border:none;border-top:1px dashed #d1d5db;margin:5mm 0;">
-      <div style="font-size:10px;display:flex;justify-content:space-between;margin-bottom:3px;"><span>Méthode de paiement</span><span>${(r.payment_method || '—').toUpperCase()}</span></div>
-      ${r.balance_payment_method ? `<div style="font-size:10px;display:flex;justify-content:space-between;margin-bottom:3px;"><span>Méthode solde</span><span>${r.balance_payment_method.toUpperCase()}</span></div>` : ''}
+      <div style="font-size:10px;display:flex;justify-content:space-between;margin-bottom:3px;"><span>Méthode de paiement</span><span>${formatPaymentMethod(r.payment_method).toUpperCase()}</span></div>
+      ${r.balance_payment_method ? `<div style="font-size:10px;display:flex;justify-content:space-between;margin-bottom:3px;"><span>Méthode solde</span><span>${formatPaymentMethod(r.balance_payment_method).toUpperCase()}</span></div>` : ''}
       <div style="font-size:10px;display:flex;justify-content:space-between;margin-bottom:3px;"><span>Statut</span><span>${r.status}</span></div>
       <div style="text-align:center;font-size:9px;color:#9ca3af;margin-top:10mm;line-height:1.6;">
         Merci pour votre confiance!<br>
@@ -596,7 +605,7 @@ window.printReservationsList = function() {
       <td style="padding:6px;border-bottom:1px solid #e5e7eb;font-size:9px;">${r.service || '—'}</td>
       <td style="padding:6px;border-bottom:1px solid #e5e7eb;font-size:9px;">${formatDate(r.date)} ${formatTime(r.time)}</td>
       <td style="padding:6px;border-bottom:1px solid #e5e7eb;font-size:9px;">${r.location === 'Spa' ? 'Au Spa' : 'Domicile'}</td>
-      <td style="padding:6px;border-bottom:1px solid #e5e7eb;font-size:9px;">${r.payment_method || '—'} (${r.payment_choice === 'full' ? 'Complet' : 'Acompte'})</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;font-size:9px;">${formatPaymentMethod(r.payment_method)} (${r.payment_choice === 'full' ? 'Complet' : 'Acompte'})</td>
       <td style="padding:6px;border-bottom:1px solid #e5e7eb;font-size:9px;">${r.status}</td>
     </tr>
   `).join('');
