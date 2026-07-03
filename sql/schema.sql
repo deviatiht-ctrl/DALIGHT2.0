@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS reservations (
     id_type TEXT,
     id_number TEXT,
     notes TEXT,
-    status TEXT DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW')),
+    status TEXT DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'AWAITING_PAYMENT', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW')),
     total_amount_usd DECIMAL(10, 2),
     total_amount_htg DECIMAL(10, 2),
     payment_status TEXT DEFAULT 'UNPAID' CHECK (payment_status IN ('UNPAID', 'PARTIAL', 'PAID', 'REFUNDED')),
