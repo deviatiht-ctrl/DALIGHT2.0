@@ -1,5 +1,6 @@
 import { formatDate, formatTime, getSupabase } from './main.js?v=5.0.0';
 import { createPlopPayment, verifyPlopPayment, isAutomaticPlopPayment, isBankPayment } from './plop-payment.js';
+import { loadConsentData, matchTemplate, findSubmission, openConsentModal } from './consent-forms.js';
 
 let supabase = getSupabase();
 
@@ -28,6 +29,7 @@ let allReservations = [];
 let activeFilter = 'ALL';
 let resvPaymentMethods = [];
 let selectedBalancePM = {};
+let consentData = { templates: [], submissions: [] };
 
 const STATUS_FR = {
   PENDING:   { label: 'En attente', css: 'pending' },
@@ -95,6 +97,14 @@ function renderCard(r) {
   const balanceBtn = needsBalance
     ? `<button class="rc-btn rc-btn-balance" data-action="open-balance" data-id="${r.id}">
          <i data-lucide="credit-card" style="width:14px;height:14px;"></i> Payer le solde (${balanceAmount.toLocaleString()} HTG)
+       </button>`
+    : '';
+
+  const tpl = matchTemplate(r, consentData.templates);
+  const sub = tpl ? findSubmission(r, consentData.submissions) : null;
+  const consentBtn = (r.payment_status === 'fully_paid' || r.balance_paid_amount > 0) && tpl
+    ? `<button class="rc-btn rc-btn-consent" data-action="open-consent" data-id="${r.id}">
+         <i data-lucide="file-signature" style="width:14px;height:14px;"></i> ${sub ? 'Voir le formulaire' : 'Remplir le formulaire de consentement'}
        </button>`
     : '';
 
@@ -187,6 +197,7 @@ function renderCard(r) {
       <div class="rc-actions">
         ${modifyBtn}
         ${balanceBtn}
+        ${consentBtn}
       </div>
       <div class="rc-panel rc-modify-panel" hidden data-panel="modify">
         <h4>Modifier la réservation</h4>
@@ -509,6 +520,26 @@ function wireCardActions() {
       btn.closest('.rc-balance-panel').hidden = true;
     } else if (action === 'select-pm') {
       selectBalancePM(btn.dataset.resvId, btn.dataset.pmSlug);
+    } else if (action === 'open-consent') {
+      openConsentForReservation(btn.dataset.id);
+    }
+  });
+}
+
+function openConsentForReservation(id) {
+  const r = allReservations.find(res => res.id === id);
+  if (!r) return;
+  const tpl = matchTemplate(r, consentData.templates);
+  if (!tpl) return;
+  const sub = findSubmission(r, consentData.submissions);
+  openConsentModal({
+    supabase,
+    reservation: r,
+    template: tpl,
+    submission: sub,
+    onSubmitted: (newSub) => {
+      consentData.submissions.push(newSub);
+      applyFilter();
     }
   });
 }
@@ -620,6 +651,7 @@ async function loadReservations() {
 
     allReservations = Array.isArray(data) ? data : [];
     await verifyPendingPlopPayments(allReservations);
+    consentData = await loadConsentData(supabase, session.user.id);
     const hasRows = allReservations.length > 0;
     toggleSections(hasRows);
     updateMetrics(allReservations);

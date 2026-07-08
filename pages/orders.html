@@ -21,7 +21,7 @@
     <script src="../js/toast.js?v=5.0.0"></script>
     <script type="module" src="../js/main.js?v=5.0.0"></script>
     <script type="module" src="../js/chat-widget.js?v=5.0.0" defer></script>
-    <script type="module" src="../js/orders.js?v=202607031330" defer></script>
+    <script type="module" src="../js/orders.js?v=202607081600" defer></script>
     <script type="module">
       import { initChatWidget } from '../js/chat-widget.js?v=5.0.0';
       import { autoPollPlopPayments } from '../js/plop-payment.js?v=5.0.0';
@@ -271,6 +271,18 @@
       .rc-payment-status.pending { background:#fff7e0; color:#b8860b; }
       .rc-payment-status.partial  { background:#fff3e0; color:#e65100; }
       .rc-payment-status.paid     { background:#e6f9ee; color:#15803d; }
+      .rc-actions { grid-column: 1 / -1; display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .5rem; }
+      .rc-btn {
+        display: inline-flex; align-items: center; gap: .35rem; padding: .5rem .9rem;
+        border-radius: 10px; font-size: .82rem; font-weight: 600; border: 1.5px solid transparent;
+        cursor: pointer; transition: background .15s;
+      }
+      .rc-btn-modify { background: #eef2ff; color: #4338ca; border-color: #c7d2fe; }
+      .rc-btn-modify:hover { background: #e0e7ff; }
+      .rc-btn-balance { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+      .rc-btn-balance:hover { background: #ffedd5; }
+      .rc-btn-consent { background: #f5f3f0; color: #4A3728; border-color: #d9cebf; }
+      .rc-btn-consent:hover { background: #e9e4dd; }
 
       @media (max-width: 600px) {
         .reservation-card {
