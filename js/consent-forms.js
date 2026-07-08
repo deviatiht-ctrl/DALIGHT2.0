@@ -59,14 +59,18 @@ function injectStyles() {
 
 // ── Data loading ────────────────────────────────────────────
 export async function loadConsentData(supabase, userId) {
-  const result = { templates: [], submissions: [] };
+  const result = { templates: [], submissions: [], serviceMap: {} };
   try {
-    const [tplRes, subRes] = await Promise.all([
+    const [tplRes, subRes, svcRes] = await Promise.all([
       supabase.from('form_templates').select('*').eq('is_active', true),
       supabase.from('form_submissions').select('*').eq('user_id', userId),
+      supabase.from('services').select('id, category'),
     ]);
     if (!tplRes.error) result.templates = tplRes.data || [];
     if (!subRes.error) result.submissions = subRes.data || [];
+    if (!svcRes.error) {
+      result.serviceMap = Object.fromEntries((svcRes.data || []).map(s => [s.id, s.category]));
+    }
   } catch (err) {
     console.warn('loadConsentData error (tables may not exist yet):', err.message);
   }
@@ -82,31 +86,39 @@ function reservationServiceNames(reservation) {
   return names;
 }
 
-function reservationCategories(reservation) {
+function reservationCategories(reservation, serviceMap = {}) {
   const cats = [];
   if (Array.isArray(reservation.services)) {
     reservation.services.forEach(s => { if (s && s.category) cats.push(String(s.category).toLowerCase()); });
   }
-  return cats;
+  const dbCat = serviceMap[reservation.service_id];
+  if (dbCat) cats.push(String(dbCat).toLowerCase());
+  if (reservation.service_category) cats.push(String(reservation.service_category).toLowerCase());
+  return [...new Set(cats)];
 }
 
 // Find the best matching template for a reservation.
-export function matchTemplate(reservation, templates) {
+export function matchTemplate(reservation, templates, serviceMap = {}) {
   if (!templates || !templates.length) return null;
   const names = reservationServiceNames(reservation);
-  const cats = reservationCategories(reservation);
+  const cats = reservationCategories(reservation, serviceMap);
 
-  // 1. Specific service-name match
-  let match = templates.find(t => !t.applies_to_all && t.service_name &&
+  // 1. Specific service-id match (exact)
+  let match = templates.find(t => !t.applies_to_all && t.service_id &&
+    t.service_id === reservation.service_id);
+  if (match) return match;
+
+  // 2. Specific service-name match (fallback)
+  match = templates.find(t => !t.applies_to_all && t.service_name &&
     names.some(n => n.includes(t.service_name.toLowerCase()) || t.service_name.toLowerCase().includes(n)));
   if (match) return match;
 
-  // 2. Category match
+  // 3. Category match
   match = templates.find(t => !t.applies_to_all && t.service_category &&
     cats.some(c => c === t.service_category.toLowerCase()));
   if (match) return match;
 
-  // 3. Applies to all
+  // 4. Applies to all
   match = templates.find(t => t.applies_to_all);
   return match || null;
 }

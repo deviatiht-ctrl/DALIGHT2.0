@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS form_templates (
 );
 
 CREATE INDEX IF NOT EXISTS idx_form_templates_service_id ON form_templates(service_id);
+CREATE INDEX IF NOT EXISTS idx_form_templates_service_category ON form_templates(service_category);
 CREATE INDEX IF NOT EXISTS idx_form_templates_active ON form_templates(is_active);
 
 -- ============================================================

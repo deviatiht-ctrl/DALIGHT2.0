@@ -5,6 +5,7 @@
 let allTemplates = [];
 let allSubmissions = [];
 let allServices = [];
+let allCategories = [];
 let currentFields = [];       // form builder state
 let currentTemplateId = null;
 let currentSubmission = null; // for print
@@ -29,7 +30,7 @@ const NEEDS_OPTIONS = ['radio', 'checkbox', 'select'];
 // ============================================
 document.addEventListener('DOMContentLoaded', async () => {
   await checkAdminAuth();
-  await loadServices();
+  await Promise.all([loadServices(), loadCategories()]);
   await Promise.all([loadTemplates(), loadSubmissions()]);
   if (window.lucide) lucide.createIcons();
 });
@@ -67,11 +68,39 @@ async function loadServices() {
   }
 }
 
-function toggleServiceSelect() {
-  const all = document.getElementById('t-applies-all').checked;
-  const sel = document.getElementById('t-service');
-  sel.disabled = all;
-  if (all) sel.value = '';
+async function loadCategories() {
+  try {
+    const { data, error } = await supabaseClient
+      .from('services')
+      .select('category')
+      .order('category');
+    if (error) throw error;
+    const cats = [...new Set((data || []).map(s => s.category).filter(Boolean))];
+    allCategories = cats;
+    const sel = document.getElementById('t-category');
+    if (sel) {
+      sel.innerHTML = '<option value="">— Choisir une catégorie —</option>' +
+        cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+    }
+  } catch (err) {
+    console.error('loadCategories error:', err);
+  }
+}
+
+function getTemplateScope(t) {
+  if (!t) return 'all';
+  if (t.applies_to_all) return 'all';
+  if (t.service_id) return 'service';
+  if (t.service_category) return 'category';
+  return 'all';
+}
+
+function toggleScopeFields() {
+  const scope = document.getElementById('t-scope').value;
+  document.getElementById('t-category-wrap').hidden = scope !== 'category';
+  document.getElementById('t-service-wrap').hidden = scope !== 'service';
+  if (scope !== 'category') document.getElementById('t-category').value = '';
+  if (scope !== 'service') document.getElementById('t-service').value = '';
 }
 
 // ============================================
@@ -105,7 +134,11 @@ function renderTemplates() {
     return;
   }
   grid.innerHTML = allTemplates.map(t => {
-    const scope = t.applies_to_all ? 'Tous les services' : (t.service_name || '—');
+    const scope = t.applies_to_all
+      ? 'Tous les services'
+      : (t.service_category
+          ? 'Catégorie : ' + t.service_category
+          : (t.service_name || '—'));
     const nbFields = Array.isArray(t.fields) ? t.fields.filter(f => f.type !== 'section').length : 0;
     const nbSubs = allSubmissions.filter(s => s.form_template_id === t.id).length;
     return `
@@ -117,7 +150,7 @@ function renderTemplates() {
         ${t.form_type ? `<span class="fb-type-badge">${escapeHtml(t.form_type)}</span>` : ''}
         <p style="font-size:.85rem;color:var(--admin-text-muted);margin:.6rem 0;line-height:1.5;max-height:48px;overflow:hidden;">${escapeHtml(t.description || 'Aucune description')}</p>
         <div style="font-size:.78rem;color:var(--admin-text-muted);margin-bottom:1rem;">
-          <div><strong>Service:</strong> ${escapeHtml(scope)}</div>
+          <div><strong>Portée:</strong> ${escapeHtml(scope)}</div>
           <div><strong>Questions:</strong> ${nbFields} &nbsp;·&nbsp; <strong>Remplis:</strong> ${nbSubs}</div>
         </div>
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
@@ -140,10 +173,13 @@ function openTemplateModal(template = null) {
   document.getElementById('t-title').value = template?.title || '';
   document.getElementById('t-type').value = template?.form_type || '';
   document.getElementById('t-description').value = template?.description || '';
-  document.getElementById('t-applies-all').checked = !!template?.applies_to_all;
   document.getElementById('t-active').checked = template ? !!template.is_active : true;
+
+  const scope = getTemplateScope(template);
+  document.getElementById('t-scope').value = scope;
+  document.getElementById('t-category').value = template?.service_category || '';
   document.getElementById('t-service').value = template?.service_id || '';
-  toggleServiceSelect();
+  toggleScopeFields();
 
   currentFields = template && Array.isArray(template.fields)
     ? JSON.parse(JSON.stringify(template.fields))
@@ -245,18 +281,20 @@ async function saveTemplate() {
 
   if (!fields.length) { showToast('Ajoutez au moins une question', 'error'); return; }
 
-  const appliesAll = document.getElementById('t-applies-all').checked;
+  const scope = document.getElementById('t-scope').value;
   const serviceSel = document.getElementById('t-service');
-  const opt = serviceSel.options[serviceSel.selectedIndex];
+  const serviceOpt = serviceSel.options[serviceSel.selectedIndex];
+  const categorySel = document.getElementById('t-category');
+  const categoryOpt = categorySel.options[categorySel.selectedIndex];
 
   const payload = {
     title,
     form_type: document.getElementById('t-type').value.trim(),
     description: document.getElementById('t-description').value.trim(),
-    applies_to_all: appliesAll,
-    service_id: appliesAll ? null : (serviceSel.value || null),
-    service_name: appliesAll ? '' : (opt?.dataset.name || ''),
-    service_category: appliesAll ? '' : (opt?.dataset.category || ''),
+    applies_to_all: scope === 'all',
+    service_id: scope === 'service' ? (serviceSel.value || null) : null,
+    service_name: scope === 'service' ? (serviceOpt?.dataset.name || '') : '',
+    service_category: scope === 'category' ? (categorySel.value || '') : '',
     is_active: document.getElementById('t-active').checked,
     fields,
   };

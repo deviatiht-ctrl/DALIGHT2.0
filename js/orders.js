@@ -100,7 +100,7 @@ function renderCard(r) {
        </button>`
     : '';
 
-  const tpl = matchTemplate(r, consentData.templates);
+  const tpl = matchTemplate(r, consentData.templates, consentData.serviceMap);
   const sub = tpl ? findSubmission(r, consentData.submissions) : null;
   const consentBtn = (r.payment_status === 'fully_paid' || r.balance_paid_amount > 0) && tpl
     ? `<button class="rc-btn rc-btn-consent" data-action="open-consent" data-id="${r.id}">
@@ -529,7 +529,7 @@ function wireCardActions() {
 function openConsentForReservation(id) {
   const r = allReservations.find(res => res.id === id);
   if (!r) return;
-  const tpl = matchTemplate(r, consentData.templates);
+  const tpl = matchTemplate(r, consentData.templates, consentData.serviceMap);
   if (!tpl) return;
   const sub = findSubmission(r, consentData.submissions);
   openConsentModal({

@@ -149,20 +149,33 @@
           <label class="form-label">Description / Introduction</label>
           <textarea class="form-control" id="t-description" rows="3" placeholder="Texte affiché en haut du formulaire pour le client…"></textarea>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:end;">
           <div class="form-group">
-            <label class="form-label">Service associé</label>
-            <select class="form-control" id="t-service">
-              <option value="">— Choisir un service —</option>
+            <label class="form-label">Portée du formulaire</label>
+            <select class="form-control" id="t-scope" onchange="toggleScopeFields()">
+              <option value="all">Tous les services</option>
+              <option value="category">Une catégorie de service</option>
+              <option value="service">Un service spécifique</option>
             </select>
           </div>
           <div class="form-group" style="display:flex;flex-direction:column;justify-content:flex-end;gap:.5rem;">
             <label style="display:flex;align-items:center;gap:.5rem;font-size:.85rem;font-weight:500;">
-              <input type="checkbox" id="t-applies-all" style="width:16px;height:16px;" onchange="toggleServiceSelect()"> Appliquer à tous les services
-            </label>
-            <label style="display:flex;align-items:center;gap:.5rem;font-size:.85rem;font-weight:500;">
               <input type="checkbox" id="t-active" checked style="width:16px;height:16px;"> Formulaire actif
             </label>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="form-group" id="t-category-wrap" hidden>
+            <label class="form-label">Catégorie</label>
+            <select class="form-control" id="t-category">
+              <option value="">— Choisir une catégorie —</option>
+            </select>
+          </div>
+          <div class="form-group" id="t-service-wrap" hidden>
+            <label class="form-label">Service spécifique</label>
+            <select class="form-control" id="t-service">
+              <option value="">— Choisir un service —</option>
+            </select>
           </div>
         </div>
 
@@ -198,7 +211,7 @@
     </div>
   </div>
 
-  <script src="js/admin-core.js?v=202607081400"></script>
-  <script src="js/forms.js?v=202607081400"></script>
+  <script src="js/admin-core.js?v=202607081600"></script>
+  <script src="js/forms.js?v=202607081600"></script>
 </body>
 </html>
