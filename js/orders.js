@@ -711,8 +711,27 @@ async function initOrdersPage() {
   await waitForSupabase();
   wireFilters();
   wireCardActions();
-  loadReservations();
+  await loadReservations();
+  handleUrlConsentOpen();
   subscribeToUpdates();
+}
+
+function handleUrlConsentOpen() {
+  const params = new URLSearchParams(window.location.search);
+  const showConsent = params.get('show_consent') === '1';
+  const reservationId = params.get('reservation_id');
+  if (!showConsent || !reservationId || !allReservations.length) return;
+
+  const r = allReservations.find(res => res.id === reservationId);
+  if (!r) return;
+
+  // Clean URL params without reload
+  const url = new URL(window.location.href);
+  url.searchParams.delete('show_consent');
+  url.searchParams.delete('reservation_id');
+  window.history.replaceState({}, '', url);
+
+  openConsentForReservation(r.id);
 }
 
 window.ChatWidget = {

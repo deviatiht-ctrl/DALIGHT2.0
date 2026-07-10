@@ -9,8 +9,12 @@ let currentReservation = null;
 function formatPaymentMethod(pm) {
   if (!pm) return '—';
   if (String(pm).startsWith('other:')) return String(pm).slice(6);
-  const labels = { moncash: 'MonCash', natcash: 'NatCash', bank: 'Banque' };
+  const labels = { moncash: 'MonCash', natcash: 'NatCash', bank: 'Banque', card: 'Carte crédit', check: 'Chèque', cash: 'Cash' };
   return labels[pm] || pm;
+}
+
+function ico(path, size = 14, color = 'currentColor') {
+  return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="${color}" stroke-width="2" width="${size}" height="${size}" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="${path}"/></svg>`;
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -434,6 +438,18 @@ window.openDetailModal = function(id) {
         <div style="background:var(--admin-bg);padding:.85rem 1rem;border-radius:10px;border:1px solid var(--admin-border);font-size:.88rem;">${r.notes}</div>
       </div>` : ''}
 
+      <!-- Consent Form section -->
+      <div id="consent-section-${r.id}" style="background:var(--admin-bg);border-radius:12px;padding:1rem;border:1px solid var(--admin-border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+          <div style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--admin-text-muted);">
+            ${ico('M9 12h6m-6 4h6m-2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2h-2M9 12l2-2m-2 2l-2-2m2 2v6', 14)} Formulaire de consentement
+          </div>
+        </div>
+        <div id="consent-status-${r.id}" style="font-size:.85rem;">
+          <div class="loading-spinner" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:.4rem;"></div> Chargement...
+        </div>
+      </div>
+
       <div style="font-size:.75rem;color:var(--admin-text-muted);">
         Créé le ${formatDate(r.created_at)}
       </div>
@@ -514,6 +530,9 @@ window.openDetailModal = function(id) {
   footer.style.flexDirection = 'column';
   footer.style.alignItems    = 'stretch';
   modal.classList.add('active');
+
+  // Load consent form info asynchronously
+  loadConsentSection(r.id);
 };
 
 window.closeModal = function() {
@@ -647,6 +666,7 @@ window.printReservationsList = function() {
 // ── Balance payment ─────────────────────────────────────────────────────────
 let balanceReservationId = null;
 let selectedBalancePM = 'cash';
+let currentBalanceDue = 0;
 
 window.openBalanceModal = function(id) {
   const r = allReservations.find(r => r.id === id);
@@ -654,20 +674,24 @@ window.openBalanceModal = function(id) {
 
   balanceReservationId = id;
   selectedBalancePM = 'cash';
+  currentBalanceDue = computeBalance(r);
   document.querySelectorAll('.balance-pm-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.pm === 'cash'));
   document.getElementById('balance-reference').value = '';
+  document.getElementById('balance-amount').value = '';
+  document.getElementById('balance-other-text').value = '';
+  document.getElementById('balance-other-wrap').style.display = 'none';
 
   const totalAmt = parseFloat(r.total_amount || r.total_price || 0);
   const depositAmt = parseFloat(r.deposit_amount || 0);
   const balancePaid = parseFloat(r.balance_amount_paid || 0);
-  const balance = Math.max(0, totalAmt - depositAmt - balancePaid);
+  const paidSoFar = depositAmt + balancePaid;
 
   document.getElementById('balance-info').innerHTML = `
     <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:.75rem 1rem;">
-      <div style="font-size:.78rem;color:#92400e;margin-bottom:.25rem;">Solde à payer</div>
-      <div style="font-size:1.4rem;font-weight:700;color:#b45309;">${balance.toLocaleString('fr-FR')} HTG</div>
+      <div style="font-size:.78rem;color:#92400e;margin-bottom:.25rem;">Solde restant</div>
+      <div style="font-size:1.4rem;font-weight:700;color:#b45309;">${currentBalanceDue.toLocaleString('fr-FR')} HTG</div>
       <div style="font-size:.75rem;color:#92400e;margin-top:.25rem;">
-        Total: ${totalAmt.toLocaleString('fr-FR')} HTG — Déjà payé: ${(depositAmt + balancePaid).toLocaleString('fr-FR')} HTG
+        Total: ${totalAmt.toLocaleString('fr-FR')} HTG — Déjà payé: ${paidSoFar.toLocaleString('fr-FR')} HTG
       </div>
     </div>
   `;
@@ -675,9 +699,18 @@ window.openBalanceModal = function(id) {
   document.getElementById('balance-modal').style.display = 'flex';
 };
 
+function computeBalance(r) {
+  const totalAmt = parseFloat(r.total_amount || r.total_price || 0);
+  const depositAmt = parseFloat(r.deposit_amount || 0);
+  const balancePaid = parseFloat(r.balance_amount_paid || 0);
+  const isFull = r.payment_choice === 'full' || r.payment_status === 'fully_paid';
+  return isFull ? 0 : Math.max(0, totalAmt - depositAmt - balancePaid);
+}
+
 window.closeBalanceModal = function() {
   document.getElementById('balance-modal').style.display = 'none';
   balanceReservationId = null;
+  currentBalanceDue = 0;
 };
 
 window.selectBalancePM = function(pm) {
@@ -685,6 +718,8 @@ window.selectBalancePM = function(pm) {
   document.querySelectorAll('.balance-pm-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.pm === pm);
   });
+  const otherWrap = document.getElementById('balance-other-wrap');
+  if (otherWrap) otherWrap.style.display = pm === 'other' ? 'block' : 'none';
 };
 
 window.processBalancePayment = async function() {
@@ -701,63 +736,483 @@ window.processBalancePayment = async function() {
   const totalAmt = parseFloat(r.total_amount || r.total_price || 0);
   const depositAmt = parseFloat(r.deposit_amount || 0);
   const balancePaid = parseFloat(r.balance_amount_paid || 0);
-  const balance = Math.max(0, totalAmt - depositAmt - balancePaid);
-  const reference = document.getElementById('balance-reference').value.trim() || `${r.reservation_number || 'DL' + Date.now().toString().slice(-8)}-SOLDE`;
+  const balanceDue = Math.max(0, totalAmt - depositAmt - balancePaid);
+  let amountInput = parseFloat(document.getElementById('balance-amount').value);
+  if (!amountInput || amountInput <= 0 || amountInput > balanceDue) amountInput = balanceDue;
+  const isFinal = amountInput >= balanceDue;
+
+  let method = selectedBalancePM;
+  if (method === 'other') {
+    const otherText = document.getElementById('balance-other-text').value.trim();
+    method = otherText ? `other:${otherText}` : 'other';
+  }
+
+  const reference = document.getElementById('balance-reference').value.trim() || `${r.reservation_number || 'DL' + Date.now().toString().slice(-8)}-${isFinal ? 'SOLDE' : 'PARTIEL'}`;
 
   try {
-    // Mobile payment: create Plop Plop payment for balance
+    // Mobile payment: create Plop Plop payment for balance/partial
     if (selectedBalancePM === 'moncash' || selectedBalancePM === 'natcash') {
       const { createPlopPayment } = await import('../../js/plop-payment.js?v=5.0.0');
       const payment = await createPlopPayment(supabase, {
         refference_id: reference,
-        montant: balance,
+        montant: amountInput,
         payment_method: selectedBalancePM,
         context_type: 'reservation_balance',
         context_id: r.id,
       });
 
       if (payment?.transaction_id) {
+        const newBalancePaid = balancePaid + amountInput;
+        const isNowFull = newBalancePaid >= balanceDue;
         await supabase.from('reservations').update({
-          balance_amount_paid: balancePaid + balance,
-          balance_payment_method: selectedBalancePM,
+          balance_amount_paid: newBalancePaid,
+          balance_payment_method: method,
           balance_payment_reference: reference,
           balance_plop_transaction_id: payment.transaction_id,
-          payment_status: 'fully_paid',
-          payment_choice: 'full',
+          payment_status: isNowFull ? 'fully_paid' : 'deposit_paid',
+          payment_choice: isNowFull ? 'full' : 'deposit',
         }).eq('id', r.id);
+
+        // Update local data
+        const idx = allReservations.findIndex(res => res.id === r.id);
+        if (idx !== -1) {
+          allReservations[idx].balance_amount_paid = newBalancePaid;
+          allReservations[idx].balance_payment_method = method;
+          allReservations[idx].balance_payment_reference = reference;
+          allReservations[idx].balance_plop_transaction_id = payment.transaction_id;
+          allReservations[idx].payment_status = isNowFull ? 'fully_paid' : 'deposit_paid';
+          allReservations[idx].payment_choice = isNowFull ? 'full' : 'deposit';
+        }
       }
       if (payment?.url) { window.location.href = payment.url; return; }
     } else {
-      // Cash or bank: mark balance paid immediately
+      // Cash / bank / card / check / other: mark immediately
+      const newBalancePaid = balancePaid + amountInput;
+      const isNowFull = newBalancePaid >= balanceDue;
       await supabase.from('reservations').update({
-        balance_amount_paid: balancePaid + balance,
-        balance_payment_method: selectedBalancePM,
+        balance_amount_paid: newBalancePaid,
+        balance_payment_method: method,
         balance_payment_reference: reference,
-        payment_status: 'fully_paid',
-        payment_choice: 'full',
+        payment_status: isNowFull ? 'fully_paid' : 'deposit_paid',
+        payment_choice: isNowFull ? 'full' : 'deposit',
       }).eq('id', r.id);
-    }
 
-    // Update local data
-    const idx = allReservations.findIndex(res => res.id === r.id);
-    if (idx !== -1) {
-      allReservations[idx].balance_amount_paid = balancePaid + balance;
-      allReservations[idx].balance_payment_method = selectedBalancePM;
-      allReservations[idx].balance_payment_reference = reference;
-      allReservations[idx].payment_status = 'fully_paid';
-      allReservations[idx].payment_choice = 'full';
+      const idx = allReservations.findIndex(res => res.id === r.id);
+      if (idx !== -1) {
+        allReservations[idx].balance_amount_paid = newBalancePaid;
+        allReservations[idx].balance_payment_method = method;
+        allReservations[idx].balance_payment_reference = reference;
+        allReservations[idx].payment_status = isNowFull ? 'fully_paid' : 'deposit_paid';
+        allReservations[idx].payment_choice = isNowFull ? 'full' : 'deposit';
+      }
     }
 
     closeBalanceModal();
     closeModal();
     renderReservations();
-    window.adminCore.showToast('Solde payé avec succès', 'success');
+    window.adminCore.showToast('Paiement enregistré avec succès', 'success');
     // Print receipt after balance payment
     printReservationDetail(r.id);
   } catch (err) {
     console.error('Error processing balance payment:', err);
-    window.adminCore.showToast('Erreur lors du paiement du solde', 'error');
+    window.adminCore.showToast('Erreur lors du paiement: ' + err.message, 'error');
   }
+};
+
+// ── Consent forms ───────────────────────────────────────────────────────────
+let currentConsentReservationId = null;
+let currentConsentTemplate = null;
+let currentConsentSubmission = null;
+let currentConsentSigPad = null;
+
+function esc(v = '') {
+  return String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function matchReservationTemplate(r, templates, serviceMap = {}) {
+  if (!templates || !templates.length) return null;
+  const names = [];
+  if (Array.isArray(r.services)) r.services.forEach(s => { if (s && s.name) names.push(String(s.name).toLowerCase()); });
+  if (r.service) names.push(String(r.service).toLowerCase());
+  const cats = [];
+  if (Array.isArray(r.services)) r.services.forEach(s => { if (s && s.category) cats.push(String(s.category).toLowerCase()); });
+  if (serviceMap[r.service_id]) cats.push(String(serviceMap[r.service_id]).toLowerCase());
+  if (r.service_category) cats.push(String(r.service_category).toLowerCase());
+
+  let match = templates.find(t => !t.applies_to_all && t.service_id && t.service_id === r.service_id);
+  if (match) return match;
+  match = templates.find(t => !t.applies_to_all && t.service_name &&
+    names.some(n => n.includes(t.service_name.toLowerCase()) || t.service_name.toLowerCase().includes(n)));
+  if (match) return match;
+  match = templates.find(t => !t.applies_to_all && t.service_category &&
+    cats.some(c => c === t.service_category.toLowerCase()));
+  if (match) return match;
+  return templates.find(t => t.applies_to_all) || null;
+}
+
+async function loadConsentSection(reservationId) {
+  const statusEl = document.getElementById(`consent-status-${reservationId}`);
+  if (!statusEl) return;
+
+  const r = allReservations.find(x => x.id === reservationId);
+  if (!r) { statusEl.innerHTML = 'Réservation introuvable.'; return; }
+
+  const supabase = getSupabaseClient();
+  if (!supabase) { statusEl.innerHTML = 'Connexion Supabase indisponible.'; return; }
+
+  try {
+    const [tplRes, subRes, svcRes] = await Promise.all([
+      supabase.from('form_templates').select('*').eq('is_active', true),
+      supabase.from('form_submissions').select('*').eq('reservation_id', reservationId),
+      supabase.from('services').select('id, category')
+    ]);
+
+    if (tplRes.error) throw tplRes.error;
+    const templates = tplRes.data || [];
+    const submissions = subRes.data || [];
+    const serviceMap = Object.fromEntries((svcRes.data || []).map(s => [s.id, s.category]));
+
+    const template = matchReservationTemplate(r, templates, serviceMap);
+    const submission = submissions.length ? submissions[0] : null;
+
+    if (!template) {
+      statusEl.innerHTML = `<span style="color:var(--admin-text-muted);">Aucun formulaire actif pour ce service.</span>`;
+      return;
+    }
+
+    if (submission) {
+      statusEl.innerHTML = `
+        <div style="display:flex;align-items:center;gap:.4rem;color:#059669;font-weight:600;">
+          ${ico('M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', 15, '#059669')}
+          Formulaire rempli · <span class="ref-chip">${esc(submission.reference_number)}</span>
+        </div>
+        <div style="margin-top:.5rem; display:flex; gap:.4rem; flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="openConsentModal('${r.id}')">Voir / Modifier</button>
+          <button class="btn btn-secondary btn-sm" onclick="sendConsentLink('${r.id}')">Renvoyer au client</button>
+        </div>`;
+    } else {
+      statusEl.innerHTML = `
+        <div style="display:flex;align-items:center;gap:.4rem;color:#92400e;font-weight:600;">
+          ${ico('M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z', 15, '#92400e')}
+          Formulaire en attente
+        </div>
+        <div style="margin-top:.5rem; display:flex; gap:.4rem; flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" onclick="openConsentModal('${r.id}')">Remplir maintenant</button>
+          <button class="btn btn-secondary btn-sm" onclick="sendConsentLink('${r.id}')">Envoyer au client</button>
+        </div>`;
+    }
+  } catch (err) {
+    console.error('loadConsentSection error:', err);
+    statusEl.innerHTML = `<span style="color:#ef4444;">Erreur chargement formulaire.</span>`;
+  }
+}
+
+window.openConsentModal = async function(reservationId) {
+  currentConsentReservationId = reservationId;
+  const r = allReservations.find(x => x.id === reservationId);
+  if (!r) return;
+
+  const supabase = getSupabaseClient();
+  if (!supabase) { window.adminCore.showToast('Connexion Supabase indisponible.', 'error'); return; }
+
+  const modal = document.getElementById('consent-modal');
+  const body = document.getElementById('consent-modal-body');
+  const footer = document.getElementById('consent-modal-footer');
+
+  body.innerHTML = '<div class="loading-spinner"></div> Chargement...';
+  footer.innerHTML = '<button class="btn btn-secondary" onclick="closeConsentModal()">Fermer</button>';
+  modal.style.display = 'flex';
+
+  try {
+    const [tplRes, subRes, svcRes] = await Promise.all([
+      supabase.from('form_templates').select('*').eq('is_active', true),
+      supabase.from('form_submissions').select('*').eq('reservation_id', reservationId),
+      supabase.from('services').select('id, category')
+    ]);
+    if (tplRes.error) throw tplRes.error;
+    const templates = tplRes.data || [];
+    const submissions = subRes.data || [];
+    const serviceMap = Object.fromEntries((svcRes.data || []).map(s => [s.id, s.category]));
+
+    const template = matchReservationTemplate(r, templates, serviceMap);
+    const submission = submissions.length ? submissions[0] : null;
+    currentConsentTemplate = template;
+    currentConsentSubmission = submission;
+
+    if (!template) {
+      document.getElementById('consent-modal-title').textContent = 'Formulaire indisponible';
+      body.innerHTML = '<div class="text-center text-muted" style="padding:2rem;">Aucun modèle de formulaire actif pour ce service.</div>';
+      return;
+    }
+
+    document.getElementById('consent-modal-title').textContent = esc(template.title);
+
+    if (submission) {
+      // Read-only view
+      body.innerHTML = buildSubmissionView(template, submission, r);
+      footer.innerHTML = `
+        <button class="btn btn-secondary" onclick="closeConsentModal()">Fermer</button>
+        <button class="btn btn-secondary" onclick="printConsentSubmission('${submission.id}')">Imprimer</button>
+        <button class="btn btn-primary" onclick="reopenConsentForEdit('${r.id}')">Remplir à nouveau</button>
+        <button class="btn btn-secondary" onclick="sendConsentLink('${r.id}')">Renvoyer au client</button>`;
+    } else {
+      body.innerHTML = buildConsentForm(template, r);
+      footer.innerHTML = `
+        <button class="btn btn-secondary" onclick="closeConsentModal()">Annuler</button>
+        <button class="btn btn-primary" onclick="submitConsentForm('${r.id}')">Enregistrer le formulaire</button>
+        <button class="btn btn-secondary" onclick="sendConsentLink('${r.id}')">Envoyer au client</button>`;
+      initConsentSignature();
+    }
+  } catch (err) {
+    console.error('openConsentModal error:', err);
+    body.innerHTML = `<div class="text-center" style="padding:2rem;color:#ef4444;">Erreur: ${esc(err.message)}</div>`;
+  }
+};
+
+window.closeConsentModal = function() {
+  document.getElementById('consent-modal').style.display = 'none';
+  currentConsentReservationId = null;
+  currentConsentTemplate = null;
+  currentConsentSubmission = null;
+  currentConsentSigPad = null;
+};
+
+window.reopenConsentForEdit = async function(reservationId) {
+  currentConsentSubmission = null;
+  await window.openConsentModal(reservationId);
+};
+
+function buildConsentForm(template, r) {
+  const fields = Array.isArray(template.fields) ? template.fields : [];
+  return `
+    ${template.description ? `<div style="background:#fff7ed;border-left:3px solid #D4AF37;padding:.85rem 1rem;border-radius:0 8px 8px 0;font-size:.88rem;color:#5a4a3a;line-height:1.6;margin-bottom:1.25rem;">${esc(template.description)}</div>` : ''}
+    <div style="display:grid;gap:1rem;">
+      ${fields.map((f, i) => renderConsentField(f, i)).join('')}
+    </div>`;
+}
+
+function renderConsentField(f, idx) {
+  const req = f.required ? '<span style="color:#dc2626;margin-left:.2rem;">*</span>' : '';
+  if (f.type === 'section') {
+    return `<div style="font-weight:700;color:#4A3728;margin:.8rem 0 .2rem;padding-bottom:.35rem;border-bottom:1px solid var(--admin-border);">${esc(f.label)}</div>`;
+  }
+  let control = '';
+  if (f.type === 'text') control = `<input type="text" class="form-input" id="cf-field-${idx}" data-idx="${idx}">`;
+  else if (f.type === 'textarea') control = `<textarea class="form-input" rows="3" id="cf-field-${idx}" data-idx="${idx}"></textarea>`;
+  else if (f.type === 'date') control = `<input type="date" class="form-input" id="cf-field-${idx}" data-idx="${idx}">`;
+  else if (f.type === 'select') control = `<select class="form-input" id="cf-field-${idx}" data-idx="${idx}"><option value="">— Choisir —</option>${(f.options || []).map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('')}</select>`;
+  else if (f.type === 'radio') control = `<div id="cf-field-${idx}" data-idx="${idx}">${(f.options || []).map(o => `<label style="display:flex;align-items:center;gap:.4rem;padding:.4rem 0;cursor:pointer;"><input type="radio" name="cf-radio-${idx}" value="${esc(o)}" style="width:16px;height:16px;"> ${esc(o)}</label>`).join('')}</div>`;
+  else if (f.type === 'checkbox') control = `<div id="cf-field-${idx}" data-idx="${idx}">${(f.options || []).map(o => `<label style="display:flex;align-items:center;gap:.4rem;padding:.4rem 0;cursor:pointer;"><input type="checkbox" value="${esc(o)}" style="width:16px;height:16px;"> ${esc(o)}</label>`).join('')}</div>`;
+  else if (f.type === 'consent') control = `<label style="display:flex;align-items:center;gap:.4rem;padding:.4rem 0;cursor:pointer;"><input type="checkbox" id="cf-field-${idx}" data-idx="${idx}" style="width:16px;height:16px;"> Oui, j'accepte</label>`;
+  else if (f.type === 'signature') {
+    return `
+      <div style="margin-bottom:1rem;">
+        <label style="display:block;font-weight:600;font-size:.88rem;margin-bottom:.4rem;">${esc(f.label)} ${req}</label>
+        <div style="border:1.5px dashed #d9cebf;border-radius:12px;background:#fdfbf8;padding:.5rem;">
+          <canvas id="cf-signature" width="560" height="160" style="width:100%;height:160px;border-radius:8px;background:#fff;cursor:crosshair;"></canvas>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.4rem;">
+            <small style="color:#9a8f86;">Signez avec la souris ou le doigt</small>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="clearConsentSignature()">Effacer</button>
+          </div>
+        </div>
+        <div id="cf-signature-err" style="color:#dc2626;font-size:.82rem;margin-top:.3rem;display:none;">La signature est requise.</div>
+      </div>`;
+  }
+  return `
+    <div style="margin-bottom:1rem;">
+      <label style="display:block;font-weight:600;font-size:.88rem;margin-bottom:.4rem;">${esc(f.label)} ${req}</label>
+      ${control}
+      <div id="cf-err-${idx}" style="color:#dc2626;font-size:.82rem;margin-top:.3rem;display:none;">Ce champ est obligatoire.</div>
+    </div>`;
+}
+
+function buildSubmissionView(template, submission, r) {
+  const answers = Array.isArray(submission.answers) ? submission.answers : [];
+  const fields = Array.isArray(template.fields) ? template.fields : [];
+  const rows = answers.map(a => {
+    if (a.type === 'section') return `<div style="font-weight:700;color:#4A3728;margin:.8rem 0 .2rem;padding-bottom:.35rem;border-bottom:1px solid var(--admin-border);">${esc(a.label)}</div>`;
+    let val = a.value;
+    if (Array.isArray(val)) val = val.join(', ');
+    if (a.type === 'consent') val = (val === true || val === 'true' || val === 'oui') ? '✓ Accepté' : (val || '—');
+    return `<div style="margin-bottom:.85rem;"><div style="font-size:.78rem;color:var(--admin-text-muted);margin-bottom:.25rem;">${esc(a.label)}</div><div style="background:var(--admin-bg);padding:.65rem .85rem;border-radius:8px;font-size:.9rem;">${esc(val || '—')}</div></div>`;
+  }).join('');
+
+  const d = new Date(submission.submitted_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return `
+    <div style="margin-bottom:1rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;">
+        <div style="font-size:.85rem;color:#059669;font-weight:600;">✓ Déjà rempli le ${d}</div>
+        <span class="ref-chip">${esc(submission.reference_number)}</span>
+      </div>
+    </div>
+    <div style="border:1px solid var(--admin-border);border-radius:10px;padding:1rem;">
+      ${rows || '<p style="color:var(--admin-text-muted);">Aucune réponse.</p>'}
+      ${submission.signature_data ? `
+        <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--admin-border);">
+          <div style="font-weight:600;font-size:.85rem;margin-bottom:.4rem;">Signature du client</div>
+          <img src="${submission.signature_data}" alt="Signature" style="max-width:280px;border:1px solid var(--admin-border);border-radius:8px;background:#fff;">
+        </div>` : ''}
+    </div>`;
+}
+
+function initConsentSignature() {
+  const canvas = document.getElementById('cf-signature');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const ratio = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * ratio;
+  canvas.height = rect.height * ratio;
+  ctx.scale(ratio, ratio);
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#1a1a1a';
+
+  let drawing = false, hasInk = false, last = null;
+  const pos = (e) => {
+    const r = canvas.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return { x: t.clientX - r.left, y: t.clientY - r.top };
+  };
+  const start = (e) => { drawing = true; last = pos(e); e.preventDefault(); };
+  const move = (e) => {
+    if (!drawing) return;
+    const p = pos(e);
+    ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+    last = p; hasInk = true; e.preventDefault();
+  };
+  const end = () => { drawing = false; };
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, { passive: false });
+  canvas.addEventListener('touchmove', move, { passive: false });
+  canvas.addEventListener('touchend', end);
+
+  currentConsentSigPad = {
+    clear: () => { ctx.clearRect(0, 0, canvas.width, canvas.height); hasInk = false; },
+    isEmpty: () => !hasInk,
+    toDataURL: () => canvas.toDataURL('image/png')
+  };
+}
+
+window.clearConsentSignature = function() {
+  if (currentConsentSigPad) currentConsentSigPad.clear();
+};
+
+window.submitConsentForm = async function(reservationId) {
+  const r = allReservations.find(x => x.id === reservationId);
+  if (!r || !currentConsentTemplate) return;
+
+  const supabase = getSupabaseClient();
+  if (!supabase) { window.adminCore.showToast('Connexion Supabase indisponible.', 'error'); return; }
+
+  const fields = Array.isArray(currentConsentTemplate.fields) ? currentConsentTemplate.fields : [];
+  const answers = [];
+  let firstErr = null;
+
+  fields.forEach((f, idx) => {
+    const type = f.type;
+    let value = '';
+    if (type === 'section') {
+      answers.push({ field_id: String(idx), label: f.label, type, value: '' });
+      return;
+    }
+
+    if (type === 'checkbox') {
+      const checked = Array.from(document.querySelectorAll(`#cf-field-${idx} input[type=checkbox]:checked`)).map(c => c.value);
+      value = checked;
+    } else if (type === 'radio') {
+      const checked = document.querySelector(`input[name="cf-radio-${idx}"]:checked`);
+      value = checked ? checked.value : '';
+    } else if (type === 'consent') {
+      const c = document.getElementById(`cf-field-${idx}`);
+      value = c && c.checked ? 'oui' : '';
+    } else if (type === 'signature') {
+      value = currentConsentSigPad && !currentConsentSigPad.isEmpty() ? currentConsentSigPad.toDataURL() : '';
+    } else {
+      const input = document.getElementById(`cf-field-${idx}`);
+      value = input ? input.value.trim() : '';
+    }
+
+    const errEl = document.getElementById(`cf-err-${idx}`) || document.getElementById('cf-signature-err');
+    if (errEl) errEl.style.display = 'none';
+
+    const isEmpty = (Array.isArray(value) ? value.length === 0 : !value) || (type === 'consent' && value !== 'oui');
+    if (f.required && isEmpty) {
+      if (errEl) {
+        errEl.textContent = type === 'signature' ? 'La signature est requise.' : type === 'consent' ? 'Vous devez accepter.' : 'Ce champ est obligatoire.';
+        errEl.style.display = 'block';
+      }
+      if (!firstErr) firstErr = type === 'signature' ? document.getElementById('cf-signature') : document.getElementById(`cf-field-${idx}`);
+    }
+
+    if (type !== 'signature') {
+      answers.push({ field_id: String(idx), label: f.label, type, value });
+    } else {
+      answers.push({ field_id: String(idx), label: f.label, type, value: value ? '✓ Signé' : '' });
+    }
+  });
+
+  if (firstErr) {
+    firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  // Signature data separate
+  let signatureData = '';
+  const sigIdx = fields.findIndex(f => f.type === 'signature');
+  if (sigIdx !== -1 && currentConsentSigPad && !currentConsentSigPad.isEmpty()) {
+    signatureData = currentConsentSigPad.toDataURL();
+  }
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    const record = {
+      form_template_id: currentConsentTemplate.id,
+      reservation_id: r.id,
+      user_id: user?.id || r.user_id || null,
+      client_name: r.user_name || '',
+      client_email: r.user_email || '',
+      client_phone: r.phone || '',
+      service_name: r.service || '',
+      form_title: currentConsentTemplate.title || '',
+      form_type: currentConsentTemplate.form_type || '',
+      answers,
+      signature_data: signatureData,
+    };
+
+    let result;
+    if (currentConsentSubmission) {
+      result = await supabase.from('form_submissions').update(record).eq('id', currentConsentSubmission.id).select().single();
+    } else {
+      result = await supabase.from('form_submissions').insert([record]).select().single();
+    }
+    if (result.error) throw result.error;
+
+    window.adminCore.showToast(currentConsentSubmission ? 'Formulaire mis à jour' : 'Formulaire enregistré', 'success');
+    closeConsentModal();
+    loadConsentSection(r.id);
+  } catch (err) {
+    console.error('submitConsentForm error:', err);
+    window.adminCore.showToast('Erreur: ' + err.message, 'error');
+  }
+};
+
+window.sendConsentLink = async function(reservationId) {
+  const r = allReservations.find(x => x.id === reservationId);
+  if (!r || !r.user_email) { window.adminCore.showToast('Email client manquant.', 'error'); return; }
+
+  const formUrl = `${window.location.origin}/pages/orders.html?show_consent=1&reservation_id=${encodeURIComponent(reservationId)}`;
+  const subject = encodeURIComponent('Veuillez remplir votre formulaire de consentement — DALIGHT');
+  const body = encodeURIComponent(`Bonjour ${r.user_name || 'cher(e) client(e)'},\n\nMerci de remplir le formulaire de consentement pour votre réservation du ${r.date} à ${r.time}.\n\nLien: ${formUrl}\n\nÀ très bientôt,\nL'équipe DALIGHT`);
+  window.location.href = `mailto:${encodeURIComponent(r.user_email)}?subject=${subject}&body=${body}`;
+};
+
+window.printConsentSubmission = function(submissionId) {
+  // Opens admin forms page in new tab focused on the submission
+  window.open(`forms.html?submission=${encodeURIComponent(submissionId)}`, '_blank');
 };
 
 // ── Vérification paiement Plop Plop ─────────────────────────────────────────

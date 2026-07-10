@@ -526,9 +526,9 @@
 
   <!-- Balance Payment Modal -->
   <div class="modal-overlay" id="balance-modal" style="display: none;">
-    <div class="modal" style="max-width: 450px;">
+    <div class="modal" style="max-width: 460px;">
       <div class="modal-header">
-        <h3 class="modal-title">Payer le solde restant</h3>
+        <h3 class="modal-title">Paiement du solde</h3>
         <button class="modal-close" onclick="closeBalanceModal()">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
@@ -536,17 +536,29 @@
         </button>
       </div>
       <div class="modal-body">
-        <div id="balance-info" style="margin-bottom:1.5rem;">
+        <div id="balance-info" style="margin-bottom:1.25rem;">
           <!-- Populated by JS -->
         </div>
         <div class="form-group">
-          <label>Méthode de paiement pour le solde</label>
+          <label>Montant à payer maintenant</label>
+          <input type="number" id="balance-amount" class="form-input" min="1" step="1" placeholder="ex: 2500">
+          <small id="balance-amount-hint" style="color:var(--admin-text-muted);">Laissez vide pour payer le solde complet.</small>
+        </div>
+        <div class="form-group">
+          <label>Méthode de paiement</label>
           <div class="d-flex gap-2" style="flex-wrap:wrap;">
             <button type="button" class="btn btn-secondary balance-pm-btn active" data-pm="cash" onclick="selectBalancePM('cash')">Cash</button>
-            <button type="button" class="btn btn-secondary balance-pm-btn" data-pm="moncash" onclick="selectBalancePM('moncash')">MonCash (Plop)</button>
-            <button type="button" class="btn btn-secondary balance-pm-btn" data-pm="natcash" onclick="selectBalancePM('natcash')">NatCash (Plop)</button>
+            <button type="button" class="btn btn-secondary balance-pm-btn" data-pm="moncash" onclick="selectBalancePM('moncash')">MonCash</button>
+            <button type="button" class="btn btn-secondary balance-pm-btn" data-pm="natcash" onclick="selectBalancePM('natcash')">NatCash</button>
+            <button type="button" class="btn btn-secondary balance-pm-btn" data-pm="card" onclick="selectBalancePM('card')">Carte crédit</button>
             <button type="button" class="btn btn-secondary balance-pm-btn" data-pm="bank" onclick="selectBalancePM('bank')">Virement</button>
+            <button type="button" class="btn btn-secondary balance-pm-btn" data-pm="check" onclick="selectBalancePM('check')">Chèque</button>
+            <button type="button" class="btn btn-secondary balance-pm-btn" data-pm="other" onclick="selectBalancePM('other')">Autre</button>
           </div>
+        </div>
+        <div class="form-group" id="balance-other-wrap" style="display:none;">
+          <label>Précisez le moyen</label>
+          <input type="text" id="balance-other-text" class="form-input" placeholder="Ex: Zelle, Western Union...">
         </div>
         <div class="form-group">
           <label>Référence / Numéro de transaction (optionnel)</label>
@@ -555,7 +567,27 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeBalanceModal()">Annuler</button>
-        <button class="btn btn-primary" onclick="processBalancePayment()">Payer le solde</button>
+        <button class="btn btn-primary" onclick="processBalancePayment()">Valider le paiement</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Consent Form Modal -->
+  <div class="modal-overlay" id="consent-modal" style="display: none;">
+    <div class="modal" style="max-width: 640px; max-height: 90vh; display: flex; flex-direction: column;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="consent-modal-title">Formulaire de consentement</h3>
+        <button class="modal-close" onclick="closeConsentModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body" id="consent-modal-body" style="overflow-y:auto; flex:1;">
+        <!-- Populated by JS -->
+      </div>
+      <div class="modal-footer" id="consent-modal-footer" style="justify-content:space-between; flex-wrap:wrap; gap:.5rem;">
+        <button class="btn btn-secondary" onclick="closeConsentModal()">Fermer</button>
       </div>
     </div>
   </div>
