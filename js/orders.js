@@ -102,9 +102,9 @@ function renderCard(r) {
 
   const tpl = matchTemplate(r, consentData.templates, consentData.serviceMap);
   const sub = tpl ? findSubmission(r, consentData.submissions) : null;
-  const consentBtn = (r.payment_status === 'fully_paid' || r.balance_paid_amount > 0) && tpl
+  const consentBtn = tpl
     ? `<button class="rc-btn rc-btn-consent" data-action="open-consent" data-id="${r.id}">
-         <i data-lucide="file-signature" style="width:14px;height:14px;"></i> ${sub ? 'Voir le formulaire' : 'Remplir le formulaire de consentement'}
+         <i data-lucide="file-signature" style="width:14px;height:14px;"></i> ${sub ? 'Voir le formulaire de consentement' : 'Remplir le formulaire de consentement'}
        </button>`
     : '';
 

@@ -8,126 +8,53 @@
 -- (run 23_consent_forms.sql before this file)
 
 -- Upsert the massage consent form template (idempotent without requiring a UNIQUE constraint)
+-- The fields array is FLAT because consent-forms.js renders each item sequentially.
+-- Sections are rendered as "type": "section" headers.
 DO $$
 DECLARE
   v_form_title TEXT := 'FEUILLE DE CONSENTEMENT POUR MASSAGE THÉRAPEUTIQUE / BIEN-ÊTRE';
   v_fields JSONB := '[
-    {
-      "section": "1. Informations du Client",
-      "fields": [
-        { "name": "nom", "label": "Nom", "type": "text", "required": true },
-        { "name": "prenom", "label": "Prénom", "type": "text", "required": true },
-        { "name": "date_naissance", "label": "Date de naissance", "type": "date", "required": true },
-        { "name": "adresse", "label": "Adresse", "type": "textarea", "required": false },
-        { "name": "telephone", "label": "Téléphone", "type": "tel", "required": true },
-        { "name": "email", "label": "E-mail", "type": "email", "required": false }
-      ]
-    },
-    {
-      "section": "2. Informations Médicales (confidentielles)",
-      "fields": [
-        {
-          "name": "douleurs_actuelles",
-          "label": "Avez-vous actuellement des douleurs ou inconforts ?",
-          "type": "radio",
-          "options": ["Oui", "Non"],
-          "required": true
-        },
-        { "name": "douleurs_localisation", "label": "Si oui, où ?", "type": "text", "required": false },
-        {
-          "name": "maladies_conditions",
-          "label": "Avez-vous des maladies ou conditions médicales connues ?",
-          "type": "radio",
-          "options": ["Oui", "Non"],
-          "required": true
-        },
-        { "name": "maladies_details", "label": "Si oui, préciser", "type": "textarea", "required": false },
-        { "name": "medicaments", "label": "Médicaments en cours", "type": "textarea", "required": false },
-        { "name": "allergies", "label": "Allergies connues (produits, huiles, lotions…)", "type": "textarea", "required": false },
-        {
-          "name": "antecedents_chirurgicaux",
-          "label": "Antécédents chirurgicaux",
-          "type": "radio",
-          "options": ["Oui", "Non"],
-          "required": true
-        },
-        { "name": "chirurgicaux_details", "label": "Si oui, préciser", "type": "textarea", "required": false },
-        {
-          "name": "enceinte",
-          "label": "Êtes-vous enceinte ?",
-          "type": "radio",
-          "options": ["Oui", "Non"],
-          "required": true
-        },
-        { "name": "mois_grossesse", "label": "Mois", "type": "number", "required": false }
-      ]
-    },
-    {
-      "section": "3. Type de Massage Choisi",
-      "fields": [
-        {
-          "name": "type_massage",
-          "label": "Type de massage",
-          "type": "checkbox",
-          "options": ["Relaxation", "Thérapeutique", "Drainage lymphatique", "Pierres chaudes", "Autre"],
-          "required": true
-        },
-        { "name": "type_massage_autre", "label": "Autre (préciser)", "type": "text", "required": false },
-        { "name": "zones_a_traiter", "label": "Zone(s) à traiter", "type": "textarea", "required": false },
-        { "name": "zones_a_eviter", "label": "Zone(s) à éviter", "type": "textarea", "required": false }
-      ]
-    },
-    {
-      "section": "4. Consentement du Client",
-      "fields": [
-        { "name": "consentement_nom", "label": "Je soussigné(e)", "type": "text", "required": true },
-        {
-          "name": "consentement_infos_veridiques",
-          "label": "J’ai fourni des informations véridiques concernant mon état de santé.",
-          "type": "checkbox",
-          "options": ["Je confirme"],
-          "required": true
-        },
-        {
-          "name": "consentement_informe",
-          "label": "J’ai été informé(e) de la nature du massage et de ses objectifs.",
-          "type": "checkbox",
-          "options": ["Je confirme"],
-          "required": true
-        },
-        {
-          "name": "consentement_non_medical",
-          "label": "Je comprends que le massage ne remplace pas un avis ou traitement médical.",
-          "type": "checkbox",
-          "options": ["Je confirme"],
-          "required": true
-        },
-        {
-          "name": "consentement_eclaire",
-          "label": "Je donne mon consentement libre et éclairé pour recevoir ce soin.",
-          "type": "checkbox",
-          "options": ["Je confirme"],
-          "required": true
-        },
-        {
-          "name": "consentement_arret",
-          "label": "Je peux arrêter la séance à tout moment si je ressens une gêne ou un inconfort.",
-          "type": "checkbox",
-          "options": ["Je confirme"],
-          "required": true
-        },
-        { "name": "signature_client", "label": "Signature du client", "type": "signature", "required": true },
-        { "name": "date_signature_client", "label": "Date", "type": "date", "required": true }
-      ]
-    },
-    {
-      "section": "5. Praticien(ne) – Déclaration et Engagement",
-      "fields": [
-        { "name": "nom_praticien", "label": "Nom du praticien", "type": "text", "required": true },
-        { "name": "signature_praticien", "label": "Signature du praticien", "type": "signature", "required": true },
-        { "name": "date_signature_praticien", "label": "Date", "type": "date", "required": true }
-      ]
-    }
+    { "type": "section", "label": "1. Informations du Client" },
+    { "type": "text",     "label": "Nom",                    "required": true },
+    { "type": "text",     "label": "Prénom",               "required": true },
+    { "type": "date",     "label": "Date de naissance",    "required": true },
+    { "type": "textarea", "label": "Adresse",               "required": false },
+    { "type": "text",     "label": "Téléphone",            "required": true },
+    { "type": "text",     "label": "E-mail",               "required": false },
+
+    { "type": "section", "label": "2. Informations Médicales (confidentielles)" },
+    { "type": "radio",    "label": "Avez-vous actuellement des douleurs ou inconforts ?", "options": ["Oui", "Non"], "required": true },
+    { "type": "text",     "label": "Si oui, où ?",          "required": false },
+    { "type": "radio",    "label": "Avez-vous des maladies ou conditions médicales connues ?", "options": ["Oui", "Non"], "required": true },
+    { "type": "textarea", "label": "Si oui, préciser",     "required": false },
+    { "type": "textarea", "label": "Médicaments en cours",   "required": false },
+    { "type": "textarea", "label": "Allergies connues (produits, huiles, lotions…)", "required": false },
+    { "type": "radio",    "label": "Antécédents chirurgicaux", "options": ["Oui", "Non"], "required": true },
+    { "type": "textarea", "label": "Si oui, préciser",     "required": false },
+    { "type": "radio",    "label": "Êtes-vous enceinte ?", "options": ["Oui", "Non"], "required": true },
+    { "type": "text",     "label": "Mois",                 "required": false },
+
+    { "type": "section", "label": "3. Type de Massage Choisi" },
+    { "type": "checkbox", "label": "Type de massage",      "options": ["Relaxation", "Thérapeutique", "Drainage lymphatique", "Pierres chaudes", "Autre"], "required": true },
+    { "type": "text",     "label": "Autre (préciser)",     "required": false },
+    { "type": "textarea", "label": "Zone(s) à traiter",    "required": false },
+    { "type": "textarea", "label": "Zone(s) à éviter",     "required": false },
+
+    { "type": "section", "label": "4. Consentement du Client" },
+    { "type": "text",     "label": "Je soussigné(e)",      "required": true },
+    { "type": "checkbox", "label": "J’ai fourni des informations véridiques concernant mon état de santé.", "options": ["Je confirme"], "required": true },
+    { "type": "checkbox", "label": "J’ai été informé(e) de la nature du massage et de ses objectifs.", "options": ["Je confirme"], "required": true },
+    { "type": "checkbox", "label": "Je comprends que le massage ne remplace pas un avis ou traitement médical.", "options": ["Je confirme"], "required": true },
+    { "type": "checkbox", "label": "Je donne mon consentement libre et éclairé pour recevoir ce soin.", "options": ["Je confirme"], "required": true },
+    { "type": "checkbox", "label": "Je peux arrêter la séance à tout moment si je ressens une gêne ou un inconfort.", "options": ["Je confirme"], "required": true },
+    { "type": "signature", "label": "Signature du client", "required": true },
+    { "type": "date",      "label": "Date",                "required": true },
+
+    { "type": "section", "label": "5. Praticien(ne) – Déclaration et Engagement" },
+    { "type": "checkbox", "label": "Je certifie avoir expliqué clairement le déroulement du soin, les techniques utilisées ainsi que les contre-indications du massage.", "options": ["Je confirme"], "required": true },
+    { "type": "text",      "label": "Nom du praticien",    "required": true },
+    { "type": "signature", "label": "Signature du praticien", "required": true },
+    { "type": "date",      "label": "Date",                "required": true }
   ]'::jsonb;
   v_existing_id UUID;
 BEGIN
