@@ -12,7 +12,7 @@ function injectStyles() {
   const css = `
   .cf-overlay{position:fixed;inset:0;background:rgba(30,20,12,.55);backdrop-filter:blur(4px);z-index:100000;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto;animation:cfFade .2s ease;}
   @keyframes cfFade{from{opacity:0}to{opacity:1}}
-  .cf-modal{background:#fff;border-radius:18px;max-width:640px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;animation:cfSlide .3s cubic-bezier(.175,.885,.32,1.275);margin:auto;}
+  .cf-modal{background:#2a1f16;color:#fff;border-radius:18px;max-width:640px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.45);overflow:hidden;animation:cfSlide .3s cubic-bezier(.175,.885,.32,1.275);margin:auto;}
   @keyframes cfSlide{from{opacity:0;transform:translateY(20px) scale(.98)}to{opacity:1;transform:none}}
   .cf-head{background:linear-gradient(135deg,#4A3728 0%,#6B4F3B 100%);color:#fff;padding:1.5rem 1.75rem;position:relative;}
   .cf-head h2{font-family:'Playfair Display',serif;font-size:1.4rem;margin:0 0 .25rem;}
@@ -20,36 +20,36 @@ function injectStyles() {
   .cf-head .cf-type{display:inline-block;margin-top:.5rem;background:rgba(212,175,55,.9);color:#3a2a1a;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px;}
   .cf-close{position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,.15);border:none;color:#fff;width:34px;height:34px;border-radius:50%;font-size:1.3rem;cursor:pointer;line-height:1;}
   .cf-close:hover{background:rgba(255,255,255,.28);}
-  .cf-body{padding:1.5rem 1.75rem;max-height:60vh;overflow-y:auto;}
-  .cf-intro{background:#faf6f0;border-left:3px solid #D4AF37;padding:.85rem 1rem;border-radius:0 8px 8px 0;font-size:.88rem;color:#5a4a3a;line-height:1.6;margin-bottom:1.25rem;white-space:pre-line;}
+  .cf-body{padding:1.5rem 1.75rem;max-height:60vh;overflow-y:auto;background:#2a1f16;color:#fff;}
+  .cf-intro{background:#3a2a1a;border-left:3px solid #D4AF37;padding:.85rem 1rem;border-radius:0 8px 8px 0;font-size:.88rem;color:#fff;line-height:1.6;margin-bottom:1.25rem;white-space:pre-line;}
   .cf-field{margin-bottom:1.1rem;}
-  .cf-field label.cf-q{display:block;font-weight:600;color:#3a2a1a;font-size:.92rem;margin-bottom:.4rem;}
+  .cf-field label.cf-q{display:block;font-weight:600;color:#fff;font-size:.92rem;margin-bottom:.4rem;}
   .cf-field .cf-req{color:#dc2626;margin-left:.2rem;}
-  .cf-field input[type=text],.cf-field input[type=date],.cf-field textarea,.cf-field select{width:100%;padding:.7rem .85rem;border:1.5px solid #e5ddd3;border-radius:10px;font-size:.92rem;font-family:inherit;transition:border-color .15s;box-sizing:border-box;}
+  .cf-field input[type=text],.cf-field input[type=date],.cf-field textarea,.cf-field select{width:100%;padding:.7rem .85rem;background:#3a2a1a;color:#fff;border:1.5px solid #6b5a48;border-radius:10px;font-size:.92rem;font-family:inherit;transition:border-color .15s;box-sizing:border-box;}
   .cf-field input[type=text]:focus,.cf-field textarea:focus,.cf-field select:focus,.cf-field input[type=date]:focus{outline:none;border-color:#D4AF37;}
   .cf-field textarea{resize:vertical;min-height:80px;}
-  .cf-opt{display:flex;align-items:flex-start;gap:.6rem;padding:.55rem .75rem;border:1.5px solid #eee6db;border-radius:10px;margin-bottom:.5rem;cursor:pointer;font-size:.9rem;color:#4a3d30;transition:all .15s;}
-  .cf-opt:hover{border-color:#D4AF37;background:#fdfaf5;}
+  .cf-opt{display:flex;align-items:flex-start;gap:.6rem;padding:.55rem .75rem;border:1.5px solid #6b5a48;border-radius:10px;margin-bottom:.5rem;cursor:pointer;font-size:.9rem;color:#fff;transition:all .15s;}
+  .cf-opt:hover{border-color:#D4AF37;background:#3a2a1a;}
   .cf-opt input{margin-top:.15rem;width:16px;height:16px;accent-color:#4A3728;}
-  .cf-opt.cf-checked{border-color:#4A3728;background:#faf6f0;}
-  .cf-section-title{font-family:'Playfair Display',serif;font-size:1.1rem;color:#4A3728;margin:1.25rem 0 .5rem;padding-bottom:.35rem;border-bottom:1px solid #eee6db;}
-  .cf-sign-wrap{border:1.5px dashed #d9cebf;border-radius:12px;background:#fdfbf8;padding:.5rem;}
+  .cf-opt.cf-checked{border-color:#D4AF37;background:#4A3728;}
+  .cf-section-title{font-family:'Playfair Display',serif;font-size:1.1rem;color:#fff;margin:1.25rem 0 .5rem;padding-bottom:.35rem;border-bottom:1px solid #6b5a48;}
+  .cf-sign-wrap{border:1.5px dashed #6b5a48;border-radius:12px;background:#3a2a1a;padding:.5rem;}
   .cf-sign-canvas{width:100%;height:170px;border-radius:8px;background:#fff;touch-action:none;cursor:crosshair;display:block;}
   .cf-sign-actions{display:flex;justify-content:space-between;align-items:center;margin-top:.4rem;}
-  .cf-sign-actions small{color:#9a8f86;font-size:.78rem;}
+  .cf-sign-actions small{color:#e5ddd3;font-size:.78rem;}
   .cf-btn{border:none;border-radius:10px;font-weight:600;font-size:.92rem;padding:.8rem 1.4rem;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;transition:all .15s;}
   .cf-btn-primary{background:#4A3728;color:#fff;}
   .cf-btn-primary:hover{background:#5C4432;}
   .cf-btn-primary:disabled{opacity:.6;cursor:not-allowed;}
-  .cf-btn-ghost{background:transparent;color:#7a6a58;border:1.5px solid #e5ddd3;}
-  .cf-btn-ghost:hover{background:#f7f2ec;}
-  .cf-foot{padding:1.1rem 1.75rem;border-top:1px solid #f0e9e0;display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;}
+  .cf-btn-ghost{background:transparent;color:#fff;border:1.5px solid #fff;}
+  .cf-btn-ghost:hover{background:rgba(255,255,255,.12);}
+  .cf-foot{padding:1.1rem 1.75rem;border-top:1px solid #6b5a48;background:#2a1f16;display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;}
   .cf-err{color:#dc2626;font-size:.82rem;margin-top:.3rem;}
   .cf-success{text-align:center;padding:2.5rem 1.75rem;}
   .cf-success .cf-check{width:72px;height:72px;border-radius:50%;background:#e6f9ee;color:#15803d;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:2.2rem;}
-  .cf-success h2{font-family:'Playfair Display',serif;color:#4A3728;margin:0 0 .5rem;}
+  .cf-success h2{font-family:'Playfair Display',serif;color:#fff;margin:0 0 .5rem;}
   .cf-success .cf-ref{font-family:monospace;background:#4A3728;color:#fff;padding:4px 12px;border-radius:8px;display:inline-block;margin:.5rem 0 1.25rem;}
-  .cf-readonly{background:#f7f2ec;border-radius:8px;padding:.6rem .85rem;font-size:.92rem;color:#4a3d30;white-space:pre-line;}
+  .cf-readonly{background:#3a2a1a;border-radius:8px;padding:.6rem .85rem;font-size:.92rem;color:#fff;white-space:pre-line;}
   `;
   const style = document.createElement('style');
   style.id = 'cf-styles';
