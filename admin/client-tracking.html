@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suivi clients - DALIGHT Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css?v=202607101000">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .tracking-tabs { display:flex; gap:.5rem; margin-bottom:1rem; border-bottom:1px solid var(--admin-border); padding-bottom:.5rem; }
+    .tracking-tab { padding:.5rem 1rem; border-radius:8px; cursor:pointer; font-weight:500; color:var(--admin-text-muted); background:transparent; border:none; }
+    .tracking-tab.active { background:var(--admin-accent); color:#fff; }
+    .tracking-grid { display:grid; gap:1rem; grid-template-columns:1fr; }
+    @media (min-width: 1100px) { .tracking-grid { grid-template-columns: 320px 1fr; } }
+    .programs-list { max-height:70vh; overflow-y:auto; padding-right:.5rem; }
+    .program-card { background:var(--admin-card-bg); border:1px solid var(--admin-border); border-radius:12px; padding:1rem; margin-bottom:.75rem; cursor:pointer; transition:all .2s; }
+    .program-card:hover, .program-card.active { border-color:var(--admin-accent); box-shadow:0 4px 12px rgba(184,147,39,.12); }
+    .program-card h4 { margin:0 0 .25rem; font-size:1rem; }
+    .program-card .meta { font-size:.8rem; color:var(--admin-text-muted); }
+    .program-card .badge-row { display:flex; gap:.4rem; margin-top:.5rem; flex-wrap:wrap; }
+    .reservations-list { display:grid; gap:.75rem; }
+    .reservation-card { background:var(--admin-card-bg); border:1px solid var(--admin-border); border-radius:12px; padding:1rem; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:.75rem; }
+    .session-form { background:var(--admin-card-bg); border:1px solid var(--admin-border); border-radius:12px; padding:1.25rem; }
+    .session-form h3 { margin-top:0; }
+    .form-grid { display:grid; gap:1rem; grid-template-columns:repeat(auto-fit, minmax(160px,1fr)); }
+    .form-group { display:flex; flex-direction:column; gap:.35rem; }
+    .form-group label { font-size:.82rem; font-weight:600; color:var(--admin-text-muted); }
+    .form-group input, .form-group select, .form-group textarea { padding:.55rem .7rem; border-radius:8px; border:1px solid var(--admin-border); background:var(--admin-input-bg); color:var(--admin-text); }
+    .sessions-timeline { display:flex; flex-direction:column; gap:.75rem; }
+    .session-item { background:var(--admin-card-bg); border:1px solid var(--admin-border); border-radius:12px; padding:1rem; display:grid; gap:1rem; }
+    @media (min-width: 768px) { .session-item { grid-template-columns: 80px 1fr; } }
+    .session-number { font-size:1.4rem; font-weight:700; color:var(--admin-accent); }
+    .metrics-grid { display:grid; gap:.5rem; grid-template-columns:repeat(auto-fit, minmax(120px,1fr)); margin:.75rem 0; }
+    .metric-box { background:rgba(255,255,255,.04); border-radius:8px; padding:.6rem; text-align:center; }
+    .metric-box .value { font-size:1.1rem; font-weight:700; }
+    .metric-box .label { font-size:.72rem; color:var(--admin-text-muted); text-transform:uppercase; }
+    .analysis-card { background:var(--admin-card-bg); border:1px solid var(--admin-border); border-radius:12px; padding:1.25rem; }
+    .analysis-grid { display:grid; gap:1rem; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); margin:1rem 0; }
+    .analysis-item { text-align:center; padding:1rem; border-radius:10px; background:rgba(255,255,255,.04); }
+    .analysis-item .value { font-size:1.5rem; font-weight:700; color:var(--admin-accent); }
+    .analysis-item .label { font-size:.8rem; color:var(--admin-text-muted); }
+    .progress-bar { height:8px; background:rgba(255,255,255,.08); border-radius:4px; overflow:hidden; margin-top:.5rem; }
+    .progress-bar > div { height:100%; background:var(--admin-accent); border-radius:4px; transition:width .3s; }
+    .print-only { display:none; }
+    @media print {
+      body > * { display:none !important; }
+      .print-only { display:block !important; position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; color:#000; overflow:auto; }
+      .print-only * { color:#000 !important; }
+    }
+    .empty-state { text-align:center; padding:3rem; color:var(--admin-text-muted); }
+  </style>
+</head>
+<body>
+  <aside class="admin-sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="sidebar-logo">
+        <img src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" onerror="this.style.display='none'">
+        <div class="sidebar-logo-text">DALIGHT<span>Administration</span></div>
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Principal</div>
+        <a href="dashboard.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Dashboard</a>
+        <a href="reservations.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Réservations</a>
+        <a href="client-tracking.html" class="nav-item active"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>Suivi clients</a>
+        <a href="pos.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>Caisse / POS</a>
+        <a href="employees.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Employés &amp; Présence</a>
+        <a href="retraits.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Retraits &amp; Revenus</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Utilisateurs</div>
+        <a href="clients.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>Clients</a>
+        <a href="emails.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Templates Email</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Système</div>
+        <a href="settings.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Paramètres</a>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="admin-main">
+    <header class="admin-header">
+      <div class="header-left">
+        <button class="mobile-menu-btn" id="mobile-menu-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <h1 class="page-title">Suivi clients</h1>
+      </div>
+      <div class="header-right">
+        <button class="header-btn" id="logout-btn" title="Déconnexion"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
+      </div>
+    </header>
+
+    <div class="admin-content">
+      <div class="tracking-tabs">
+        <button class="tracking-tab active" data-tab="programs" onclick="switchTab('programs')">Programmes actifs</button>
+        <button class="tracking-tab" data-tab="reservations" onclick="switchTab('reservations')">Créer depuis réservation</button>
+      </div>
+
+      <div id="programs-view">
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom:1rem;">
+          <div class="glass-card stat-card">
+            <div class="stat-icon blue"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div>
+            <div class="stat-info"><div class="stat-value" id="stat-active-programs">0</div><div class="stat-label">Programmes actifs</div></div>
+          </div>
+          <div class="glass-card stat-card">
+            <div class="stat-icon green"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+            <div class="stat-info"><div class="stat-value" id="stat-completed-programs">0</div><div class="stat-label">Terminés</div></div>
+          </div>
+          <div class="glass-card stat-card">
+            <div class="stat-icon gold"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+            <div class="stat-info"><div class="stat-value" id="stat-today-sessions">0</div><div class="stat-label">Séances aujourd’hui</div></div>
+          </div>
+        </div>
+
+        <div class="tracking-grid">
+          <div>
+            <div class="glass-card" style="margin-bottom:1rem;">
+              <div class="card-header"><h3 class="card-title">Programmes</h3></div>
+              <div class="programs-list" id="programs-list"><div class="loading-spinner"></div>Chargement...</div>
+            </div>
+          </div>
+          <div id="program-detail">
+            <div class="empty-state">Sélectionnez un programme pour voir le détail.</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="reservations-view" style="display:none;">
+        <div class="glass-card">
+          <div class="card-header"><h3 class="card-title">Réservations confirmées sans programme</h3><p class="card-subtitle">Sélectionnez une réservation pour démarrer un suivi.</p></div>
+          <div class="reservations-list" id="reservations-list"><div class="loading-spinner"></div>Chargement...</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="print-area" class="print-only"></div>
+
+  <script src="js/admin-core.js?v=202607101000"></script>
+  <script>
+    const { supabase: sb } = window.adminCore || {};
+    let currentPrograms = [];
+    let currentReservations = [];
+    let selectedProgram = null;
+    let sessionsCache = [];
+    let weightChart = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await new Promise(r => setTimeout(r, 120));
+      const session = await window.adminCore?.checkAdminAuth?.();
+      if (!session) return;
+      loadPrograms();
+      loadConfirmedReservations();
+    });
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tracking-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+      document.getElementById('programs-view').style.display = tab === 'programs' ? 'block' : 'none';
+      document.getElementById('reservations-view').style.display = tab === 'reservations' ? 'block' : 'none';
+    }
+
+    async function loadPrograms() {
+      try {
+        const { data, error } = await sb.from('client_programs').select('*').order('updated_at', { ascending: false });
+        if (error) throw error;
+        currentPrograms = data || [];
+        renderProgramsList();
+        updateStats();
+      } catch (err) {
+        console.error(err);
+        window.adminCore?.showToast?.('Erreur chargement programmes', 'error');
+      }
+    }
+
+    async function loadConfirmedReservations() {
+      try {
+        const { data: reservations, error: rErr } = await sb.from('reservations').select('*').eq('status', 'CONFIRMED').order('date', { ascending: true });
+        if (rErr) throw rErr;
+        const { data: programs, error: pErr } = await sb.from('client_programs').select('reservation_id');
+        if (pErr) throw pErr;
+        const usedIds = new Set((programs || []).map(p => p.reservation_id));
+        currentReservations = (reservations || []).filter(r => !usedIds.has(r.id));
+        renderReservationsList();
+      } catch (err) {
+        console.error(err);
+        document.getElementById('reservations-list').innerHTML = '<div class="empty-state">Erreur chargement réservations.</div>';
+      }
+    }
+
+    function renderProgramsList() {
+      const list = document.getElementById('programs-list');
+      if (!currentPrograms.length) {
+        list.innerHTML = '<div class="empty-state">Aucun programme. Allez dans l’onglet « Créer depuis réservation ».</div>';
+        return;
+      }
+      list.innerHTML = currentPrograms.map(p => `
+        <div class="program-card ${selectedProgram?.id === p.id ? 'active' : ''}" onclick="selectProgram('${p.id}')">
+          <h4>${escapeHtml(p.client_name)}</h4>
+          <div class="meta">${escapeHtml(p.service_name)} · ${p.start_date || '—'}</div>
+          <div class="badge-row">
+            <span class="status-badge ${p.status}">${p.status}</span>
+            <span class="status-badge completed">${p.total_sessions} séance(s)</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function selectProgram(id) {
+      selectedProgram = currentPrograms.find(p => p.id === id) || null;
+      if (!selectedProgram) return;
+      renderProgramsList();
+      await loadProgramSessions(id);
+      renderProgramDetail();
+    }
+
+    async function loadProgramSessions(programId) {
+      const { data, error } = await sb.from('client_program_sessions').select('*').eq('program_id', programId).order('session_number', { ascending: true });
+      if (error) { console.error(error); return; }
+      sessionsCache = data || [];
+    }
+
+    function renderProgramDetail() {
+      const container = document.getElementById('program-detail');
+      if (!selectedProgram) {
+        container.innerHTML = '<div class="empty-state">Sélectionnez un programme.</div>';
+        return;
+      }
+      const completed = sessionsCache.filter(s => s.completed).length;
+      const remaining = Math.max(selectedProgram.total_sessions - completed, 0);
+      const nextSession = Math.min(completed + 1, selectedProgram.total_sessions);
+      container.innerHTML = `
+        <div class="glass-card" style="margin-bottom:1rem;">
+          <div class="card-header" style="justify-content:space-between; flex-wrap:wrap; gap:.5rem;">
+            <div>
+              <h3 class="card-title">${escapeHtml(selectedProgram.client_name)}</h3>
+              <p class="card-subtitle">${escapeHtml(selectedProgram.service_name)} · ${selectedProgram.client_email}</p>
+            </div>
+            <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+              <button class="btn btn-secondary btn-sm" onclick="printProgramReport()">🖨️ Imprimer</button>
+              <button class="btn btn-secondary btn-sm" onclick="emailProgramReport()">✉️ Envoyer au client</button>
+              <button class="btn btn-primary btn-sm" onclick="toggleStatus()">${selectedProgram.status === 'active' ? 'Terminer' : 'Réactiver'}</button>
+            </div>
+          </div>
+          <div class="progress-bar"><div style="width:${(completed / selectedProgram.total_sessions) * 100}%"></div></div>
+          <div style="display:flex; justify-content:space-between; margin-top:.5rem; font-size:.85rem; color:var(--admin-text-muted);">
+            <span>${completed} / ${selectedProgram.total_sessions} séances</span>
+            <span>${remaining} restante(s)</span>
+          </div>
+        </div>
+        <div class="analysis-card" style="margin-bottom:1rem;">
+          <h3 class="card-title">Analyse de progression</h3>
+          <div class="analysis-grid" id="analysis-grid"></div>
+          <div style="height:220px; margin-top:1rem;"><canvas id="weightChart"></canvas></div>
+        </div>
+        <div class="session-form" style="margin-bottom:1rem;">
+          <h3>Ajouter / modifier la séance ${nextSession}</h3>
+          <form id="session-form" onsubmit="saveSession(event)">
+            <input type="hidden" id="session-id" value="">
+            <div class="form-grid">
+              <div class="form-group"><label>Date</label><input type="date" id="session-date" required value="${new Date().toISOString().split('T')[0]}"></div>
+              <div class="form-group"><label>Poids (kg)</label><input type="number" step="0.1" id="weight-kg" placeholder="ex: 72.5"></div>
+              <div class="form-group"><label>Cuisse (cm)</label><input type="number" step="0.1" id="thigh-cm" placeholder="cm"></div>
+              <div class="form-group"><label>Ventre (cm)</label><input type="number" step="0.1" id="waist-cm" placeholder="cm"></div>
+              <div class="form-group"><label>Hanches (cm)</label><input type="number" step="0.1" id="hips-cm" placeholder="cm"></div>
+              <div class="form-group"><label>Bras (cm)</label><input type="number" step="0.1" id="arm-cm" placeholder="cm"></div>
+              <div class="form-group"><label>N° de séance</label><input type="number" id="session-count-input" value="${nextSession}" min="1" max="${selectedProgram.total_sessions}"></div>
+            </div>
+            <div class="form-grid" style="margin-top:1rem; grid-template-columns:1fr;">
+              <div class="form-group"><label>Notes massage / soin</label><textarea id="massage-notes" rows="2"></textarea></div>
+              <div class="form-group"><label>Alimentation / régime suivi</label><textarea id="diet-notes" rows="2"></textarea></div>
+              <div class="form-group"><label>Observations générales</label><textarea id="observations" rows="2"></textarea></div>
+            </div>
+            <div style="margin-top:1rem; display:flex; gap:.5rem;">
+              <button type="submit" class="btn btn-primary">💾 Enregistrer la séance</button>
+              <button type="button" class="btn btn-secondary" onclick="clearSessionForm()">Nouvelle saisie</button>
+            </div>
+          </form>
+        </div>
+        <div class="glass-card">
+          <div class="card-header"><h3 class="card-title">Historique des séances</h3></div>
+          <div class="sessions-timeline" id="sessions-timeline"></div>
+        </div>
+      `;
+      renderAnalysis();
+      renderSessionsTimeline();
+    }
+
+    function renderAnalysis() {
+      const grid = document.getElementById('analysis-grid');
+      if (!grid) return;
+      if (sessionsCache.length < 1) {
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1; padding:1rem;">Aucune séance enregistrée.</div>';
+        return;
+      }
+      const first = sessionsCache[0];
+      const last = sessionsCache[sessionsCache.length - 1];
+      const weightDiff = (first.weight_kg && last.weight_kg) ? (last.weight_kg - first.weight_kg).toFixed(1) : null;
+      const waistDiff = (getMeas(first, 'waist') && getMeas(last, 'waist')) ? (getMeas(last, 'waist') - getMeas(first, 'waist')).toFixed(1) : null;
+      const thighDiff = (getMeas(first, 'thigh') && getMeas(last, 'thigh')) ? (getMeas(last, 'thigh') - getMeas(first, 'thigh')).toFixed(1) : null;
+      grid.innerHTML = [
+        { label: 'Poids début', value: first.weight_kg ? first.weight_kg + ' kg' : '—' },
+        { label: 'Poids actuel', value: last.weight_kg ? last.weight_kg + ' kg' : '—' },
+        { label: 'Variation poids', value: weightDiff !== null ? (weightDiff > 0 ? '+' : '') + weightDiff + ' kg' : '—', color: weightDiff < 0 ? '#22c55e' : (weightDiff > 0 ? '#ef4444' : '') },
+        { label: 'Variation ventre', value: waistDiff !== null ? (waistDiff > 0 ? '+' : '') + waistDiff + ' cm' : '—' },
+        { label: 'Variation cuisse', value: thighDiff !== null ? (thighDiff > 0 ? '+' : '') + thighDiff + ' cm' : '—' },
+        { label: 'Séances complétées', value: sessionsCache.filter(s => s.completed).length + ' / ' + selectedProgram.total_sessions },
+      ].map(item => `
+        <div class="analysis-item">
+          <div class="value" style="${item.color ? 'color:'+item.color : ''}">${item.value}</div>
+          <div class="label">${item.label}</div>
+        </div>
+      `).join('');
+      drawWeightChart();
+    }
+
+    function renderSessionsTimeline() {
+      const timeline = document.getElementById('sessions-timeline');
+      if (!timeline) return;
+      if (!sessionsCache.length) {
+        timeline.innerHTML = '<div class="empty-state">Aucune séance pour l’instant.</div>';
+        return;
+      }
+      timeline.innerHTML = sessionsCache.map(s => {
+        const m = s.measurements || {};
+        const metrics = [];
+        if (s.weight_kg) metrics.push({ label: 'Poids', value: s.weight_kg + ' kg' });
+        if (m.waist) metrics.push({ label: 'Ventre', value: m.waist + ' cm' });
+        if (m.hips) metrics.push({ label: 'Hanches', value: m.hips + ' cm' });
+        if (m.thigh) metrics.push({ label: 'Cuisse', value: m.thigh + ' cm' });
+        if (m.arm) metrics.push({ label: 'Bras', value: m.arm + ' cm' });
+        return `
+          <div class="session-item">
+            <div><div class="session-number">#${s.session_number}</div><div style="font-size:.8rem; color:var(--admin-text-muted);">${window.adminCore?.formatDate?.(s.session_date) || s.session_date}</div></div>
+            <div>
+              <div class="metrics-grid">${metrics.map(m => `<div class="metric-box"><div class="value">${m.value}</div><div class="label">${m.label}</div></div>`).join('')}</div>
+              ${s.massage_notes ? `<p><strong>Massage/soin:</strong> ${escapeHtml(s.massage_notes)}</p>` : ''}
+              ${s.diet_notes ? `<p><strong>Alimentation:</strong> ${escapeHtml(s.diet_notes)}</p>` : ''}
+              ${s.observations ? `<p><strong>Observations:</strong> ${escapeHtml(s.observations)}</p>` : ''}
+              <div style="margin-top:.5rem;"><button class="btn btn-secondary btn-sm" onclick="editSession('${s.id}')">Modifier</button></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function drawWeightChart() {
+      const canvas = document.getElementById('weightChart');
+      if (!canvas || sessionsCache.length < 2) return;
+      const ctx = canvas.getContext('2d');
+      if (weightChart) weightChart.destroy();
+      weightChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: sessionsCache.map(s => '#'+s.session_number), datasets: [{ label: 'Poids (kg)', data: sessionsCache.map(s => s.weight_kg || null), borderColor: '#B89327', backgroundColor: 'rgba(184,147,39,.15)', fill: true, tension: 0.3, pointRadius: 4 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } }, scales: { y: { beginAtZero: false } } }
+      });
+    }
+
+    function getMeas(session, key) { return session?.measurements?.[key] || null; }
+
+    function editSession(id) {
+      const s = sessionsCache.find(x => x.id === id);
+      if (!s) return;
+      document.getElementById('session-id').value = s.id;
+      document.getElementById('session-date').value = s.session_date;
+      document.getElementById('weight-kg').value = s.weight_kg || '';
+      document.getElementById('massage-notes').value = s.massage_notes || '';
+      document.getElementById('diet-notes').value = s.diet_notes || '';
+      document.getElementById('observations').value = s.observations || '';
+      document.getElementById('session-count-input').value = s.session_number;
+      const m = s.measurements || {};
+      document.getElementById('waist-cm').value = m.waist || '';
+      document.getElementById('hips-cm').value = m.hips || '';
+      document.getElementById('thigh-cm').value = m.thigh || '';
+      document.getElementById('arm-cm').value = m.arm || '';
+      window.scrollTo({ top: document.getElementById('session-form').offsetTop - 20, behavior: 'smooth' });
+    }
+
+    function clearSessionForm() {
+      const next = (sessionsCache.filter(s => s.completed).length) + 1;
+      document.getElementById('session-form').reset();
+      document.getElementById('session-id').value = '';
+      document.getElementById('session-count-input').value = Math.min(next, selectedProgram.total_sessions);
+      document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
+    }
+
+    async function saveSession(e) {
+      e.preventDefault();
+      if (!selectedProgram) return;
+      const sessionId = document.getElementById('session-id').value;
+      const sessionNumber = parseInt(document.getElementById('session-count-input').value, 10) || 1;
+      const measurements = {
+        waist: parseFloat(document.getElementById('waist-cm').value) || null,
+        hips: parseFloat(document.getElementById('hips-cm').value) || null,
+        thigh: parseFloat(document.getElementById('thigh-cm').value) || null,
+        arm: parseFloat(document.getElementById('arm-cm').value) || null,
+      };
+      const payload = {
+        program_id: selectedProgram.id,
+        session_number: sessionNumber,
+        session_date: document.getElementById('session-date').value,
+        weight_kg: parseFloat(document.getElementById('weight-kg').value) || null,
+        measurements,
+        massage_notes: document.getElementById('massage-notes').value,
+        diet_notes: document.getElementById('diet-notes').value,
+        observations: document.getElementById('observations').value,
+        completed: true
+      };
+      try {
+        let error;
+        if (sessionId) {
+          const res = await sb.from('client_program_sessions').update(payload).eq('id', sessionId);
+          error = res.error;
+        } else {
+          const res = await sb.from('client_program_sessions').upsert(payload, { onConflict: 'program_id,session_number' });
+          error = res.error;
+        }
+        if (error) throw error;
+        window.adminCore?.showToast?.('Séance enregistrée', 'success');
+        await loadProgramSessions(selectedProgram.id);
+        renderProgramDetail();
+      } catch (err) {
+        console.error(err);
+        window.adminCore?.showToast?.('Erreur: ' + err.message, 'error');
+      }
+    }
+
+    async function toggleStatus() {
+      if (!selectedProgram) return;
+      const newStatus = selectedProgram.status === 'active' ? 'completed' : 'active';
+      try {
+        const { error } = await sb.from('client_programs').update({ status: newStatus }).eq('id', selectedProgram.id);
+        if (error) throw error;
+        selectedProgram.status = newStatus;
+        const idx = currentPrograms.findIndex(p => p.id === selectedProgram.id);
+        if (idx >= 0) currentPrograms[idx].status = newStatus;
+        renderProgramsList();
+        renderProgramDetail();
+        updateStats();
+        window.adminCore?.showToast?.('Statut mis à jour', 'success');
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function createProgramFromReservation(reservationId, totalSessions) {
+      totalSessions = parseInt(totalSessions, 10) || 1;
+      try {
+        const { data, error } = await sb.rpc('create_program_from_reservation', {
+          p_reservation_id: reservationId,
+          p_total_sessions: totalSessions
+        });
+        if (error) throw error;
+        window.adminCore?.showToast?.('Programme créé', 'success');
+        switchTab('programs');
+        await loadPrograms();
+        await loadConfirmedReservations();
+        selectProgram(data);
+      } catch (err) {
+        console.error(err);
+        window.adminCore?.showToast?.('Erreur création: ' + err.message, 'error');
+      }
+    }
+
+    function renderReservationsList() {
+      const list = document.getElementById('reservations-list');
+      if (!currentReservations.length) {
+        list.innerHTML = '<div class="empty-state">Aucune réservation confirmée disponible pour un suivi.</div>';
+        return;
+      }
+      list.innerHTML = currentReservations.map(r => `
+        <div class="reservation-card">
+          <div>
+            <div style="font-weight:600;">${escapeHtml(r.user_name || r.user_email)}</div>
+            <div style="font-size:.85rem; color:var(--admin-text-muted);">${escapeHtml(r.service)} · ${window.adminCore?.formatDate?.(r.date) || r.date} · ${r.time}</div>
+          </div>
+          <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
+            <input type="number" min="1" max="50" value="4" class="form-control" id="sessions-${r.id}" style="width:70px; padding:.4rem;" title="Nombre de séances">
+            <button class="btn btn-primary btn-sm" onclick="createProgramFromReservation('${r.id}', document.getElementById('sessions-${r.id}').value)">Démarrer le suivi</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateStats() {
+      const active = currentPrograms.filter(p => p.status === 'active').length;
+      const completed = currentPrograms.filter(p => p.status === 'completed').length;
+      document.getElementById('stat-active-programs').textContent = active;
+      document.getElementById('stat-completed-programs').textContent = completed;
+      const todayStr = new Date().toISOString().split('T')[0];
+      document.getElementById('stat-today-sessions').textContent = sessionsCache.filter(s => s.session_date === todayStr).length;
+    }
+
+    function printProgramReport() {
+      if (!selectedProgram) return;
+      const first = sessionsCache[0];
+      const last = sessionsCache[sessionsCache.length - 1];
+      const weightDiff = (first?.weight_kg && last?.weight_kg) ? (last.weight_kg - first.weight_kg).toFixed(1) : null;
+      const rows = sessionsCache.map(s => `
+        <tr>
+          <td>#${s.session_number}</td>
+          <td>${s.session_date}</td>
+          <td>${s.weight_kg || '—'}</td>
+          <td>${s.measurements?.waist || '—'}</td>
+          <td>${s.measurements?.thigh || '—'}</td>
+          <td>${s.massage_notes || '—'}</td>
+          <td>${s.diet_notes || '—'}</td>
+        </tr>
+      `).join('');
+      document.getElementById('print-area').innerHTML = `
+        <div style="padding:2rem; font-family:Arial,sans-serif;">
+          <div style="text-align:center; margin-bottom:1.5rem;">
+            <h2 style="margin:0;">DALIGHT — Rapport de suivi</h2>
+            <p style="margin:.2rem 0 0; color:#555;">${escapeHtml(selectedProgram.service_name)}</p>
+          </div>
+          <div style="margin-bottom:1rem;">
+            <p><strong>Client:</strong> ${escapeHtml(selectedProgram.client_name)}</p>
+            <p><strong>Email:</strong> ${escapeHtml(selectedProgram.client_email)}</p>
+            <p><strong>Séances:</strong> ${sessionsCache.length} / ${selectedProgram.total_sessions}</p>
+            ${weightDiff !== null ? `<p><strong>Variation poids:</strong> ${weightDiff > 0 ? '+' : ''}${weightDiff} kg</p>` : ''}
+          </div>
+          <table style="width:100%; border-collapse:collapse; margin-top:1rem;" border="1" cellpadding="8">
+            <thead><tr style="background:#f3f3f3;"><th>Séance</th><th>Date</th><th>Poids</th><th>Ventre</th><th>Cuisse</th><th>Soin</th><th>Alimentation</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <div style="margin-top:1.5rem; text-align:center; font-size:.85rem; color:#777;">Rapport généré le ${new Date().toLocaleDateString('fr-FR')}</div>
+        </div>
+      `;
+      window.print();
+    }
+
+    function emailProgramReport() {
+      if (!selectedProgram) return;
+      const first = sessionsCache[0];
+      const last = sessionsCache[sessionsCache.length - 1];
+      const weightDiff = (first?.weight_kg && last?.weight_kg) ? (last.weight_kg - first.weight_kg).toFixed(1) : null;
+      const subject = encodeURIComponent('Votre progression chez DALIGHT');
+      let body = `Bonjour ${selectedProgram.client_name},\n\nVoici votre rapport de suivi pour le service ${selectedProgram.service_name}.\n\n`;
+      body += `Séances réalisées: ${sessionsCache.length} / ${selectedProgram.total_sessions}\n`;
+      if (weightDiff !== null) body += `Variation de poids: ${weightDiff > 0 ? '+' : ''}${weightDiff} kg\n`;
+      if (last?.measurements?.waist) body += `Ventre: ${last.measurements.waist} cm\n`;
+      if (last?.measurements?.thigh) body += `Cuisse: ${last.measurements.thigh} cm\n`;
+      body += `\nMerci de votre confiance.\nL’équipe DALIGHT`;
+      window.location.href = `mailto:${encodeURIComponent(selectedProgram.client_email)}?subject=${subject}&body=${encodeURIComponent(body)}`;
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>

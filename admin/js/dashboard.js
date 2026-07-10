@@ -328,8 +328,20 @@ async function loadDashboardStats() {
       `;
     }
     
+    // Active client tracking programs
+    try {
+      const { count: activeProgramsCount } = await supabase
+        .from('client_programs')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active');
+      const activeProgramsEl = document.getElementById('active-programs');
+      if (activeProgramsEl) activeProgramsEl.textContent = activeProgramsCount || 0;
+    } catch (progErr) {
+      console.log('client_programs table might not exist yet:', progErr.message);
+    }
+
     console.log('Dashboard: Stats loaded successfully');
-    
+
   } catch (err) {
     console.error('Error loading stats:', err);
   }
