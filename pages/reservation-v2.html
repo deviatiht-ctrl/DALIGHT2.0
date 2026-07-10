@@ -1505,7 +1505,25 @@
 
         // If returning from a PLOP PLOP payment, verify it and show confirmation/error modal
         handlePlopReturn();
+
+        // Fallback: ensure the hamburger menu works on this page
+        setupResvNavToggle();
       });
+
+      // ── Local nav toggle handler (fallback when main.js handler is missing) ──
+      function setupResvNavToggle() {
+        const nav = document.querySelector('.top-nav');
+        const toggle = document.querySelector('.nav-toggle');
+        if (!nav || !toggle) return;
+        // Use capture phase and stop propagation so this always wins over any other listener
+        toggle.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          nav.classList.toggle('open');
+          toggle.classList.toggle('active');
+          toggle.setAttribute('aria-expanded', nav.classList.contains('open') ? 'true' : 'false');
+        }, true);
+      }
 
       // ─────────────────────────────────────────────────────────────
       // RESERVATION STEPS SYSTEM
