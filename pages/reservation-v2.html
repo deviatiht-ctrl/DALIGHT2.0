@@ -784,6 +784,118 @@
         color: var(--marron-800);
       }
 
+      /* PLOP Payment Modal */
+      .plop-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+      }
+
+      .plop-modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(74,55,40,0.55);
+        backdrop-filter: blur(4px);
+      }
+
+      .plop-modal-card {
+        position: relative;
+        background: white;
+        border-radius: var(--radius-lg);
+        box-shadow: 0 25px 50px rgba(74,55,40,0.18);
+        max-width: 460px;
+        width: 100%;
+        padding: 2rem;
+        animation: fadeInScale 0.35s ease;
+        text-align: center;
+      }
+
+      .plop-modal-header h3 {
+        margin: 0 0 1.5rem 0;
+        font-family: 'Playfair Display', serif;
+        color: var(--marron-900);
+        font-size: 1.45rem;
+      }
+
+      .plop-modal-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .plop-spinner {
+        width: 44px;
+        height: 44px;
+        border: 4px solid rgba(74,55,40,0.1);
+        border-top-color: var(--gold-500);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      .plop-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0.5rem;
+      }
+
+      .plop-icon.success {
+        background: #dcfce7;
+        color: #16a34a;
+      }
+
+      .plop-icon.error {
+        background: #fee2e2;
+        color: #dc2626;
+      }
+
+      .plop-modal-state h4 {
+        margin: 0;
+        color: var(--marron-900);
+        font-size: 1.15rem;
+      }
+
+      .plop-modal-state p {
+        margin: 0;
+        color: var(--marron-600);
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+
+      .plop-modal-details {
+        background: #faf8f6;
+        border-radius: var(--radius-md);
+        padding: 1rem 1.25rem;
+        margin-top: 0.75rem;
+        text-align: left;
+        width: 100%;
+      }
+
+      .plop-modal-details p {
+        margin: 0.4rem 0;
+        font-size: 0.9rem;
+      }
+
+      .plop-modal-footer {
+        margin-top: 1.5rem;
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
       @media (max-width: 600px) {
       .cart-summary-box {
         padding: 1rem;
@@ -1018,6 +1130,45 @@
             <a href="../index.html" style="color: var(--marron-600); text-decoration: none; font-size: 0.9rem;">
               Retour à l'accueil
             </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- PLOP Payment Verification Modal -->
+      <div id="plop-modal" class="plop-modal" style="display:none;">
+        <div class="plop-modal-backdrop"></div>
+        <div class="plop-modal-card">
+          <div class="plop-modal-header">
+            <h3 id="plop-modal-title">Vérification du paiement</h3>
+          </div>
+          <div class="plop-modal-body">
+            <div id="plop-modal-loader" class="plop-modal-state">
+              <div class="plop-spinner"></div>
+              <p>Vérification du paiement PLOP PLOP en cours...</p>
+            </div>
+            <div id="plop-modal-success" class="plop-modal-state" style="display:none;">
+              <div class="plop-icon success">
+                <i data-lucide="check-circle" style="width:48px;height:48px;"></i>
+              </div>
+              <h4>Paiement confirmé !</h4>
+              <p>Votre réservation a été créée avec succès.</p>
+              <div class="plop-modal-details">
+                <p><strong>Référence :</strong> <span id="plop-success-ref">#---</span></p>
+                <p><strong>Date :</strong> <span id="plop-success-date">---</span></p>
+                <p><strong>Heure :</strong> <span id="plop-success-time">---</span></p>
+              </div>
+            </div>
+            <div id="plop-modal-error" class="plop-modal-state" style="display:none;">
+              <div class="plop-icon error">
+                <i data-lucide="x-circle" style="width:48px;height:48px;"></i>
+              </div>
+              <h4>Paiement échoué</h4>
+              <p id="plop-error-message">Le paiement n'a pas pu être confirmé.</p>
+            </div>
+          </div>
+          <div class="plop-modal-footer" id="plop-modal-footer" style="display:none;">
+            <button type="button" class="btn-prev" id="plop-close-btn" style="display:none;">Réessayer le paiement</button>
+            <a href="./orders.html" class="btn-submit" id="plop-orders-btn" style="display:none;text-decoration:none;">Voir mes réservations</a>
           </div>
         </div>
       </div>
@@ -1344,13 +1495,16 @@
 
     <script type="module">
       import { initChatWidget } from '../js/chat-widget.js?v=5.0.0';
-      import { createPlopPayment, isAutomaticPlopPayment, isBankPayment } from '../js/plop-payment.js?v=5.0.0';
+      import { createPlopPayment, verifyPlopPayment, isAutomaticPlopPayment, isBankPayment } from '../js/plop-payment.js?v=5.0.0';
       
       document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();
         initChatWidget();
         initReservationSteps();
         loadResvPaymentMethods();
+
+        // If returning from a PLOP PLOP payment, verify it and show confirmation/error modal
+        handlePlopReturn();
       });
 
       // ─────────────────────────────────────────────────────────────
@@ -2412,7 +2566,46 @@ function loadCartData() {
           let supabaseClient = getSupabaseClient();
           if (!supabaseClient) throw new Error('Supabase not connected');
 
-          // 1. UPLOAD PAYMENT PROOF
+          // Common data
+          const { data: { user } } = await supabaseClient.auth.getUser();
+          const reservationNumber = 'DL' + Date.now().toString().slice(-8);
+          const totalAmount = cartServices.reduce((sum, s) => sum + (Number(s.price_htg) || 0), 0);
+          const amountToPay = formData.paymentChoice === 'full' ? totalAmount : calcDeposit(cartServices);
+
+          // ── PLOP PLOP PAYMENT PATH ───────────────────────────────
+          if (isPlop) {
+            const paymentReference = `${reservationNumber}-${formData.paymentChoice === 'full' ? 'FULL' : 'DEP'}`;
+
+            // Save reservation data locally BEFORE redirect; the reservation is only created AFTER PLOP confirms payment
+            const pendingPlopReservation = {
+              reservationNumber,
+              userId: user?.id || null,
+              formData,
+              cartServices,
+              paymentMethod: paymentMethod.value,
+              otherPaymentName,
+              isOther,
+              paymentReference,
+              amountToPay,
+              paymentChoice: formData.paymentChoice,
+              createdAt: Date.now(),
+            };
+            localStorage.setItem('dalight:pendingPlopReservation', JSON.stringify(pendingPlopReservation));
+
+            console.log('💾 Pending PLOP reservation saved locally:', pendingPlopReservation);
+
+            const payment = await createPlopPayment(supabaseClient, {
+              refference_id: paymentReference,
+              montant: amountToPay,
+              payment_method: paymentMethod.value,
+              context_type: 'reservation',
+            });
+
+            window.location.href = payment.url;
+            return;
+          }
+
+          // ── MANUAL PAYMENT PATH ──────────────────────────────────
           let proofUrl = null;
           if (proofFile) {
             console.log('📤 Uploading proof...', proofFile.name);
@@ -2432,132 +2625,28 @@ function loadCartData() {
             const { data: publicUrlData } = supabaseClient.storage
               .from('payment-proofs')
               .getPublicUrl(filePath);
-            
+
             proofUrl = publicUrlData.publicUrl;
             console.log('✅ Proof uploaded:', proofUrl);
           }
 
-          // 2. GET USER
-          const { data: { user } } = await supabaseClient.auth.getUser();
-          const reservationNumber = 'DL' + Date.now().toString().slice(-8);
+          window.__lastReservationPaymentMeta = { isOther, otherPaymentName };
 
-          // 3. PREPARE RECORD
-          const totalAmount = cartServices.reduce((sum, s) => sum + (Number(s.price_htg) || 0), 0);
-          const reservationRecord = {
-            reservation_number: reservationNumber,
-            user_id: user?.id || null,
-            user_email: formData.email,
-            user_name: (formData.firstName || '') + ' ' + (formData.lastName || ''),
-            phone: formData.phone || null,
-            service: cartServices.map(s => s.name).join(', '),
-            services: cartServices,
-            date: formData.date,
-            time: formData.time,
-            notes: formData.notes || null,
-            payment_method: isOther ? `other:${otherPaymentName}` : paymentMethod.value,
-            payment_proof_url: proofUrl,
-            deposit_amount: calcDeposit(cartServices),
-            total_amount: totalAmount,
-            payment_status: 'pending',
-            location: 'Spa',
-            status: isPlop ? 'AWAITING_PAYMENT' : 'PENDING'
-          };
+          const savedReservation = await insertReservationRecord(supabaseClient, {
+            reservationNumber,
+            user,
+            proofUrl,
+            status: 'PENDING',
+            paymentStatus: 'pending',
+          });
 
-          console.log('💾 Saving to Supabase:', reservationRecord);
+          await sendReservationEmails(supabaseClient, savedReservation, reservationNumber);
+          showReservationSuccess(reservationNumber);
 
-          // 4. INSERT INTO DB
-          const { data: insertData, error: insertError } = await supabaseClient
-            .from('reservations')
-            .insert([reservationRecord])
-            .select();
-
-          if (insertError) {
-            console.error('❌ Insert error:', insertError);
-            throw new Error('Erreur base de données : ' + insertError.message);
-          }
-
-          console.log('✅ Reservation saved!', insertData);
-
-          const savedReservationForPayment = insertData[0];
-          if (isAutomaticPlopPayment(paymentMethod.value)) {
-            const amountToPay = formData.paymentChoice === 'full' ? totalAmount : calcDeposit(cartServices);
-            const paymentReference = `${reservationNumber}-${formData.paymentChoice === 'full' ? 'FULL' : 'DEP'}`;
-            const payment = await createPlopPayment(supabaseClient, {
-              refference_id: paymentReference,
-              montant: amountToPay,
-              payment_method: paymentMethod.value,
-              context_type: 'reservation',
-              context_id: savedReservationForPayment.id,
-            });
-
-            await supabaseClient
-              .from('reservations')
-              .update({
-                payment_reference: paymentReference,
-                plop_transaction_id: payment.transaction_id || null,
-                payment_status: 'pending'
-              })
-              .eq('id', savedReservationForPayment.id);
-
-            localStorage.removeItem('dalight:serviceCart');
-            localStorage.removeItem('dalight:cartServices');
-            window.location.href = payment.url;
-            return;
-          }
-
-          // 5. SEND EMAILS
-          try {
-            const savedReservation = insertData[0];
-            const { clientConfirmationEmail, adminNotificationEmail } = await import('../js/email-templates.js?v=5.0.1');
-
-            // Send confirmation email to client
-            const clientHtml = clientConfirmationEmail(savedReservation);
-            await supabaseClient.functions.invoke('send-email', {
-              body: {
-                to: formData.email,
-                subject: 'Votre réservation DALIGHT a été reçue',
-                html: clientHtml
-              }
-            });
-
-            // Send notification email to admin
-            const adminHtml = adminNotificationEmail(savedReservation);
-            await supabaseClient.functions.invoke('send-email', {
-              body: {
-                to: 'dalightbeauty15mai@gmail.com',
-                subject: `Nouvelle réservation: ${reservationNumber}`,
-                html: adminHtml
-              }
-            });
-
-            console.log('✅ Emails sent successfully');
-          } catch (emailError) {
-            console.warn('⚠️ Failed to send emails (reservation still saved):', emailError);
-          }
-
-          // 6. SUCCESS HANDLING
-          localStorage.removeItem('dalight:serviceCart');
-          localStorage.removeItem('dalight:cartServices');
-
-          // Update success details in the UI
-          document.getElementById('reservation-number').textContent = '#' + reservationNumber;
-          document.getElementById('success-date').textContent = formatLocalDateFR(formData.date, true);
-          document.getElementById('success-time').textContent = formData.time;
-
-          // Hide form and progress bar, show success message
-          document.getElementById('reservation-form').style.display = 'none';
-          document.querySelector('.steps-progress').style.display = 'none';
-          document.getElementById('success-message').style.display = 'block';
-          
-          // Scroll to top to see the message
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-          
-          lucide.createIcons();
-          
         } catch (error) {
           console.error('❌ Submission failed:', error);
           alert('Désolé, une erreur est survenue : ' + error.message);
-          
+
           if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i data-lucide="check-circle"></i> Réessayer la confirmation';
@@ -2565,6 +2654,225 @@ function loadCartData() {
           }
         }
       }
+
+      // Helper: build and insert the reservation record
+      async function insertReservationRecord(supabaseClient, { reservationNumber, user, proofUrl, status, paymentStatus }) {
+        const totalAmount = cartServices.reduce((sum, s) => sum + (Number(s.price_htg) || 0), 0);
+        const { isOther, otherPaymentName } = window.__lastReservationPaymentMeta || {};
+        const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
+        const rawPaymentMethod = isOther ? `other:${otherPaymentName}` : (paymentMethod?.value || formData.paymentMethod);
+
+        const reservationRecord = {
+          reservation_number: reservationNumber,
+          user_id: user?.id || null,
+          user_email: formData.email,
+          user_name: (formData.firstName || '') + ' ' + (formData.lastName || ''),
+          phone: formData.phone || null,
+          service: cartServices.map(s => s.name).join(', '),
+          services: cartServices,
+          date: formData.date,
+          time: formData.time,
+          notes: formData.notes || null,
+          payment_method: rawPaymentMethod,
+          payment_proof_url: proofUrl || null,
+          deposit_amount: calcDeposit(cartServices),
+          total_amount: totalAmount,
+          payment_status: paymentStatus,
+          location: 'Spa',
+          status,
+        };
+
+        const { data: insertData, error: insertError } = await supabaseClient
+          .from('reservations')
+          .insert([reservationRecord])
+          .select();
+
+        if (insertError) {
+          console.error('❌ Insert error:', insertError);
+          throw new Error('Erreur base de données : ' + insertError.message);
+        }
+
+        return insertData[0];
+      }
+
+      // Helper: send client + admin emails
+      async function sendReservationEmails(supabaseClient, savedReservation, reservationNumber) {
+        try {
+          const { clientConfirmationEmail, adminNotificationEmail } = await import('../js/email-templates.js?v=5.0.1');
+
+          const clientHtml = clientConfirmationEmail(savedReservation);
+          await supabaseClient.functions.invoke('send-email', {
+            body: {
+              to: formData.email,
+              subject: 'Votre réservation DALIGHT a été reçue',
+              html: clientHtml
+            }
+          });
+
+          const adminHtml = adminNotificationEmail(savedReservation);
+          await supabaseClient.functions.invoke('send-email', {
+            body: {
+              to: 'dalightbeauty15mai@gmail.com',
+              subject: `Nouvelle réservation: ${reservationNumber}`,
+              html: adminHtml
+            }
+          });
+
+          console.log('✅ Emails sent successfully');
+        } catch (emailError) {
+          console.warn('⚠️ Failed to send emails (reservation still saved):', emailError);
+        }
+      }
+
+      // Helper: show success panel
+      function showReservationSuccess(reservationNumber) {
+        localStorage.removeItem('dalight:serviceCart');
+        localStorage.removeItem('dalight:cartServices');
+
+        document.getElementById('reservation-number').textContent = '#' + reservationNumber;
+        document.getElementById('success-date').textContent = formatLocalDateFR(formData.date, true);
+        document.getElementById('success-time').textContent = formData.time;
+
+        document.getElementById('reservation-form').style.display = 'none';
+        document.querySelector('.steps-progress').style.display = 'none';
+        document.getElementById('success-message').style.display = 'block';
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        lucide.createIcons();
+      }
+
+      // Handle return from PLOP PLOP payment: verify, show modal, create reservation only if paid
+      async function handlePlopReturn() {
+        const pendingJson = localStorage.getItem('dalight:pendingPlopReservation');
+        if (!pendingJson) return;
+
+        const pending = JSON.parse(pendingJson);
+        if (!pending?.reservationNumber || !pending?.paymentReference) {
+          localStorage.removeItem('dalight:pendingPlopReservation');
+          return;
+        }
+
+        // Show modal in loading state
+        showPlopModal('loader');
+
+        let supabaseClient;
+        try {
+          supabaseClient = getSupabaseClient();
+          if (!supabaseClient) throw new Error('Supabase not connected');
+
+          const result = await verifyPlopPayment(supabaseClient, pending.paymentReference);
+          console.log('🔍 PLOP verify result:', result);
+
+          if (result?.trans_status === 'ok') {
+            // Payment confirmed -> create the reservation
+            const { data: { user } } = await supabaseClient.auth.getUser();
+
+            // Restore form/cart data from pending record
+            cartServices = pending.cartServices || [];
+            Object.assign(formData, pending.formData || {});
+            window.__lastReservationPaymentMeta = {
+              isOther: pending.isOther,
+              otherPaymentName: pending.otherPaymentName,
+            };
+
+            const savedReservation = await insertReservationRecord(supabaseClient, {
+              reservationNumber: pending.reservationNumber,
+              user,
+              proofUrl: null,
+              status: 'CONFIRMED',
+              paymentStatus: pending.paymentChoice === 'full' ? 'fully_paid' : 'deposit_paid',
+            });
+
+            // Save PLOP transaction details
+            await supabaseClient
+              .from('reservations')
+              .update({
+                payment_reference: pending.paymentReference,
+                plop_transaction_id: result.id_transaction || null,
+                plop_client_id: result.id_client || null,
+              })
+              .eq('id', savedReservation.id);
+
+            await sendReservationEmails(supabaseClient, { ...savedReservation, plop_client_id: result.id_client || null }, pending.reservationNumber);
+
+            // Clear pending data and cart
+            localStorage.removeItem('dalight:pendingPlopReservation');
+            localStorage.removeItem('dalight:serviceCart');
+            localStorage.removeItem('dalight:cartServices');
+
+            // Show success modal
+            showPlopModal('success', {
+              reservationNumber: pending.reservationNumber,
+              date: formatLocalDateFR(formData.date, true),
+              time: formData.time,
+            });
+            return;
+          }
+
+          // Payment failed -> show exact error and do NOT create reservation
+          const errorMessage = result?.message || result?.error || 'Le paiement n\'a pas pu être confirmé.';
+          showPlopModal('error', { message: errorMessage });
+
+        } catch (err) {
+          console.error('❌ PLOP return handling error:', err);
+          showPlopModal('error', { message: err.message || 'Une erreur est survenue lors de la vérification du paiement.' });
+        }
+      }
+
+      // Show PLOP modal states: state = 'loader' | 'success' | 'error'
+      function showPlopModal(state, data = {}) {
+        const modal = document.getElementById('plop-modal');
+        const loader = document.getElementById('plop-modal-loader');
+        const success = document.getElementById('plop-modal-success');
+        const error = document.getElementById('plop-modal-error');
+        const footer = document.getElementById('plop-modal-footer');
+        const closeBtn = document.getElementById('plop-close-btn');
+        const ordersBtn = document.getElementById('plop-orders-btn');
+
+        if (!modal) return;
+
+        loader.style.display = 'none';
+        success.style.display = 'none';
+        error.style.display = 'none';
+        footer.style.display = 'none';
+        closeBtn.style.display = 'none';
+        ordersBtn.style.display = 'none';
+
+        modal.style.display = 'flex';
+
+        if (state === 'loader') {
+          loader.style.display = 'flex';
+          document.getElementById('plop-modal-title').textContent = 'Vérification du paiement';
+        } else if (state === 'success') {
+          success.style.display = 'flex';
+          document.getElementById('plop-modal-title').textContent = 'Paiement confirmé';
+          document.getElementById('plop-success-ref').textContent = '#' + (data.reservationNumber || '---');
+          document.getElementById('plop-success-date').textContent = data.date || '---';
+          document.getElementById('plop-success-time').textContent = data.time || '---';
+          footer.style.display = 'flex';
+          ordersBtn.style.display = 'inline-flex';
+
+          // Also show the main success panel behind the modal
+          document.getElementById('reservation-form').style.display = 'none';
+          document.querySelector('.steps-progress').style.display = 'none';
+          document.getElementById('success-message').style.display = 'block';
+        } else if (state === 'error') {
+          error.style.display = 'flex';
+          document.getElementById('plop-modal-title').textContent = 'Paiement échoué';
+          document.getElementById('plop-error-message').textContent = data.message || 'Le paiement n\'a pas pu être confirmé.';
+          footer.style.display = 'flex';
+          closeBtn.style.display = 'inline-flex';
+        }
+
+        lucide.createIcons();
+      }
+
+      document.getElementById('plop-close-btn')?.addEventListener('click', () => {
+        const modal = document.getElementById('plop-modal');
+        if (modal) modal.style.display = 'none';
+        // Keep the pending reservation in localStorage so the user can retry paying
+        // They must select the PLOP method again and click submit to recreate the PLOP payment
+      });
 
       // Form submission
       document.getElementById('reservation-form')?.addEventListener('submit', handleSubmit);
