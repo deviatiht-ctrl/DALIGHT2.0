@@ -58,14 +58,28 @@ export async function verifyAndUpdateReservation(supabase, refferenceId, reserva
   const data = await verifyPlopPayment(supabase, refferenceId);
 
   if (data?.trans_status === 'ok') {
-    await supabase
-      .from('reservations')
-      .update({
-        plop_client_id:     data.id_client     || null,
-        plop_transaction_id: data.id_transaction || null,
-        payment_status:     'fully_paid',
-      })
-      .eq('id', reservationId);
+    const reference = String(refferenceId || '');
+    const isFullPayment = reference.endsWith('-FULL');
+    const isBalancePayment = reference.includes('-BAL-') || reference.endsWith('-SOLDE') || reference.endsWith('-PARTIEL');
+
+    // Build update: always confirm the reservation if payment succeeded
+    const updates = {
+      status: 'CONFIRMED',
+      plop_client_id: data.id_client || null,
+      plop_transaction_id: data.id_transaction || null,
+    };
+
+    // Set payment_status only when it makes sense
+    if (isFullPayment) {
+      updates.payment_status = 'fully_paid';
+    } else if (!isBalancePayment) {
+      // Deposit payment for a new/existing reservation
+      updates.payment_status = 'deposit_paid';
+    }
+    // For balance payments we don't want to overwrite the deposit status incorrectly here;
+    // callers that need balance updates should handle payment_status themselves.
+
+    await supabase.from('reservations').update(updates).eq('id', reservationId);
   }
 
   return data;

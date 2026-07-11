@@ -2594,23 +2594,28 @@ function loadCartData() {
           if (isPlop) {
             const paymentReference = `${reservationNumber}-${formData.paymentChoice === 'full' ? 'FULL' : 'DEP'}`;
 
-            // Save reservation data locally BEFORE redirect; the reservation is only created AFTER PLOP confirms payment
-            const pendingPlopReservation = {
+            // Create reservation FIRST so it exists even if the user doesn't return from PLOP
+            const savedReservation = await insertReservationRecord(supabaseClient, {
               reservationNumber,
-              userId: user?.id || null,
-              formData,
-              cartServices,
-              paymentMethod: paymentMethod.value,
-              otherPaymentName,
-              isOther,
+              user,
+              proofUrl: null,
+              status: 'PENDING',
+              paymentStatus: 'pending',
               paymentReference,
-              amountToPay,
+              paymentChoice: formData.paymentChoice,
+            });
+
+            // Save only the IDs needed to verify/update on return
+            const pendingPlopReservation = {
+              reservationId: savedReservation.id,
+              reservationNumber,
+              paymentReference,
               paymentChoice: formData.paymentChoice,
               createdAt: Date.now(),
             };
             localStorage.setItem('dalight:pendingPlopReservation', JSON.stringify(pendingPlopReservation));
 
-            console.log('💾 Pending PLOP reservation saved locally:', pendingPlopReservation);
+            console.log('💾 PENDING PLOP reservation created:', savedReservation.id, pendingPlopReservation);
 
             const payment = await createPlopPayment(supabaseClient, {
               refference_id: paymentReference,
@@ -2674,7 +2679,7 @@ function loadCartData() {
       }
 
       // Helper: build and insert the reservation record
-      async function insertReservationRecord(supabaseClient, { reservationNumber, user, proofUrl, status, paymentStatus }) {
+      async function insertReservationRecord(supabaseClient, { reservationNumber, user, proofUrl, status, paymentStatus, paymentReference, paymentChoice }) {
         const totalAmount = cartServices.reduce((sum, s) => sum + (Number(s.price_htg) || 0), 0);
         const { isOther, otherPaymentName } = window.__lastReservationPaymentMeta || {};
         const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
@@ -2696,6 +2701,8 @@ function loadCartData() {
           deposit_amount: calcDeposit(cartServices),
           total_amount: totalAmount,
           payment_status: paymentStatus,
+          payment_choice: paymentChoice || formData.paymentChoice || 'deposit',
+          payment_reference: paymentReference || null,
           location: 'Spa',
           status,
         };
@@ -2759,13 +2766,13 @@ function loadCartData() {
         lucide.createIcons();
       }
 
-      // Handle return from PLOP PLOP payment: verify, show modal, create reservation only if paid
+      // Handle return from PLOP PLOP payment: verify and update the existing reservation
       async function handlePlopReturn() {
         const pendingJson = localStorage.getItem('dalight:pendingPlopReservation');
         if (!pendingJson) return;
 
         const pending = JSON.parse(pendingJson);
-        if (!pending?.reservationNumber || !pending?.paymentReference) {
+        if (!pending?.reservationId || !pending?.reservationNumber || !pending?.paymentReference) {
           localStorage.removeItem('dalight:pendingPlopReservation');
           return;
         }
@@ -2782,34 +2789,27 @@ function loadCartData() {
           console.log('🔍 PLOP verify result:', result);
 
           if (result?.trans_status === 'ok') {
-            // Payment confirmed -> create the reservation
-            const { data: { user } } = await supabaseClient.auth.getUser();
-
-            // Restore form/cart data from pending record
-            cartServices = pending.cartServices || [];
-            Object.assign(formData, pending.formData || {});
-            window.__lastReservationPaymentMeta = {
-              isOther: pending.isOther,
-              otherPaymentName: pending.otherPaymentName,
-            };
-
-            const savedReservation = await insertReservationRecord(supabaseClient, {
-              reservationNumber: pending.reservationNumber,
-              user,
-              proofUrl: null,
-              status: 'CONFIRMED',
-              paymentStatus: pending.paymentChoice === 'full' ? 'fully_paid' : 'deposit_paid',
-            });
-
-            // Save PLOP transaction details
-            await supabaseClient
+            // Payment confirmed -> update existing reservation to CONFIRMED
+            const { error: updateError } = await supabaseClient
               .from('reservations')
               .update({
-                payment_reference: pending.paymentReference,
+                status: 'CONFIRMED',
+                payment_status: pending.paymentChoice === 'full' ? 'fully_paid' : 'deposit_paid',
                 plop_transaction_id: result.id_transaction || null,
                 plop_client_id: result.id_client || null,
               })
-              .eq('id', savedReservation.id);
+              .eq('id', pending.reservationId);
+
+            if (updateError) throw new Error('Erreur mise à jour réservation: ' + updateError.message);
+
+            // Fetch updated reservation to send emails
+            const { data: savedReservation, error: fetchError } = await supabaseClient
+              .from('reservations')
+              .select('*')
+              .eq('id', pending.reservationId)
+              .single();
+
+            if (fetchError) throw new Error('Erreur récupération réservation: ' + fetchError.message);
 
             await sendReservationEmails(supabaseClient, { ...savedReservation, plop_client_id: result.id_client || null }, pending.reservationNumber);
 
@@ -2821,13 +2821,13 @@ function loadCartData() {
             // Show success modal
             showPlopModal('success', {
               reservationNumber: pending.reservationNumber,
-              date: formatLocalDateFR(formData.date, true),
-              time: formData.time,
+              date: formatLocalDateFR(savedReservation.date, true),
+              time: savedReservation.time,
             });
             return;
           }
 
-          // Payment failed -> show exact error and do NOT create reservation
+          // Payment failed -> show exact error (reservation stays PENDING)
           const errorMessage = result?.message || result?.error || 'Le paiement n\'a pas pu être confirmé.';
           showPlopModal('error', { message: errorMessage });
 
