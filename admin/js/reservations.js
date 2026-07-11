@@ -672,9 +672,15 @@ window.openBalanceModal = function(id) {
   const r = allReservations.find(r => r.id === id);
   if (!r) return;
 
+  const due = computeBalance(r);
+  if (due <= 0) {
+    window.adminCore.showToast('Aucun solde à payer pour cette réservation.', 'info');
+    return;
+  }
+
   balanceReservationId = id;
   selectedBalancePM = 'cash';
-  currentBalanceDue = computeBalance(r);
+  currentBalanceDue = due;
   document.querySelectorAll('.balance-pm-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.pm === 'cash'));
   document.getElementById('balance-reference').value = '';
   document.getElementById('balance-amount').value = '';
@@ -696,7 +702,9 @@ window.openBalanceModal = function(id) {
     </div>
   `;
 
-  document.getElementById('balance-modal').style.display = 'flex';
+  const modal = document.getElementById('balance-modal');
+  modal.style.display = 'flex';
+  modal.classList.add('active');
 };
 
 function computeBalance(r) {
@@ -708,7 +716,9 @@ function computeBalance(r) {
 }
 
 window.closeBalanceModal = function() {
-  document.getElementById('balance-modal').style.display = 'none';
+  const modal = document.getElementById('balance-modal');
+  modal.classList.remove('active');
+  modal.style.display = 'none';
   balanceReservationId = null;
   currentBalanceDue = 0;
 };
@@ -737,6 +747,13 @@ window.processBalancePayment = async function() {
   const depositAmt = parseFloat(r.deposit_amount || 0);
   const balancePaid = parseFloat(r.balance_amount_paid || 0);
   const balanceDue = Math.max(0, totalAmt - depositAmt - balancePaid);
+
+  if (balanceDue <= 0) {
+    window.adminCore.showToast('Aucun solde à payer.', 'info');
+    closeBalanceModal();
+    return;
+  }
+
   let amountInput = parseFloat(document.getElementById('balance-amount').value);
   if (!amountInput || amountInput <= 0 || amountInput > balanceDue) amountInput = balanceDue;
   const isFinal = amountInput >= balanceDue;
@@ -747,9 +764,30 @@ window.processBalancePayment = async function() {
     method = otherText ? `other:${otherText}` : 'other';
   }
 
-  const reference = document.getElementById('balance-reference').value.trim() || `${r.reservation_number || 'DL' + Date.now().toString().slice(-8)}-${isFinal ? 'SOLDE' : 'PARTIEL'}`;
+  const resNum = r.reservation_number || ('DL' + Date.now().toString().slice(-8));
+  const reference = document.getElementById('balance-reference').value.trim() || `${resNum}-BAL-${isFinal ? 'SOLDE' : 'PARTIEL'}`;
+
+  const submitBtn = document.querySelector('#balance-modal .btn-primary');
+  const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span class="loading-spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:.35rem;"></span> Traitement...`;
+  }
 
   try {
+    const newBalancePaid = balancePaid + amountInput;
+    const isNowFull = newBalancePaid >= balanceDue;
+    const baseUpdates = {
+      balance_amount_paid: newBalancePaid,
+      balance_payment_method: method,
+      balance_payment_reference: reference,
+      payment_status: isNowFull ? 'fully_paid' : 'deposit_paid',
+      payment_choice: isNowFull ? 'full' : 'deposit',
+    };
+    if (isNowFull && r.status === 'AWAITING_PAYMENT') {
+      baseUpdates.status = 'CONFIRMED';
+    }
+
     // Mobile payment: create Plop Plop payment for balance/partial
     if (selectedBalancePM === 'moncash' || selectedBalancePM === 'natcash') {
       const { createPlopPayment } = await import('../../js/plop-payment.js?v=5.0.0');
@@ -762,61 +800,50 @@ window.processBalancePayment = async function() {
         redirect_url: `${window.location.origin}${window.location.pathname}`,
       });
 
-      if (payment?.transaction_id) {
-        const newBalancePaid = balancePaid + amountInput;
-        const isNowFull = newBalancePaid >= balanceDue;
-        await supabase.from('reservations').update({
-          balance_amount_paid: newBalancePaid,
-          balance_payment_method: method,
-          balance_payment_reference: reference,
-          balance_plop_transaction_id: payment.transaction_id,
-          payment_status: isNowFull ? 'fully_paid' : 'deposit_paid',
-          payment_choice: isNowFull ? 'full' : 'deposit',
-        }).eq('id', r.id);
-
-        // Update local data
-        const idx = allReservations.findIndex(res => res.id === r.id);
-        if (idx !== -1) {
-          allReservations[idx].balance_amount_paid = newBalancePaid;
-          allReservations[idx].balance_payment_method = method;
-          allReservations[idx].balance_payment_reference = reference;
-          allReservations[idx].balance_plop_transaction_id = payment.transaction_id;
-          allReservations[idx].payment_status = isNowFull ? 'fully_paid' : 'deposit_paid';
-          allReservations[idx].payment_choice = isNowFull ? 'full' : 'deposit';
-        }
+      if (!payment?.url) {
+        throw new Error('Plop Plop n\'a pas retourné de lien de paiement.');
       }
-      if (payment?.url) { window.location.href = payment.url; return; }
-    } else {
-      // Cash / bank / card / check / other: mark immediately
-      const newBalancePaid = balancePaid + amountInput;
-      const isNowFull = newBalancePaid >= balanceDue;
-      await supabase.from('reservations').update({
-        balance_amount_paid: newBalancePaid,
-        balance_payment_method: method,
-        balance_payment_reference: reference,
-        payment_status: isNowFull ? 'fully_paid' : 'deposit_paid',
-        payment_choice: isNowFull ? 'full' : 'deposit',
-      }).eq('id', r.id);
+
+      // Save the pending balance payment before redirecting
+      const updates = {
+        ...baseUpdates,
+        balance_plop_transaction_id: payment.transaction_id || null,
+      };
+      const { error: updateErr } = await supabase.from('reservations').update(updates).eq('id', r.id);
+      if (updateErr) throw updateErr;
 
       const idx = allReservations.findIndex(res => res.id === r.id);
       if (idx !== -1) {
-        allReservations[idx].balance_amount_paid = newBalancePaid;
-        allReservations[idx].balance_payment_method = method;
-        allReservations[idx].balance_payment_reference = reference;
-        allReservations[idx].payment_status = isNowFull ? 'fully_paid' : 'deposit_paid';
-        allReservations[idx].payment_choice = isNowFull ? 'full' : 'deposit';
+        allReservations[idx] = { ...allReservations[idx], ...updates };
       }
+
+      // Redirect to Plop Plop to complete payment
+      window.location.href = payment.url;
+      return;
+    }
+
+    // Cash / bank / card / check / other: mark immediately
+    const { error: updateErr } = await supabase.from('reservations').update(baseUpdates).eq('id', r.id);
+    if (updateErr) throw updateErr;
+
+    const idx = allReservations.findIndex(res => res.id === r.id);
+    if (idx !== -1) {
+      allReservations[idx] = { ...allReservations[idx], ...baseUpdates };
     }
 
     closeBalanceModal();
     closeModal();
     renderReservations();
     window.adminCore.showToast('Paiement enregistré avec succès', 'success');
-    // Print receipt after balance payment
     printReservationDetail(r.id);
   } catch (err) {
     console.error('Error processing balance payment:', err);
     window.adminCore.showToast('Erreur lors du paiement: ' + err.message, 'error');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnText;
+    }
   }
 };
 
