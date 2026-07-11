@@ -33,6 +33,7 @@ let selectedPM  = 'cash';
 let payChoice   = 'full';
 let receiptData = null;
 let currentType = 'services';
+let removeFees  = false;   // true = retire 3% Moncash sur les prix affichés
 
 /* ── Supabase init ───────────────────────────────────────── */
 async function initSupabase() {
@@ -66,6 +67,22 @@ const esc    = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
 
 function withFee(p) {
   return Math.round(Number(p) * 1.03);
+}
+
+function currentPrice(base) {
+  return removeFees ? Math.round(Number(base)) : withFee(base);
+}
+
+function applyFeeState() {
+  allServices.forEach(s => { s.price_htg = currentPrice(s._basePrice_htg); });
+  allProducts.forEach(p => { p.price_htg = currentPrice(p._basePrice_htg); });
+  allFormations.forEach(f => { f.price_htg = currentPrice(f._basePrice_htg); });
+
+  orderItems.forEach(it => {
+    const base = Number(it._basePrice_htg) || Number(it.price_htg) || 0;
+    if (!it._basePrice_htg) it._basePrice_htg = base;
+    it.price_htg = removeFees ? Math.round(base) : withFee(base);
+  });
 }
 
 function genReceiptNo() {
@@ -163,26 +180,34 @@ async function loadAllItems() {
     // Load services
     const { data: svcData, error: svcErr } = await sb.from('services').select('*').eq('is_active', true).order('category').order('name');
     if (svcErr) throw svcErr;
-    allServices = (svcData || []).map(s => ({
-      ...s,
-      type: 'service',
-      price_htg: withFee(s.price_htg || 0),
-      price_usd: s.price_usd ? Math.round(Number(s.price_usd) * 1.03 * 100) / 100 : null,
-    }));
+    allServices = (svcData || []).map(s => {
+      const base = Number(s.price_htg) || 0;
+      return {
+        ...s,
+        type: 'service',
+        _basePrice_htg: base,
+        price_htg: withFee(base),
+        price_usd: s.price_usd ? Math.round(Number(s.price_usd) * 1.03 * 100) / 100 : null,
+      };
+    });
     console.log('POS: Services chargés:', allServices.length);
 
     // Load products (optional) — uses `price` column (not price_htg)
     try {
       const { data: prodData, error: prodErr } = await sb.from('products').select('id,name,description,price,sale_price,is_active,image_urls').eq('is_active', true).order('name');
       if (prodErr) throw prodErr;
-      allProducts = (prodData || []).map(p => ({
-        ...p,
-        type: 'product',
-        category: 'Produit',
-        duration: '',
-        price_htg: withFee(Number(p.sale_price || p.price) || 0),
-        price_usd: null,
-      }));
+      allProducts = (prodData || []).map(p => {
+        const base = Number(p.sale_price || p.price) || 0;
+        return {
+          ...p,
+          type: 'product',
+          category: 'Produit',
+          duration: '',
+          _basePrice_htg: base,
+          price_htg: withFee(base),
+          price_usd: null,
+        };
+      });
       console.log('POS: Produits chargés:', allProducts.length);
     } catch (e) {
       console.warn('POS: Products table error (ignoring):', e.message);
@@ -204,7 +229,8 @@ async function loadAllItems() {
           ...f,
           type: 'formation',
           category: 'Formation',
-          price_htg: total,
+          _basePrice_htg: total,
+          price_htg: withFee(total),
           price_usd: null,
           frais_inscription: fraisInscription,
           frais_blouse: fraisBlouse,
@@ -364,6 +390,7 @@ function renderCustomGrid() {
     addToOrder({
       id: `custom-${Date.now()}`,
       name,
+      _basePrice_htg: price,
       price_htg: withFee(price),
       price_usd: null,
       category: 'Custom',
@@ -381,7 +408,8 @@ function addToOrder(svc) {
   if (existing) {
     existing.qty++;
   } else {
-    orderItems.push({ ...svc, qty: 1 });
+    const base = Number(svc._basePrice_htg) || Number(svc.price_htg) || 0;
+    orderItems.push({ ...svc, _basePrice_htg: base, price_htg: currentPrice(base), qty: 1 });
   }
   renderOrder();
 }
@@ -448,6 +476,22 @@ function updateTotals() {
   document.getElementById('tot-subtotal').textContent = fmtHTG(subtotal);
   document.getElementById('tot-total').textContent    = fmtHTG(subtotal);
 
+  const feeRow = document.getElementById('tot-fee-row');
+  if (feeRow) {
+    if (removeFees && subtotal > 0) {
+      const feeSaved = orderItems.reduce((s, it) => {
+        const base = Number(it._basePrice_htg) || 0;
+        return s + (withFee(base) - base) * it.qty;
+      }, 0);
+      feeRow.style.display = '';
+      feeRow.classList.add('show');
+      document.getElementById('tot-fee-saved').textContent = '-' + fmtHTG(feeSaved);
+    } else {
+      feeRow.style.display = 'none';
+      feeRow.classList.remove('show');
+    }
+  }
+
   const depRow = document.getElementById('tot-deposit-row');
   if (isDeposit && subtotal > 0) {
     depRow.style.display = '';
@@ -455,6 +499,23 @@ function updateTotals() {
   } else {
     depRow.style.display = 'none';
   }
+}
+
+function toggleRemoveFees() {
+  removeFees = !removeFees;
+  applyFeeState();
+
+  const btn = document.getElementById('btn-remove-fees');
+  if (btn) {
+    btn.classList.toggle('active', removeFees);
+    btn.innerHTML = removeFees
+      ? '<i data-lucide="percent"></i> Frais MonCash retirés (3%)'
+      : '<i data-lucide="tag"></i> Retirer frais MonCash (3%)';
+    if (window.lucide) lucide.createIcons({ el: btn });
+  }
+
+  renderServiceGrid(document.querySelector('.cat-btn.active')?.dataset.cat || 'all', document.getElementById('svc-search').value);
+  renderOrder();
 }
 
 /* ── Payment method & choice UI ─────────────────────────── */
@@ -490,7 +551,7 @@ function buildReceiptHTML(data) {
   const {
     receiptNo, dateTime, clientName, clientPhone, date, time,
     items, subtotal, deposit, amountDue, balance,
-    paymentMethod, paymentChoice,
+    paymentMethod, paymentChoice, removeFees,
   } = data;
 
   const pmLabels = { cash: 'Cash', moncash: 'MonCash', natcash: 'NatCash', bank: 'Virement bancaire' };
@@ -550,6 +611,7 @@ function buildReceiptHTML(data) {
 
     <div class="rcpt-totals">
       <div class="rcpt-total-row"><span>Sous-total</span><span>${fmtHTG(subtotal)}</span></div>
+      ${removeFees ? `<div class="rcpt-total-row" style="color:#047857;"><span>Frais MonCash retirés (-3%)</span><span>-${fmtHTG(orderItems.reduce((s, it) => { const base = Number(it._basePrice_htg) || 0; return s + (withFee(base) - base) * it.qty; }, 0))}</span></div>` : ''}
       <div class="rcpt-total-row grand"><span>TOTAL</span><span>${fmtHTG(subtotal)}</span></div>
     </div>
 
@@ -604,6 +666,7 @@ function buildReceiptData(confirmed = false) {
     balance,
     paymentMethod: selectedPM,
     paymentChoice: payChoice,
+    removeFees,
   };
 }
 

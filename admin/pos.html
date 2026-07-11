@@ -196,6 +196,43 @@
       margin-top: .3rem;
     }
 
+    /* ── Fee removal toggle ─────────────────────────── */
+    .pos-fee-toggle {
+      padding: .5rem 1rem;
+      border-top: 1px solid var(--admin-border);
+    }
+    .btn-remove-fees {
+      width: 100%;
+      padding: .55rem .75rem;
+      border-radius: 8px;
+      border: 1px solid var(--admin-border);
+      background: #fff;
+      color: var(--admin-text);
+      font-size: .8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .4rem;
+      transition: all .15s;
+    }
+    .btn-remove-fees:hover { border-color: var(--admin-accent); color: var(--admin-accent); }
+    .btn-remove-fees.active {
+      background: #ecfdf5;
+      border-color: #10b981;
+      color: #047857;
+    }
+    .btn-remove-fees svg { width:14px; height:14px; }
+    .fee-saved-row {
+      display: none;
+      justify-content: space-between;
+      font-size: .82rem;
+      color: #047857;
+      margin-bottom: .35rem;
+    }
+    .fee-saved-row.show { display: flex; }
+
     /* ── Payment method ──────────────────────────────── */
     .pos-pm {
       padding: .6rem 1rem;
@@ -585,8 +622,15 @@
           </div>
         </div>
 
+        <div class="pos-fee-toggle">
+          <button type="button" class="btn-remove-fees" id="btn-remove-fees" onclick="toggleRemoveFees()">
+            <i data-lucide="tag"></i> Retirer frais MonCash (3%)
+          </button>
+        </div>
+
         <div class="pos-totals">
           <div class="total-row"><span>Sous-total</span><span id="tot-subtotal">0 HTG</span></div>
+          <div class="total-row fee-saved-row" id="tot-fee-row"><span>Frais MonCash retirés</span><span id="tot-fee-saved">0 HTG</span></div>
           <div class="total-row" id="tot-deposit-row" style="display:none;"><span>Acompte dû</span><span id="tot-deposit" style="color:var(--admin-accent);">0 HTG</span></div>
           <div class="total-row grand"><span>TOTAL</span><span id="tot-total">0 HTG</span></div>
         </div>
