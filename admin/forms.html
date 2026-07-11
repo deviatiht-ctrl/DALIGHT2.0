@@ -100,9 +100,21 @@
 
       <!-- SUBMISSIONS TAB -->
       <div class="tab-content" id="tab-submissions">
-        <div class="search-box">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-          <input type="text" class="form-control" id="submission-search" placeholder="Rechercher par nom, email, téléphone ou n° de formulaire…" oninput="renderSubmissions()">
+        <div style="display:flex;gap:1rem;align-items:end;flex-wrap:wrap;margin-bottom:1rem;">
+          <div class="search-box" style="margin-bottom:0;flex:1;min-width:260px;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" class="form-control" id="submission-search" placeholder="Rechercher par nom, email, téléphone ou n° de formulaire…" oninput="renderSubmissions()">
+          </div>
+          <div class="form-group" style="margin:0;min-width:200px;">
+            <label class="form-label" style="font-size:.78rem;">Filtrer par statut</label>
+            <select class="form-control" id="submission-status-filter" onchange="renderSubmissions()">
+              <option value="">Tous les statuts</option>
+              <option value="en attente">En attente (non consulté)</option>
+              <option value="consulté">Consulté</option>
+              <option value="traitement terminé">Traitement terminé</option>
+              <option value="envoyé au client">Envoyé au client</option>
+            </select>
+          </div>
         </div>
         <div class="glass-card" style="padding:0;overflow:hidden;">
           <div class="table-responsive">
@@ -115,11 +127,12 @@
                   <th>Formulaire</th>
                   <th>Service</th>
                   <th>Date</th>
+                  <th>Statut</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="submissions-table">
-                <tr><td colspan="7" style="text-align:center;padding:2rem;">Chargement…</td></tr>
+                <tr><td colspan="8" style="text-align:center;padding:2rem;">Chargement…</td></tr>
               </tbody>
             </table>
           </div>
@@ -212,6 +225,6 @@
   </div>
 
   <script src="js/admin-core.js?v=202607081600"></script>
-  <script src="js/forms.js?v=202607081600"></script>
+  <script src="js/forms.js?v=202607111600"></script>
 </body>
 </html>

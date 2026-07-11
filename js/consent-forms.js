@@ -6,6 +6,24 @@
 
 let _stylesInjected = false;
 
+const PRACTITIONER_LABELS = new Set([
+  'Analyse du cuir chevelu',
+  'Type de soin recommandé',
+  'Fréquence des séances',
+  'Soin effectué',
+  'Durée',
+  'Techniques utilisées',
+  'Conseils après soin / recommandations'
+]);
+
+function isPractitionerField(label = '') {
+  if (PRACTITIONER_LABELS.has(label)) return true;
+  const lower = label.toLowerCase();
+  return lower.includes('diagnostic du praticien') ||
+    lower.includes('plan de traitement') ||
+    lower.includes('conseils après soin');
+}
+
 function injectStyles() {
   if (_stylesInjected) return;
   _stylesInjected = true;
@@ -176,6 +194,7 @@ function esc(v = '') {
 
 // ── Render a single field control ───────────────────────────
 function renderFieldControl(f, idx) {
+  if (isPractitionerField(f.label)) return '';
   const req = f.required ? '<span class="cf-req">*</span>' : '';
   if (f.type === 'section') {
     return `<div class="cf-section-title" data-field-index="${idx}" data-type="section" data-label="${esc(f.label)}">${esc(f.label)}</div>`;
@@ -223,6 +242,7 @@ function renderFieldControl(f, idx) {
 function renderReadOnly(submission) {
   const answers = Array.isArray(submission.answers) ? submission.answers : [];
   return answers.map(a => {
+    if (isPractitionerField(a.label)) return '';
     if (a.type === 'section') return `<div class="cf-section-title">${esc(a.label)}</div>`;
     let val = a.value;
     if (Array.isArray(val)) val = val.join(', ');

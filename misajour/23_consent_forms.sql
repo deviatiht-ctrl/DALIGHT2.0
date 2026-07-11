@@ -62,11 +62,15 @@ CREATE TABLE IF NOT EXISTS form_submissions (
   form_title        TEXT DEFAULT '',
   form_type         TEXT DEFAULT '',
   answers           JSONB NOT NULL DEFAULT '[]'::jsonb, -- réponses du client
+  practitioner_data JSONB NOT NULL DEFAULT '[]'::jsonb, -- données renseignées par le praticien
   signature_data    TEXT DEFAULT '',             -- signature (data URL base64)
-  submitted_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+  status            TEXT DEFAULT 'en attente',  -- en attente / consulté / traitement terminé / envoyé au client
+  submitted_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS idx_form_submissions_reservation ON form_submissions(reservation_id);
+CREATE INDEX IF NOT EXISTS idx_form_submissions_status ON form_submissions(status);
 CREATE INDEX IF NOT EXISTS idx_form_submissions_user ON form_submissions(user_id);
 CREATE INDEX IF NOT EXISTS idx_form_submissions_email ON form_submissions(client_email);
 CREATE INDEX IF NOT EXISTS idx_form_submissions_phone ON form_submissions(client_phone);

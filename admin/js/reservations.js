@@ -1010,6 +1010,19 @@ window.reopenConsentForEdit = async function(reservationId) {
   await window.openConsentModal(reservationId);
 };
 
+const PRACTITIONER_LABELS = new Set([
+  'Analyse du cuir chevelu', 'Type de soin recommandé', 'Fréquence des séances',
+  'Soin effectué', 'Durée', 'Techniques utilisées', 'Conseils après soin / recommandations'
+]);
+
+function isPractitionerField(label = '') {
+  if (PRACTITIONER_LABELS.has(label)) return true;
+  const lower = label.toLowerCase();
+  return lower.includes('diagnostic du praticien') ||
+    lower.includes('plan de traitement') ||
+    lower.includes('conseils après soin');
+}
+
 function buildConsentForm(template, r) {
   const fields = Array.isArray(template.fields) ? template.fields : [];
   return `
@@ -1020,6 +1033,7 @@ function buildConsentForm(template, r) {
 }
 
 function renderConsentField(f, idx) {
+  if (isPractitionerField(f.label)) return '';
   const req = f.required ? '<span style="color:#dc2626;margin-left:.2rem;">*</span>' : '';
   if (f.type === 'section') {
     return `<div style="font-weight:700;color:#4A3728;margin:.8rem 0 .2rem;padding-bottom:.35rem;border-bottom:1px solid var(--admin-border);">${esc(f.label)}</div>`;
@@ -1058,6 +1072,7 @@ function buildSubmissionView(template, submission, r) {
   const answers = Array.isArray(submission.answers) ? submission.answers : [];
   const fields = Array.isArray(template.fields) ? template.fields : [];
   const rows = answers.map(a => {
+    if (isPractitionerField(a.label)) return '';
     if (a.type === 'section') return `<div style="font-weight:700;color:#4A3728;margin:.8rem 0 .2rem;padding-bottom:.35rem;border-bottom:1px solid var(--admin-border);">${esc(a.label)}</div>`;
     let val = a.value;
     if (Array.isArray(val)) val = val.join(', ');

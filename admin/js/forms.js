@@ -10,6 +10,35 @@ let currentFields = [];       // form builder state
 let currentTemplateId = null;
 let currentSubmission = null; // for print
 
+const PRACTITIONER_FIELDS = [
+  { section: '7. Diagnostic du praticien', fields: [
+    { label: 'Analyse du cuir chevelu', type: 'textarea' },
+    { label: 'Type de soin recommandé', type: 'textarea' },
+    { label: 'Fréquence des séances', type: 'textarea' }
+  ]},
+  { section: '8. Plan de traitement', fields: [
+    { label: 'Soin effectué', type: 'textarea' },
+    { label: 'Durée', type: 'text' },
+    { label: 'Techniques utilisées', type: 'checkbox', options: ['Massage', 'Gommage', 'Sérum', 'Autre'] }
+  ]},
+  { section: '9. Conseils après soin / recommandations', fields: [
+    { label: 'Conseils après soin / recommandations', type: 'textarea' }
+  ]}
+];
+const PRACTITIONER_LABELS = new Set(PRACTITIONER_FIELDS.flatMap(g => g.fields.map(f => f.label)));
+const STATUS_OPTIONS = [
+  { value: 'en attente', label: 'En attente (non consulté)' },
+  { value: 'consulté', label: 'Consulté' },
+  { value: 'traitement terminé', label: 'Traitement terminé' },
+  { value: 'envoyé au client', label: 'Envoyé au client' }
+];
+const STATUS_COLORS = {
+  'en attente': '#f59e0b',
+  'consulté': '#3b82f6',
+  'traitement terminé': '#10b981',
+  'envoyé au client': '#8b5cf6'
+};
+
 const FIELD_TYPES = [
   { value: 'text',      label: 'Texte court' },
   { value: 'textarea',  label: 'Texte long' },
@@ -364,28 +393,55 @@ async function loadSubmissions() {
   } catch (err) {
     console.error('loadSubmissions error:', err);
     document.getElementById('submissions-table').innerHTML =
-      `<tr><td colspan="7" style="text-align:center;padding:2rem;color:#dc2626;">Erreur: ${escapeHtml(err.message)}</td></tr>`;
+      `<tr><td colspan="8" style="text-align:center;padding:2rem;color:#dc2626;">Erreur: ${escapeHtml(err.message)}</td></tr>`;
   }
+}
+
+function getPractitionerValue(submission, label) {
+  const pd = Array.isArray(submission?.practitioner_data) ? submission.practitioner_data : [];
+  const found = pd.find(p => p.label === label);
+  if (found) return found.value;
+  const ans = Array.isArray(submission?.answers) ? submission.answers : [];
+  const a = ans.find(x => x.label === label);
+  return a ? a.value : '';
+}
+
+function isDiagnosticSubmission(s) {
+  if (!s) return false;
+  if ((s.form_type || '').includes('diagnostic')) return true;
+  if ((s.form_title || '').toLowerCase().includes('diagnostic')) return true;
+  const ans = Array.isArray(s.answers) ? s.answers : [];
+  return PRACTITIONER_LABELS.size && ans.some(a => PRACTITIONER_LABELS.has(a.label));
+}
+
+function statusBadge(status) {
+  const color = STATUS_COLORS[status] || '#6b7280';
+  return `<span class="status-badge" style="background:${color};color:#fff;border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:600;white-space:nowrap;">${escapeHtml(status || 'en attente')}</span>`;
 }
 
 function renderSubmissions() {
   const q = (document.getElementById('submission-search')?.value || '').toLowerCase().trim();
+  const statusFilter = (document.getElementById('submission-status-filter')?.value || '').toLowerCase();
   const tbody = document.getElementById('submissions-table');
   let list = allSubmissions;
   if (q) {
-    list = allSubmissions.filter(s =>
+    list = list.filter(s =>
       (s.client_name || '').toLowerCase().includes(q) ||
       (s.client_email || '').toLowerCase().includes(q) ||
       (s.client_phone || '').toLowerCase().includes(q) ||
       (s.reference_number || '').toLowerCase().includes(q)
     );
   }
+  if (statusFilter) {
+    list = list.filter(s => (s.status || 'en attente').toLowerCase() === statusFilter);
+  }
   if (!list.length) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--admin-text-muted);">${q ? 'Aucun résultat.' : 'Aucun formulaire rempli pour le moment.'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--admin-text-muted);">${q || statusFilter ? 'Aucun résultat.' : 'Aucun formulaire rempli pour le moment.'}</td></tr>`;
     return;
   }
   tbody.innerHTML = list.map(s => {
     const d = new Date(s.submitted_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const status = s.status || 'en attente';
     return `
       <tr>
         <td><span class="ref-chip">${escapeHtml(s.reference_number || '')}</span></td>
@@ -394,6 +450,7 @@ function renderSubmissions() {
         <td>${escapeHtml(s.form_title || '')}${s.form_type ? `<br><span class="fb-type-badge">${escapeHtml(s.form_type)}</span>` : ''}</td>
         <td style="font-size:.82rem;">${escapeHtml(s.service_name || '—')}</td>
         <td style="font-size:.8rem;">${d}</td>
+        <td>${statusBadge(status)}</td>
         <td><button class="btn btn-secondary btn-sm" onclick="viewSubmission('${s.id}')"><i data-lucide="eye"></i> Voir</button></td>
       </tr>`;
   }).join('');
@@ -413,6 +470,13 @@ function buildSubmissionHtml(s) {
     return `<div class="sub-answer"><div class="q">${escapeHtml(a.label)}</div><div class="a">${escapeHtml(val || '—')}</div></div>`;
   }).join('');
 
+  const pd = Array.isArray(s.practitioner_data) ? s.practitioner_data : [];
+  const pdHtml = pd.length ? pd.map(a => {
+    let val = a.value;
+    if (Array.isArray(val)) val = val.join(', ');
+    return `<div class="sub-answer"><div class="q">${escapeHtml(a.label)}</div><div class="a">${escapeHtml(val || '—')}</div></div>`;
+  }).join('') : '<p style="color:var(--admin-text-muted);">Aucune donnée praticien pour le moment.</p>';
+
   return `
     <div style="border:1px solid var(--admin-border);border-radius:10px;overflow:hidden;">
       <div style="background:var(--admin-muted-bg);padding:1rem;">
@@ -421,7 +485,10 @@ function buildSubmissionHtml(s) {
             <div style="font-size:1.05rem;font-weight:700;">${escapeHtml(s.form_title || 'Formulaire')}</div>
             ${s.form_type ? `<span class="fb-type-badge">${escapeHtml(s.form_type)}</span>` : ''}
           </div>
-          <span class="ref-chip" style="height:fit-content;">${escapeHtml(s.reference_number || '')}</span>
+          <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+            ${statusBadge(s.status || 'en attente')}
+            <span class="ref-chip" style="height:fit-content;">${escapeHtml(s.reference_number || '')}</span>
+          </div>
         </div>
         <div style="margin-top:.75rem;font-size:.85rem;color:#444;line-height:1.7;">
           <div><strong>Client:</strong> ${escapeHtml(s.client_name || '—')}</div>
@@ -439,21 +506,215 @@ function buildSubmissionHtml(s) {
           <div style="font-weight:600;font-size:.85rem;margin-bottom:.4rem;">Signature du client</div>
           <img src="${s.signature_data}" alt="Signature" style="max-width:280px;border:1px solid var(--admin-border);border-radius:8px;background:#fff;">
         </div>` : ''}
-    </div>`;
+    </div>
+    ${isDiagnosticSubmission(s) ? `
+    <div style="border:1px solid var(--admin-border);border-radius:10px;overflow:hidden;margin-top:1rem;">
+      <div style="background:var(--admin-muted-bg);padding:1rem;">
+        <div style="font-weight:700;color:#4A3728;">Diagnostic & plan du praticien</div>
+      </div>
+      <div style="padding:.5rem 1rem;">
+        ${pdHtml}
+      </div>
+    </div>` : ''}`;
+}
+
+function renderPractitionerEditForm(s) {
+  return PRACTITIONER_FIELDS.map(group => {
+    const fieldsHtml = group.fields.map(f => {
+      const val = getPractitionerValue(s, f.label);
+      const inputId = `pract-${slugLabel(f.label)}`;
+      let control = '';
+      if (f.type === 'textarea') {
+        control = `<textarea class="form-control" id="${inputId}" rows="3">${escapeHtml(val || '')}</textarea>`;
+      } else if (f.type === 'text') {
+        control = `<input type="text" class="form-control" id="${inputId}" value="${escapeHtml(val || '')}">`;
+      } else if (f.type === 'checkbox') {
+        const checked = Array.isArray(val) ? val : (val ? String(val).split(',').map(x => x.trim()) : []);
+        control = (f.options || []).map(o => {
+          const isChecked = checked.includes(o);
+          return `<label style="display:flex;align-items:center;gap:.4rem;padding:.35rem 0;cursor:pointer;"><input type="checkbox" value="${escapeHtml(o)}" ${isChecked ? 'checked' : ''}> ${escapeHtml(o)}</label>`;
+        }).join('');
+      }
+      return `
+        <div class="form-group" style="margin-bottom:.75rem;">
+          <label class="form-label" style="font-size:.82rem;">${escapeHtml(f.label)}</label>
+          ${control}
+        </div>`;
+    }).join('');
+    return `
+      <div style="font-weight:700;color:#4A3728;margin:1rem 0 .5rem;padding-bottom:.35rem;border-bottom:1px solid var(--admin-border);">${escapeHtml(group.section)}</div>
+      ${fieldsHtml}`;
+  }).join('');
+}
+
+function slugLabel(label) {
+  return String(label).toLowerCase().replace(/[^a-z0-9]+/g, '-');
+}
+
+function collectPractitionerData() {
+  const data = [];
+  PRACTITIONER_FIELDS.forEach(group => {
+    group.fields.forEach(f => {
+      const inputId = `pract-${slugLabel(f.label)}`;
+      let value = '';
+      if (f.type === 'checkbox') {
+        value = Array.from(document.querySelectorAll(`#${inputId} input[type=checkbox]:checked`)).map(c => c.value);
+      } else {
+        const el = document.getElementById(inputId);
+        value = el ? el.value.trim() : '';
+      }
+      data.push({ label: f.label, type: f.type, value });
+    });
+  });
+  return data;
 }
 
 function viewSubmission(id) {
   const s = allSubmissions.find(x => x.id === id);
   if (!s) return;
   currentSubmission = s;
-  document.getElementById('submission-detail').innerHTML = buildSubmissionHtml(s);
+  if ((s.status || 'en attente') === 'en attente') {
+    updateSubmissionStatus(id, 'consulté');
+  }
+  const detail = document.getElementById('submission-detail');
+  detail.innerHTML = buildSubmissionHtml(s) + (isDiagnosticSubmission(s) ? `
+    <div id="practitioner-edit" style="margin-top:1rem;border:1px solid var(--admin-border);border-radius:10px;padding:1rem;background:var(--admin-muted-bg);">
+      <h4 style="margin:0 0 .75rem;font-size:1rem;color:#4A3728;">Remplir / modifier le diagnostic du praticien</h4>
+      ${renderPractitionerEditForm(s)}
+      <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+        <button class="btn btn-primary" id="btn-save-pract" onclick="savePractitionerData('${s.id}')"><i data-lucide="save"></i> Enregistrer le diagnostic</button>
+        <button class="btn btn-secondary" onclick="sendDiagnosticToClient('${s.id}')"><i data-lucide="send"></i> Envoyer au client</button>
+      </div>
+    </div>` : '');
   document.getElementById('modal-submission').classList.add('active');
   if (window.lucide) lucide.createIcons();
+}
+
+async function savePractitionerData(id) {
+  const s = allSubmissions.find(x => x.id === id);
+  if (!s) return;
+  const btn = document.getElementById('btn-save-pract');
+  if (btn) { btn.disabled = true; btn.textContent = 'Enregistrement…'; }
+  try {
+    const practitioner_data = collectPractitionerData();
+    const status = s.status === 'envoyé au client' ? s.status : 'traitement terminé';
+    const { error } = await supabaseClient
+      .from('form_submissions')
+      .update({ practitioner_data, status })
+      .eq('id', id);
+    if (error) throw error;
+    s.practitioner_data = practitioner_data;
+    s.status = status;
+    renderSubmissions();
+    viewSubmission(id);
+    showToast('Diagnostic enregistré', 'success');
+  } catch (err) {
+    console.error('savePractitionerData error:', err);
+    showToast('Erreur: ' + err.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="save"></i> Enregistrer le diagnostic'; if (window.lucide) lucide.createIcons(); }
+  }
+}
+
+async function updateSubmissionStatus(id, status) {
+  const s = allSubmissions.find(x => x.id === id);
+  if (!s) return;
+  try {
+    const { error } = await supabaseClient.from('form_submissions').update({ status }).eq('id', id);
+    if (error) throw error;
+    s.status = status;
+    renderSubmissions();
+    showToast('Statut mis à jour', 'success');
+  } catch (err) {
+    console.error('updateSubmissionStatus error:', err);
+    showToast('Erreur: ' + err.message, 'error');
+  }
 }
 
 function closeSubmissionModal() {
   document.getElementById('modal-submission').classList.remove('active');
   currentSubmission = null;
+}
+
+function buildDiagnosticBody(s) {
+  const d = new Date(s.submitted_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  let body = `Bonjour ${s.client_name || 'cher(e) client(e)'},\n\n`;
+  body += `Voici le récapitulatif de votre diagnostic / soin DALIGHT du ${d}.\n\n`;
+  const pd = Array.isArray(s.practitioner_data) ? s.practitioner_data : [];
+  if (pd.length) {
+    body += `--- Diagnostic du praticien ---\n`;
+    pd.forEach(p => {
+      let val = Array.isArray(p.value) ? p.value.join(', ') : (p.value || '—');
+      body += `${p.label}: ${val}\n`;
+    });
+  }
+  body += `\nÀ très bientôt,\nL'équipe DALIGHT`;
+  return body;
+}
+
+async function sendDiagnosticToClient(id) {
+  const s = allSubmissions.find(x => x.id === id);
+  if (!s) return;
+  if (!s.client_email) { showToast('Email client manquant.', 'error'); return; }
+
+  // Make sure data is saved first
+  const practitioner_data = collectPractitionerData();
+  const hasData = practitioner_data.some(p => {
+    const v = p.value;
+    return Array.isArray(v) ? v.length > 0 : !!v;
+  });
+  if (!hasData) { showToast('Remplissez au moins un champ praticien avant d\'envoyer.', 'error'); return; }
+
+  // Persist latest values and mark as sent
+  await savePractitionerData(id);
+
+  const subject = `Votre diagnostic / soin DALIGHT — ${s.reference_number || ''}`;
+  const htmlBody = buildDiagnosticEmailHtml(s);
+
+  try {
+    const response = await supabaseClient.functions.invoke('send-email', {
+      body: {
+        to: s.client_email,
+        subject,
+        html: htmlBody,
+        isAdmin: false
+      }
+    });
+    if (response.error) throw response.error;
+    if (response.data && response.data.success === false) throw new Error(response.data.error || 'Échec envoi');
+    await updateSubmissionStatus(id, 'envoyé au client');
+    showToast('Diagnostic envoyé au client', 'success');
+  } catch (err) {
+    console.warn('sendDiagnosticToClient edge function failed, fallback mailto:', err);
+    const body = encodeURIComponent(buildDiagnosticBody(s));
+    const mailto = `mailto:${encodeURIComponent(s.client_email)}?subject=${encodeURIComponent(subject)}&body=${body}`;
+    window.location.href = mailto;
+  }
+}
+
+function buildDiagnosticEmailHtml(s) {
+  const d = new Date(s.submitted_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const pd = Array.isArray(s.practitioner_data) ? s.practitioner_data : [];
+  const rows = pd.map(p => {
+    let val = Array.isArray(p.value) ? p.value.join(', ') : (p.value || '—');
+    return `<tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:600;width:40%;">${escapeHtml(p.label)}</td><td style="padding:8px;border-bottom:1px solid #eee;">${escapeHtml(val)}</td></tr>`;
+  }).join('');
+  return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="font-family:Arial,sans-serif;background:#f5f5f5;padding:20px;color:#333;">
+<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1);">
+  <div style="background:linear-gradient(135deg,#4A3728 0%,#6B4F3B 100%);color:#fff;padding:30px;text-align:center;">
+    <h2 style="margin:0;">DALIGHT — Votre diagnostic / soin</h2>
+    <p style="margin:8px 0 0;opacity:.9;">${escapeHtml(s.service_name || '')} · ${d}</p>
+  </div>
+  <div style="padding:30px;">
+    <p>Bonjour ${escapeHtml(s.client_name || 'cher(e) client(e)')},</p>
+    <p>Voici le récapitulatif de votre diagnostic / soin.</p>
+    <table style="width:100%;border-collapse:collapse;margin-top:16px;">${rows || '<tr><td style="padding:8px;">Aucune donnée</td></tr>'}</table>
+    <p style="margin-top:24px;">À très bientôt,<br><strong>L'équipe DALIGHT</strong></p>
+  </div>
+</div>
+</body></html>`;
 }
 
 function printSubmission() {
