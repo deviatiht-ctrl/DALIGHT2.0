@@ -123,15 +123,23 @@ serve(async (req: Request) => {
     const paymentMethod = String(body.payment_method || 'all').toLowerCase()
     const allowedMethods = new Set(['moncash', 'kashpaw', 'natcash', 'all'])
 
+    const plopPayload: Record<string, unknown> = {
+      client_id: PLOP_CLIENT_ID,
+      refference_id: body.refference_id,
+      montant: amount,
+      payment_method: allowedMethods.has(paymentMethod) ? paymentMethod : 'all',
+    }
+
+    // Optional redirect URL so the customer comes back to the merchant page after payment
+    const redirectUrl = body.redirect_url || body.return_url || body.callback_url
+    if (redirectUrl && typeof redirectUrl === 'string') {
+      plopPayload.redirect_url = redirectUrl
+    }
+
     const res = await fetch(`${cleanBaseUrl(PLOP_BASE_URL)}/api/paiement-marchand`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        client_id: PLOP_CLIENT_ID,
-        refference_id: body.refference_id,
-        montant: amount,
-        payment_method: allowedMethods.has(paymentMethod) ? paymentMethod : 'all',
-      }),
+      body: JSON.stringify(plopPayload),
     })
 
     const data = await res.json().catch(() => ({ status: false, message: 'Réponse PLOP PLOP invalide' }))

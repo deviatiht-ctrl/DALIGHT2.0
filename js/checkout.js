@@ -355,6 +355,7 @@ document.getElementById('place-order-btn')?.addEventListener('click', async () =
         payment_method: selectedPaymentMethod,
         context_type: 'order',
         context_id: order.id,
+        redirect_url: window.location.href,
       });
 
       await supabase

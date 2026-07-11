@@ -759,6 +759,7 @@ window.processBalancePayment = async function() {
         payment_method: selectedBalancePM,
         context_type: 'reservation_balance',
         context_id: r.id,
+        redirect_url: `${window.location.origin}${window.location.pathname}`,
       });
 
       if (payment?.transaction_id) {

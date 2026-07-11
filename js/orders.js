@@ -451,6 +451,7 @@ async function saveBalanceProof(btn) {
         payment_method: pm.slug,
         context_type: 'reservation_balance',
         context_id: id,
+        redirect_url: `${window.location.origin}${window.location.pathname}`,
       });
 
       const { error: autoUpdateError } = await supabase
