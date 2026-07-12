@@ -599,6 +599,11 @@ async function verifyPendingPlopPayments(reservations) {
   );
   if (!pending.length) return;
 
+  // Server-side reconcile first (works even for reservations from other devices)
+  try {
+    await supabase.functions.invoke('plop-payment', { body: { action: 'reconcile' } });
+  } catch (_) {}
+
   let showedPopup = false;
 
   for (const r of pending) {
@@ -615,14 +620,22 @@ async function verifyPendingPlopPayments(reservations) {
 
         await supabase.from('reservations').update(updates).eq('id', r.id);
         Object.assign(r, updates);
-      } else if (result && (result.trans_status === 'failed' || result.trans_status === 'cancelled' || result.trans_status === 'expired' || result.status === false)) {
-        // Payment failed/cancelled/expired — cancel the reservation and show popup once
-        await supabase.from('reservations').update({ status: 'CANCELLED', payment_status: 'failed' }).eq('id', r.id);
-        Object.assign(r, { status: 'CANCELLED', payment_status: 'failed' });
-        if (!showedPopup) {
-          showPaymentFailedPopup(r.reservation_number);
-          showedPopup = true;
+      } else {
+        const transStatus = String(result?.trans_status || '').toLowerCase();
+        const isDefinitiveFailure = ['failed', 'cancelled', 'canceled', 'expired', 'refused', 'declined'].includes(transStatus);
+        // Grace period: never cancel a reservation created less than 30 minutes ago
+        // (the customer may still be completing the payment)
+        const ageMs = Date.now() - new Date(r.created_at).getTime();
+        if (isDefinitiveFailure && ageMs > 30 * 60 * 1000) {
+          await supabase.from('reservations').update({ status: 'CANCELLED', payment_status: 'failed' }).eq('id', r.id);
+          Object.assign(r, { status: 'CANCELLED', payment_status: 'failed' });
+          if (!showedPopup) {
+            showPaymentFailedPopup(r.reservation_number);
+            showedPopup = true;
+          }
         }
+        // Generic errors (result.status === false, network issues, etc.) are IGNORED:
+        // the reservation stays pending and will be re-verified on the next visit / reconcile.
       }
     } catch (_) {}
   }

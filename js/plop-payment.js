@@ -92,6 +92,15 @@ export async function verifyAndUpdateReservation(supabase, refferenceId, reserva
 export async function autoPollPlopPayments(supabase) {
   if (!supabase?.from) return;
 
+  // 1. Server-side reconcile (service role): confirms ALL pending paid reservations,
+  // even ones created from another device/browser. Best-effort.
+  try {
+    await supabase.functions.invoke('plop-payment', { body: { action: 'reconcile' } });
+  } catch (err) {
+    console.warn('[plop] reconcile error:', err.message);
+  }
+
+  // 2. Client-side fallback for the current user's own reservations
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;

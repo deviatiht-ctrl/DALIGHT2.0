@@ -70,9 +70,14 @@ function initDateFilter() {
 // ============================================
 
 async function loadReservations() {
-  const { fetchReservations } = window.adminCore;
+  const { fetchReservations, supabase } = window.adminCore;
   
   try {
+    // Safety net: confirm any paid-but-pending PLOP reservations server-side first
+    try {
+      await supabase?.functions?.invoke('plop-payment', { body: { action: 'reconcile' } });
+    } catch (_) {}
+
     allReservations = await fetchReservations();
     renderReservations();
   } catch (err) {
@@ -2553,4 +2558,421 @@ async function saveCapacity() {
 
 function openSetCapacityModal() {
   window.adminCore?.showToast('Sélectionnez un créneau dans le calendrier pour modifier sa capacité');
+}
+
+// ============================================
+// ADMIN CREATE RESERVATION
+// ============================================
+
+let createReservationClient = null;
+let createReservationServices = [];
+let createReservationHeadSpaPricing = [];
+const HAIR_TYPE_LABELS = { dreadlocks: 'Dreadlocks', defrises: 'Cheveux Défrisés', naturels: 'Cheveux Naturels' };
+
+function withFee(p) { return Math.round(Number(p) * 1.03); }
+function withoutFee(p) { return Math.round(Number(p)); }
+
+function openCreateReservationModal() {
+  const modal = document.getElementById('create-reservation-modal');
+  if (!modal) return;
+  modal.classList.add('active');
+  modal.style.display = 'flex';
+
+  // Reset form
+  document.getElementById('create-reservation-form').reset();
+  document.getElementById('create-client-info').textContent = '';
+  document.getElementById('create-client-error').style.display = 'none';
+  document.getElementById('create-reservation-total').textContent = '';
+  document.getElementById('create-moncash-fee-display').textContent = '';
+  document.getElementById('create-services-config').innerHTML = '';
+  createReservationClient = null;
+  loadCreateReservationServices();
+
+  // Default date = tomorrow
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  document.getElementById('create-date').value = tomorrow.toISOString().split('T')[0];
+}
+
+function closeCreateReservationModal() {
+  const modal = document.getElementById('create-reservation-modal');
+  if (!modal) return;
+  modal.classList.remove('active');
+  modal.style.display = 'none';
+  createReservationClient = null;
+}
+
+async function loadCreateReservationServices() {
+  const listEl = document.getElementById('create-services-list');
+  const configEl = document.getElementById('create-services-config');
+  if (!listEl) return;
+
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    listEl.innerHTML = '<p class="text-muted">Supabase non connecté.</p>';
+    return;
+  }
+
+  try {
+    const [{ data: services, error: svcErr }, { data: pricing, error: priceErr }] = await Promise.all([
+      supabase.from('services').select('id, name, price_htg, price_usd, duration, category').eq('is_active', true).order('name'),
+      supabase.from('head_spa_pricing').select('*').eq('is_active', true).order('sort_order')
+    ]);
+
+    if (svcErr) throw svcErr;
+    createReservationServices = services || [];
+    createReservationHeadSpaPricing = pricing || [];
+
+    if (!createReservationServices.length) {
+      listEl.innerHTML = '<p class="text-muted">Aucun service actif.</p>';
+      return;
+    }
+
+    listEl.innerHTML = createReservationServices.map((s, i) => {
+      const isHeadSpa = String(s.category || '').toLowerCase() === 'headspa';
+      const basePrice = isHeadSpa ? null : Number(s.price_htg || 0);
+      return `
+      <label id="create-svc-label-${i}" style="display: flex; align-items: center; gap: .5rem; padding: .4rem 0; cursor: pointer; border-bottom: 1px solid #f1f5f9;">
+        <input type="checkbox" name="create-service" value="${s.id}" data-index="${i}" onchange="onCreateServiceToggle(${i})">
+        <span style="flex: 1;">${escapeHtml(s.name)} <span style="color: #64748b; font-size: .85rem;">${isHeadSpa ? '(Head Spa — choisir type & longueur)' : '(' + basePrice.toLocaleString() + ' HTG)'}</span></span>
+      </label>`;
+    }).join('');
+
+    if (configEl) configEl.innerHTML = '';
+  } catch (err) {
+    console.error('Error loading services:', err);
+    listEl.innerHTML = '<p class="text-muted">Erreur chargement services.</p>';
+  }
+}
+
+function onCreateServiceToggle(index) {
+  const cb = document.querySelector(`input[name="create-service"][data-index="${index}"]`);
+  const configEl = document.getElementById('create-services-config');
+  if (!cb || !configEl) return;
+
+  const svc = createReservationServices[index];
+  if (!svc) return;
+
+  const isHeadSpa = String(svc.category || '').toLowerCase() === 'headspa';
+  if (!isHeadSpa) {
+    updateCreateReservationTotal();
+    return;
+  }
+
+  const existing = document.getElementById(`create-svc-config-${index}`);
+  if (cb.checked) {
+    if (!existing) {
+      const div = document.createElement('div');
+      div.id = `create-svc-config-${index}`;
+      div.className = 'create-svc-config-box';
+      div.style.cssText = 'background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:.75rem;margin-bottom:.5rem;';
+      div.innerHTML = renderHeadSpaConfig(index, svc);
+      configEl.appendChild(div);
+      // Auto-select first options if available
+      const typeSelect = div.querySelector(`#create-svc-hair-type-${index}`);
+      if (typeSelect) { typeSelect.value = typeSelect.options[1]?.value || ''; populateHeadSpaLengthOptions(index); }
+    }
+  } else if (existing) {
+    existing.remove();
+  }
+  updateCreateReservationTotal();
+}
+
+function renderHeadSpaConfig(index, svc) {
+  const hairTypes = [...new Set(createReservationHeadSpaPricing.map(p => p.type))];
+  return `
+    <div style="font-weight:600;margin-bottom:.5rem;color:#334155;">${escapeHtml(svc.name)}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+      <div class="form-group" style="margin-bottom:0;">
+        <label style="font-size:.78rem;">Type de cheveux</label>
+        <select id="create-svc-hair-type-${index}" class="form-input" onchange="populateHeadSpaLengthOptions(${index})">
+          <option value="">Choisir...</option>
+          ${hairTypes.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(HAIR_TYPE_LABELS[t] || t)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label style="font-size:.78rem;">Longueur / Prix</label>
+        <select id="create-svc-hair-length-${index}" class="form-input" onchange="updateCreateReservationTotal()">
+          <option value="">Choisir d'abord le type</option>
+        </select>
+      </div>
+    </div>
+  `;
+}
+
+function populateHeadSpaLengthOptions(index) {
+  const typeSelect = document.getElementById(`create-svc-hair-type-${index}`);
+  const lengthSelect = document.getElementById(`create-svc-hair-length-${index}`);
+  if (!typeSelect || !lengthSelect) return;
+
+  const selectedType = typeSelect.value;
+  const options = createReservationHeadSpaPricing
+    .filter(p => p.type === selectedType)
+    .map((p, i) => `<option value="${escapeHtml(p.id)}" data-price-htg="${p.price_htg}" data-price-usd="${p.price_usd || ''}">${escapeHtml(p.label)} ${p.hair_length ? '(' + escapeHtml(p.hair_length) + ')' : ''} — ${Number(p.price_htg).toLocaleString()} HTG</option>`);
+
+  lengthSelect.innerHTML = options.length
+    ? `<option value="">Choisir...</option>` + options.join('')
+    : `<option value="">Aucun tarif pour ce type</option>`;
+  updateCreateReservationTotal();
+}
+
+async function searchClientByEmail() {
+  const emailInput = document.getElementById('create-email');
+  const infoEl = document.getElementById('create-client-info');
+  const errorEl = document.getElementById('create-client-error');
+  const email = emailInput.value.trim().toLowerCase();
+
+  infoEl.textContent = '';
+  errorEl.style.display = 'none';
+  createReservationClient = null;
+
+  if (!email || !email.includes('@')) {
+    errorEl.textContent = 'Veuillez entrer un email valide.';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    errorEl.textContent = 'Supabase non connecté.';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    // Lookup profile by email (matches existing accounts)
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, phone')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) {
+      errorEl.textContent = 'Aucun compte trouvé avec cet email. Le client doit d\'abord créer un compte.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    createReservationClient = data;
+    infoEl.innerHTML = `✅ Compte trouvé : <strong>${escapeHtml(data.full_name || 'Sans nom')}</strong> (${escapeHtml(data.email || '')})`;
+  } catch (err) {
+    console.error('Error searching client:', err);
+    errorEl.textContent = 'Erreur recherche : ' + err.message;
+    errorEl.style.display = 'block';
+  }
+}
+
+function updateCreateReservationTotal() {
+  const checkboxes = document.querySelectorAll('input[name="create-service"]:checked');
+  const includeFee = document.getElementById('create-include-moncash-fee')?.checked ?? true;
+  let subtotal = 0;
+  let feeAmount = 0;
+  let headSpaMissing = false;
+
+  checkboxes.forEach(cb => {
+    const idx = Number(cb.dataset.index);
+    const svc = createReservationServices[idx];
+    if (!svc) return;
+
+    const isHeadSpa = String(svc.category || '').toLowerCase() === 'headspa';
+    if (isHeadSpa) {
+      const lengthSelect = document.getElementById(`create-svc-hair-length-${idx}`);
+      const selectedOption = lengthSelect?.selectedOptions?.[0];
+      if (selectedOption?.dataset?.priceHtg) {
+        const base = Number(selectedOption.dataset.priceHtg);
+        subtotal += base;
+        feeAmount += includeFee ? (withFee(base) - base) : 0;
+      } else {
+        headSpaMissing = true;
+      }
+    } else {
+      const base = Number(svc.price_htg || 0);
+      subtotal += base;
+      feeAmount += includeFee ? (withFee(base) - base) : 0;
+    }
+  });
+
+  const total = includeFee ? withFee(subtotal) : subtotal;
+  const totalEl = document.getElementById('create-reservation-total');
+  const feeEl = document.getElementById('create-moncash-fee-display');
+
+  if (totalEl) {
+    let text = subtotal > 0 ? `Sous-total : ${subtotal.toLocaleString()} HTG` : '';
+    if (includeFee && subtotal > 0) text += `  —  Frais MonCash : ${feeAmount.toLocaleString()} HTG  —  Total : ${total.toLocaleString()} HTG`;
+    else if (subtotal > 0) text += `  —  Total : ${total.toLocaleString()} HTG`;
+    totalEl.textContent = text;
+  }
+  if (feeEl) feeEl.textContent = includeFee ? 'Frais MonCash (3%) inclus dans le total' : 'Frais MonCash retirés';
+
+  return { subtotal, feeAmount, total, headSpaMissing };
+}
+
+async function submitCreateReservation() {
+  if (!createReservationClient?.id) {
+    window.adminCore?.showToast('Veuillez d\'abord rechercher un client par email.', 'error');
+    return;
+  }
+
+  const date = document.getElementById('create-date').value;
+  const time = document.getElementById('create-time').value;
+  if (!date || !time) {
+    window.adminCore?.showToast('Date et heure obligatoires.', 'error');
+    return;
+  }
+
+  const selected = Array.from(document.querySelectorAll('input[name="create-service"]:checked'));
+  if (!selected.length) {
+    window.adminCore?.showToast('Veuillez sélectionner au moins un service.', 'error');
+    return;
+  }
+
+  const { subtotal, feeAmount, total, headSpaMissing } = updateCreateReservationTotal();
+  if (headSpaMissing) {
+    window.adminCore?.showToast('Veuillez choisir le type et la longueur pour chaque service Head Spa.', 'error');
+    return;
+  }
+
+  const includeFee = document.getElementById('create-include-moncash-fee')?.checked ?? true;
+  const selectedServices = selected.map(cb => {
+    const idx = Number(cb.dataset.index);
+    const svc = createReservationServices[idx];
+    if (!svc) return null;
+
+    const isHeadSpa = String(svc.category || '').toLowerCase() === 'headspa';
+    if (isHeadSpa) {
+      const lengthSelect = document.getElementById(`create-svc-hair-length-${idx}`);
+      const option = lengthSelect?.selectedOptions?.[0];
+      const pricingId = option?.value;
+      const pricing = createReservationHeadSpaPricing.find(p => p.id === pricingId);
+      if (!pricing) return null;
+      const baseHtg = Number(pricing.price_htg || 0);
+      const baseUsd = Number(pricing.price_usd || 0);
+      return {
+        id: svc.id,
+        name: `${svc.name} — ${HAIR_TYPE_LABELS[pricing.type] || pricing.type} — ${pricing.label}`,
+        base_name: svc.name,
+        price_htg: includeFee ? withFee(baseHtg) : baseHtg,
+        price_usd: includeFee ? withFeeUSD(baseUsd) : baseUsd,
+        hair_type: pricing.type,
+        hair_length: pricing.label,
+        hair_length_detail: pricing.hair_length || null,
+        head_spa_pricing_id: pricing.id,
+        category: svc.category,
+      };
+    }
+
+    const baseHtg = Number(svc.price_htg || 0);
+    const baseUsd = Number(svc.price_usd || 0);
+    return {
+      id: svc.id,
+      name: svc.name,
+      base_name: svc.name,
+      price_htg: includeFee ? withFee(baseHtg) : baseHtg,
+      price_usd: includeFee ? withFeeUSD(baseUsd) : baseUsd,
+      category: svc.category,
+    };
+  }).filter(Boolean);
+
+  if (!selectedServices.length) {
+    window.adminCore?.showToast('Erreur lors de la construction des services.', 'error');
+    return;
+  }
+
+  const reservationNumber = 'DL' + Date.now().toString().slice(-8);
+  const client = createReservationClient;
+
+  const record = {
+    reservation_number: reservationNumber,
+    user_id: client.id,
+    user_email: client.email || '',
+    user_name: client.full_name || '',
+    phone: client.phone || null,
+    service: selectedServices.map(s => s.name).join(', '),
+    services: selectedServices.map(s => ({ id: s.id, name: s.name, price_htg: s.price_htg, price_usd: s.price_usd, hair_type: s.hair_type || null, hair_length: s.hair_length || null })),
+    service_id: selectedServices[0].id,
+    location: document.getElementById('create-location').value,
+    date,
+    time,
+    status: document.getElementById('create-status').value,
+    payment_status: document.getElementById('create-payment-status').value,
+    payment_method: document.getElementById('create-payment-method').value,
+    payment_choice: 'full',
+    total_amount: total,
+    deposit_amount: total,
+    notes: document.getElementById('create-notes').value.trim() || null,
+  };
+
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    window.adminCore?.showToast('Supabase non connecté.', 'error');
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('reservations')
+      .insert([record])
+      .select();
+
+    if (error) throw error;
+
+    const reservation = data?.[0];
+    if (!reservation) throw new Error('Réservation créée mais réponse vide.');
+
+    // Send confirmation email if requested
+    if (document.getElementById('create-send-email')?.checked) {
+      try {
+        await supabase.functions.invoke('send-email', {
+          body: {
+            to: client.email,
+            subject: `Votre réservation DALIGHT ${reservationNumber}`,
+            html: `
+              <div style="font-family: Inter, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #7c3aed;">Bonjour ${escapeHtml(client.full_name || '')},</h2>
+                <p>Une réservation a été créée pour vous chez <strong>DALIGHT</strong>.</p>
+                <p><strong>Réservation :</strong> #${reservationNumber}<br>
+                   <strong>Service :</strong> ${escapeHtml(record.service)}<br>
+                   <strong>Date :</strong> ${date}<br>
+                   <strong>Heure :</strong> ${time}<br>
+                   <strong>Lieu :</strong> ${escapeHtml(record.location)}<br>
+                   ${includeFee ? `<strong>Sous-total :</strong> ${subtotal.toLocaleString()} HTG<br><strong>Frais MonCash :</strong> ${feeAmount.toLocaleString()} HTG<br>` : ''}
+                   <strong>Total :</strong> ${total.toLocaleString()} HTG</p>
+                <p>Merci de votre confiance.</p>
+              </div>
+            `
+          }
+        });
+      } catch (emailErr) {
+        console.warn('Email confirmation failed:', emailErr);
+      }
+    }
+
+    window.adminCore?.showToast(`Réservation ${reservationNumber} créée avec succès ✓`);
+    closeCreateReservationModal();
+    loadReservations();
+  } catch (err) {
+    console.error('Error creating reservation:', err);
+    window.adminCore?.showToast('Erreur création : ' + err.message, 'error');
+  }
+}
+
+function withFeeUSD(p) { return Number((Number(p) * 1.03).toFixed(2)); }
+
+window.openCreateReservationModal = openCreateReservationModal;
+window.closeCreateReservationModal = closeCreateReservationModal;
+window.searchClientByEmail = searchClientByEmail;
+window.submitCreateReservation = submitCreateReservation;
+window.updateCreateReservationTotal = updateCreateReservationTotal;
+window.onCreateServiceToggle = onCreateServiceToggle;
+window.populateHeadSpaLengthOptions = populateHeadSpaLengthOptions;
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }

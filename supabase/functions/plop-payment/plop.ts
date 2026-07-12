@@ -72,6 +72,73 @@ serve(async (req: Request) => {
       return jsonResponse({ ...data, plop_http_status: res.status })
     }
 
+    // ── RECONCILE (safety net) ──────────────────────────────────
+    // Verifies every pending PLOP reservation server-side and confirms/cancels it.
+    // Works even if the customer never returned to the site after paying.
+    if (action === 'reconcile') {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')
+      const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+      if (!supabaseUrl || !serviceKey) {
+        return jsonResponse({ status: false, message: 'Service non configuré' }, 503)
+      }
+
+      const dbHeaders = {
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        'Content-Type': 'application/json',
+      }
+
+      // Pending PLOP reservations from the last 7 days
+      const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString()
+      const listUrl = `${supabaseUrl}/rest/v1/reservations` +
+        `?select=id,payment_reference,created_at` +
+        `&payment_status=eq.pending` +
+        `&payment_reference=not.is.null` +
+        `&plop_client_id=is.null` +
+        `&payment_method=in.(moncash,natcash,kashpaw)` +
+        `&created_at=gte.${encodeURIComponent(since)}` +
+        `&limit=25`
+
+      const listRes = await fetch(listUrl, { headers: dbHeaders })
+      const rows = await listRes.json().catch(() => [])
+      if (!Array.isArray(rows) || rows.length === 0) {
+        return jsonResponse({ status: true, checked: 0, confirmed: 0 })
+      }
+
+      let confirmed = 0
+      for (const row of rows) {
+        try {
+          const vRes = await fetch(`${cleanBaseUrl(PLOP_BASE_URL)}/api/paiement-verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              client_id: PLOP_CLIENT_ID,
+              refference_id: row.payment_reference,
+            }),
+          })
+          const v = await vRes.json().catch(() => null)
+          if (v && v.trans_status === 'ok') {
+            const isFull = String(row.payment_reference).endsWith('-FULL')
+            await fetch(`${supabaseUrl}/rest/v1/reservations?id=eq.${row.id}`, {
+              method: 'PATCH',
+              headers: dbHeaders,
+              body: JSON.stringify({
+                status: 'CONFIRMED',
+                payment_status: isFull ? 'fully_paid' : 'deposit_paid',
+                plop_transaction_id: v.id_transaction || null,
+                plop_client_id: v.id_client || null,
+              }),
+            })
+            confirmed++
+          }
+        } catch (_) {
+          // Network error on one row must not block the others
+        }
+      }
+
+      return jsonResponse({ status: true, checked: rows.length, confirmed })
+    }
+
     // ── WITHDRAW (Retrait) ───────────────────────────────────────
     if (action === 'withdraw') {
       if (!PLOP_CLIENT_SECRET) {

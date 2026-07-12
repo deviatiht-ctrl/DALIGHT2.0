@@ -1495,7 +1495,7 @@
 
     <script type="module">
       import { initChatWidget } from '../js/chat-widget.js?v=5.0.0';
-      import { createPlopPayment, verifyPlopPayment, isAutomaticPlopPayment, isBankPayment } from '../js/plop-payment.js?v=5.0.0';
+      import { createPlopPayment, verifyPlopPayment, isAutomaticPlopPayment, isBankPayment, autoPollPlopPayments } from '../js/plop-payment.js?v=5.0.1';
       
       document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();
@@ -1505,6 +1505,13 @@
 
         // If returning from a PLOP PLOP payment, verify it and show confirmation/error modal
         handlePlopReturn();
+
+        // Safety net: auto-confirm any pending PLOP reservations already in the DB
+        // (covers cases where localStorage was cleared or payment was made from another device)
+        setTimeout(() => {
+          const sb = getSupabaseClient();
+          if (sb) autoPollPlopPayments(sb).catch(() => {});
+        }, 3000);
 
         // Fallback: ensure the hamburger menu works on this page
         setupResvNavToggle();
@@ -2594,9 +2601,28 @@ function loadCartData() {
           if (isPlop) {
             const paymentReference = `${reservationNumber}-${formData.paymentChoice === 'full' ? 'FULL' : 'DEP'}`;
 
-            // Save reservation data locally BEFORE redirect; the reservation is only created AFTER PLOP confirms payment
+            window.__lastReservationPaymentMeta = { isOther, otherPaymentName };
+
+            // 1. Create the reservation in the DATABASE FIRST (AWAITING_PAYMENT).
+            // This guarantees the reservation exists server-side even if the redirect
+            // back from PLOP PLOP never happens (internet cut, browser closed, etc.).
+            // It will be auto-confirmed by verification once the payment succeeds.
+            const savedReservation = await insertReservationRecord(supabaseClient, {
+              reservationNumber,
+              user,
+              proofUrl: null,
+              status: 'AWAITING_PAYMENT',
+              paymentStatus: 'pending',
+              paymentReference,
+              paymentChoice: formData.paymentChoice,
+            });
+
+            console.log('💾 AWAITING_PAYMENT reservation created in DB:', savedReservation.id);
+
+            // 2. Save reservation data locally for the return flow (UI restore)
             const pendingPlopReservation = {
               reservationNumber,
+              reservationId: savedReservation.id,
               userId: user?.id || null,
               formData,
               cartServices,
@@ -2610,15 +2636,25 @@ function loadCartData() {
             };
             localStorage.setItem('dalight:pendingPlopReservation', JSON.stringify(pendingPlopReservation));
 
-            console.log('💾 Pending PLOP reservation saved locally:', pendingPlopReservation);
-
-            const payment = await createPlopPayment(supabaseClient, {
-              refference_id: paymentReference,
-              montant: amountToPay,
-              payment_method: paymentMethod.value,
-              context_type: 'reservation',
-              redirect_url: window.location.href,
-            });
+            // 3. Create the PLOP payment and redirect
+            let payment;
+            try {
+              payment = await createPlopPayment(supabaseClient, {
+                refference_id: paymentReference,
+                montant: amountToPay,
+                payment_method: paymentMethod.value,
+                context_type: 'reservation',
+                redirect_url: window.location.href,
+              });
+            } catch (payErr) {
+              // Payment could not even be created: cancel the placeholder reservation
+              await supabaseClient
+                .from('reservations')
+                .update({ status: 'CANCELLED', payment_status: 'failed' })
+                .eq('id', savedReservation.id);
+              localStorage.removeItem('dalight:pendingPlopReservation');
+              throw payErr;
+            }
 
             window.location.href = payment.url;
             return;
@@ -2762,12 +2798,103 @@ function loadCartData() {
         lucide.createIcons();
       }
 
-      // Handle return from PLOP PLOP payment: verify, show modal, create reservation only if paid
+      // Verify a PLOP payment with automatic retries (network resilience)
+      async function verifyPlopWithRetry(supabaseClient, reference, attempts = 3, delayMs = 2500) {
+        let lastErr = null;
+        for (let i = 0; i < attempts; i++) {
+          try {
+            return await verifyPlopPayment(supabaseClient, reference);
+          } catch (err) {
+            lastErr = err;
+            console.warn(`⚠️ PLOP verify attempt ${i + 1}/${attempts} failed:`, err.message);
+            if (i < attempts - 1) await new Promise(r => setTimeout(r, delayMs * (i + 1)));
+          }
+        }
+        throw lastErr;
+      }
+
+      // Confirm the reservation in DB after a successful PLOP payment.
+      // Updates the existing AWAITING_PAYMENT row; falls back to insert for legacy pending records.
+      async function confirmPlopReservation(supabaseClient, pending, result) {
+        const paymentStatus = pending.paymentChoice === 'full' ? 'fully_paid' : 'deposit_paid';
+        const updates = {
+          status: 'CONFIRMED',
+          payment_status: paymentStatus,
+          plop_transaction_id: result.id_transaction || null,
+          plop_client_id: result.id_client || null,
+        };
+
+        let savedReservation = null;
+
+        if (pending.reservationId) {
+          const { data } = await supabaseClient
+            .from('reservations')
+            .update(updates)
+            .eq('id', pending.reservationId)
+            .select();
+          savedReservation = data?.[0] || null;
+        }
+
+        if (!savedReservation) {
+          // Row may exist from a previous attempt: find it by payment reference
+          const { data: existing } = await supabaseClient
+            .from('reservations')
+            .select('id')
+            .eq('payment_reference', pending.paymentReference)
+            .maybeSingle();
+          if (existing?.id) {
+            const { data } = await supabaseClient
+              .from('reservations')
+              .update(updates)
+              .eq('id', existing.id)
+              .select();
+            savedReservation = data?.[0] || null;
+          }
+        }
+
+        if (!savedReservation) {
+          // Legacy fallback: no row exists yet -> insert it as CONFIRMED
+          const { data: { user } } = await supabaseClient.auth.getUser();
+          savedReservation = await insertReservationRecord(supabaseClient, {
+            reservationNumber: pending.reservationNumber,
+            user,
+            proofUrl: null,
+            status: 'CONFIRMED',
+            paymentStatus,
+            paymentReference: pending.paymentReference,
+            paymentChoice: pending.paymentChoice,
+          });
+          await supabaseClient
+            .from('reservations')
+            .update({
+              plop_transaction_id: result.id_transaction || null,
+              plop_client_id: result.id_client || null,
+            })
+            .eq('id', savedReservation.id);
+        }
+
+        return savedReservation;
+      }
+
+      // Auto-recheck loop: retries the whole return flow while a pending PLOP reservation exists
+      let plopRecheckTimer = null;
+      function schedulePlopRecheck(delayMs = 20000) {
+        if (plopRecheckTimer) return;
+        plopRecheckTimer = setTimeout(() => {
+          plopRecheckTimer = null;
+          if (localStorage.getItem('dalight:pendingPlopReservation')) {
+            handlePlopReturn();
+          }
+        }, delayMs);
+      }
+
+      // Handle return from PLOP PLOP payment: verify, show modal, confirm reservation only if paid
       async function handlePlopReturn() {
         const pendingJson = localStorage.getItem('dalight:pendingPlopReservation');
         if (!pendingJson) return;
 
-        const pending = JSON.parse(pendingJson);
+        let pending = null;
+        try { pending = JSON.parse(pendingJson); } catch (_) {}
         if (!pending?.reservationNumber || !pending?.paymentReference) {
           localStorage.removeItem('dalight:pendingPlopReservation');
           return;
@@ -2781,13 +2908,11 @@ function loadCartData() {
           supabaseClient = getSupabaseClient();
           if (!supabaseClient) throw new Error('Supabase not connected');
 
-          const result = await verifyPlopPayment(supabaseClient, pending.paymentReference);
+          const result = await verifyPlopWithRetry(supabaseClient, pending.paymentReference);
           console.log('🔍 PLOP verify result:', result);
 
           if (result?.trans_status === 'ok') {
-            // Payment confirmed -> create the reservation
-            const { data: { user } } = await supabaseClient.auth.getUser();
-
+            // Payment confirmed -> confirm the reservation
             // Restore form/cart data from pending record
             cartServices = pending.cartServices || [];
             Object.assign(formData, pending.formData || {});
@@ -2796,24 +2921,7 @@ function loadCartData() {
               otherPaymentName: pending.otherPaymentName,
             };
 
-            const savedReservation = await insertReservationRecord(supabaseClient, {
-              reservationNumber: pending.reservationNumber,
-              user,
-              proofUrl: null,
-              status: 'CONFIRMED',
-              paymentStatus: pending.paymentChoice === 'full' ? 'fully_paid' : 'deposit_paid',
-              paymentReference: pending.paymentReference,
-              paymentChoice: pending.paymentChoice,
-            });
-
-            // Save PLOP transaction details
-            await supabaseClient
-              .from('reservations')
-              .update({
-                plop_transaction_id: result.id_transaction || null,
-                plop_client_id: result.id_client || null,
-              })
-              .eq('id', savedReservation.id);
+            const savedReservation = await confirmPlopReservation(supabaseClient, pending, result);
 
             await sendReservationEmails(supabaseClient, { ...savedReservation, plop_client_id: result.id_client || null }, pending.reservationNumber);
 
@@ -2831,13 +2939,41 @@ function loadCartData() {
             return;
           }
 
-          // Payment failed -> show exact error and do NOT create reservation
-          const errorMessage = result?.message || result?.error || 'Le paiement n\'a pas pu être confirmé.';
-          showPlopModal('error', { message: errorMessage });
+          // Definitive failure -> cancel the placeholder reservation and clear pending data
+          const transStatus = String(result?.trans_status || '').toLowerCase();
+          const isDefinitiveFailure = ['failed', 'cancelled', 'canceled', 'expired', 'refused', 'declined'].includes(transStatus);
+
+          if (isDefinitiveFailure) {
+            if (pending.reservationId) {
+              await supabaseClient
+                .from('reservations')
+                .update({ status: 'CANCELLED', payment_status: 'failed' })
+                .eq('id', pending.reservationId);
+            }
+            localStorage.removeItem('dalight:pendingPlopReservation');
+            const errorMessage = result?.message || result?.error || 'Le paiement n\'a pas pu être confirmé.';
+            showPlopModal('error', { message: errorMessage });
+            return;
+          }
+
+          // Inconclusive (payment still processing / unknown): keep pending data and auto-retry.
+          // The reservation already exists in DB (AWAITING_PAYMENT) and will be auto-confirmed
+          // by the server-side reconciliation even if this page is closed.
+          schedulePlopRecheck();
+          showPlopModal('error', {
+            title: 'Vérification en cours',
+            message: 'Nou poko resevwa konfimasyon peman an. Si ou fin peye, rezèvasyon ou ap konfime otomatikman — ou ka tcheke "Mes réservations" nan kèk minit.',
+          });
 
         } catch (err) {
           console.error('❌ PLOP return handling error:', err);
-          showPlopModal('error', { message: err.message || 'Une erreur est survenue lors de la vérification du paiement.' });
+          // Network/verification failure: DO NOT drop the pending reservation.
+          // It exists in DB and will be auto-confirmed later (auto-retry + server reconciliation).
+          schedulePlopRecheck();
+          showPlopModal('error', {
+            title: 'Connexion instable',
+            message: 'Nou pa t ka verifye peman an kounye a akoz koneksyon an. Si peman ou pase, rezèvasyon an ap konfime otomatikman. Tcheke "Mes réservations" nan kèk minit.',
+          });
         }
       }
 
@@ -2880,7 +3016,7 @@ function loadCartData() {
           document.getElementById('success-message').style.display = 'block';
         } else if (state === 'error') {
           error.style.display = 'flex';
-          document.getElementById('plop-modal-title').textContent = 'Paiement échoué';
+          document.getElementById('plop-modal-title').textContent = data.title || 'Paiement échoué';
           document.getElementById('plop-error-message').textContent = data.message || 'Le paiement n\'a pas pu être confirmé.';
           footer.style.display = 'flex';
           closeBtn.style.display = 'inline-flex';
