@@ -1,6 +1,6 @@
 import { formatDate, formatTime, getSupabase } from './main.js?v=5.0.0';
 import { createPlopPayment, verifyPlopPayment, isAutomaticPlopPayment, isBankPayment } from './plop-payment.js';
-import { loadConsentData, matchTemplate, findSubmission, openConsentModal } from './consent-forms.js';
+import { loadConsentData, matchTemplate, findSubmission, openConsentModal } from './consent-forms.js?v=202607121600';
 
 let supabase = getSupabase();
 
