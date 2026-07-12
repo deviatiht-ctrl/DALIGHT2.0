@@ -10,7 +10,7 @@ let currentFields = [];       // form builder state
 let currentTemplateId = null;
 let currentSubmission = null; // for print
 
-const PRACTITIONER_FIELDS = [
+const HEAD_SPA_PRACTITIONER_FIELDS = [
   { section: '7. Diagnostic du praticien', fields: [
     { label: 'Analyse du cuir chevelu', type: 'textarea' },
     { label: 'Type de soin recommandé', type: 'textarea' },
@@ -25,7 +25,38 @@ const PRACTITIONER_FIELDS = [
     { label: 'Conseils après soin / recommandations', type: 'textarea' }
   ]}
 ];
-const PRACTITIONER_LABELS = new Set(PRACTITIONER_FIELDS.flatMap(g => g.fields.map(f => f.label)));
+
+const MASSAGE_PRACTITIONER_FIELDS = [
+  { section: '5. Praticien(ne) – Déclaration et Engagement', fields: [
+    { label: 'Je certifie avoir expliqué clairement le déroulement du soin, les techniques utilisées ainsi que les contre-indications du massage.', type: 'checkbox', options: ['Je confirme'] },
+    { label: 'Nom du praticien', type: 'text' },
+    { label: 'Signature du praticien', type: 'signature' },
+    { label: 'Date', type: 'date' }
+  ]}
+];
+
+function getPractitionerFields(s) {
+  if (!s) return null;
+  const type = (s.form_type || '').toLowerCase();
+  const title = (s.form_title || '').toLowerCase();
+  if (type.includes('massage') || title.includes('massage')) return MASSAGE_PRACTITIONER_FIELDS;
+  if (type.includes('diagnostic') || title.includes('diagnostic') || title.includes('head spa')) return HEAD_SPA_PRACTITIONER_FIELDS;
+  // Also detect by existing practitioner data labels
+  const pd = Array.isArray(s.practitioner_data) ? s.practitioner_data : [];
+  const labels = new Set(pd.map(p => p.label));
+  const headLabels = new Set(HEAD_SPA_PRACTITIONER_FIELDS.flatMap(g => g.fields.map(f => f.label)));
+  const massageLabels = new Set(MASSAGE_PRACTITIONER_FIELDS.flatMap(g => g.fields.map(f => f.label)));
+  if ([...labels].some(l => massageLabels.has(l))) return MASSAGE_PRACTITIONER_FIELDS;
+  if ([...labels].some(l => headLabels.has(l))) return HEAD_SPA_PRACTITIONER_FIELDS;
+  return null;
+}
+
+function getPractitionerLabels(s) {
+  const fields = getPractitionerFields(s);
+  if (!fields) return new Set();
+  return new Set(fields.flatMap(g => g.fields.map(f => f.label)));
+}
+
 const STATUS_OPTIONS = [
   { value: 'en attente', label: 'En attente (non consulté)' },
   { value: 'consulté', label: 'Consulté' },
@@ -406,12 +437,9 @@ function getPractitionerValue(submission, label) {
   return a ? a.value : '';
 }
 
-function isDiagnosticSubmission(s) {
+function isPractitionerEditable(s) {
   if (!s) return false;
-  if ((s.form_type || '').includes('diagnostic')) return true;
-  if ((s.form_title || '').toLowerCase().includes('diagnostic')) return true;
-  const ans = Array.isArray(s.answers) ? s.answers : [];
-  return PRACTITIONER_LABELS.size && ans.some(a => PRACTITIONER_LABELS.has(a.label));
+  return !!getPractitionerFields(s);
 }
 
 function statusBadge(status) {
@@ -474,7 +502,8 @@ function buildSubmissionHtml(s) {
   const pdHtml = pd.length ? pd.map(a => {
     let val = a.value;
     if (Array.isArray(val)) val = val.join(', ');
-    return `<div class="sub-answer"><div class="q">${escapeHtml(a.label)}</div><div class="a">${escapeHtml(val || '—')}</div></div>`;
+    if (a.type === 'signature' && val) val = `<img src="${val}" alt="${escapeHtml(a.label)}" style="max-width:280px;border:1px solid var(--admin-border);border-radius:8px;background:#fff;">`;
+    return `<div class="sub-answer"><div class="q">${escapeHtml(a.label)}</div><div class="a">${a.type === 'signature' ? (val || '—') : escapeHtml(val || '—')}</div></div>`;
   }).join('') : '<p style="color:var(--admin-text-muted);">Aucune donnée praticien pour le moment.</p>';
 
   return `
@@ -507,10 +536,10 @@ function buildSubmissionHtml(s) {
           <img src="${s.signature_data}" alt="Signature" style="max-width:280px;border:1px solid var(--admin-border);border-radius:8px;background:#fff;">
         </div>` : ''}
     </div>
-    ${isDiagnosticSubmission(s) ? `
+    ${isPractitionerEditable(s) ? `
     <div style="border:1px solid var(--admin-border);border-radius:10px;overflow:hidden;margin-top:1rem;">
       <div style="background:var(--admin-muted-bg);padding:1rem;">
-        <div style="font-weight:700;color:#4A3728;">Diagnostic & plan du praticien</div>
+        <div style="font-weight:700;color:#4A3728;">Partie praticien</div>
       </div>
       <div style="padding:.5rem 1rem;">
         ${pdHtml}
@@ -519,7 +548,9 @@ function buildSubmissionHtml(s) {
 }
 
 function renderPractitionerEditForm(s) {
-  return PRACTITIONER_FIELDS.map(group => {
+  const groups = getPractitionerFields(s);
+  if (!groups) return '';
+  return groups.map(group => {
     const fieldsHtml = group.fields.map(f => {
       const val = getPractitionerValue(s, f.label);
       const inputId = `pract-${slugLabel(f.label)}`;
@@ -528,12 +559,23 @@ function renderPractitionerEditForm(s) {
         control = `<textarea class="form-control" id="${inputId}" rows="3">${escapeHtml(val || '')}</textarea>`;
       } else if (f.type === 'text') {
         control = `<input type="text" class="form-control" id="${inputId}" value="${escapeHtml(val || '')}">`;
+      } else if (f.type === 'date') {
+        control = `<input type="date" class="form-control" id="${inputId}" value="${escapeHtml(val || '')}">`;
       } else if (f.type === 'checkbox') {
         const checked = Array.isArray(val) ? val : (val ? String(val).split(',').map(x => x.trim()) : []);
         control = (f.options || []).map(o => {
           const isChecked = checked.includes(o);
           return `<label style="display:flex;align-items:center;gap:.4rem;padding:.35rem 0;cursor:pointer;"><input type="checkbox" value="${escapeHtml(o)}" ${isChecked ? 'checked' : ''}> ${escapeHtml(o)}</label>`;
         }).join('');
+      } else if (f.type === 'signature') {
+        control = `
+          <div style="border:1.5px dashed #d9cebf;border-radius:12px;background:#fdfbf8;padding:.5rem;">
+            <canvas id="${inputId}" width="400" height="120" style="width:100%;height:120px;border-radius:8px;background:#fff;cursor:crosshair;" data-saved="${escapeHtml(val || '')}"></canvas>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.4rem;">
+              <small style="color:#9a8f86;">Signez avec la souris ou le doigt</small>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="clearPractitionerSignature('${inputId}')">Effacer</button>
+            </div>
+          </div>`;
       }
       return `
         <div class="form-group" style="margin-bottom:.75rem;">
@@ -553,12 +595,18 @@ function slugLabel(label) {
 
 function collectPractitionerData() {
   const data = [];
-  PRACTITIONER_FIELDS.forEach(group => {
+  const groups = getPractitionerFields(currentSubmission);
+  if (!groups) return data;
+  groups.forEach(group => {
     group.fields.forEach(f => {
       const inputId = `pract-${slugLabel(f.label)}`;
       let value = '';
       if (f.type === 'checkbox') {
         value = Array.from(document.querySelectorAll(`#${inputId} input[type=checkbox]:checked`)).map(c => c.value);
+      } else if (f.type === 'signature') {
+        const pad = window.practSigPads?.[inputId];
+        const saved = getPractitionerValue(currentSubmission, f.label);
+        value = pad && !pad.isEmpty() ? pad.toDataURL() : (saved || '');
       } else {
         const el = document.getElementById(inputId);
         value = el ? el.value.trim() : '';
@@ -569,6 +617,71 @@ function collectPractitionerData() {
   return data;
 }
 
+window.practSigPads = {};
+
+function clearPractitionerSignature(inputId) {
+  const pad = window.practSigPads?.[inputId];
+  if (pad) pad.clear();
+}
+
+function initPractitionerSignatures(s) {
+  window.practSigPads = {};
+  const groups = getPractitionerFields(s);
+  if (!groups) return;
+  groups.flatMap(g => g.fields).forEach(f => {
+    if (f.type !== 'signature') return;
+    const inputId = `pract-${slugLabel(f.label)}`;
+    const canvas = document.getElementById(inputId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#000';
+    let drawing = false;
+    let empty = true;
+    const getPos = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: clientX - rect.left, y: clientY - rect.top };
+    };
+    const start = (e) => {
+      drawing = true;
+      const p = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+    };
+    const move = (e) => {
+      if (!drawing) return;
+      if (e.cancelable) e.preventDefault();
+      const p = getPos(e);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      empty = false;
+    };
+    const end = () => { drawing = false; };
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', move);
+    canvas.addEventListener('mouseup', end);
+    canvas.addEventListener('mouseleave', end);
+    canvas.addEventListener('touchstart', start, { passive: false });
+    canvas.addEventListener('touchmove', move, { passive: false });
+    canvas.addEventListener('touchend', end);
+    const saved = getPractitionerValue(s, f.label);
+    if (saved) {
+      const img = new Image();
+      img.onload = () => { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); empty = false; };
+      img.src = saved;
+    }
+    window.practSigPads[inputId] = {
+      isEmpty: () => empty,
+      toDataURL: () => canvas.toDataURL(),
+      clear: () => { ctx.clearRect(0, 0, canvas.width, canvas.height); empty = true; }
+    };
+  });
+}
+
 function viewSubmission(id) {
   const s = allSubmissions.find(x => x.id === id);
   if (!s) return;
@@ -577,16 +690,17 @@ function viewSubmission(id) {
     updateSubmissionStatus(id, 'consulté');
   }
   const detail = document.getElementById('submission-detail');
-  detail.innerHTML = buildSubmissionHtml(s) + (isDiagnosticSubmission(s) ? `
+  detail.innerHTML = buildSubmissionHtml(s) + (isPractitionerEditable(s) ? `
     <div id="practitioner-edit" style="margin-top:1rem;border:1px solid var(--admin-border);border-radius:10px;padding:1rem;background:var(--admin-muted-bg);">
-      <h4 style="margin:0 0 .75rem;font-size:1rem;color:#4A3728;">Remplir / modifier le diagnostic du praticien</h4>
+      <h4 style="margin:0 0 .75rem;font-size:1rem;color:#4A3728;">Remplir / modifier la partie praticien</h4>
       ${renderPractitionerEditForm(s)}
       <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap;">
-        <button class="btn btn-primary" id="btn-save-pract" onclick="savePractitionerData('${s.id}')"><i data-lucide="save"></i> Enregistrer le diagnostic</button>
+        <button class="btn btn-primary" id="btn-save-pract" onclick="savePractitionerData('${s.id}')"><i data-lucide="save"></i> Enregistrer</button>
         <button class="btn btn-secondary" onclick="sendDiagnosticToClient('${s.id}')"><i data-lucide="send"></i> Envoyer au client</button>
       </div>
     </div>` : '');
   document.getElementById('modal-submission').classList.add('active');
+  initPractitionerSignatures(s);
   if (window.lucide) lucide.createIcons();
 }
 
@@ -639,10 +753,10 @@ function closeSubmissionModal() {
 function buildDiagnosticBody(s) {
   const d = new Date(s.submitted_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   let body = `Bonjour ${s.client_name || 'cher(e) client(e)'},\n\n`;
-  body += `Voici le récapitulatif de votre diagnostic / soin DALIGHT du ${d}.\n\n`;
+  body += `Voici le récapitulatif de votre soin / formulaire DALIGHT du ${d}.\n\n`;
   const pd = Array.isArray(s.practitioner_data) ? s.practitioner_data : [];
   if (pd.length) {
-    body += `--- Diagnostic du praticien ---\n`;
+    body += `--- Partie praticien ---\n`;
     pd.forEach(p => {
       let val = Array.isArray(p.value) ? p.value.join(', ') : (p.value || '—');
       body += `${p.label}: ${val}\n`;
@@ -668,7 +782,7 @@ async function sendDiagnosticToClient(id) {
   // Persist latest values and mark as sent
   await savePractitionerData(id);
 
-  const subject = `Votre diagnostic / soin DALIGHT — ${s.reference_number || ''}`;
+  const subject = `Votre soin / formulaire DALIGHT — ${s.reference_number || ''}`;
   const htmlBody = buildDiagnosticEmailHtml(s);
 
   try {
@@ -704,12 +818,12 @@ function buildDiagnosticEmailHtml(s) {
 <body style="font-family:Arial,sans-serif;background:#f5f5f5;padding:20px;color:#333;">
 <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1);">
   <div style="background:linear-gradient(135deg,#4A3728 0%,#6B4F3B 100%);color:#fff;padding:30px;text-align:center;">
-    <h2 style="margin:0;">DALIGHT — Votre diagnostic / soin</h2>
+    <h2 style="margin:0;">DALIGHT — Votre soin / formulaire</h2>
     <p style="margin:8px 0 0;opacity:.9;">${escapeHtml(s.service_name || '')} · ${d}</p>
   </div>
   <div style="padding:30px;">
     <p>Bonjour ${escapeHtml(s.client_name || 'cher(e) client(e)')},</p>
-    <p>Voici le récapitulatif de votre diagnostic / soin.</p>
+    <p>Voici le récapitulatif de votre soin / formulaire.</p>
     <table style="width:100%;border-collapse:collapse;margin-top:16px;">${rows || '<tr><td style="padding:8px;">Aucune donnée</td></tr>'}</table>
     <p style="margin-top:24px;">À très bientôt,<br><strong>L'équipe DALIGHT</strong></p>
   </div>
@@ -729,6 +843,13 @@ function printSubmission() {
     if (a.type === 'consent') val = (val === true || val === 'true' || val === 'oui') ? 'Accepté' : (val || '—');
     return `<div style="margin-bottom:10px;"><div style="font-weight:600;">${escapeHtml(a.label)}</div><div style="color:#333;">${escapeHtml(val || '—')}</div></div>`;
   }).join('');
+  const pd = Array.isArray(s.practitioner_data) ? s.practitioner_data : [];
+  const practRows = pd.map(a => {
+    let val = a.value;
+    if (a.type === 'signature') val = val ? `<img src="${val}" style="max-width:280px;border:1px solid #ccc;border-radius:8px;">` : '—';
+    else if (Array.isArray(val)) val = val.join(', ');
+    return `<div style="margin-bottom:10px;"><div style="font-weight:600;">${escapeHtml(a.label)}</div><div style="color:#333;">${a.type === 'signature' ? val : escapeHtml(val || '—')}</div></div>`;
+  }).join('');
   const d = new Date(s.submitted_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   win.document.write(`
     <html><head><title>${escapeHtml(s.reference_number)}</title>
@@ -746,7 +867,8 @@ function printSubmission() {
         <div><strong>Rempli le:</strong> ${d}</div>
       </div>
       ${rows}
-      ${s.signature_data ? `<div style="margin-top:20px;"><div style="font-weight:600;">Signature:</div><img src="${s.signature_data}" style="max-width:280px;border:1px solid #ccc;border-radius:8px;"></div>` : ''}
+      ${s.signature_data ? `<div style="margin-top:20px;"><div style="font-weight:600;">Signature client:</div><img src="${s.signature_data}" style="max-width:280px;border:1px solid #ccc;border-radius:8px;"></div>` : ''}
+      ${practRows ? `<div style="margin-top:24px;padding-top:16px;border-top:2px solid #D4AF37;"><h3 style="margin:0 0 12px;color:#4A3728;">Partie praticien</h3>${practRows}</div>` : ''}
       <script>window.onload=function(){window.print();}<\/script>
     </body></html>`);
   win.document.close();

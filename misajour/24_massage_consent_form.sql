@@ -50,11 +50,11 @@ DECLARE
     { "type": "signature", "label": "Signature du client", "required": true },
     { "type": "date",      "label": "Date",                "required": true },
 
-    { "type": "section", "label": "5. Praticien(ne) – Déclaration et Engagement" },
-    { "type": "checkbox", "label": "Je certifie avoir expliqué clairement le déroulement du soin, les techniques utilisées ainsi que les contre-indications du massage.", "options": ["Je confirme"], "required": true },
-    { "type": "text",      "label": "Nom du praticien",    "required": true },
-    { "type": "signature", "label": "Signature du praticien", "required": true },
-    { "type": "date",      "label": "Date",                "required": true }
+    { "type": "section", "label": "5. Praticien(ne) – Déclaration et Engagement", "role": "practitioner" },
+    { "type": "checkbox", "label": "Je certifie avoir expliqué clairement le déroulement du soin, les techniques utilisées ainsi que les contre-indications du massage.", "options": ["Je confirme"], "required": true, "role": "practitioner" },
+    { "type": "text",      "label": "Nom du praticien",    "required": true, "role": "practitioner" },
+    { "type": "signature", "label": "Signature du praticien", "required": true, "role": "practitioner" },
+    { "type": "date",      "label": "Date",                "required": true, "role": "practitioner" }
   ]'::jsonb;
   v_existing_id UUID;
 BEGIN
