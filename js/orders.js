@@ -566,6 +566,36 @@ function updateMetrics(reservations = []) {
   }
 }
 
+function showPaymentSuccessPopup(reservationNumber, date, time) {
+  const existing = document.getElementById('payment-success-popup');
+  if (existing) existing.remove();
+
+  const popup = document.createElement('div');
+  popup.id = 'payment-success-popup';
+  popup.innerHTML = `
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:99998;animation:fadeIn 0.25s ease-out;"></div>
+    <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:2.5rem;border-radius:20px;box-shadow:0 30px 70px rgba(0,0,0,0.4);z-index:99999;max-width:480px;width:90vw;text-align:center;animation:slideIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275);">
+      <div style="width:80px;height:80px;background:linear-gradient(135deg,#d1fae5 0%,#a7f3d0 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;box-shadow:0 8px 20px rgba(16,185,129,0.3);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <h3 style="margin:0 0 1rem;color:#1f2937;font-size:1.5rem;font-weight:700;">✅ Paiement confirmé !</h3>
+      <p style="margin:0 0 1.5rem;color:#4b5563;font-size:1rem;line-height:1.7;">
+        Votre réservation <strong style="color:#D4AF37;">#${escapeHtml(reservationNumber || '')}</strong> a été confirmée avec succès.<br><br>
+        <strong>Date:</strong> ${formatDate(date)}<br>
+        <strong>Heure:</strong> ${formatTime(time)}
+      </p>
+      <button onclick="document.getElementById('payment-success-popup').remove()" style="background:linear-gradient(135deg,#D4AF37 0%,#C5A028 100%);color:#fff;border:none;padding:1rem 2rem;border-radius:12px;font-weight:700;font-size:1rem;cursor:pointer;box-shadow:0 4px 15px rgba(212,175,55,0.4);transition:all 0.2s;">
+        Parfait !
+      </button>
+    </div>
+    <style>
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes slideIn { from { opacity: 0; transform: translate(-50%, -45%) scale(0.9); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+    </style>
+  `;
+  document.body.appendChild(popup);
+}
+
 function showPaymentFailedPopup(reservationNumber) {
   const existing = document.getElementById('payment-failed-popup');
   if (existing) existing.remove();
@@ -620,6 +650,12 @@ async function verifyPendingPlopPayments(reservations) {
 
         await supabase.from('reservations').update(updates).eq('id', r.id);
         Object.assign(r, updates);
+        
+        // Show success popup for newly confirmed payment
+        if (!showedPopup) {
+          showPaymentSuccessPopup(r.reservation_number, r.date, r.time);
+          showedPopup = true;
+        }
       } else {
         const transStatus = String(result?.trans_status || '').toLowerCase();
         const isDefinitiveFailure = ['failed', 'cancelled', 'canceled', 'expired', 'refused', 'declined'].includes(transStatus);

@@ -2644,7 +2644,7 @@ function loadCartData() {
                 montant: amountToPay,
                 payment_method: paymentMethod.value,
                 context_type: 'reservation',
-                redirect_url: window.location.href,
+                redirect_url: `${window.location.origin}/pages/orders.html`,
               });
             } catch (payErr) {
               // Payment could not even be created: cancel the placeholder reservation
@@ -2656,7 +2656,8 @@ function loadCartData() {
               throw payErr;
             }
 
-            window.location.href = payment.url;
+            // 4. Show warning modal before redirect
+            showPaymentWarningModal(payment.url, reservationNumber);
             return;
           }
 
@@ -3031,6 +3032,43 @@ function loadCartData() {
         // Keep the pending reservation in localStorage so the user can retry paying
         // They must select the PLOP method again and click submit to recreate the PLOP payment
       });
+
+      // Show warning modal before redirecting to payment
+      function showPaymentWarningModal(paymentUrl, reservationNumber) {
+        const existing = document.getElementById('payment-warning-modal');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'payment-warning-modal';
+        modal.innerHTML = `
+          <div style="position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);z-index:99998;animation:fadeIn 0.3s ease-out;"></div>
+          <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:2.5rem;border-radius:20px;box-shadow:0 30px 70px rgba(0,0,0,0.4);z-index:99999;max-width:480px;width:90vw;text-align:center;animation:slideIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275);">
+            <div style="width:80px;height:80px;background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;box-shadow:0 8px 20px rgba(251,191,36,0.3);">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <h3 style="margin:0 0 1rem;color:#1f2937;font-size:1.4rem;font-weight:700;">⚠️ Important !</h3>
+            <p style="margin:0 0 1.5rem;color:#4b5563;font-size:1rem;line-height:1.7;">
+              Vous allez être redirigé vers la page de paiement <strong>MonCash / NatCash</strong>.<br><br>
+              <strong style="color:#d97706;">⚠️ Ne fermez pas cette page avant d'avoir terminé le paiement !</strong><br><br>
+              Une fois le paiement effectué, vous serez automatiquement redirigé vers votre compte pour confirmer votre réservation <strong>#${reservationNumber}</strong>.
+            </p>
+            <button id="payment-warning-continue" style="background:linear-gradient(135deg,#D4AF37 0%,#C5A028 100%);color:#fff;border:none;padding:1rem 2rem;border-radius:12px;font-weight:700;font-size:1rem;cursor:pointer;box-shadow:0 4px 15px rgba(212,175,55,0.4);transition:all 0.2s;">
+              J'ai compris, continuer →
+            </button>
+          </div>
+          <style>
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes slideIn { from { opacity: 0; transform: translate(-50%, -45%) scale(0.9); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+            #payment-warning-continue:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212,175,55,0.5); }
+          </style>
+        `;
+        document.body.appendChild(modal);
+
+        document.getElementById('payment-warning-continue').addEventListener('click', () => {
+          modal.remove();
+          window.location.href = paymentUrl;
+        });
+      }
 
       // Form submission
       document.getElementById('reservation-form')?.addEventListener('submit', handleSubmit);
