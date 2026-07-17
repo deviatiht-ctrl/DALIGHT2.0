@@ -1996,31 +1996,148 @@ window.confirmQRAssignment = async function() {
 // ATTENDANCE CORRECTION
 // ============================================
 
+let attendanceToDelete = null;
+
 window.deleteAttendanceLog = async function(logId, event) {
   if (event) event.stopPropagation();
   
-  if (!confirm('Supprimer cet enregistrement de présence?\n\nCette action est irréversible.')) {
+  const supabase = getSupabaseClient();
+  if (!supabase) return;
+
+  try {
+    // Récupérer les infos de l'enregistrement avant de le supprimer
+    const { data, error } = await supabase
+      .from('attendance_logs')
+      .select(`
+        *,
+        presence_employees (
+          id,
+          full_name,
+          employee_number,
+          position,
+          photo_url
+        )
+      `)
+      .eq('id', logId)
+      .single();
+
+    if (error) throw error;
+    if (!data) {
+      showToast('Enregistrement introuvable', 'error');
+      return;
+    }
+
+    attendanceToDelete = data;
+    openDeleteAttendanceModal();
+  } catch (err) {
+    console.error('Error fetching attendance log:', err);
+    const msg = err?.message || err?.error?.message || 'Erreur inconnue';
+    showToast('Erreur: ' + msg, 'error');
+  }
+};
+
+window.openDeleteAttendanceModal = function() {
+  if (!attendanceToDelete) return;
+
+  const emp = attendanceToDelete.presence_employees || {};
+  const infoDiv = document.getElementById('delete-attendance-info');
+  
+  infoDiv.innerHTML = `
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.75rem;">
+      <div style="width:48px;height:48px;border-radius:50%;overflow:hidden;background:#e5e7eb;">
+        ${emp.photo_url ? `<img src="${emp.photo_url}" alt="${esc(emp.full_name)}" style="width:100%;height:100%;object-fit:cover;">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-weight:600;color:#6b7280;">${getInitials(emp.full_name)}</div>`}
+      </div>
+      <div>
+        <div style="font-weight:600;font-size:1rem;">${esc(emp.full_name || 'Employé')}</div>
+        <div style="font-size:0.85rem;color:#6b7280;">${esc(emp.position || '')} • ${esc(emp.employee_number || '')}</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;font-size:0.9rem;">
+      <div><strong>Date:</strong> ${attendanceToDelete.log_date}</div>
+      <div><strong>Entrée:</strong> ${attendanceToDelete.entry_time || '—'}</div>
+      <div><strong>Sortie:</strong> ${attendanceToDelete.exit_time || '—'}</div>
+      <div><strong>Statut:</strong> ${attendanceToDelete.entry_time && attendanceToDelete.exit_time ? 'Journée complète' : 'Présent'}</div>
+    </div>
+  `;
+
+  document.getElementById('delete-by-name').value = '';
+  document.getElementById('delete-reason').value = '';
+
+  const modal = document.getElementById('delete-attendance-modal');
+  modal.classList.add('active');
+  modal.style.display = 'flex';
+};
+
+window.closeDeleteAttendanceModal = function() {
+  const modal = document.getElementById('delete-attendance-modal');
+  modal.classList.remove('active');
+  modal.style.display = 'none';
+  attendanceToDelete = null;
+};
+
+window.confirmAttendanceDeletion = async function() {
+  if (!attendanceToDelete) return;
+
+  const deletedBy = document.getElementById('delete-by-name').value.trim();
+  const reason = document.getElementById('delete-reason').value.trim();
+
+  if (!deletedBy) {
+    showToast('Veuillez entrer votre nom', 'error');
+    document.getElementById('delete-by-name').focus();
+    return;
+  }
+
+  if (!reason) {
+    showToast('Veuillez entrer un motif de suppression', 'error');
+    document.getElementById('delete-reason').focus();
     return;
   }
 
   const supabase = getSupabaseClient();
   if (!supabase) return;
 
+  const btn = document.getElementById('btn-confirm-delete');
+  btn.disabled = true;
+  btn.textContent = 'Suppression...';
+
   try {
-    const { error } = await supabase
+    const emp = attendanceToDelete.presence_employees || {};
+    
+    // 1. Enregistrer dans l'audit log
+    const { error: auditError } = await supabase
+      .from('attendance_audit_log')
+      .insert({
+        action_type: 'DELETE',
+        employee_id: attendanceToDelete.employee_id,
+        employee_name: emp.full_name || 'Employé inconnu',
+        log_date: attendanceToDelete.log_date,
+        entry_time: attendanceToDelete.entry_time,
+        exit_time: attendanceToDelete.exit_time,
+        deleted_by: deletedBy,
+        deletion_reason: reason,
+        original_data: attendanceToDelete
+      });
+
+    if (auditError) throw auditError;
+
+    // 2. Supprimer l'enregistrement
+    const { error: deleteError } = await supabase
       .from('attendance_logs')
       .delete()
-      .eq('id', logId);
+      .eq('id', attendanceToDelete.id);
 
-    if (error) throw error;
+    if (deleteError) throw deleteError;
 
-    showToast('Enregistrement supprimé avec succès', 'success');
-    await loadAttendance();
+    showToast('Enregistrement supprimé et archivé avec succès', 'success');
+    closeDeleteAttendanceModal();
     await loadTodayAttendance();
     renderAttendanceCalendar();
   } catch (err) {
     console.error('Error deleting attendance log:', err);
     const msg = err?.message || err?.error?.message || 'Erreur inconnue';
     showToast('Erreur: ' + msg, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Confirmer la suppression';
   }
 };
