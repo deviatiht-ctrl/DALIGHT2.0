@@ -78,6 +78,17 @@ window.switchTab = function(tab) {
 
   if (tab === 'employees') renderEmployees();
   if (tab === 'attendance') renderAttendance();
+  if (tab === 'audit') {
+    // Set default date range (last 30 days)
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    
+    document.getElementById('audit-start-date').value = thirtyDaysAgo.toISOString().split('T')[0];
+    document.getElementById('audit-end-date').value = today.toISOString().split('T')[0];
+    
+    loadAuditLogs();
+  }
   if (tab === 'scanner') {
     // scanner is started manually
   }
@@ -2140,4 +2151,175 @@ window.confirmAttendanceDeletion = async function() {
     btn.disabled = false;
     btn.textContent = 'Confirmer la suppression';
   }
+};
+
+// ============================================
+// AUDIT HISTORY
+// ============================================
+
+let allAuditLogs = [];
+
+window.loadAuditLogs = async function() {
+  const supabase = getSupabaseClient();
+  if (!supabase) return;
+
+  const startDate = document.getElementById('audit-start-date').value;
+  const endDate = document.getElementById('audit-end-date').value;
+
+  try {
+    let query = supabase
+      .from('attendance_audit_log')
+      .select(`
+        *,
+        presence_employees (
+          photo_url,
+          position,
+          employee_number
+        )
+      `)
+      .order('deleted_at', { ascending: false });
+
+    if (startDate) {
+      query = query.gte('deleted_at', startDate + 'T00:00:00');
+    }
+    if (endDate) {
+      query = query.lte('deleted_at', endDate + 'T23:59:59');
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    allAuditLogs = data || [];
+    renderAuditLogs();
+  } catch (err) {
+    console.error('Error loading audit logs:', err);
+    const msg = err?.message || err?.error?.message || 'Erreur inconnue';
+    showToast('Erreur: ' + msg, 'error');
+  }
+};
+
+window.filterAuditLogs = function() {
+  renderAuditLogs();
+};
+
+function renderAuditLogs() {
+  const tbody = document.getElementById('audit-logs-table');
+  const searchQuery = document.getElementById('audit-search')?.value?.toLowerCase() || '';
+
+  let filtered = allAuditLogs;
+  if (searchQuery) {
+    filtered = allAuditLogs.filter(log =>
+      log.employee_name?.toLowerCase().includes(searchQuery) ||
+      log.deleted_by?.toLowerCase().includes(searchQuery) ||
+      log.deletion_reason?.toLowerCase().includes(searchQuery)
+    );
+  }
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted" style="padding:2rem;">Aucun enregistrement trouvé</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(log => {
+    const emp = log.presence_employees || {};
+    const deletedAt = new Date(log.deleted_at);
+    const deletedDate = deletedAt.toLocaleDateString('fr-FR');
+    const deletedTime = deletedAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+    return `
+      <tr>
+        <td>
+          <div style="font-weight:500;">${deletedDate}</div>
+          <div style="font-size:0.85rem;color:#6b7280;">${deletedTime}</div>
+        </td>
+        <td>
+          <div class="user-cell">
+            <div class="user-avatar" style="width:32px;height:32px;font-size:0.7rem;">
+              ${emp.photo_url ? `<img src="${emp.photo_url}" alt="${esc(log.employee_name)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : getInitials(log.employee_name)}
+            </div>
+            <div>
+              <div style="font-weight:500;font-size:0.9rem;">${esc(log.employee_name)}</div>
+              <div style="font-size:0.8rem;color:#6b7280;">${esc(emp.employee_number || '')}</div>
+            </div>
+          </div>
+        </td>
+        <td>${log.log_date}</td>
+        <td>${log.entry_time || '—'}</td>
+        <td>${log.exit_time || '—'}</td>
+        <td>
+          <div style="font-weight:500;font-size:0.9rem;">${esc(log.deleted_by)}</div>
+        </td>
+        <td>
+          <div style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(log.deletion_reason)}">
+            ${esc(log.deletion_reason)}
+          </div>
+        </td>
+        <td style="text-align:center;">
+          <button class="btn btn-icon btn-secondary btn-sm" onclick="viewAuditDetails('${log.id}')" title="Voir détails">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+window.viewAuditDetails = function(auditId) {
+  const log = allAuditLogs.find(l => l.id === auditId);
+  if (!log) return;
+
+  const emp = log.presence_employees || {};
+  const deletedAt = new Date(log.deleted_at);
+  
+  alert(`DÉTAILS DE LA SUPPRESSION
+
+Employé: ${log.employee_name}
+Position: ${emp.position || 'N/A'}
+Numéro: ${emp.employee_number || 'N/A'}
+
+Date présence: ${log.log_date}
+Entrée: ${log.entry_time || 'Non enregistrée'}
+Sortie: ${log.exit_time || 'Non enregistrée'}
+
+Supprimé par: ${log.deleted_by}
+Date suppression: ${deletedAt.toLocaleString('fr-FR')}
+
+Motif:
+${log.deletion_reason}`);
+};
+
+window.exportAuditReport = function() {
+  if (allAuditLogs.length === 0) {
+    showToast('Aucune donnée à exporter', 'warning');
+    return;
+  }
+
+  const csv = [
+    ['Date suppression', 'Heure', 'Employé', 'Numéro', 'Position', 'Date présence', 'Entrée', 'Sortie', 'Supprimé par', 'Motif'].join(','),
+    ...allAuditLogs.map(log => {
+      const emp = log.presence_employees || {};
+      const deletedAt = new Date(log.deleted_at);
+      return [
+        deletedAt.toLocaleDateString('fr-FR'),
+        deletedAt.toLocaleTimeString('fr-FR'),
+        `"${log.employee_name}"`,
+        emp.employee_number || '',
+        `"${emp.position || ''}"`,
+        log.log_date,
+        log.entry_time || '',
+        log.exit_time || '',
+        `"${log.deleted_by}"`,
+        `"${log.deletion_reason}"`
+      ].join(',');
+    })
+  ].join('\n');
+
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `audit_suppressions_${new Date().toISOString().split('T')[0]}.csv`;
+  link.click();
+  
+  showToast('Rapport exporté avec succès', 'success');
 };
