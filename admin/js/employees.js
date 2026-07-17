@@ -16,6 +16,9 @@ let currentOwnerOfQR = null;
 let selectedNewOwner = null;
 let employeesWithScannedQR = [];
 let selectedEmployeeForAttendance = null;
+let assignScanner = null;
+let scannedQRForAssignment = null;
+let selectedEmployeeForAssignment = null;
 
 const PHOTO_BUCKET = 'employees-photos';
 
@@ -1271,8 +1274,8 @@ function renderAttendanceTable(dateStr) {
       badgeClass = 'badge-warning';
     }
     return `
-      <tr style="cursor:pointer;" onclick="openEmployeeAttendanceModal('${log.employee_id}', '${log.log_date}')">
-        <td>
+      <tr>
+        <td onclick="openEmployeeAttendanceModal('${log.employee_id}', '${log.log_date}')" style="cursor:pointer;">
           <div class="user-cell">
             <div class="user-avatar" style="width:28px;height:28px;font-size:.65rem;flex-shrink:0;">
               ${emp.photo_url ? `<img src="${emp.photo_url}" alt="${esc(emp.full_name)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : getInitials(emp.full_name)}
@@ -1285,10 +1288,15 @@ function renderAttendanceTable(dateStr) {
             </div>
           </div>
         </td>
-        <td>${log.entry_time || '—'}</td>
-        <td>${log.exit_time || '—'}</td>
-        <td>${duration}</td>
-        <td><span class="badge ${badgeClass}">${status}</span></td>
+        <td onclick="openEmployeeAttendanceModal('${log.employee_id}', '${log.log_date}')" style="cursor:pointer;">${log.entry_time || '—'}</td>
+        <td onclick="openEmployeeAttendanceModal('${log.employee_id}', '${log.log_date}')" style="cursor:pointer;">${log.exit_time || '—'}</td>
+        <td onclick="openEmployeeAttendanceModal('${log.employee_id}', '${log.log_date}')" style="cursor:pointer;">${duration}</td>
+        <td onclick="openEmployeeAttendanceModal('${log.employee_id}', '${log.log_date}')" style="cursor:pointer;"><span class="badge ${badgeClass}">${status}</span></td>
+        <td style="text-align:center;">
+          <button class="btn btn-icon btn-danger btn-sm" onclick="deleteAttendanceLog('${log.id}', event)" title="Supprimer cet enregistrement">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          </button>
+        </td>
       </tr>
     `;
   }).join('');
@@ -1738,5 +1746,252 @@ window.confirmQRReassignment = async function() {
   } finally {
     btn.disabled = false;
     btn.textContent = 'Confirmer réattribution';
+  }
+};
+
+// ============================================
+// QR CODE ASSIGNMENT
+// ============================================
+
+window.startAssignScanner = function() {
+  const btnStart = document.getElementById('btn-start-assign-scan');
+  const btnStop = document.getElementById('btn-stop-assign-scan');
+  const result = document.getElementById('assign-scan-result');
+
+  if (!window.Html5Qrcode) {
+    result.innerHTML = '<div class="alert alert-error">Scanner QR non disponible.</div>';
+    return;
+  }
+
+  if (scanner) stopScanner();
+  if (reassignScanner) stopReassignScanner();
+
+  assignScanner = new Html5Qrcode('qr-reader');
+  assignScanner.start(
+    { facingMode: 'environment' },
+    { fps: 10, qrbox: { width: 250, height: 250 } },
+    onAssignScanSuccess,
+    () => {}
+  ).then(() => {
+    btnStart.style.display = 'none';
+    btnStop.style.display = 'inline-flex';
+    result.innerHTML = '<div class="alert alert-info">Scannez le badge à attribuer...</div>';
+  }).catch(err => {
+    console.error('Assign scanner error:', err);
+    result.innerHTML = `<div class="alert alert-error">Erreur caméra: ${err.message || err}</div>`;
+  });
+};
+
+window.stopAssignScanner = function() {
+  if (!assignScanner) return;
+  assignScanner.stop().then(() => {
+    assignScanner.clear();
+    assignScanner = null;
+    document.getElementById('btn-start-assign-scan').style.display = 'inline-flex';
+    document.getElementById('btn-stop-assign-scan').style.display = 'none';
+    document.getElementById('assign-scan-result').innerHTML = '';
+  }).catch(err => console.error('Stop assign scanner error:', err));
+};
+
+async function onAssignScanSuccess(qrData) {
+  if (!assignScanner) return;
+  
+  await assignScanner.pause();
+  stopAssignScanner();
+
+  scannedQRForAssignment = qrData;
+  openQRAssignModal();
+}
+
+window.openQRAssignModal = function() {
+  if (!scannedQRForAssignment) return;
+
+  document.getElementById('assign-qr-data').textContent = scannedQRForAssignment.substring(0, 40) + '...';
+  
+  const existingOwners = allEmployees.filter(e => e.qr_data === scannedQRForAssignment);
+  const ownersDiv = document.getElementById('assign-existing-owners');
+  
+  if (existingOwners.length > 0) {
+    ownersDiv.innerHTML = `
+      <div style="font-weight:600;margin-bottom:0.5rem;">Employés ayant déjà ce QR code:</div>
+      ${existingOwners.map(emp => {
+        const modifierBadge = emp.qr_modifier 
+          ? `<span style="display:inline-block;background:#3b82f6;color:white;padding:0.15rem 0.4rem;border-radius:4px;font-size:0.65rem;font-weight:600;margin-left:0.35rem;">QR-${emp.qr_modifier}</span>`
+          : `<span style="display:inline-block;background:#10b981;color:white;padding:0.15rem 0.4rem;border-radius:4px;font-size:0.65rem;font-weight:600;margin-left:0.35rem;">QR Principal</span>`;
+        
+        return `
+          <div class="emp-card" style="background:#f3f4f6;margin-bottom:0.5rem;">
+            <div class="emp-avatar" style="width:48px;height:48px;">
+              ${emp.photo_url ? `<img src="${emp.photo_url}" alt="${esc(emp.full_name)}">` : getInitials(emp.full_name)}
+            </div>
+            <div class="emp-info">
+              <div class="emp-name">${esc(emp.full_name)}${modifierBadge}</div>
+              <div class="emp-meta">${esc(emp.position)} • ${esc(emp.employee_number || '')}</div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    `;
+  } else {
+    ownersDiv.innerHTML = '<div class="alert alert-info">Ce QR code n\'est attribué à aucun employé pour le moment.</div>';
+  }
+
+  document.getElementById('assign-employee-search').value = '';
+  document.getElementById('assign-employee-results').innerHTML = '<div class="text-muted" style="padding:1rem;text-align:center;">Recherchez un employé ci-dessus</div>';
+  document.getElementById('btn-confirm-assign').disabled = true;
+  selectedEmployeeForAssignment = null;
+
+  const modal = document.getElementById('qr-assign-modal');
+  modal.classList.add('active');
+  modal.style.display = 'flex';
+};
+
+window.closeQRAssignModal = function() {
+  const modal = document.getElementById('qr-assign-modal');
+  modal.classList.remove('active');
+  modal.style.display = 'none';
+  scannedQRForAssignment = null;
+  selectedEmployeeForAssignment = null;
+};
+
+window.searchEmployeeForAssignment = function() {
+  const query = document.getElementById('assign-employee-search').value.trim().toLowerCase();
+  const resultsDiv = document.getElementById('assign-employee-results');
+  const btn = document.getElementById('btn-confirm-assign');
+
+  if (!query) {
+    resultsDiv.innerHTML = '<div class="text-muted" style="padding:1rem;text-align:center;">Recherchez un employé ci-dessus</div>';
+    selectedEmployeeForAssignment = null;
+    btn.disabled = true;
+    return;
+  }
+
+  const matches = allEmployees.filter(e =>
+    e.full_name?.toLowerCase().includes(query) ||
+    e.employee_number?.toLowerCase().includes(query) ||
+    e.nif?.toLowerCase().includes(query)
+  );
+
+  if (matches.length === 0) {
+    resultsDiv.innerHTML = '<div class="text-muted" style="padding:1rem;text-align:center;">Aucun employé trouvé</div>';
+    selectedEmployeeForAssignment = null;
+    btn.disabled = true;
+    return;
+  }
+
+  resultsDiv.innerHTML = matches.map(e => `
+    <div class="emp-card" style="cursor:pointer;margin-bottom:0.5rem;" onclick="selectEmployeeForAssignment('${e.id}')">
+      <div class="emp-avatar">
+        ${e.photo_url ? `<img src="${e.photo_url}" alt="${esc(e.full_name)}">` : getInitials(e.full_name)}
+      </div>
+      <div class="emp-info">
+        <div class="emp-name">${esc(e.full_name)}</div>
+        <div class="emp-meta">${esc(e.position)} • ${esc(e.employee_number || '')}</div>
+        ${e.nif ? `<div class="emp-meta">NIF: ${esc(e.nif)}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+};
+
+window.selectEmployeeForAssignment = function(id) {
+  selectedEmployeeForAssignment = allEmployees.find(e => e.id === id);
+  const resultsDiv = document.getElementById('assign-employee-results');
+  const btn = document.getElementById('btn-confirm-assign');
+
+  if (!selectedEmployeeForAssignment) return;
+
+  resultsDiv.innerHTML = `
+    <div class="emp-card" style="background:#d1fae5;border-color:#10b981;">
+      <div class="emp-avatar">
+        ${selectedEmployeeForAssignment.photo_url ? `<img src="${selectedEmployeeForAssignment.photo_url}" alt="${esc(selectedEmployeeForAssignment.full_name)}">` : getInitials(selectedEmployeeForAssignment.full_name)}
+      </div>
+      <div class="emp-info">
+        <div style="font-weight:600;margin-bottom:0.25rem;color:#065f46;">✓ Sélectionné</div>
+        <div class="emp-name">${esc(selectedEmployeeForAssignment.full_name)}</div>
+        <div class="emp-meta">${esc(selectedEmployeeForAssignment.position)} • ${esc(selectedEmployeeForAssignment.employee_number || '')}</div>
+      </div>
+    </div>
+  `;
+  btn.disabled = false;
+};
+
+window.confirmQRAssignment = async function() {
+  if (!selectedEmployeeForAssignment || !scannedQRForAssignment) return;
+
+  const existingOwners = allEmployees.filter(e => e.qr_data === scannedQRForAssignment);
+  const alreadyHasIt = existingOwners.find(e => e.id === selectedEmployeeForAssignment.id);
+
+  if (alreadyHasIt) {
+    showToast('Cet employé a déjà ce code QR', 'warning');
+    return;
+  }
+
+  const confirmMsg = `Attribuer ce QR code à ${selectedEmployeeForAssignment.full_name}?\n\n${existingOwners.length > 0 ? `Ce QR est déjà partagé avec ${existingOwners.length} employé(s).` : 'Ce sera le premier employé avec ce QR.'}`;
+  
+  if (!confirm(confirmMsg)) return;
+
+  const supabase = getSupabaseClient();
+  if (!supabase) return;
+
+  const btn = document.getElementById('btn-confirm-assign');
+  btn.disabled = true;
+  btn.textContent = 'Attribution...';
+
+  try {
+    const { error } = await supabase
+      .from('presence_employees')
+      .update({ qr_data: scannedQRForAssignment })
+      .eq('id', selectedEmployeeForAssignment.id);
+
+    if (error) throw error;
+
+    const empIndex = allEmployees.findIndex(e => e.id === selectedEmployeeForAssignment.id);
+    if (empIndex !== -1) {
+      allEmployees[empIndex].qr_data = scannedQRForAssignment;
+    }
+
+    await loadEmployees();
+    showToast(`Code QR attribué à ${selectedEmployeeForAssignment.full_name}`, 'success');
+    closeQRAssignModal();
+  } catch (err) {
+    console.error('Error assigning QR code:', err);
+    const msg = err?.message || err?.error?.message || 'Erreur inconnue';
+    showToast('Erreur: ' + msg, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Confirmer attribution';
+  }
+};
+
+// ============================================
+// ATTENDANCE CORRECTION
+// ============================================
+
+window.deleteAttendanceLog = async function(logId, event) {
+  if (event) event.stopPropagation();
+  
+  if (!confirm('Supprimer cet enregistrement de présence?\n\nCette action est irréversible.')) {
+    return;
+  }
+
+  const supabase = getSupabaseClient();
+  if (!supabase) return;
+
+  try {
+    const { error } = await supabase
+      .from('attendance_logs')
+      .delete()
+      .eq('id', logId);
+
+    if (error) throw error;
+
+    showToast('Enregistrement supprimé avec succès', 'success');
+    await loadAttendance();
+    await loadTodayAttendance();
+    renderAttendanceCalendar();
+  } catch (err) {
+    console.error('Error deleting attendance log:', err);
+    const msg = err?.message || err?.error?.message || 'Erreur inconnue';
+    showToast('Erreur: ' + msg, 'error');
   }
 };
