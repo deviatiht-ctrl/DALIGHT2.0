@@ -1938,9 +1938,35 @@ window.confirmQRAssignment = async function() {
   btn.textContent = 'Attribution...';
 
   try {
+    // Déterminer le modificateur à assigner
+    let qrModifier = null;
+    
+    if (existingOwners.length > 0) {
+      // Il y a déjà des employés avec ce QR, trouver le prochain modificateur disponible
+      const modifiers = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+      const usedModifiers = existingOwners.map(e => e.qr_modifier).filter(m => m !== null);
+      
+      // Trouver le premier modificateur non utilisé
+      for (const mod of modifiers) {
+        if (!usedModifiers.includes(mod)) {
+          qrModifier = mod;
+          break;
+        }
+      }
+      
+      // Si tous les modificateurs sont utilisés, utiliser un numéro
+      if (!qrModifier) {
+        qrModifier = 'Z' + (existingOwners.length + 1);
+      }
+    }
+    // Sinon, le premier employé garde qr_modifier = NULL (Principal)
+
     const { error } = await supabase
       .from('presence_employees')
-      .update({ qr_data: scannedQRForAssignment })
+      .update({ 
+        qr_data: scannedQRForAssignment,
+        qr_modifier: qrModifier
+      })
       .eq('id', selectedEmployeeForAssignment.id);
 
     if (error) throw error;
@@ -1948,10 +1974,13 @@ window.confirmQRAssignment = async function() {
     const empIndex = allEmployees.findIndex(e => e.id === selectedEmployeeForAssignment.id);
     if (empIndex !== -1) {
       allEmployees[empIndex].qr_data = scannedQRForAssignment;
+      allEmployees[empIndex].qr_modifier = qrModifier;
     }
 
     await loadEmployees();
-    showToast(`Code QR attribué à ${selectedEmployeeForAssignment.full_name}`, 'success');
+    
+    const modifierMsg = qrModifier ? ` (QR-${qrModifier})` : ' (QR Principal)';
+    showToast(`Code QR attribué à ${selectedEmployeeForAssignment.full_name}${modifierMsg}`, 'success');
     closeQRAssignModal();
   } catch (err) {
     console.error('Error assigning QR code:', err);
