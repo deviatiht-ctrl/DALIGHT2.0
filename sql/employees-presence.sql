@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS presence_employees (
     nif TEXT,
     photo_url TEXT,
     qr_code_url TEXT,
-    qr_data TEXT UNIQUE NOT NULL,
+    qr_data TEXT NOT NULL,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS attendance_logs (
 -- 3. Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_presence_employees_active ON presence_employees(is_active);
 CREATE INDEX IF NOT EXISTS idx_presence_employees_number ON presence_employees(employee_number);
+CREATE INDEX IF NOT EXISTS idx_presence_employees_qr_data ON presence_employees(qr_data) WHERE qr_data IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_attendance_logs_employee_date ON attendance_logs(employee_id, log_date);
 CREATE INDEX IF NOT EXISTS idx_attendance_logs_date ON attendance_logs(log_date);
 

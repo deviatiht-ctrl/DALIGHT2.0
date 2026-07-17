@@ -440,6 +440,31 @@
     </div>
   </div>
 
+  <!-- Employee Selection Modal (for shared QR codes) -->
+  <div class="modal-overlay" id="employee-selection-modal" style="display:none;">
+    <div class="modal" style="max-width:500px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Sélectionnez l'employé</h3>
+        <button class="modal-close" onclick="closeEmployeeSelectionModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning" style="margin-bottom:1.5rem;">
+          <strong>Plusieurs employés partagent ce badge</strong><br>
+          Sélectionnez l'employé pour enregistrer sa présence.
+        </div>
+        
+        <div id="employee-selection-list" style="display:grid;gap:0.75rem;">
+          <!-- Employee cards will be inserted here -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeEmployeeSelectionModal()">Annuler</button>
+      </div>
+    </div>
+  </div>
+
   <!-- QR Reassignment Modal -->
   <div class="modal-overlay" id="qr-reassign-modal" style="display:none;">
     <div class="modal" style="max-width:600px;">

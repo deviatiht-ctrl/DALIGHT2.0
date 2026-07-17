@@ -14,6 +14,8 @@ let reassignScanner = null;
 let scannedQRForReassignment = null;
 let currentOwnerOfQR = null;
 let selectedNewOwner = null;
+let employeesWithScannedQR = [];
+let selectedEmployeeForAttendance = null;
 
 const PHOTO_BUCKET = 'employees-photos';
 
@@ -130,31 +132,37 @@ window.renderEmployees = function() {
     return;
   }
 
-  grid.innerHTML = filtered.map(e => `
-    <div class="emp-card">
-      <div class="emp-avatar">
-        ${e.photo_url ? `<img src="${e.photo_url}" alt="${esc(e.full_name)}">` : getInitials(e.full_name)}
+  grid.innerHTML = filtered.map(e => {
+    const qrModifierBadge = e.qr_modifier 
+      ? `<span style="display:inline-block;background:#3b82f6;color:white;padding:0.15rem 0.4rem;border-radius:4px;font-size:0.65rem;font-weight:600;margin-left:0.35rem;">QR-${e.qr_modifier}</span>`
+      : '';
+    
+    return `
+      <div class="emp-card">
+        <div class="emp-avatar">
+          ${e.photo_url ? `<img src="${e.photo_url}" alt="${esc(e.full_name)}">` : getInitials(e.full_name)}
+        </div>
+        <div class="emp-info">
+          <div class="emp-name">${esc(e.full_name)}${qrModifierBadge}</div>
+          <div class="emp-meta">${esc(e.position)} • ${esc(e.employee_number || '')}</div>
+          ${e.nif ? `<div class="emp-meta">NIF: ${esc(e.nif)}</div>` : ''}
+          <div class="emp-meta">${e.is_active ? 'Actif' : 'Inactif'}</div>
+        </div>
+        <div class="emp-status ${e.is_active ? '' : 'inactive'}"></div>
+        <div class="d-flex gap-1">
+          <button class="btn btn-icon btn-secondary btn-sm" onclick="viewBadge('${e.id}')" title="Badge QR">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          </button>
+          <button class="btn btn-icon btn-secondary btn-sm" onclick="editEmployee('${e.id}')" title="Modifier">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+          </button>
+          <button class="btn btn-icon btn-danger btn-sm" onclick="deleteEmployee('${e.id}')" title="Supprimer">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          </button>
+        </div>
       </div>
-      <div class="emp-info">
-        <div class="emp-name">${esc(e.full_name)}</div>
-        <div class="emp-meta">${esc(e.position)} • ${esc(e.employee_number || '')}</div>
-        ${e.nif ? `<div class="emp-meta">NIF: ${esc(e.nif)}</div>` : ''}
-        <div class="emp-meta">${e.is_active ? 'Actif' : 'Inactif'}</div>
-      </div>
-      <div class="emp-status ${e.is_active ? '' : 'inactive'}"></div>
-      <div class="d-flex gap-1">
-        <button class="btn btn-icon btn-secondary btn-sm" onclick="viewBadge('${e.id}')" title="Badge QR">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-        </button>
-        <button class="btn btn-icon btn-secondary btn-sm" onclick="editEmployee('${e.id}')" title="Modifier">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-        </button>
-        <button class="btn btn-icon btn-danger btn-sm" onclick="deleteEmployee('${e.id}')" title="Supprimer">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-        </button>
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 };
 
 window.onEmployeePhotoSelected = function(input) {
@@ -755,7 +763,6 @@ async function onScanSuccess(qrData) {
   if (!scanner) return;
 
   const now = Date.now();
-  // Debounce: ignore same QR scan within 2 seconds
   if (qrData === lastScanQrData && (now - lastScanTime) < SCAN_DEBOUNCE_MS) {
     console.log('Ignoring duplicate scan');
     return;
@@ -765,10 +772,10 @@ async function onScanSuccess(qrData) {
   lastScanQrData = qrData;
   await scanner.pause();
 
-  const employee = allEmployees.find(e => e.qr_data === qrData);
+  employeesWithScannedQR = allEmployees.filter(e => e.qr_data === qrData && e.is_active);
   const result = document.getElementById('scan-result');
 
-  if (!employee) {
+  if (employeesWithScannedQR.length === 0) {
     showScanResultPopup('error', null, 'ERREUR', 'Badge non reconnu', null);
     if (result) result.innerHTML = `<div class="alert alert-error">Badge non reconnu</div>`;
     setTimeout(() => {
@@ -777,6 +784,18 @@ async function onScanSuccess(qrData) {
     return;
   }
 
+  if (employeesWithScannedQR.length > 1) {
+    openEmployeeSelectionModal();
+    return;
+  }
+
+  const employee = employeesWithScannedQR[0];
+  await processAttendance(employee);
+}
+
+async function processAttendance(employee) {
+  const result = document.getElementById('scan-result');
+  
   try {
     const log = await recordAttendance(employee);
     const action = log.exit_time ? 'sortie' : 'entrée';
@@ -819,7 +838,6 @@ async function onScanSuccess(qrData) {
     }
   }
 
-  // Auto-restart scanner after 3 seconds
   setTimeout(() => {
     if (scanner) scanner.resume();
   }, 3000);
@@ -828,6 +846,65 @@ async function onScanSuccess(qrData) {
 function onScanError(err) {
   // ignore frequent errors
 }
+
+// ============================================
+// EMPLOYEE SELECTION FOR SHARED QR CODES
+// ============================================
+
+window.openEmployeeSelectionModal = function() {
+  if (employeesWithScannedQR.length === 0) return;
+
+  const listDiv = document.getElementById('employee-selection-list');
+  listDiv.innerHTML = employeesWithScannedQR.map(emp => {
+    const modifier = emp.qr_modifier || 'Principal';
+    const modifierBadge = emp.qr_modifier 
+      ? `<span style="display:inline-block;background:#3b82f6;color:white;padding:0.25rem 0.5rem;border-radius:6px;font-size:0.75rem;font-weight:700;margin-left:0.5rem;">QR-${emp.qr_modifier}</span>`
+      : `<span style="display:inline-block;background:#10b981;color:white;padding:0.25rem 0.5rem;border-radius:6px;font-size:0.75rem;font-weight:700;margin-left:0.5rem;">QR Principal</span>`;
+    
+    return `
+      <div class="emp-card" style="cursor:pointer;transition:all 0.2s;border:2px solid transparent;" onclick="selectEmployeeForAttendance('${emp.id}')" onmouseover="this.style.borderColor='var(--admin-accent)'" onmouseout="this.style.borderColor='transparent'">
+        <div class="emp-avatar" style="width:64px;height:64px;font-size:1.5rem;">
+          ${emp.photo_url ? `<img src="${emp.photo_url}" alt="${esc(emp.full_name)}">` : getInitials(emp.full_name)}
+        </div>
+        <div class="emp-info" style="flex:1;">
+          <div class="emp-name" style="font-size:1.1rem;display:flex;align-items:center;">
+            ${esc(emp.full_name)}
+            ${modifierBadge}
+          </div>
+          <div class="emp-meta">${esc(emp.position)}</div>
+          <div class="emp-meta">${esc(emp.employee_number || '')}</div>
+        </div>
+        <div style="margin-left:auto;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+          </svg>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const modal = document.getElementById('employee-selection-modal');
+  modal.classList.add('active');
+  modal.style.display = 'flex';
+};
+
+window.closeEmployeeSelectionModal = function() {
+  const modal = document.getElementById('employee-selection-modal');
+  modal.classList.remove('active');
+  modal.style.display = 'none';
+  
+  setTimeout(() => {
+    if (scanner) scanner.resume();
+  }, 500);
+};
+
+window.selectEmployeeForAttendance = async function(employeeId) {
+  const employee = employeesWithScannedQR.find(e => e.id === employeeId);
+  if (!employee) return;
+
+  closeEmployeeSelectionModal();
+  await processAttendance(employee);
+};
 
 function showScanResultPopup(type, employee, title, message, time) {
   // Remove existing popup if any
