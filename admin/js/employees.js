@@ -10,6 +10,10 @@ let scanner = null;
 let employeePhotoFile = null;
 let photoCropper = null;
 let currentTab = 'employees';
+let reassignScanner = null;
+let scannedQRForReassignment = null;
+let currentOwnerOfQR = null;
+let selectedNewOwner = null;
 
 const PHOTO_BUCKET = 'employees-photos';
 
@@ -517,6 +521,41 @@ window.downloadQR = async function(format) {
   } catch (err) {
     console.error('QR download error:', err);
     showToast('Erreur téléchargement QR', 'error');
+  }
+};
+
+window.regenerateQRCode = async function() {
+  if (!currentBadgeEmployee) return;
+  
+  const confirmMsg = `Voulez-vous vraiment régénérer le code QR pour ${currentBadgeEmployee.full_name}?\n\nATTENTION: L'ancien code QR ne fonctionnera plus. Un nouveau badge devra être imprimé.`;
+  if (!confirm(confirmMsg)) return;
+
+  const supabase = getSupabaseClient();
+  if (!supabase) return;
+
+  try {
+    const newQrData = `DALIGHT-EMP-${(crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36))}`;
+    
+    const { error } = await supabase
+      .from('presence_employees')
+      .update({ qr_data: newQrData })
+      .eq('id', currentBadgeEmployee.id);
+
+    if (error) throw error;
+
+    currentBadgeEmployee.qr_data = newQrData;
+    
+    const empIndex = allEmployees.findIndex(e => e.id === currentBadgeEmployee.id);
+    if (empIndex !== -1) {
+      allEmployees[empIndex].qr_data = newQrData;
+    }
+
+    await updateQRPreview();
+    showToast('Code QR régénéré avec succès', 'success');
+  } catch (err) {
+    console.error('Error regenerating QR code:', err);
+    const msg = err?.message || err?.error?.message || 'Erreur inconnue';
+    showToast('Erreur: ' + msg, 'error');
   }
 };
 
@@ -1351,3 +1390,276 @@ function esc(str) {
   const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
   return String(str).replace(/[&<>"']/g, m => map[m]);
 }
+
+// ============================================
+// QR CODE REASSIGNMENT
+// ============================================
+
+window.startReassignScanner = function() {
+  const btnStart = document.getElementById('btn-start-reassign-scan');
+  const btnStop = document.getElementById('btn-stop-reassign-scan');
+  const result = document.getElementById('reassign-scan-result');
+
+  if (!window.Html5Qrcode) {
+    result.innerHTML = '<div class="alert alert-error">Scanner QR non disponible. Vérifiez votre connexion.</div>';
+    return;
+  }
+
+  if (scanner) {
+    stopScanner();
+  }
+
+  reassignScanner = new Html5Qrcode('qr-reader');
+  reassignScanner.start(
+    { facingMode: 'environment' },
+    { fps: 10, qrbox: { width: 250, height: 250 } },
+    onReassignScanSuccess,
+    () => {}
+  ).then(() => {
+    btnStart.style.display = 'none';
+    btnStop.style.display = 'inline-flex';
+    result.innerHTML = '<div class="alert alert-warning">Scannez le badge à réattribuer...</div>';
+  }).catch(err => {
+    console.error('Reassign scanner error:', err);
+    result.innerHTML = `<div class="alert alert-error">Erreur caméra: ${err.message || err}</div>`;
+  });
+};
+
+window.stopReassignScanner = function() {
+  if (!reassignScanner) return;
+  reassignScanner.stop().then(() => {
+    reassignScanner.clear();
+    reassignScanner = null;
+    document.getElementById('btn-start-reassign-scan').style.display = 'inline-flex';
+    document.getElementById('btn-stop-reassign-scan').style.display = 'none';
+    document.getElementById('reassign-scan-result').innerHTML = '';
+  }).catch(err => console.error('Stop reassign scanner error:', err));
+};
+
+async function onReassignScanSuccess(qrData) {
+  if (!reassignScanner) return;
+  
+  await reassignScanner.pause();
+  stopReassignScanner();
+
+  scannedQRForReassignment = qrData;
+  
+  const employeesWithThisQR = allEmployees.filter(e => e.qr_data === qrData);
+
+  if (employeesWithThisQR.length === 0) {
+    const result = document.getElementById('reassign-scan-result');
+    result.innerHTML = '<div class="alert alert-error">Code QR non trouvé dans le système</div>';
+    setTimeout(() => {
+      result.innerHTML = '';
+    }, 3000);
+    return;
+  }
+
+  if (employeesWithThisQR.length > 1) {
+    const result = document.getElementById('reassign-scan-result');
+    result.innerHTML = `<div class="alert alert-warning">⚠️ DOUBLON DÉTECTÉ: ${employeesWithThisQR.length} employés ont ce même QR code!</div>`;
+  }
+
+  currentOwnerOfQR = employeesWithThisQR[0];
+  openQRReassignModal();
+}
+
+window.openQRReassignModal = function() {
+  if (!currentOwnerOfQR || !scannedQRForReassignment) return;
+
+  document.getElementById('reassign-qr-data').textContent = scannedQRForReassignment.substring(0, 30) + '...';
+  
+  const employeesWithThisQR = allEmployees.filter(e => e.qr_data === scannedQRForReassignment);
+  
+  const ownerDiv = document.getElementById('reassign-current-owner');
+  
+  if (employeesWithThisQR.length > 1) {
+    ownerDiv.innerHTML = `
+      <div class="alert alert-error" style="margin-bottom:1rem;">
+        <strong>⚠️ PROBLÈME DE DOUBLON DÉTECTÉ!</strong><br>
+        ${employeesWithThisQR.length} employés ont le même code QR. Tous sauf un recevront un nouveau code QR.
+      </div>
+      <div style="font-weight:600;margin-bottom:0.5rem;">Employés concernés par ce doublon:</div>
+      ${employeesWithThisQR.map(emp => `
+        <div class="emp-card" style="background:#fee2e2;border-color:#ef4444;margin-bottom:0.5rem;">
+          <div class="emp-avatar" style="width:48px;height:48px;">
+            ${emp.photo_url ? `<img src="${emp.photo_url}" alt="${esc(emp.full_name)}">` : getInitials(emp.full_name)}
+          </div>
+          <div class="emp-info">
+            <div class="emp-name">${esc(emp.full_name)}</div>
+            <div class="emp-meta">${esc(emp.position)} • ${esc(emp.employee_number || '')}</div>
+          </div>
+        </div>
+      `).join('')}
+    `;
+  } else {
+    ownerDiv.innerHTML = `
+      <div class="emp-card" style="background:#fef3c7;border-color:#fbbf24;">
+        <div class="emp-avatar" style="width:56px;height:56px;font-size:1.3rem;">
+          ${currentOwnerOfQR.photo_url ? `<img src="${currentOwnerOfQR.photo_url}" alt="${esc(currentOwnerOfQR.full_name)}">` : getInitials(currentOwnerOfQR.full_name)}
+        </div>
+        <div class="emp-info">
+          <div style="font-weight:600;margin-bottom:0.25rem;">Actuellement attribué à:</div>
+          <div class="emp-name">${esc(currentOwnerOfQR.full_name)}</div>
+          <div class="emp-meta">${esc(currentOwnerOfQR.position)} • ${esc(currentOwnerOfQR.employee_number || '')}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById('reassign-employee-search').value = '';
+  document.getElementById('reassign-employee-results').innerHTML = '<div class="text-muted" style="padding:1rem;text-align:center;">Recherchez un employé ci-dessus</div>';
+  document.getElementById('btn-confirm-reassign').disabled = true;
+  selectedNewOwner = null;
+
+  const modal = document.getElementById('qr-reassign-modal');
+  modal.classList.add('active');
+  modal.style.display = 'flex';
+};
+
+window.closeQRReassignModal = function() {
+  const modal = document.getElementById('qr-reassign-modal');
+  modal.classList.remove('active');
+  modal.style.display = 'none';
+  scannedQRForReassignment = null;
+  currentOwnerOfQR = null;
+  selectedNewOwner = null;
+};
+
+window.searchEmployeeForReassignment = function() {
+  const query = document.getElementById('reassign-employee-search').value.trim().toLowerCase();
+  const resultsDiv = document.getElementById('reassign-employee-results');
+  const btn = document.getElementById('btn-confirm-reassign');
+
+  if (!query) {
+    resultsDiv.innerHTML = '<div class="text-muted" style="padding:1rem;text-align:center;">Recherchez un employé ci-dessus</div>';
+    selectedNewOwner = null;
+    btn.disabled = true;
+    return;
+  }
+
+  const matches = allEmployees.filter(e =>
+    e.id !== currentOwnerOfQR.id && (
+      e.full_name?.toLowerCase().includes(query) ||
+      e.employee_number?.toLowerCase().includes(query) ||
+      e.nif?.toLowerCase().includes(query)
+    )
+  );
+
+  if (matches.length === 0) {
+    resultsDiv.innerHTML = '<div class="text-muted" style="padding:1rem;text-align:center;">Aucun employé trouvé</div>';
+    selectedNewOwner = null;
+    btn.disabled = true;
+    return;
+  }
+
+  resultsDiv.innerHTML = matches.map(e => `
+    <div class="emp-card" style="cursor:pointer;margin-bottom:0.5rem;" onclick="selectNewOwner('${e.id}')">
+      <div class="emp-avatar">
+        ${e.photo_url ? `<img src="${e.photo_url}" alt="${esc(e.full_name)}">` : getInitials(e.full_name)}
+      </div>
+      <div class="emp-info">
+        <div class="emp-name">${esc(e.full_name)}</div>
+        <div class="emp-meta">${esc(e.position)} • ${esc(e.employee_number || '')}</div>
+        ${e.nif ? `<div class="emp-meta">NIF: ${esc(e.nif)}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+};
+
+window.selectNewOwner = function(id) {
+  selectedNewOwner = allEmployees.find(e => e.id === id);
+  const resultsDiv = document.getElementById('reassign-employee-results');
+  const btn = document.getElementById('btn-confirm-reassign');
+
+  if (!selectedNewOwner) return;
+
+  resultsDiv.innerHTML = `
+    <div class="emp-card" style="background:#d1fae5;border-color:#10b981;">
+      <div class="emp-avatar">
+        ${selectedNewOwner.photo_url ? `<img src="${selectedNewOwner.photo_url}" alt="${esc(selectedNewOwner.full_name)}">` : getInitials(selectedNewOwner.full_name)}
+      </div>
+      <div class="emp-info">
+        <div style="font-weight:600;margin-bottom:0.25rem;color:#065f46;">✓ Sélectionné</div>
+        <div class="emp-name">${esc(selectedNewOwner.full_name)}</div>
+        <div class="emp-meta">${esc(selectedNewOwner.position)} • ${esc(selectedNewOwner.employee_number || '')}</div>
+        ${selectedNewOwner.nif ? `<div class="emp-meta">NIF: ${esc(selectedNewOwner.nif)}</div>` : ''}
+      </div>
+    </div>
+  `;
+  btn.disabled = false;
+};
+
+window.confirmQRReassignment = async function() {
+  if (!currentOwnerOfQR || !selectedNewOwner || !scannedQRForReassignment) return;
+
+  const employeesWithThisQR = allEmployees.filter(e => e.qr_data === scannedQRForReassignment);
+  
+  let confirmMsg = `Confirmer la réattribution?\n\nVers: ${selectedNewOwner.full_name}\n\n`;
+  
+  if (employeesWithThisQR.length > 1) {
+    confirmMsg += `⚠️ ATTENTION: ${employeesWithThisQR.length} employés ont ce QR code!\n`;
+    confirmMsg += `Tous sauf ${selectedNewOwner.full_name} recevront un nouveau QR code.\n\n`;
+    confirmMsg += `Employés concernés:\n${employeesWithThisQR.map(e => `- ${e.full_name}`).join('\n')}`;
+  } else {
+    confirmMsg += `Le badge de ${currentOwnerOfQR.full_name} ne fonctionnera plus.`;
+  }
+  
+  if (!confirm(confirmMsg)) return;
+
+  const supabase = getSupabaseClient();
+  if (!supabase) return;
+
+  const btn = document.getElementById('btn-confirm-reassign');
+  btn.disabled = true;
+  btn.textContent = 'Réattribution...';
+
+  try {
+    const oldQrData = scannedQRForReassignment;
+    
+    for (const emp of employeesWithThisQR) {
+      if (emp.id === selectedNewOwner.id) continue;
+      
+      const newQrData = `DALIGHT-EMP-${(crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36))}`;
+      
+      const { error } = await supabase
+        .from('presence_employees')
+        .update({ qr_data: newQrData })
+        .eq('id', emp.id);
+
+      if (error) throw error;
+
+      const empIndex = allEmployees.findIndex(e => e.id === emp.id);
+      if (empIndex !== -1) {
+        allEmployees[empIndex].qr_data = newQrData;
+      }
+    }
+
+    const { error: error2 } = await supabase
+      .from('presence_employees')
+      .update({ qr_data: oldQrData })
+      .eq('id', selectedNewOwner.id);
+
+    if (error2) throw error2;
+
+    const newOwnerIndex = allEmployees.findIndex(e => e.id === selectedNewOwner.id);
+    if (newOwnerIndex !== -1) {
+      allEmployees[newOwnerIndex].qr_data = oldQrData;
+    }
+
+    const fixedCount = employeesWithThisQR.length - 1;
+    const msg = fixedCount > 0 
+      ? `Code QR réattribué à ${selectedNewOwner.full_name}. ${fixedCount} doublon(s) corrigé(s).`
+      : `Code QR réattribué à ${selectedNewOwner.full_name}`;
+    
+    showToast(msg, 'success');
+    closeQRReassignModal();
+  } catch (err) {
+    console.error('Error reassigning QR code:', err);
+    const msg = err?.message || err?.error?.message || 'Erreur inconnue';
+    showToast('Erreur: ' + msg, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Confirmer réattribution';
+  }
+};

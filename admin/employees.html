@@ -223,6 +223,20 @@
           <div id="scan-result" style="margin-top:1rem;min-height:80px;"></div>
         </div>
 
+        <!-- QR Reassignment Form -->
+        <div class="glass-card" style="margin-top:1.5rem;">
+          <h3 class="card-title mb-2">Réattribuer un code QR</h3>
+          <p class="card-subtitle mb-2">Scannez un badge déjà imprimé pour le réattribuer à un autre employé.</p>
+          <div class="d-flex gap-1 justify-center" style="flex-wrap:wrap;margin-bottom:1rem;">
+            <button class="btn btn-warning" id="btn-start-reassign-scan" onclick="startReassignScanner()">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              Scanner pour réattribuer
+            </button>
+            <button class="btn btn-secondary" id="btn-stop-reassign-scan" onclick="stopReassignScanner()" style="display:none;">Annuler</button>
+          </div>
+          <div id="reassign-scan-result" style="min-height:60px;"></div>
+        </div>
+
         <!-- Manual Entry Form -->
         <div class="glass-card" style="margin-top:1.5rem;">
           <h3 class="card-title mb-2">Entrée manuelle (badge perdu)</h3>
@@ -426,6 +440,41 @@
     </div>
   </div>
 
+  <!-- QR Reassignment Modal -->
+  <div class="modal-overlay" id="qr-reassign-modal" style="display:none;">
+    <div class="modal" style="max-width:600px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Réattribuer le code QR</h3>
+        <button class="modal-close" onclick="closeQRReassignModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning" style="margin-bottom:1.5rem;">
+          <strong>Code QR scanné:</strong> <span id="reassign-qr-data"></span>
+        </div>
+        
+        <div id="reassign-current-owner" style="margin-bottom:1.5rem;">
+          <!-- Current owner info will be displayed here -->
+        </div>
+
+        <h4 style="margin-bottom:1rem;font-size:1rem;font-weight:600;">Sélectionnez le nouvel employé:</h4>
+        
+        <div class="form-group" style="margin-bottom:1rem;">
+          <input type="text" id="reassign-employee-search" class="form-input" placeholder="Rechercher par nom, numéro ou NIF..." oninput="searchEmployeeForReassignment()">
+        </div>
+
+        <div id="reassign-employee-results" style="max-height:300px;overflow-y:auto;margin-bottom:1rem;">
+          <!-- Employee search results will be displayed here -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeQRReassignModal()">Annuler</button>
+        <button class="btn btn-primary" id="btn-confirm-reassign" onclick="confirmQRReassignment()" disabled>Confirmer réattribution</button>
+      </div>
+    </div>
+  </div>
+
   <!-- QR Code Download Modal -->
   <div class="modal-overlay" id="badge-modal" style="display:none;">
     <div class="modal" style="max-width:380px;">
@@ -473,6 +522,10 @@
         </div>
       </div>
       <div class="modal-footer">
+        <button class="btn btn-danger" onclick="regenerateQRCode()" style="margin-right:auto;" title="Générer un nouveau code QR pour cet employé">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Régénérer QR
+        </button>
         <button class="btn btn-secondary" onclick="closeBadgeModal()">Fermer</button>
       </div>
     </div>
