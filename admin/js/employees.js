@@ -692,84 +692,91 @@ window.submitManualEntry = async function() {
   if (!selectedManualEmployee) return;
 
   const action = document.getElementById('manual-action').value;
+  const dateInput = document.getElementById('manual-date').value;
+  const timeInput = document.getElementById('manual-time').value;
+
+  if (!dateInput || !timeInput) {
+    showToast('Veuillez sélectionner une date et une heure', 'warning');
+    return;
+  }
+
   const supabase = getSupabaseClient();
   if (!supabase) return;
 
-  const today = new Date().toISOString().split('T')[0];
-  const now = new Date().toISOString();
-
   try {
+    // Vérifier si un enregistrement existe déjà pour cette date
+    const { data: existing, error: fetchError } = await supabase
+      .from('attendance_logs')
+      .select('*')
+      .eq('employee_id', selectedManualEmployee.id)
+      .eq('log_date', dateInput)
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+
     if (action === 'entry') {
-      const { data: existing } = await supabase
-        .from('attendance_logs')
-        .select('*')
-        .eq('employee_id', selectedManualEmployee.id)
-        .eq('date', today)
-        .eq('type', 'entry')
-        .maybeSingle();
-
-      if (existing) {
-        showToast('Entrée déjà enregistrée aujourd\'hui', 'warning');
+      if (existing && existing.entry_time) {
+        showToast('Une entrée est déjà enregistrée pour cette date', 'warning');
         return;
       }
 
-      const { error } = await supabase.from('attendance_logs').insert({
-        employee_id: selectedManualEmployee.id,
-        date: today,
-        type: 'entry',
-        timestamp: now,
-        method: 'manual'
-      });
+      const data = existing
+        ? {
+            entry_time: timeInput,
+            entry_method: 'manual',
+            status: existing.exit_time ? 'completed' : 'present'
+          }
+        : {
+            employee_id: selectedManualEmployee.id,
+            log_date: dateInput,
+            entry_time: timeInput,
+            entry_method: 'manual',
+            exit_method: 'qr_scan',
+            status: 'present'
+          };
+
+      const { error } = existing
+        ? await supabase.from('attendance_logs').update(data).eq('id', existing.id)
+        : await supabase.from('attendance_logs').insert(data);
 
       if (error) throw error;
-      showToast(`Entrée enregistrée pour ${esc(selectedManualEmployee.full_name)}`, 'success');
+      showToast(`Entrée manuelle enregistrée pour ${esc(selectedManualEmployee.full_name)}`, 'success');
     } else {
-      const { data: entry } = await supabase
-        .from('attendance_logs')
-        .select('*')
-        .eq('employee_id', selectedManualEmployee.id)
-        .eq('date', today)
-        .eq('type', 'entry')
-        .maybeSingle();
-
-      if (!entry) {
-        showToast('Aucune entrée trouvée pour aujourd\'hui', 'error');
+      if (!existing || !existing.entry_time) {
+        showToast('Aucune entrée trouvée pour cette date', 'error');
         return;
       }
 
-      const { data: existingExit } = await supabase
-        .from('attendance_logs')
-        .select('*')
-        .eq('employee_id', selectedManualEmployee.id)
-        .eq('date', today)
-        .eq('type', 'exit')
-        .maybeSingle();
-
-      if (existingExit) {
-        showToast('Sortie déjà enregistrée aujourd\'hui', 'warning');
+      if (existing.exit_time) {
+        showToast('Une sortie est déjà enregistrée pour cette date', 'warning');
         return;
       }
 
-      const { error } = await supabase.from('attendance_logs').insert({
-        employee_id: selectedManualEmployee.id,
-        date: today,
-        type: 'exit',
-        timestamp: now,
-        method: 'manual'
-      });
+      const { error } = await supabase
+        .from('attendance_logs')
+        .update({
+          exit_time: timeInput,
+          exit_method: 'manual',
+          status: 'completed'
+        })
+        .eq('id', existing.id);
 
       if (error) throw error;
-      showToast(`Sortie enregistrée pour ${esc(selectedManualEmployee.full_name)}`, 'success');
+      showToast(`Sortie manuelle enregistrée pour ${esc(selectedManualEmployee.full_name)}`, 'success');
     }
 
     document.getElementById('manual-employee-search').value = '';
     document.getElementById('manual-employee-results').innerHTML = '';
+    document.getElementById('manual-date').value = '';
+    document.getElementById('manual-time').value = '';
     document.getElementById('btn-manual-entry').disabled = true;
     selectedManualEmployee = null;
-    await loadAttendance();
+    await loadTodayAttendance();
+    renderAttendanceCalendar();
   } catch (err) {
     console.error('Manual entry error:', err);
-    showToast('Erreur: ' + (err?.message || err), 'error');
+    const msg = err?.message || err?.error?.message || err;
+    showToast('Erreur: ' + msg, 'error');
   }
 };
 

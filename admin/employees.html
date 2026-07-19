@@ -269,6 +269,16 @@
               </select>
             </div>
           </div>
+          <div class="admin-filters" style="margin-bottom:1rem;">
+            <div class="filter-group">
+              <label>Date <span style="color:red;">*</span></label>
+              <input type="date" id="manual-date" class="form-input" required>
+            </div>
+            <div class="filter-group">
+              <label>Heure <span style="color:red;">*</span></label>
+              <input type="time" id="manual-time" class="form-input" required>
+            </div>
+          </div>
           <div id="manual-employee-results" style="margin-bottom:1rem;max-height:200px;overflow-y:auto;"></div>
           <button class="btn btn-primary" id="btn-manual-entry" onclick="submitManualEntry()" disabled>Enregistrer</button>
         </div>
