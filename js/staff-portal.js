@@ -180,7 +180,7 @@ async function renderHome(c) {
   const [sessRes, apptRes, evalRes, attRes] = await Promise.all([
     sb.from('service_sessions').select('*').eq('employee_id', empId).gte('started_at', today + 'T00:00:00'),
     roles.some(isProviderRole) || roles.includes('receptionniste') || roles.includes('adm_manager')
-      ? sb.from('reservations').select('id,status').eq('date', today)
+      ? sb.from('reservations').select('id,status,assigned_employee_id').eq('date', today)
       : Promise.resolve({ data: [] }),
     sb.from('staff_evaluations').select('overall_score').eq('employee_id', empId).eq('visible_to_employee', true),
     sb.from('attendance_logs').select('*').eq('employee_id', empId).eq('log_date', today).maybeSingle(),
@@ -188,7 +188,8 @@ async function renderHome(c) {
 
   const sessions = sessRes.data || [];
   const completed = sessions.filter(s => s.status === 'completed');
-  const appts = (apptRes.data || []).filter(r => r.status !== 'CANCELLED');
+  const seesAll = roles.includes('adm_manager') || roles.includes('receptionniste');
+  const appts = (apptRes.data || []).filter(r => r.status !== 'CANCELLED' && (seesAll || r.assigned_employee_id === empId));
   const evals = evalRes.data || [];
   const avgScore = evals.length ? (evals.reduce((s, e) => s + (Number(e.overall_score) || 0), 0) / evals.length).toFixed(1) : '—';
   const att = attRes.data;
@@ -245,12 +246,20 @@ function statCard(color, bg, value, label, icon) {
 
 // ---- APPOINTMENTS ---------------------------------------------------
 let loadedAppointments = [];
+function seesAllAppointments() {
+  const roles = employeeRoles();
+  return roles.includes('adm_manager') || roles.includes('receptionniste');
+}
 async function renderAppointments(c) {
   const date = c._date || todayStr();
   const { data, error } = await sb.from('reservations')
     .select('*').eq('date', date).order('time', { ascending: true });
 
-  const list = (data || []).filter(r => r.status !== 'CANCELLED');
+  let list = (data || []).filter(r => r.status !== 'CANCELLED');
+  // Providers only see appointments assigned to them; managers/reception see all
+  if (!seesAllAppointments()) {
+    list = list.filter(r => r.assigned_employee_id === currentEmployee.id);
+  }
   loadedAppointments = list;
 
   c.innerHTML = `

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion du Personnel - DALIGHT Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css?v=202607211036">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .admin-filters { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem; }
+    .filter-group { display:flex; flex-direction:column; gap:.35rem; }
+    .filter-group label { font-size:.75rem; font-weight:600; color:#6b7280; }
+    .staff-avatar { width:36px; height:36px; border-radius:50%; object-fit:cover; background:#f3f4f6; display:flex; align-items:center; justify-content:center; font-weight:600; color:var(--admin-text-muted); flex-shrink:0; font-size:.8rem; }
+    .staff-avatar img { width:100%; height:100%; border-radius:50%; object-fit:cover; }
+    .assign-select { min-width:180px; }
+    .role-pill { display:inline-block; background:var(--admin-accent-light); color:var(--admin-accent); padding:.1rem .45rem; border-radius:5px; font-size:.65rem; font-weight:700; margin:.1rem .15rem 0 0; }
+    .live-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; display:inline-block; animation:pulse 1.4s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="admin-sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="sidebar-logo">
+        <img src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" onerror="this.style.display='none'">
+        <div class="sidebar-logo-text">DALIGHT<span>Administration</span></div>
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Principal</div>
+        <a href="dashboard.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+        <a href="reservations.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Réservations
+        </a>
+        <a href="pos.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          Caisse / POS
+        </a>
+        <a href="employees.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Employés & Présence
+        </a>
+        <a href="staff-management.html" class="nav-item active">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Gestion Personnel
+        </a>
+        <a href="retraits.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Retraits & Revenus
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Contenu</div>
+        <a href="posts.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          Posts & Vidéos
+        </a>
+        <a href="services.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          Services
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Utilisateurs</div>
+        <a href="clients.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          Clients
+        </a>
+        <a href="settings.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Paramètres
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="user-avatar">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="user-name">Admin</div>
+          <div class="sidebar-user-role">Administrateur</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="admin-main">
+    <header class="admin-header">
+      <div class="header-left">
+        <button class="mobile-menu-btn" id="mobile-menu-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <h1 class="page-title">Gestion du Personnel</h1>
+      </div>
+      <div class="header-right">
+        <a href="employees.html" class="btn btn-secondary">Employés & Présence</a>
+      </div>
+    </header>
+
+    <div class="admin-content">
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Employés actifs</div><div class="stat-value" id="stat-employees">0</div></div>
+        <div class="stat-card"><div class="stat-label">Portails activés</div><div class="stat-value" id="stat-portals">0</div></div>
+        <div class="stat-card"><div class="stat-label">Services en cours</div><div class="stat-value" id="stat-active">0</div></div>
+        <div class="stat-card"><div class="stat-label">Rapports (7j)</div><div class="stat-value" id="stat-reports">0</div></div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="glass-card mb-3">
+        <div class="tab-nav">
+          <button class="tab-btn active" data-tab="assign" onclick="switchTab('assign')">Assignation RDV</button>
+          <button class="tab-btn" data-tab="team" onclick="switchTab('team')">Équipe & Accès</button>
+          <button class="tab-btn" data-tab="sessions" onclick="switchTab('sessions')">Sessions de service</button>
+          <button class="tab-btn" data-tab="reports" onclick="switchTab('reports')">Rapports</button>
+          <button class="tab-btn" data-tab="evals" onclick="switchTab('evals')">Évaluations</button>
+        </div>
+      </div>
+
+      <!-- ASSIGN -->
+      <div id="tab-assign" class="tab-content active">
+        <div class="glass-card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Assignation des rendez-vous</h3>
+              <p class="card-subtitle">Attribuez chaque réservation à un membre de l'équipe</p>
+            </div>
+          </div>
+          <div class="admin-filters" style="margin-bottom:1.25rem;">
+            <div class="filter-group"><label>Date</label><input type="date" id="assign-date" class="form-input" onchange="loadAssignments()"></div>
+            <div class="filter-group"><label>Filtrer par employé</label>
+              <select id="assign-filter-emp" class="form-input" onchange="renderAssignments()"><option value="">Tous</option></select>
+            </div>
+            <div class="filter-group"><label>Rechercher</label><input type="text" id="assign-search" class="form-input" placeholder="Client, service..." oninput="renderAssignments()"></div>
+          </div>
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead><tr><th>Heure</th><th>Client</th><th>Service</th><th>Lieu</th><th>Statut</th><th>Assigné à</th></tr></thead>
+              <tbody id="assign-table"><tr><td colspan="6" class="text-center text-muted" style="padding:2rem;">Chargement...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TEAM -->
+      <div id="tab-team" class="tab-content">
+        <div class="glass-card">
+          <div class="card-header">
+            <div><h3 class="card-title">Équipe & Accès portail</h3><p class="card-subtitle">Rôles, codes d'accès et liens</p></div>
+            <input type="text" id="team-search" class="form-input" placeholder="Rechercher..." style="width:220px;" oninput="renderTeam()">
+          </div>
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead><tr><th>Employé</th><th>Rôles</th><th>Portail</th><th>Code</th><th>Lien</th></tr></thead>
+              <tbody id="team-table"><tr><td colspan="5" class="text-center text-muted" style="padding:2rem;">Chargement...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SESSIONS -->
+      <div id="tab-sessions" class="tab-content">
+        <div class="glass-card">
+          <div class="card-header">
+            <div><h3 class="card-title">Sessions de service</h3><p class="card-subtitle">Prestations en cours et historique</p></div>
+            <div class="filter-group"><label>Date</label><input type="date" id="sessions-date" class="form-input" onchange="loadSessions()"></div>
+          </div>
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead><tr><th>Employé</th><th>Service</th><th>Client</th><th>Début</th><th>Durée</th><th>Statut</th></tr></thead>
+              <tbody id="sessions-table"><tr><td colspan="6" class="text-center text-muted" style="padding:2rem;">Chargement...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPORTS -->
+      <div id="tab-reports" class="tab-content">
+        <div class="glass-card">
+          <div class="card-header">
+            <div><h3 class="card-title">Rapports du personnel</h3><p class="card-subtitle">Rapports soumis par les employés</p></div>
+            <input type="text" id="reports-search" class="form-input" placeholder="Rechercher..." style="width:220px;" oninput="renderReports()">
+          </div>
+          <div id="reports-list"><div class="text-center text-muted" style="padding:2rem;">Chargement...</div></div>
+        </div>
+      </div>
+
+      <!-- EVALS -->
+      <div id="tab-evals" class="tab-content">
+        <div class="glass-card">
+          <div class="card-header">
+            <div><h3 class="card-title">Évaluations</h3><p class="card-subtitle">Historique des évaluations du personnel</p></div>
+            <input type="text" id="evals-search" class="form-input" placeholder="Rechercher..." style="width:220px;" oninput="renderEvals()">
+          </div>
+          <div id="evals-list"><div class="text-center text-muted" style="padding:2rem;">Chargement...</div></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/admin-core.js"></script>
+  <script src="js/staff-management.js?v=1"></script>
+</body>
+</html>
