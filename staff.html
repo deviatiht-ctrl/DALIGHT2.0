@@ -77,6 +77,17 @@
     .page-title { font-size:1.5rem; font-weight:700; }
     .page-sub { color:var(--muted); font-size:.85rem; margin-top:.15rem; }
     .mobile-menu { display:none; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:.5rem; cursor:pointer; color:var(--text); }
+    .bell { position:relative; cursor:pointer; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:.5rem; color:var(--text); }
+    .bell:hover { border-color:var(--gold); color:var(--gold); }
+    .bell-badge { position:absolute; top:-3px; right:-3px; background:var(--red); color:#fff; font-size:.65rem; font-weight:700; min-width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+    .bell-panel { position:absolute; right:0; top:48px; width:320px; max-width:90vw; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:.8rem; z-index:50; box-shadow:0 16px 40px rgba(0,0,0,.4); display:none; }
+    .bell-panel.open { display:block; }
+    .notif-item { padding:.7rem; border-bottom:1px solid var(--border); font-size:.85rem; cursor:pointer; }
+    .notif-item:last-child { border-bottom:none; }
+    .notif-item.unread { background:rgba(59,130,246,.08); border-radius:10px; margin-bottom:.4rem; }
+    .notif-title { font-weight:600; }
+    .notif-body { color:var(--muted); font-size:.8rem; margin-top:.15rem; }
+    .notif-time { font-size:.7rem; color:var(--muted); margin-top:.2rem; }
 
     /* ---------- CARDS / GRID ---------- */
     .grid { display:grid; gap:1.1rem; }
@@ -180,6 +191,13 @@
             <div class="page-title" id="section-title">Accueil</div>
             <div class="page-sub" id="section-sub"></div>
           </div>
+        </div>
+        <div style="position:relative;" id="bell-wrap">
+          <button class="bell" id="bell-btn" onclick="toggleBellPanel()" aria-label="Notifications">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            <span class="bell-badge hidden" id="bell-count">0</span>
+          </button>
+          <div class="bell-panel" id="bell-panel"></div>
         </div>
       </div>
       <div id="section-content"></div>

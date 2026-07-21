@@ -141,6 +141,8 @@ function enterPortal() {
 
   buildNav();
   showSection('home');
+  loadNotifications();
+  setInterval(loadNotifications, 30000);
 }
 
 const SECTION_META = {
@@ -295,7 +297,7 @@ function apptCard(r) {
     <div style="flex:1;min-width:0;">
       <div style="font-weight:600;">${clientName} <span class="badge ${statusBadge}" style="margin-left:.3rem;">${esc(r.status)}</span></div>
       <div style="color:var(--muted);font-size:.85rem;">${svc} · ${fmtTime(r.time)} · ${esc(r.location || '')}</div>
-      ${r.user_phone ? `<div style="color:var(--muted);font-size:.8rem;">📞 ${esc(r.user_phone)}</div>` : ''}
+      ${r.phone ? `<div style="color:var(--muted);font-size:.8rem;">📞 ${esc(r.phone)}</div>` : ''}
       ${r.notes ? `<div style="color:var(--muted);font-size:.8rem;margin-top:.2rem;">📝 ${esc(r.notes)}</div>` : ''}
     </div>
     <button class="btn btn-green btn-sm" onclick="startServiceFromAppt('${r.id}')">Démarrer</button>
@@ -306,7 +308,7 @@ window.startServiceFromAppt = async function (reservationId) {
   const r = loadedAppointments.find(a => a.id === reservationId);
   if (!r) { toast('Rendez-vous introuvable', 'error'); return; }
   await createSession({
-    reservation_id: r.id, client_name: r.user_name || 'Client', client_phone: r.user_phone || null,
+    reservation_id: r.id, client_name: r.user_name || 'Client', client_phone: r.phone || null,
     service_name: r.service || 'Service', location: r.location || 'Spa',
   });
   showSection('service');
@@ -611,10 +613,67 @@ window.saveProfile = async function () {
   toast('Profil mis à jour', 'success');
 };
 
+// ---- NOTIFICATIONS --------------------------------------------------
+let notifList = [];
+let notifPoller = null;
+
+async function loadNotifications() {
+  if (!currentEmployee) return;
+  const { data, error } = await sb.from('staff_notifications')
+    .select('*')
+    .eq('employee_id', currentEmployee.id)
+    .order('created_at', { ascending: false })
+    .limit(20);
+  if (error) { console.error(error); return; }
+  notifList = data || [];
+  updateBellBadge();
+  renderBellPanel();
+}
+
+function updateBellBadge() {
+  const count = notifList.filter(n => !n.read).length;
+  const badge = document.getElementById('bell-count');
+  if (!badge) return;
+  badge.textContent = count > 99 ? '99+' : String(count);
+  badge.classList.toggle('hidden', count === 0);
+}
+
+function renderBellPanel() {
+  const panel = document.getElementById('bell-panel');
+  if (!panel || !panel.classList.contains('open')) return;
+  if (!notifList.length) { panel.innerHTML = '<div class="empty" style="padding:1rem;">Aucune notification.</div>'; return; }
+  panel.innerHTML = notifList.map(n => `
+    <div class="notif-item ${n.read ? '' : 'unread'}">
+      <div class="notif-title">${esc(n.title)}</div>
+      <div class="notif-body">${esc(n.body || '')}</div>
+      <div class="notif-time">${new Date(n.created_at).toLocaleString('fr-FR')}</div>
+    </div>
+  `).join('');
+}
+
+window.toggleBellPanel = async function () {
+  const panel = document.getElementById('bell-panel');
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  if (!isOpen) {
+    await loadNotifications();
+    const unreadIds = notifList.filter(n => !n.read).map(n => n.id);
+    if (unreadIds.length) {
+      const { error } = await sb.from('staff_notifications')
+        .update({ read: true, read_at: new Date().toISOString() })
+        .in('id', unreadIds);
+      if (!error) notifList.forEach(n => { if (!n.read) { n.read = true; n.read_at = new Date().toISOString(); } });
+      updateBellBadge();
+      renderBellPanel();
+    }
+  }
+};
+
 // expose globally
 window.staffLogin = staffLogin;
 window.staffLogout = staffLogout;
 window.showSection = showSection;
+window.toggleBellPanel = toggleBellPanel;
 
 // boot
 tryAutoLogin();

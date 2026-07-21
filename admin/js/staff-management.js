@@ -30,6 +30,12 @@ function getInitials(name) { if (!name) return '?'; return name.split(' ').map(n
 function toast(msg, type = 'success') { if (window.showToast) window.showToast(msg, type); else if (window.adminCore?.showToast) window.adminCore.showToast(msg, type); else console.log(msg); }
 function todayStr() { return new Date().toISOString().split('T')[0]; }
 function fmtTime(t) { return t ? String(t).slice(0, 5) : '—'; }
+function fmtDate(d) {
+  if (!d) return '—';
+  const [y, m, dd] = String(d).split('-').map(Number);
+  const date = new Date(y, m - 1, dd);
+  return date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+}
 function normalizeRoles(e) { let r = e?.roles || []; if (typeof r === 'string') { try { r = JSON.parse(r); } catch { r = []; } } return Array.isArray(r) ? r : []; }
 
 function getPortalBaseUrl() {
@@ -46,7 +52,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!session) return;
 
   const today = todayStr();
-  document.getElementById('assign-date').value = today;
   document.getElementById('sessions-date').value = today;
 
   await loadEmployees();
@@ -96,13 +101,19 @@ async function loadStats() {
 // ASSIGNATION RDV
 // ============================================
 async function loadAssignments() {
-  const date = document.getElementById('assign-date').value || todayStr();
+  const date = document.getElementById('assign-date').value;
   const tbody = document.getElementById('assign-table');
-  tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:2rem;">Chargement...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:2rem;">Chargement...</td></tr>';
 
-  const { data, error } = await sb().from('reservations')
-    .select('*').eq('date', date).order('time', { ascending: true });
-  if (error) { tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted" style="padding:2rem;">Erreur: ${esc(error.message)}</td></tr>`; return; }
+  let query = sb().from('reservations').select('*');
+  if (date) {
+    query = query.eq('date', date);
+  } else {
+    // upcoming reservations: today and future, not cancelled
+    query = query.gte('date', todayStr()).order('date', { ascending: true });
+  }
+  const { data, error } = await query.order('time', { ascending: true });
+  if (error) { tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted" style="padding:2rem;">Erreur: ${esc(error.message)}</td></tr>`; return; }
 
   assignReservations = (data || []).filter(r => r.status !== 'CANCELLED');
   renderAssignments();
@@ -112,12 +123,15 @@ window.renderAssignments = function () {
   const tbody = document.getElementById('assign-table');
   const search = (document.getElementById('assign-search').value || '').toLowerCase();
   const filterEmp = document.getElementById('assign-filter-emp').value;
+  const filterState = document.getElementById('assign-filter-state').value;
 
   let list = assignReservations;
   if (search) list = list.filter(r => (r.user_name || '').toLowerCase().includes(search) || (r.service || '').toLowerCase().includes(search));
   if (filterEmp) list = list.filter(r => r.assigned_employee_id === filterEmp);
+  if (filterState === 'assigned') list = list.filter(r => !!r.assigned_employee_id);
+  if (filterState === 'unassigned') list = list.filter(r => !r.assigned_employee_id);
 
-  if (!list.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:2rem;">Aucun rendez-vous.</td></tr>'; return; }
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:2rem;">Aucun rendez-vous.</td></tr>'; return; }
 
   // provider employees for the dropdown (fallback: all active)
   const providers = allEmployees.filter(e => e.is_active && (normalizeRoles(e).some(r => PROVIDER_ROLES.includes(r))));
@@ -127,12 +141,13 @@ window.renderAssignments = function () {
 
   tbody.innerHTML = list.map(r => `
     <tr>
+      <td>${fmtDate(r.date)}</td>
       <td style="font-weight:600;">${fmtTime(r.time)}</td>
       <td>
         <div style="display:flex;align-items:center;gap:.5rem;">
           <div class="staff-avatar">${getInitials(r.user_name || 'C')}</div>
           <div><div style="font-weight:500;">${esc(r.user_name || 'Client')}</div>
-          ${r.user_phone ? `<div class="text-muted" style="font-size:.75rem;">${esc(r.user_phone)}</div>` : ''}</div>
+          ${r.phone ? `<div class="text-muted" style="font-size:.75rem;">${esc(r.phone)}</div>` : ''}</div>
         </div>
       </td>
       <td>${esc(r.service || '—')}</td>
@@ -150,6 +165,8 @@ window.renderAssignments = function () {
 
 window.assignReservation = async function (resId, empId) {
   const emp = allEmployees.find(e => e.id === empId);
+  const r = assignReservations.find(x => x.id === resId);
+  const previousEmployeeId = r?.assigned_employee_id || null;
   try {
     const { error } = await sb().from('reservations').update({
       assigned_employee_id: empId || null,
@@ -157,8 +174,20 @@ window.assignReservation = async function (resId, empId) {
       assigned_at: empId ? new Date().toISOString() : null,
     }).eq('id', resId);
     if (error) throw error;
-    const r = assignReservations.find(x => x.id === resId);
     if (r) { r.assigned_employee_id = empId || null; r.assigned_employee_name = emp ? emp.full_name : null; }
+
+    // Notify the newly assigned employee
+    if (empId && empId !== previousEmployeeId && emp) {
+      await sb().from('staff_notifications').insert({
+        employee_id: emp.id,
+        type: 'assignment',
+        title: 'Nouveau rendez-vous assigné',
+        body: `Vous avez un rendez-vous le ${r.date} à ${fmtTime(r.time)} — ${r.user_name || 'Client'} (${r.service || 'Service'}).`,
+        data: { reservation_id: resId },
+        read: false,
+      });
+    }
+
     toast(empId ? `Assigné à ${emp.full_name}` : 'Assignation retirée', 'success');
   } catch (err) {
     console.error(err);

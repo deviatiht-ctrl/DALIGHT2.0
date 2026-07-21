@@ -136,16 +136,23 @@
             </div>
           </div>
           <div class="admin-filters" style="margin-bottom:1.25rem;">
-            <div class="filter-group"><label>Date</label><input type="date" id="assign-date" class="form-input" onchange="loadAssignments()"></div>
+            <div class="filter-group"><label>Date précise (vide = à venir)</label><input type="date" id="assign-date" class="form-input" onchange="loadAssignments()"></div>
             <div class="filter-group"><label>Filtrer par employé</label>
               <select id="assign-filter-emp" class="form-input" onchange="renderAssignments()"><option value="">Tous</option></select>
+            </div>
+            <div class="filter-group"><label>Assignation</label>
+              <select id="assign-filter-state" class="form-input" onchange="renderAssignments()">
+                <option value="">Tous</option>
+                <option value="unassigned">Non assignés</option>
+                <option value="assigned">Assignés</option>
+              </select>
             </div>
             <div class="filter-group"><label>Rechercher</label><input type="text" id="assign-search" class="form-input" placeholder="Client, service..." oninput="renderAssignments()"></div>
           </div>
           <div class="table-responsive">
             <table class="admin-table">
-              <thead><tr><th>Heure</th><th>Client</th><th>Service</th><th>Lieu</th><th>Statut</th><th>Assigné à</th></tr></thead>
-              <tbody id="assign-table"><tr><td colspan="6" class="text-center text-muted" style="padding:2rem;">Chargement...</td></tr></tbody>
+              <thead><tr><th>Date</th><th>Heure</th><th>Client</th><th>Service</th><th>Lieu</th><th>Statut</th><th>Assigné à</th></tr></thead>
+              <tbody id="assign-table"><tr><td colspan="7" class="text-center text-muted" style="padding:2rem;">Chargement...</td></tr></tbody>
             </table>
           </div>
         </div>
