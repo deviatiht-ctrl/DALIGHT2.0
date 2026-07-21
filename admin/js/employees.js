@@ -22,6 +22,21 @@ let selectedEmployeeForAssignment = null;
 
 const PHOTO_BUCKET = 'employees-photos';
 
+// Staff portal roles catalogue (must match js/staff-portal.js)
+const ROLE_LABELS = {
+  estheticienne: 'Esthéticienne',
+  masseuse: 'Masseur/Masseuse',
+  coiffure: 'Coiffure',
+  onglerie: 'Onglerie',
+  community_manager: 'Community Manager',
+  adm_manager: 'ADM / Manager',
+  receptionniste: 'Réceptionniste',
+  caissier: 'Caissier/Caisse',
+  formateur: 'Formateur',
+};
+const ALL_ROLES = Object.keys(ROLE_LABELS);
+let currentPortalEmployee = null;
+
 function getSupabaseClient() {
   if (window.adminCore?.supabase) return window.adminCore.supabase;
   if (window.dalightAdminSupabase) return window.dalightAdminSupabase;
@@ -150,6 +165,14 @@ window.renderEmployees = function() {
     const qrModifierBadge = e.qr_modifier 
       ? `<span style="display:inline-block;background:#3b82f6;color:white;padding:0.15rem 0.4rem;border-radius:4px;font-size:0.65rem;font-weight:600;margin-left:0.35rem;">QR-${e.qr_modifier}</span>`
       : '';
+
+    let roles = e.roles || [];
+    if (typeof roles === 'string') { try { roles = JSON.parse(roles); } catch { roles = []; } }
+    if (!Array.isArray(roles)) roles = [];
+    const rolesBadges = roles.map(r => `<span style="display:inline-block;background:var(--admin-accent-light);color:var(--admin-accent);padding:0.1rem 0.4rem;border-radius:4px;font-size:0.62rem;font-weight:700;margin:0.1rem 0.15rem 0 0;">${esc(ROLE_LABELS[r] || r)}</span>`).join('');
+    const portalBadge = e.portal_enabled && e.access_code
+      ? `<span style="display:inline-block;background:#10b981;color:white;padding:0.1rem 0.4rem;border-radius:4px;font-size:0.62rem;font-weight:700;">Portail: ${esc(e.access_code)}</span>`
+      : '';
     
     return `
       <div class="emp-card">
@@ -161,9 +184,14 @@ window.renderEmployees = function() {
           <div class="emp-meta">${esc(e.position)} • ${esc(e.employee_number || '')}</div>
           ${e.nif ? `<div class="emp-meta">NIF: ${esc(e.nif)}</div>` : ''}
           <div class="emp-meta">${e.is_active ? 'Actif' : 'Inactif'}</div>
+          ${rolesBadges ? `<div style="margin-top:.3rem;">${rolesBadges}</div>` : ''}
+          ${portalBadge ? `<div style="margin-top:.3rem;">${portalBadge}</div>` : ''}
         </div>
         <div class="emp-status ${e.is_active ? '' : 'inactive'}"></div>
         <div class="d-flex gap-1">
+          <button class="btn btn-icon btn-secondary btn-sm" onclick="openPortalModal('${e.id}')" title="Portail employé">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </button>
           <button class="btn btn-icon btn-secondary btn-sm" onclick="viewBadge('${e.id}')" title="Badge QR">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
           </button>
@@ -2329,4 +2357,253 @@ window.exportAuditReport = function() {
   link.click();
   
   showToast('Rapport exporté avec succès', 'success');
+};
+
+// ============================================
+// STAFF PORTAL MANAGEMENT
+// ============================================
+
+function getPortalBaseUrl() {
+  // staff.html is at the site root; admin pages live under /admin/
+  const origin = window.location.origin;
+  let path = window.location.pathname;
+  const adminIdx = path.indexOf('/admin/');
+  const base = adminIdx >= 0 ? path.slice(0, adminIdx) : path.replace(/\/admin\/.*/, '').replace(/\/[^/]*$/, '');
+  return `${origin}${base}/staff.html`;
+}
+
+function normalizeRoles(e) {
+  let roles = e?.roles || [];
+  if (typeof roles === 'string') { try { roles = JSON.parse(roles); } catch { roles = []; } }
+  if (!Array.isArray(roles)) roles = [];
+  return roles;
+}
+
+window.openPortalModal = function(id) {
+  const e = allEmployees.find(emp => emp.id === id);
+  if (!e) return;
+  currentPortalEmployee = e;
+
+  document.getElementById('portal-emp-name').textContent = e.full_name || '';
+  document.getElementById('portal-enabled').checked = !!e.portal_enabled;
+  document.getElementById('portal-code').value = e.access_code || '';
+
+  const roles = normalizeRoles(e);
+  document.getElementById('portal-roles').innerHTML = ALL_ROLES.map(r => `
+    <label style="display:flex;align-items:center;gap:.4rem;font-size:.85rem;padding:.4rem .5rem;border:1px solid var(--admin-border);border-radius:8px;cursor:pointer;">
+      <input type="checkbox" class="portal-role-cb" value="${r}" ${roles.includes(r) ? 'checked' : ''}>
+      ${esc(ROLE_LABELS[r])}
+    </label>
+  `).join('');
+
+  updatePortalLink();
+  switchPortalTab('access');
+
+  const modal = document.getElementById('portal-modal');
+  modal.classList.add('active');
+  modal.style.display = 'flex';
+};
+
+window.closePortalModal = function() {
+  const modal = document.getElementById('portal-modal');
+  modal.classList.remove('active');
+  modal.style.display = 'none';
+  currentPortalEmployee = null;
+};
+
+window.switchPortalTab = function(tab) {
+  document.querySelectorAll('#portal-modal .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.ptab === tab));
+  document.getElementById('ptab-access').style.display = tab === 'access' ? 'block' : 'none';
+  document.getElementById('ptab-eval').style.display = tab === 'eval' ? 'block' : 'none';
+  document.getElementById('ptab-reports').style.display = tab === 'reports' ? 'block' : 'none';
+  if (tab === 'eval') loadEmployeeEvaluations();
+  if (tab === 'reports') loadEmployeeReports();
+};
+
+function updatePortalLink() {
+  const code = (document.getElementById('portal-code').value || '').trim().toUpperCase();
+  const linkEl = document.getElementById('portal-link');
+  linkEl.value = code ? `${getPortalBaseUrl()}?code=${code}` : `${getPortalBaseUrl()} (générez un code)`;
+}
+
+window.generatePortalCode = function() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const existing = new Set(allEmployees.map(e => e.access_code).filter(Boolean));
+  let code;
+  do {
+    code = '';
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  } while (existing.has(code));
+  document.getElementById('portal-code').value = code;
+  updatePortalLink();
+};
+
+window.copyPortalLink = function() {
+  const val = document.getElementById('portal-link').value;
+  if (!val || val.includes('générez')) { showToast('Générez d\'abord un code', 'warning'); return; }
+  navigator.clipboard.writeText(val).then(
+    () => showToast('Lien copié', 'success'),
+    () => showToast('Impossible de copier', 'error')
+  );
+};
+
+window.savePortalSettings = async function() {
+  if (!currentPortalEmployee) return;
+  const supabase = getSupabaseClient();
+  if (!supabase) return;
+
+  const enabled = document.getElementById('portal-enabled').checked;
+  const code = (document.getElementById('portal-code').value || '').trim().toUpperCase() || null;
+  const roles = Array.from(document.querySelectorAll('.portal-role-cb:checked')).map(cb => cb.value);
+
+  if (enabled && !code) { showToast('Un code est requis pour activer le portail', 'warning'); return; }
+
+  // Check code uniqueness locally
+  if (code) {
+    const clash = allEmployees.find(e => e.access_code === code && e.id !== currentPortalEmployee.id);
+    if (clash) { showToast('Ce code est déjà utilisé par ' + clash.full_name, 'error'); return; }
+  }
+
+  const btn = document.getElementById('btn-save-portal');
+  btn.disabled = true; btn.textContent = 'Enregistrement...';
+
+  try {
+    const { error } = await supabase
+      .from('presence_employees')
+      .update({ portal_enabled: enabled, access_code: code, roles })
+      .eq('id', currentPortalEmployee.id);
+    if (error) throw error;
+
+    Object.assign(currentPortalEmployee, { portal_enabled: enabled, access_code: code, roles });
+    const idx = allEmployees.findIndex(e => e.id === currentPortalEmployee.id);
+    if (idx !== -1) Object.assign(allEmployees[idx], { portal_enabled: enabled, access_code: code, roles });
+
+    renderEmployees();
+    showToast('Portail mis à jour', 'success');
+    updatePortalLink();
+  } catch (err) {
+    console.error('Portal save error:', err);
+    showToast('Erreur: ' + (err?.message || err), 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Enregistrer';
+  }
+};
+
+// ---- Evaluations ----
+async function loadEmployeeEvaluations() {
+  if (!currentPortalEmployee) return;
+  const supabase = getSupabaseClient();
+  const box = document.getElementById('eval-history');
+  box.innerHTML = '<div class="text-muted" style="padding:1rem;">Chargement…</div>';
+  try {
+    const { data, error } = await supabase
+      .from('staff_evaluations')
+      .select('*')
+      .eq('employee_id', currentPortalEmployee.id)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    const evals = data || [];
+    if (!evals.length) { box.innerHTML = '<div class="text-muted" style="padding:1rem;">Aucune évaluation.</div>'; return; }
+    box.innerHTML = evals.map(ev => {
+      const ratings = ev.ratings && typeof ev.ratings === 'object' ? ev.ratings : {};
+      const rstr = Object.entries(ratings).map(([k, v]) => `${k}: ${v}/5`).join(' · ');
+      return `<div style="border:1px solid var(--admin-border);border-radius:10px;padding:.75rem;margin-bottom:.5rem;">
+        <div style="display:flex;justify-content:space-between;"><strong>${esc(ev.period || 'Évaluation')}</strong><span class="badge badge-secondary">${ev.overall_score ?? '—'}/5</span></div>
+        <div class="text-muted" style="font-size:.8rem;margin:.2rem 0;">Par ${esc(ev.evaluator)} · ${new Date(ev.created_at).toLocaleDateString('fr-FR')}</div>
+        ${rstr ? `<div style="font-size:.82rem;">${esc(rstr)}</div>` : ''}
+        ${ev.strengths ? `<div style="font-size:.82rem;"><strong>Forts:</strong> ${esc(ev.strengths)}</div>` : ''}
+        ${ev.improvements ? `<div style="font-size:.82rem;"><strong>À améliorer:</strong> ${esc(ev.improvements)}</div>` : ''}
+        ${ev.comments ? `<div style="font-size:.82rem;color:#6b7280;">${esc(ev.comments)}</div>` : ''}
+      </div>`;
+    }).join('');
+  } catch (err) {
+    box.innerHTML = `<div class="text-muted" style="padding:1rem;">Erreur: ${esc(err.message || err)}</div>`;
+  }
+}
+
+window.submitEvaluation = async function() {
+  if (!currentPortalEmployee) return;
+  const supabase = getSupabaseClient();
+  const evaluator = document.getElementById('eval-by').value.trim();
+  if (!evaluator) { showToast('Indiquez l\'évaluateur', 'warning'); return; }
+
+  const r1 = parseFloat(document.getElementById('eval-r1').value);
+  const r2 = parseFloat(document.getElementById('eval-r2').value);
+  const r3 = parseFloat(document.getElementById('eval-r3').value);
+  const ratings = {};
+  if (!isNaN(r1)) ratings.ponctualite = r1;
+  if (!isNaN(r2)) ratings.qualite = r2;
+  if (!isNaN(r3)) ratings.attitude = r3;
+  const vals = Object.values(ratings);
+  const overall = vals.length ? Number((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2)) : null;
+
+  try {
+    const { error } = await supabase.from('staff_evaluations').insert({
+      employee_id: currentPortalEmployee.id,
+      employee_name: currentPortalEmployee.full_name,
+      evaluator,
+      period: document.getElementById('eval-period').value.trim() || null,
+      ratings,
+      overall_score: overall,
+      strengths: document.getElementById('eval-strengths').value.trim() || null,
+      improvements: document.getElementById('eval-improvements').value.trim() || null,
+      comments: document.getElementById('eval-comments').value.trim() || null,
+      visible_to_employee: true,
+    });
+    if (error) throw error;
+    showToast('Évaluation enregistrée', 'success');
+    ['eval-period', 'eval-r1', 'eval-r2', 'eval-r3', 'eval-strengths', 'eval-improvements', 'eval-comments'].forEach(id => document.getElementById(id).value = '');
+    loadEmployeeEvaluations();
+  } catch (err) {
+    console.error('Eval error:', err);
+    showToast('Erreur: ' + (err?.message || err), 'error');
+  }
+};
+
+// ---- Reports received ----
+async function loadEmployeeReports() {
+  if (!currentPortalEmployee) return;
+  const supabase = getSupabaseClient();
+  const box = document.getElementById('reports-received');
+  box.innerHTML = '<div class="text-muted" style="padding:1rem;">Chargement…</div>';
+  try {
+    const { data, error } = await supabase
+      .from('staff_reports')
+      .select('*')
+      .eq('employee_id', currentPortalEmployee.id)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    const reports = data || [];
+    if (!reports.length) { box.innerHTML = '<div class="text-muted" style="padding:1rem;">Aucun rapport reçu.</div>'; return; }
+    box.innerHTML = reports.map(r => {
+      const metrics = r.metrics && typeof r.metrics === 'object' ? r.metrics : {};
+      const mstr = Object.entries(metrics).map(([k, v]) => `${k}: ${v}`).join(' · ');
+      return `<div style="border:1px solid var(--admin-border);border-radius:10px;padding:.75rem;margin-bottom:.5rem;">
+        <div style="display:flex;justify-content:space-between;"><strong>${esc(r.title)}</strong><span class="badge badge-secondary">${esc(r.report_type)}</span></div>
+        <div class="text-muted" style="font-size:.8rem;margin:.2rem 0;">${new Date(r.created_at).toLocaleString('fr-FR')}</div>
+        ${r.content ? `<div style="font-size:.85rem;line-height:1.5;">${esc(r.content)}</div>` : ''}
+        ${mstr ? `<div class="text-muted" style="font-size:.8rem;margin-top:.2rem;">📊 ${esc(mstr)}</div>` : ''}
+        <div style="margin-top:.5rem;display:flex;gap:.4rem;">
+          <input type="text" class="form-input" id="fb-${r.id}" placeholder="Retour admin..." value="${esc(r.admin_feedback || '')}" style="font-size:.82rem;">
+          <button class="btn btn-secondary btn-sm" onclick="saveReportFeedback('${r.id}')">Envoyer</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (err) {
+    box.innerHTML = `<div class="text-muted" style="padding:1rem;">Erreur: ${esc(err.message || err)}</div>`;
+  }
+}
+
+window.saveReportFeedback = async function(reportId) {
+  const supabase = getSupabaseClient();
+  const feedback = document.getElementById('fb-' + reportId).value.trim();
+  try {
+    const { error } = await supabase.from('staff_reports')
+      .update({ admin_feedback: feedback || null, status: 'reviewed' })
+      .eq('id', reportId);
+    if (error) throw error;
+    showToast('Retour enregistré', 'success');
+  } catch (err) {
+    showToast('Erreur: ' + (err?.message || err), 'error');
+  }
 };

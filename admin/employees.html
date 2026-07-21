@@ -584,6 +584,79 @@
     </div>
   </div>
 
+  <!-- Staff Portal Management Modal -->
+  <div class="modal-overlay" id="portal-modal" style="display:none;">
+    <div class="modal" style="max-width:640px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Portail employé — <span id="portal-emp-name"></span></h3>
+        <button class="modal-close" onclick="closePortalModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="tab-nav" style="margin-bottom:1.25rem;">
+          <button class="tab-btn active" data-ptab="access" onclick="switchPortalTab('access')">Accès & Rôles</button>
+          <button class="tab-btn" data-ptab="eval" onclick="switchPortalTab('eval')">Évaluations</button>
+          <button class="tab-btn" data-ptab="reports" onclick="switchPortalTab('reports')">Rapports reçus</button>
+        </div>
+
+        <!-- ACCESS & ROLES -->
+        <div id="ptab-access" class="ptab-content">
+          <div class="form-group" style="margin-bottom:1.25rem;">
+            <label style="display:flex;align-items:center;gap:.5rem;font-weight:600;">
+              <input type="checkbox" id="portal-enabled" style="width:18px;height:18px;"> Activer l'accès au portail
+            </label>
+          </div>
+
+          <label style="font-size:.8rem;font-weight:600;color:#6b7280;">Rôles / Attributions (plusieurs possibles)</label>
+          <div id="portal-roles" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.5rem;margin:.5rem 0 1.25rem;"></div>
+
+          <label style="font-size:.8rem;font-weight:600;color:#6b7280;">Code d'accès</label>
+          <div style="display:flex;gap:.5rem;align-items:center;margin:.5rem 0 1rem;">
+            <input type="text" id="portal-code" class="form-input" style="text-transform:uppercase;font-weight:700;letter-spacing:2px;max-width:160px;" maxlength="6" placeholder="Aucun">
+            <button class="btn btn-secondary" onclick="generatePortalCode()">Générer</button>
+          </div>
+
+          <label style="font-size:.8rem;font-weight:600;color:#6b7280;">Lien direct</label>
+          <div style="display:flex;gap:.5rem;align-items:center;margin:.5rem 0 1rem;">
+            <input type="text" id="portal-link" class="form-input" readonly style="font-size:.82rem;">
+            <button class="btn btn-secondary" onclick="copyPortalLink()">Copier</button>
+          </div>
+        </div>
+
+        <!-- EVALUATIONS -->
+        <div id="ptab-eval" class="ptab-content" style="display:none;">
+          <h4 style="font-size:.95rem;font-weight:600;margin-bottom:.75rem;">Nouvelle évaluation</h4>
+          <div class="admin-filters" style="margin-bottom:.75rem;">
+            <div class="filter-group"><label>Évaluateur *</label><input type="text" id="eval-by" class="form-input" placeholder="Votre nom"></div>
+            <div class="filter-group"><label>Période</label><input type="text" id="eval-period" class="form-input" placeholder="Ex: Juillet 2026"></div>
+          </div>
+          <div class="admin-filters" style="margin-bottom:.75rem;">
+            <div class="filter-group"><label>Ponctualité (/5)</label><input type="number" id="eval-r1" class="form-input" min="0" max="5" step="1"></div>
+            <div class="filter-group"><label>Qualité (/5)</label><input type="number" id="eval-r2" class="form-input" min="0" max="5" step="1"></div>
+            <div class="filter-group"><label>Attitude (/5)</label><input type="number" id="eval-r3" class="form-input" min="0" max="5" step="1"></div>
+          </div>
+          <div class="form-group" style="margin-bottom:.75rem;"><label>Points forts</label><textarea id="eval-strengths" class="form-input" rows="2"></textarea></div>
+          <div class="form-group" style="margin-bottom:.75rem;"><label>À améliorer</label><textarea id="eval-improvements" class="form-input" rows="2"></textarea></div>
+          <div class="form-group" style="margin-bottom:.75rem;"><label>Commentaires</label><textarea id="eval-comments" class="form-input" rows="2"></textarea></div>
+          <button class="btn btn-primary" onclick="submitEvaluation()">Enregistrer l'évaluation</button>
+          <hr style="margin:1.25rem 0;border:none;border-top:1px solid var(--admin-border);">
+          <h4 style="font-size:.95rem;font-weight:600;margin-bottom:.75rem;">Historique</h4>
+          <div id="eval-history"></div>
+        </div>
+
+        <!-- REPORTS -->
+        <div id="ptab-reports" class="ptab-content" style="display:none;">
+          <div id="reports-received"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closePortalModal()">Fermer</button>
+        <button class="btn btn-primary" id="btn-save-portal" onclick="savePortalSettings()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
   <!-- QR Assignment Modal -->
   <div class="modal-overlay" id="qr-assign-modal" style="display:none;">
     <div class="modal" style="max-width:600px;">
