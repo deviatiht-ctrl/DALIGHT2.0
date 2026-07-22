@@ -1495,23 +1495,12 @@
 
     <script type="module">
       import { initChatWidget } from '../js/chat-widget.js?v=5.0.0';
-      import { createPlopPayment, verifyPlopPayment, isAutomaticPlopPayment, isBankPayment, autoPollPlopPayments } from '../js/plop-payment.js?v=5.0.1';
       
       document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();
         initChatWidget();
         initReservationSteps();
         loadResvPaymentMethods();
-
-        // If returning from a PLOP PLOP payment, verify it and show confirmation/error modal
-        handlePlopReturn();
-
-        // Safety net: auto-confirm any pending PLOP reservations already in the DB
-        // (covers cases where localStorage was cleared or payment was made from another device)
-        setTimeout(() => {
-          const sb = getSupabaseClient();
-          if (sb) autoPollPlopPayments(sb).catch(() => {});
-        }, 3000);
 
         // Fallback: ensure the hamburger menu works on this page
         setupResvNavToggle();
@@ -1598,12 +1587,10 @@
         el?.classList.add('selected');
         const pm = selectedResvPM;
         const isOther = slug === 'other';
-        const isBank = isBankPayment(slug);
-        const isManual = !isAutomaticPlopPayment(slug);
         const detailBox = document.getElementById('resv-payment-detail-box');
         const otherBox = document.getElementById('resv-other-payment-box');
         if (detailBox) {
-          if (isBank && pm) {
+          if (pm && !isOther) {
             document.getElementById('resv-pm-title').textContent = pm.name;
             document.getElementById('resv-pm-account-name').textContent = pm.account_name || '—';
             document.getElementById('resv-pm-account-number').textContent = pm.account_number || '—';
@@ -1619,7 +1606,7 @@
           if (otherInput) otherInput.required = isOther;
           if (!isOther && otherInput) otherInput.value = '';
         }
-        const requiresManualProof = (isBank || isOther) && (isOther || pm?.requires_proof !== false);
+        const requiresManualProof = isOther || pm?.requires_proof !== false;
         const proofSection = document.getElementById('resv-proof-section');
         if (proofSection) proofSection.style.display = requiresManualProof ? 'block' : 'none';
         const proofInput = document.getElementById('payment-proof');
@@ -2524,8 +2511,6 @@ function loadCartData() {
         if (oldProofError) oldProofError.remove();
 
         const selectedPaymentConfig = resvPaymentMethods.find(p => p.slug === paymentMethod.value) || selectedResvPM;
-        const isPlop = isAutomaticPlopPayment(paymentMethod.value);
-        const isManual = !isPlop;
         const isOther = paymentMethod.value === 'other';
         const otherPaymentName = isOther ? document.getElementById('other-payment-name')?.value.trim() : '';
 
@@ -2547,22 +2532,8 @@ function loadCartData() {
         document.getElementById('other-payment-name')?.classList.remove('field-error');
         document.getElementById('other-payment-error')?.remove();
 
-        // Block non-PLOP methods that don't require proof (e.g. cash) — not allowed online
-        if (isManual && selectedPaymentConfig && selectedPaymentConfig.requires_proof === false) {
-          const paymentContainer = document.querySelector('.payment-methods');
-          const oldErr = document.getElementById('payment-method-error');
-          if (oldErr) oldErr.remove();
-          const msg = document.createElement('div');
-          msg.id = 'payment-method-error';
-          msg.className = 'error-text';
-          msg.style.cssText = 'margin-top:.75rem;padding:.75rem 1rem;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;color:#991b1b;font-size:.9rem;';
-          msg.innerHTML = '<strong>Rezèvasyon pa konfime.</strong><br>Metòd peman sa a pa disponib pou rezèvasyon sou entènèt. Tanpri chwazi MonCash, NatCash, Vèsman bankè oswa yon lòt metòd ak prèv peman.';
-          if (paymentContainer) paymentContainer.insertAdjacentElement('afterend', msg);
-          return;
-        }
-
-        // All manual non-PLOP methods (including bank transfer and other) must have proof uploaded
-        const requiresManualProof = isManual && (isOther || selectedPaymentConfig?.requires_proof !== false);
+        // All manual methods must have proof uploaded
+        const requiresManualProof = isOther || selectedPaymentConfig?.requires_proof !== false;
 
         if (requiresManualProof && !proofFile) {
           if (uploadZone) {
@@ -2597,71 +2568,7 @@ function loadCartData() {
           const totalAmount = cartServices.reduce((sum, s) => sum + (Number(s.price_htg) || 0), 0);
           const amountToPay = formData.paymentChoice === 'full' ? totalAmount : calcDeposit(cartServices);
 
-          // ── PLOP PLOP PAYMENT PATH ───────────────────────────────
-          if (isPlop) {
-            const paymentReference = `${reservationNumber}-${formData.paymentChoice === 'full' ? 'FULL' : 'DEP'}`;
-
-            window.__lastReservationPaymentMeta = { isOther, otherPaymentName };
-
-            // 1. Create the reservation in the DATABASE FIRST (AWAITING_PAYMENT).
-            // This guarantees the reservation exists server-side even if the redirect
-            // back from PLOP PLOP never happens (internet cut, browser closed, etc.).
-            // It will be auto-confirmed by verification once the payment succeeds.
-            const savedReservation = await insertReservationRecord(supabaseClient, {
-              reservationNumber,
-              user,
-              proofUrl: null,
-              status: 'AWAITING_PAYMENT',
-              paymentStatus: 'pending',
-              paymentReference,
-              paymentChoice: formData.paymentChoice,
-            });
-
-            console.log('💾 AWAITING_PAYMENT reservation created in DB:', savedReservation.id);
-
-            // 2. Save reservation data locally for the return flow (UI restore)
-            const pendingPlopReservation = {
-              reservationNumber,
-              reservationId: savedReservation.id,
-              userId: user?.id || null,
-              formData,
-              cartServices,
-              paymentMethod: paymentMethod.value,
-              otherPaymentName,
-              isOther,
-              paymentReference,
-              amountToPay,
-              paymentChoice: formData.paymentChoice,
-              createdAt: Date.now(),
-            };
-            localStorage.setItem('dalight:pendingPlopReservation', JSON.stringify(pendingPlopReservation));
-
-            // 3. Create the PLOP payment and redirect
-            let payment;
-            try {
-              payment = await createPlopPayment(supabaseClient, {
-                refference_id: paymentReference,
-                montant: amountToPay,
-                payment_method: paymentMethod.value,
-                context_type: 'reservation',
-                redirect_url: `${window.location.origin}/pages/orders.html`,
-              });
-            } catch (payErr) {
-              // Payment could not even be created: cancel the placeholder reservation
-              await supabaseClient
-                .from('reservations')
-                .update({ status: 'CANCELLED', payment_status: 'failed' })
-                .eq('id', savedReservation.id);
-              localStorage.removeItem('dalight:pendingPlopReservation');
-              throw payErr;
-            }
-
-            // 4. Show warning modal before redirect
-            showPaymentWarningModal(payment.url, reservationNumber);
-            return;
-          }
-
-          // ── MANUAL PAYMENT PATH ──────────────────────────────────
+          // ── MANUAL PROOF-OF-PAYMENT PATH ─────────────────────────
           let proofUrl = null;
           if (proofFile) {
             console.log('📤 Uploading proof...', proofFile.name);
