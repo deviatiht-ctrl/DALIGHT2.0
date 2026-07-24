@@ -483,7 +483,28 @@
         updateCartUI();
       }
 
-      function addToCart(service) {
+      async function requireAuth() {
+        let attempts = 0;
+        let supabase = getSupabase();
+        while (!supabase && attempts < 30) {
+          await new Promise(r => setTimeout(r, 100));
+          supabase = getSupabase();
+          attempts++;
+        }
+        if (!supabase) {
+          showToast('error', 'Erreur', 'Connexion au serveur impossible. Veuillez réessayer.');
+          return false;
+        }
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          window.location.href = './login.html?redirect=services.html';
+          return false;
+        }
+        return true;
+      }
+
+      async function addToCart(service) {
+        if (!(await requireAuth())) return;
         const exists = cart.find(item => item.name === service.name);
         if (exists) {
           showToast('error', 'Déjà dans le panier', 'Ce service est déjà ajouté. Ouvrez le panier pour finaliser.');
@@ -587,7 +608,8 @@
         document.body.style.overflow = '';
       }
 
-      function checkout() {
+      async function checkout() {
+        if (!(await requireAuth())) return;
         if (cart.length === 0) {
           alert('Votre panier est vide !');
           return;
@@ -615,7 +637,8 @@
 
         // Package subscription buttons
         document.querySelectorAll('.add-to-cart-package').forEach(btn => {
-          btn.addEventListener('click', () => {
+          btn.addEventListener('click', async () => {
+            if (!(await requireAuth())) return;
             const packageName = btn.dataset.package;
             const priceHtg = btn.dataset.price;
             const priceUsd = btn.dataset.priceUsd;
@@ -826,7 +849,7 @@
       }
       window.selectPricingByIndex = selectPricingByIndex;
 
-      function confirmHairSelection() {
+      async function confirmHairSelection() {
         if (!selectedPricing || !hairModalService) return;
         const service = {
           ...hairModalService,
@@ -837,7 +860,7 @@
           name: hairModalService.name + ' — ' + selectedPricing.label
         };
         closeHairModal();
-        addToCart(service);
+        await addToCart(service);
       }
       window.confirmHairSelection = confirmHairSelection;
 
@@ -930,7 +953,7 @@
 
         // Wire add to cart buttons
         grid.querySelectorAll('.add-to-cart').forEach(btn => {
-          btn.addEventListener('click', () => {
+          btn.addEventListener('click', async () => {
             const isHeadSpa = btn.dataset.isHeadspa === 'true';
             const service = {
               name: btn.dataset.serviceName,
@@ -944,7 +967,7 @@
               openHairModal(service);
               return;
             }
-            addToCart(service);
+            await addToCart(service);
             // Visual feedback
             btn.classList.add('added');
             btn.innerHTML = '<i data-lucide="check"></i> <span>Ajouté !</span>';
