@@ -1616,6 +1616,10 @@
         formData.payment_method = slug;
         formData.payment_method_id = pm?.id || null;
         formData.is_other_payment = isOther;
+        // Recalculate totals when payment method changes (bank transfer has no fee)
+        const selectedChoice = document.querySelector('input[name="payment_choice"]:checked');
+        if (selectedChoice) selectedChoice.dispatchEvent(new Event('change'));
+        updateSummary();
       };
 
 function loadCartData() {
@@ -1641,6 +1645,7 @@ function loadCartData() {
           
           if (cartData && cartData.length > 0) {
             cartServices = cartData;
+            cartServices.forEach(s => { if (s && !s.base_price_htg && s.price_htg) s.base_price_htg = Math.round(Number(s.price_htg) / 1.03); });
           } else {
             console.warn('⚠️ No cart found in localStorage');
             cartServices = [];
@@ -1784,12 +1789,12 @@ function loadCartData() {
         }
 
         // Update payment choice amounts
-        const totalAmount = cartServices.reduce((sum, s) => sum + (Number(s.price_htg) || 0), 0);
+        const totalAmount = getEffectiveTotal();
         const depositAmount = calcDeposit(cartServices);
         const depositDisplay = document.getElementById('choice-deposit-amount');
         const fullDisplay = document.getElementById('choice-full-amount');
-        if (depositDisplay) depositDisplay.textContent = `${depositAmount.toLocaleString()} HTG`;
-        if (fullDisplay) fullDisplay.textContent = `${totalAmount.toLocaleString()} HTG`;
+        if (depositDisplay) depositDisplay.textContent = `${depositAmount.toLocaleString()} HTG${getFeeNote()}`;
+        if (fullDisplay) fullDisplay.textContent = `${totalAmount.toLocaleString()} HTG${getFeeNote()}`;
         console.log('Payment choice amounts updated:', { depositAmount, totalAmount });
 
         // Step 5: payment
@@ -1881,17 +1886,17 @@ function loadCartData() {
               selectedCard.style.background = 'rgba(212,175,55,0.08)';
             }
             // Update payment heading
-            const totalAmount = cartServices.reduce((sum, s) => sum + (Number(s.price_htg) || 0), 0);
+            const totalAmount = getEffectiveTotal();
             const depositAmount = calcDeposit(cartServices);
             console.log('Payment choice:', choice, 'Deposit:', depositAmount, 'Total:', totalAmount);
             if (choice === 'deposit') {
-              document.getElementById('payment-heading-display').textContent = `Méthode de paiement de l'avance (${depositAmount.toLocaleString()} HTG)`;
+              document.getElementById('payment-heading-display').textContent = `Méthode de paiement de l'avance (${depositAmount.toLocaleString()} HTG)${getFeeNote()}`;
               // Show toast notification
               if (window.toast) {
-                toast.info('Avance sur réservation sélectionné', `Vous paierez ${depositAmount.toLocaleString()} HTG maintenant, le solde plus tard.`);
+                toast.info('Avance sur réservation sélectionné', `Vous paierez ${depositAmount.toLocaleString()} HTG${getFeeNote()} maintenant, le solde plus tard.`);
               }
             } else {
-              document.getElementById('payment-heading-display').textContent = `Méthode de paiement (${totalAmount.toLocaleString()} HTG)`;
+              document.getElementById('payment-heading-display').textContent = `Méthode de paiement (${totalAmount.toLocaleString()} HTG)${getFeeNote()}`;
               // Show toast notification
               if (window.toast) {
                 toast.success('Paiement complet sélectionné', `Vous paierez le montant total de ${totalAmount.toLocaleString()} HTG maintenant.`);
@@ -2147,18 +2152,26 @@ function loadCartData() {
       }
 
       const MASSAGE_CATS = ['massage-relaxant', 'wood-therapy', 'massage'];
+
+      function getBasePriceHTG(s) { return Number(s?.base_price_htg) || Math.round(Number(s?.price_htg || 0) / 1.03); }
+      function isBankTransferPayment() { return selectedResvPM && (selectedResvPM.slug === 'bank-transfer' || selectedResvPM.slug === 'bank_transfer' || (selectedResvPM.name || '').toLowerCase().includes('virement')); }
+      function getEffectivePriceHTG(s) { return isBankTransferPayment() ? getBasePriceHTG(s) : (Number(s?.price_htg) || 0); }
+      function getEffectiveTotal() { return cartServices.reduce((sum, s) => sum + getEffectivePriceHTG(s), 0); }
+      function getFeeNote() { return isBankTransferPayment() ? ' (virement bancaire - sans frais)' : ' (incl. 3% Moncash)'; }
+
       function calcDeposit(services) {
+        const useBase = isBankTransferPayment();
         let massageTotal = 0, headspaCount = 0;
         (services || []).forEach(s => {
           const cat = (s.category || '').toLowerCase();
           const name = (s.name || '').toLowerCase();
           if (MASSAGE_CATS.some(c => cat.includes(c) || name.includes('massage') || name.includes('wood'))) {
-            massageTotal += Number(s.price_htg) || 0;
+            massageTotal += useBase ? getBasePriceHTG(s) : (Number(s.price_htg) || 0);
           } else {
             headspaCount += 1;
           }
         });
-        const feeFunc = window.withFee || ((p) => Math.round(p * 1.03));
+        const feeFunc = useBase ? ((p) => Math.round(Number(p))) : (window.withFee || ((p) => Math.round(p * 1.03)));
         const baseDeposit = Math.round(massageTotal * 0.5) + (headspaCount * 1000);
         return feeFunc(baseDeposit);
       }
@@ -2170,7 +2183,7 @@ function loadCartData() {
           `${formData.firstName} ${formData.lastName}` : '-';
 
         // Calculate total and deposit from cart
-        const total   = cartServices.reduce((sum, s) => sum + (Number(s.price_htg) || 0), 0);
+        const total   = getEffectiveTotal();
         const deposit = cartServices.length > 0 ? calcDeposit(cartServices) : 1000;
         const hasMassage = cartServices.some(s => {
           const cat = (s.category||'').toLowerCase();
@@ -2178,8 +2191,8 @@ function loadCartData() {
           return MASSAGE_CATS.some(c => cat.includes(c) || name.includes('massage') || name.includes('wood'));
         });
         const totalText = cartServices.length > 0
-          ? `${deposit.toLocaleString()} HTG (avance sur réservation sur ${total.toLocaleString()} HTG)`
-          : `${deposit.toLocaleString()} HTG (avance sur réservation)`;
+          ? `${deposit.toLocaleString()} HTG (avance sur réservation sur ${total.toLocaleString()} HTG)${getFeeNote()}`
+          : `${deposit.toLocaleString()} HTG (avance sur réservation)${getFeeNote()}`;
         document.getElementById('summary-total').textContent = totalText;
 
         // Update all deposit displays
@@ -2196,7 +2209,7 @@ function loadCartData() {
         const condEl = document.getElementById('conditions-deposit-display');
         if (condEl) condEl.textContent = `${deposit.toLocaleString()} HTG`;
         const pmEl = document.getElementById('payment-heading-display');
-        if (pmEl) pmEl.textContent = `Méthode de paiement de l'avance (${deposit.toLocaleString()} HTG)`;
+        if (pmEl) pmEl.textContent = `Méthode de paiement de l'avance (${deposit.toLocaleString()} HTG)${getFeeNote()}`;
         
         // Populate cart items in summary
         const summaryCartItems = document.getElementById('summary-cart-items');
@@ -2565,7 +2578,7 @@ function loadCartData() {
           // Common data
           const { data: { user } } = await supabaseClient.auth.getUser();
           const reservationNumber = 'DL' + Date.now().toString().slice(-8);
-          const totalAmount = cartServices.reduce((sum, s) => sum + (Number(s.price_htg) || 0), 0);
+          const totalAmount = getEffectiveTotal();
           const amountToPay = formData.paymentChoice === 'full' ? totalAmount : calcDeposit(cartServices);
 
           // ── MANUAL PROOF-OF-PAYMENT PATH ─────────────────────────
@@ -2620,7 +2633,7 @@ function loadCartData() {
 
       // Helper: build and insert the reservation record
       async function insertReservationRecord(supabaseClient, { reservationNumber, user, proofUrl, status, paymentStatus, paymentReference, paymentChoice }) {
-        const totalAmount = cartServices.reduce((sum, s) => sum + (Number(s.price_htg) || 0), 0);
+        const totalAmount = getEffectiveTotal();
         const { isOther, otherPaymentName } = window.__lastReservationPaymentMeta || {};
         const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
         const rawPaymentMethod = isOther ? `other:${otherPaymentName}` : (paymentMethod?.value || formData.paymentMethod);

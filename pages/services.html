@@ -572,7 +572,7 @@
               <div class="cart-item-info">
                 <h4>${esc(item.name)}</h4>
                 <p>${esc(item.duration || '')}</p>
-                <div class="cart-item-price">${Number(item.price_htg).toLocaleString()} HTG</div>
+                <div class="cart-item-price">${Number(item.price_htg).toLocaleString()} HTG <small style="font-size:.75em;opacity:.7;">(incl. 3% Moncash)</small></div>
               </div>
               <button class="cart-item-remove" data-cart-id="${item.id}" aria-label="Retirer">
                 <i data-lucide="trash-2"></i>
@@ -586,7 +586,7 @@
           });
 
           if (footer) footer.style.display = 'block';
-          if (totalEl) totalEl.textContent = getCartTotal().toLocaleString() + ' HTG';
+          if (totalEl) totalEl.innerHTML = getCartTotal().toLocaleString() + ' HTG <small style="font-size:.75em;opacity:.7;">(incl. 3% Moncash)</small>';
         }
 
         if (window.lucide) lucide.createIcons();
@@ -655,6 +655,7 @@
               name: packageName,
               description: 'Abonnement mensuel - 4 séances par mois',
               duration: '1 mois (4 séances)',
+              base_price_htg: Number(priceHtg),
               price_htg: withFee(priceHtg),
               price_usd: withFeeUSD(priceUsd),
               isPackage: true
@@ -840,7 +841,7 @@
             el.querySelectorAll('strong').forEach(s => s.style.color = '#4A3728');
           }
         });
-        document.getElementById('hair-price-value').textContent = withFee(pricing.price_htg).toLocaleString() + ' HTG';
+        document.getElementById('hair-price-value').innerHTML = withFee(pricing.price_htg).toLocaleString() + ' HTG <small style="font-size:.7em;opacity:.7;">(incl. 3% Moncash)</small>';
         document.getElementById('hair-price-display').style.display = 'block';
         const confirmBtn = document.getElementById('hair-confirm-btn');
         confirmBtn.disabled = false;
@@ -853,6 +854,7 @@
         if (!selectedPricing || !hairModalService) return;
         const service = {
           ...hairModalService,
+          base_price_htg: selectedPricing.price_htg,
           price_htg: withFee(selectedPricing.price_htg),
           price_usd: withFeeUSD(selectedPricing.price_usd || hairModalService.price_usd),
           hair_type: selectedHairType || 'non précisé',
@@ -942,7 +944,7 @@
           <article class="service-tile" data-category="${cat}">
             <header>
               <h3>${esc(s.name)}</h3>
-              <span class="price">${isHeadSpa ? 'À partir de ' : ''}${withFee(s.price_htg).toLocaleString()} HTG${isHeadSpa ? ' <small style="font-size:.7em;opacity:.7;">(selon longueur)</small>' : ' · $' + withFeeUSD(s.price_usd)}</span>
+              <span class="price">${isHeadSpa ? 'À partir de ' : ''}${withFee(s.price_htg).toLocaleString()} HTG <small style="font-size:.65em;opacity:.7;">(incl. 3% Moncash)</small>${isHeadSpa ? ' <small style="font-size:.7em;opacity:.7;">(selon longueur)</small>' : ' · $' + withFeeUSD(s.price_usd)}</span>
             </header>
             <p>${esc(s.description || '')} ${s.duration ? '(' + esc(s.duration) + ')' : ''}</p>
             <button class="add-to-cart" data-service-id="${s.id || ''}" data-is-headspa="${isHeadSpa}" data-service-name="${esc(s.name)}" data-service-desc="${esc(s.description || '')}" data-service-duration="${esc(s.duration || '')}" data-service-price-htg="${s.price_htg}" data-service-price-usd="${s.price_usd}" data-service-category="${esc(s.category || '')}">
@@ -959,6 +961,7 @@
               name: btn.dataset.serviceName,
               description: btn.dataset.serviceDesc,
               duration: btn.dataset.serviceDuration,
+              base_price_htg: Number(btn.dataset.servicePriceHtg),
               price_htg: withFee(btn.dataset.servicePriceHtg),
               price_usd: withFeeUSD(btn.dataset.servicePriceUsd),
               category: btn.dataset.serviceCategory || ''
