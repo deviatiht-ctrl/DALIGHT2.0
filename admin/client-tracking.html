@@ -291,6 +291,11 @@
               <div class="form-group"><label>Bras (cm)</label><input type="number" step="0.1" id="arm-cm" placeholder="cm"></div>
               <div class="form-group"><label>N° de séance</label><input type="number" id="session-count-input" value="${nextSession}" min="1" max="${selectedProgram.total_sessions}"></div>
             </div>
+            <div style="margin-top:1rem;">
+              <h4 style="margin:.5rem 0; font-size:.95rem; color:var(--admin-text-muted);">Autres mesures / contours</h4>
+              <div id="custom-measurements-list" style="display:flex; flex-direction:column; gap:.5rem;"></div>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="addCustomMeasurementRow()" style="margin-top:.5rem;">+ Ajouter une mesure</button>
+            </div>
             <div class="form-grid" style="margin-top:1rem; grid-template-columns:1fr;">
               <div class="form-group"><label>Notes massage / soin</label><textarea id="massage-notes" rows="2"></textarea></div>
               <div class="form-group"><label>Alimentation / régime suivi</label><textarea id="diet-notes" rows="2"></textarea></div>
@@ -307,6 +312,7 @@
           <div class="sessions-timeline" id="sessions-timeline"></div>
         </div>
       `;
+      renderCustomMeasurements();
       renderAnalysis();
       renderSessionsTimeline();
     }
@@ -354,6 +360,11 @@
         if (m.hips) metrics.push({ label: 'Hanches', value: m.hips + ' cm' });
         if (m.thigh) metrics.push({ label: 'Cuisse', value: m.thigh + ' cm' });
         if (m.arm) metrics.push({ label: 'Bras', value: m.arm + ' cm' });
+        if (Array.isArray(m.custom)) {
+          m.custom.forEach(c => {
+            if (c.value != null) metrics.push({ label: c.label || 'Mesure', value: c.value + ' cm' });
+          });
+        }
         return `
           <div class="session-item">
             <div><div class="session-number">#${s.session_number}</div><div style="font-size:.8rem; color:var(--admin-text-muted);">${window.adminCore?.formatDate?.(s.session_date) || s.session_date}</div></div>
@@ -384,6 +395,37 @@
       });
     }
 
+    function renderCustomMeasurements(custom = []) {
+      const list = document.getElementById('custom-measurements-list');
+      if (!list) return;
+      list.innerHTML = '';
+      custom.forEach(m => addCustomMeasurementRow(m.label, m.value));
+      if (!custom.length) addCustomMeasurementRow();
+    }
+
+    function addCustomMeasurementRow(label = '', value = '') {
+      const list = document.getElementById('custom-measurements-list');
+      if (!list) return;
+      const row = document.createElement('div');
+      row.className = 'custom-measurement-row';
+      row.style = 'display:flex; gap:.5rem; align-items:center;';
+      row.innerHTML = `
+        <input type="text" class="cm-label form-control" placeholder="Nom (ex: contour ventre)" value="${escapeHtml(label)}" style="flex:1;">
+        <input type="number" step="0.1" class="cm-value form-control" placeholder="cm" value="${value !== '' ? value : ''}" style="width:100px;">
+        <button type="button" class="btn btn-sm" onclick="this.parentElement.remove()" style="background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;">❌</button>
+      `;
+      list.appendChild(row);
+    }
+
+    function getCustomMeasurements() {
+      const rows = document.querySelectorAll('#custom-measurements-list .custom-measurement-row');
+      return Array.from(rows).map(row => {
+        const label = row.querySelector('.cm-label')?.value?.trim() || '';
+        const value = parseFloat(row.querySelector('.cm-value')?.value);
+        return label ? { label, value: isNaN(value) ? null : value } : null;
+      }).filter(Boolean);
+    }
+
     function getMeas(session, key) { return session?.measurements?.[key] || null; }
 
     function editSession(id) {
@@ -401,6 +443,7 @@
       document.getElementById('hips-cm').value = m.hips || '';
       document.getElementById('thigh-cm').value = m.thigh || '';
       document.getElementById('arm-cm').value = m.arm || '';
+      renderCustomMeasurements(m.custom || []);
       window.scrollTo({ top: document.getElementById('session-form').offsetTop - 20, behavior: 'smooth' });
     }
 
@@ -410,6 +453,7 @@
       document.getElementById('session-id').value = '';
       document.getElementById('session-count-input').value = Math.min(next, selectedProgram.total_sessions);
       document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
+      renderCustomMeasurements();
     }
 
     async function saveSession(e) {
@@ -422,6 +466,7 @@
         hips: parseFloat(document.getElementById('hips-cm').value) || null,
         thigh: parseFloat(document.getElementById('thigh-cm').value) || null,
         arm: parseFloat(document.getElementById('arm-cm').value) || null,
+        custom: getCustomMeasurements(),
       };
       const payload = {
         program_id: selectedProgram.id,
