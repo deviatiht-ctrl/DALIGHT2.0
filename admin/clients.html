@@ -131,12 +131,37 @@
     let reservationCounts = {};
     let clientPhones = {};
     let sb = null;
-    
+
+    function getSupabase() {
+      return window.adminCore?.supabase || window.dalightAdminSupabase || window.supabaseClient || null;
+    }
+
+    function displayError(msg) {
+      const tbody = document.getElementById('clients-table');
+      const countEl = document.getElementById('clients-count');
+      const safe = String(msg).replace(/</g, '&lt;').replace(/&/g, '&amp;');
+      if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding:2rem; color:red;">' + safe + '</td></tr>';
+      if (countEl) countEl.textContent = 'Erreur';
+    }
+
+    window.onerror = function(message, source, lineno, colno, error) {
+      console.error('JS Error:', message, source, lineno, error);
+      displayError('Erreur JS: ' + message + ' (ligne ' + lineno + ')');
+      return false;
+    };
+    window.addEventListener('unhandledrejection', function(event) {
+      console.error('Promise rejection:', event.reason);
+      const reason = event.reason && event.reason.message ? event.reason.message : event.reason;
+      displayError('Erreur async: ' + reason);
+    });
+
     document.addEventListener('DOMContentLoaded', async () => {
       await new Promise(resolve => setTimeout(resolve, 100));
-      const session = await window.adminCore?.checkAdminAuth();
-      if (!session) return;
-      sb = window.adminCore?.supabase;
+      if (window.adminCore?.checkAdminAuth) {
+        const session = await window.adminCore.checkAdminAuth();
+        if (!session) return;
+      }
+      sb = getSupabase();
       loadClients();
       initSearch();
     });
@@ -171,11 +196,35 @@
     }
     
     async function loadClients() {
-      const { fetchClients, fetchReservations, formatDate, getInitials } = window.adminCore;
-      
+      const core = window.adminCore || {};
+
       try {
-        allClients = await fetchClients();
-        const reservations = await fetchReservations();
+        if (typeof core.fetchClients === 'function') {
+          allClients = await core.fetchClients();
+        } else {
+          const client = getSupabase();
+          if (!client) throw new Error('Supabase non disponible');
+          const { data, error } = await client
+            .from('profiles')
+            .select('*')
+            .order('created_at', { ascending: false });
+          if (error) throw error;
+          allClients = data || [];
+        }
+
+        let reservations = [];
+        if (typeof core.fetchReservations === 'function') {
+          reservations = await core.fetchReservations();
+        } else {
+          const client = getSupabase();
+          const { data, error } = await client
+            .from('reservations')
+            .select('*')
+            .order('created_at', { ascending: false });
+          if (error) throw error;
+          reservations = data || [];
+        }
+
         reservationCounts = {};
         clientPhones = {};
         reservations.forEach(r => {
@@ -185,9 +234,9 @@
             clientPhones[email] = r.phone;
           }
         });
-        
+
         document.getElementById('total-clients').textContent = allClients.length;
-        
+
         const now = new Date();
         const activeEmails = new Set();
         reservations.forEach(r => {
@@ -197,15 +246,17 @@
           }
         });
         document.getElementById('active-clients').textContent = activeEmails.size;
-        
+
         renderClients();
       } catch (err) {
-        console.error('Error:', err);
+        console.error('Error loading clients:', err);
+        displayError('Erreur chargement clients: ' + err.message);
       }
     }
     
     function renderClients() {
-      const { formatDate, getInitials } = window.adminCore;
+      const formatDate = window.adminCore?.formatDate || ((d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-');
+      const getInitials = window.adminCore?.getInitials || ((n) => n ? n.split(' ').map(x => x[0]).join('').toUpperCase().slice(0, 2) : '?');
       const tbody = document.getElementById('clients-table');
       const searchInput = document.getElementById('search-input');
       const countEl = document.getElementById('clients-count');
