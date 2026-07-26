@@ -598,7 +598,7 @@
     }
 
     async function addCategory() {
-      const slug = document.getElementById('cat-slug').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+      const slug = document.getElementById('cat-slug').value.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9_-]/g, '');
       const label = document.getElementById('cat-label').value.trim();
       const order = parseInt(document.getElementById('cat-order').value) || 0;
       if (!slug || !label) { alert('Slug et libellé requis'); return; }

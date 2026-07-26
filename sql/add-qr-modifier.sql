@@ -100,7 +100,7 @@ RETURNS TABLE (
     id UUID,
     employee_number TEXT,
     full_name TEXT,
-    position TEXT,
+    emp_position TEXT,
     qr_modifier TEXT,
     photo_url TEXT
 ) AS $$
@@ -110,7 +110,7 @@ BEGIN
         pe.id,
         pe.employee_number,
         pe.full_name,
-        pe.position,
+        pe."position",
         pe.qr_modifier,
         pe.photo_url
     FROM presence_employees pe

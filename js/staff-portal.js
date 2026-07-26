@@ -9,16 +9,17 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
 
 // ---- Role catalogue -------------------------------------------------
 const ROLE_META = {
-  estheticienne:     { label: 'Esthéticienne',     icon: '✨', provider: true },
-  masseuse:          { label: 'Masseur/Masseuse',  icon: '💆', provider: true },
-  coiffure:          { label: 'Coiffure',          icon: '💇', provider: true },
-  onglerie:          { label: 'Onglerie',          icon: '💅', provider: true },
-  community_manager: { label: 'Community Manager',  icon: '📱', provider: false },
-  adm_manager:       { label: 'ADM / Manager',      icon: '🗂️', provider: false },
-  receptionniste:    { label: 'Réceptionniste',     icon: '📞', provider: false },
-  caissier:          { label: 'Caissier/Caisse',   icon: '💵', provider: false },
-  formateur:         { label: 'Formateur',          icon: '🎓', provider: false },
+  estheticienne:     { label: 'Esthéticienne',     icon: 'sparkles', provider: true },
+  masseuse:          { label: 'Masseur/Masseuse',  icon: 'hand', provider: true },
+  coiffure:          { label: 'Coiffure',          icon: 'scissors', provider: true },
+  onglerie:          { label: 'Onglerie',          icon: 'gem', provider: true },
+  community_manager: { label: 'Community Manager',  icon: 'smartphone', provider: false },
+  adm_manager:       { label: 'ADM / Manager',      icon: 'briefcase', provider: false },
+  receptionniste:    { label: 'Réceptionniste',     icon: 'phone', provider: false },
+  caissier:          { label: 'Caissier/Caisse',   icon: 'banknote', provider: false },
+  formateur:         { label: 'Formateur',          icon: 'graduation-cap', provider: false },
 };
+function lucideIcon(name, size = 16) { return `<i data-lucide="${name}" style="width:${size}px;height:${size}px;vertical-align:-3px;"></i>`; }
 function roleLabel(r) { return ROLE_META[r]?.label || r; }
 function isProviderRole(r) { return !!ROLE_META[r]?.provider; }
 
@@ -42,27 +43,30 @@ function toast(msg, type = 'success') {
   setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(() => el.remove(), 300); }, 3200);
 }
 
-// ---- Auth (code) ----------------------------------------------------
+// ---- Auth (username / password) --------------------------------------
 async function staffLogin() {
-  const input = document.getElementById('code-input');
+  const userInput = document.getElementById('username-input');
+  const passInput = document.getElementById('password-input');
   const errEl = document.getElementById('login-error');
-  const code = (input.value || '').trim().toUpperCase();
+  const username = (userInput.value || '').trim().toLowerCase();
+  const password = (passInput.value || '').trim();
   errEl.textContent = '';
-  if (code.length < 4) { errEl.textContent = 'Entrez votre code d\'accès.'; return; }
+  if (!username || !password) { errEl.textContent = 'Entrez votre nom d\'utilisateur et votre mot de passe.'; return; }
 
   try {
     const { data, error } = await sb
       .from('presence_employees')
       .select('*')
-      .eq('access_code', code)
+      .eq('username', username)
       .maybeSingle();
 
     if (error) throw error;
-    if (!data) { errEl.textContent = 'Code invalide.'; return; }
+    if (!data || data.password !== password) { errEl.textContent = 'Identifiants invalides.'; return; }
     if (data.portal_enabled === false) { errEl.textContent = 'Accès désactivé. Contactez l\'administration.'; return; }
 
     currentEmployee = data;
-    sessionStorage.setItem('dalight_staff_code', code);
+    sessionStorage.setItem('dalight_staff_username', username);
+    sessionStorage.setItem('dalight_staff_password', password);
     enterPortal();
   } catch (err) {
     console.error(err);
@@ -71,21 +75,22 @@ async function staffLogin() {
 }
 
 function staffLogout() {
-  sessionStorage.removeItem('dalight_staff_code');
+  sessionStorage.removeItem('dalight_staff_username');
+  sessionStorage.removeItem('dalight_staff_password');
   currentEmployee = null;
   if (chronoTimer) clearInterval(chronoTimer);
   document.getElementById('portal-shell').classList.add('hidden');
   document.getElementById('login-screen').classList.remove('hidden');
-  document.getElementById('code-input').value = '';
+  document.getElementById('username-input').value = '';
+  document.getElementById('password-input').value = '';
 }
 
 async function tryAutoLogin() {
-  const url = new URLSearchParams(location.search);
-  const codeFromUrl = url.get('code');
-  const stored = sessionStorage.getItem('dalight_staff_code');
-  const code = (codeFromUrl || stored || '').toUpperCase();
-  if (!code) return;
-  document.getElementById('code-input').value = code;
+  const username = sessionStorage.getItem('dalight_staff_username');
+  const password = sessionStorage.getItem('dalight_staff_password');
+  if (!username || !password) return;
+  document.getElementById('username-input').value = username;
+  document.getElementById('password-input').value = password;
   await staffLogin();
 }
 
@@ -170,7 +175,7 @@ function showSection(id) {
     stats: renderStats, reports: renderReports, attendance: renderAttendance,
     evaluations: renderEvaluations, profile: renderProfile,
   };
-  (map[id] || renderHome)(c);
+  Promise.resolve((map[id] || renderHome)(c)).then(() => { if (window.lucide) lucide.createIcons(); });
 }
 
 // ---- HOME -----------------------------------------------------------
@@ -210,15 +215,15 @@ async function renderHome(c) {
   cards.push(statCard('#c9a227', 'rgba(201,162,39,.16)', avgScore, 'Note moyenne /5', 'M11 3.049c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915'));
 
   const presence = att
-    ? `<span class="badge ${att.exit_time ? 'badge-blue' : 'badge-green'}">${att.exit_time ? 'Journée terminée' : 'Présent(e)'}</span> · Entrée ${fmtTime(att.entry_time)} ${att.exit_time ? '· Sortie ' + fmtTime(att.exit_time) : ''}`
-    : '<span class="badge badge-muted">Aucune présence enregistrée aujourd\'hui</span>';
+    ? `<span class="badge ${att.exit_time ? 'badge-blue' : 'badge-green'}">${att.exit_time ? 'Journée terminée' : 'Présent(e)'}</span> · ${fmtDate(att.log_date)} · Entrée ${fmtTime(att.entry_time)} · Sortie ${att.exit_time ? fmtTime(att.exit_time) : '—'}`
+    : '<span class="badge badge-red">Al scanner</span>';
 
   c.innerHTML = `
     <div class="grid cards-4" style="margin-bottom:1.3rem;">${cards.join('')}</div>
     <div class="card" style="margin-bottom:1.3rem;">
-      <div class="card-title">Bonjour, ${esc((currentEmployee.full_name || '').split(' ')[0] || 'vous')} 👋</div>
+      <div class="card-title">Bonjour, ${esc((currentEmployee.full_name || '').split(' ')[0] || 'vous')}</div>
       <div style="color:var(--muted);font-size:.9rem;line-height:1.6;">
-        Rôles: ${roles.map(r => `<span class="badge badge-gold" style="margin-right:.3rem;">${ROLE_META[r]?.icon || ''} ${esc(roleLabel(r))}</span>`).join('') || '—'}<br>
+        Rôles: ${roles.map(r => `<span class="badge badge-gold" style="margin-right:.3rem;">${ROLE_META[r]?.icon ? lucideIcon(ROLE_META[r].icon, 14) : ''} ${esc(roleLabel(r))}</span>`).join('') || '—'}<br>
         Présence: ${presence}
       </div>
     </div>
@@ -248,33 +253,72 @@ function statCard(color, bg, value, label, icon) {
 
 // ---- APPOINTMENTS ---------------------------------------------------
 let loadedAppointments = [];
+let cfModule = null;
+let loadedConsent = null;
 function seesAllAppointments() {
   const roles = employeeRoles();
   return roles.includes('adm_manager') || roles.includes('receptionniste');
 }
 async function renderAppointments(c) {
-  const date = c._date || todayStr();
-  const { data, error } = await sb.from('reservations')
-    .select('*').eq('date', date).order('time', { ascending: true });
+  const date = c._date || '';
+  const seesAll = seesAllAppointments();
+  let data = [], error = null;
+  if (seesAll) {
+    let q = sb.from('reservations').select('*, reservation_employees(*)').neq('status', 'CANCELLED');
+    if (date) q = q.eq('date', date); else q = q.gte('date', todayStr());
+    const res = await q.order('date', { ascending: true }).order('time', { ascending: true });
+    data = res.data; error = res.error;
+  } else {
+    const empId = currentEmployee.id;
+    const [primaryRes, empRes] = await Promise.all([
+      sb.from('reservations').select('*, reservation_employees(*)').eq('assigned_employee_id', empId).neq('status', 'CANCELLED'),
+      sb.from('reservation_employees').select('reservation_id').eq('employee_id', empId),
+    ]);
+    const ids = new Set((empRes.data || []).map(re => re.reservation_id));
+    (primaryRes.data || []).forEach(r => ids.add(r.id));
+    if (ids.size) {
+      const res = await sb.from('reservations').select('*, reservation_employees(*)').in('id', Array.from(ids)).neq('status', 'CANCELLED').order('date', { ascending: true }).order('time', { ascending: true });
+      data = res.data; error = res.error;
+    } else {
+      data = [];
+    }
+  }
 
   let list = (data || []).filter(r => r.status !== 'CANCELLED');
-  // Providers only see appointments assigned to them; managers/reception see all
-  if (!seesAllAppointments()) {
-    list = list.filter(r => r.assigned_employee_id === currentEmployee.id);
-  }
+  if (date) list = list.filter(r => r.date === date);
   loadedAppointments = list;
+
+  try {
+    if (!cfModule) cfModule = await import('./consent-forms.js');
+    const ids = list.map(r => r.id);
+    const [subRes, tplRes, svcRes] = await Promise.all([
+      ids.length ? sb.from('form_submissions').select('*').in('reservation_id', ids) : Promise.resolve({ data: [] }),
+      sb.from('form_templates').select('*').eq('is_active', true),
+      sb.from('services').select('id, category'),
+    ]);
+    loadedConsent = {
+      submissions: subRes.data || [],
+      templates: tplRes.data || [],
+      serviceMap: Object.fromEntries((svcRes.data || []).map(s => [s.id, s.category])),
+    };
+  } catch (err) {
+    console.warn('consent forms load error:', err);
+    cfModule = null;
+    loadedConsent = null;
+  }
 
   c.innerHTML = `
     <div class="card" style="margin-bottom:1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
       <div class="form-group" style="margin:0;">
-        <label>Date</label>
+        <label>Filtrer par date</label>
         <input type="date" class="input" id="appt-date" value="${date}" onchange="reloadAppointments(this.value)">
       </div>
-      <div style="color:var(--muted);font-size:.85rem;">${list.length} rendez-vous</div>
+      <button class="btn btn-ghost btn-sm" onclick="reloadAppointments('')">Toutes les dates</button>
+      <div style="color:var(--admin-text-muted);font-size:.85rem;">${list.length} rendez-vous</div>
     </div>
     <div id="appt-list">
       ${error ? `<div class="empty">Erreur: ${esc(error.message)}</div>` :
-        list.length === 0 ? '<div class="empty">Aucun rendez-vous pour cette date.</div>' :
+        list.length === 0 ? '<div class="empty">Aucun rendez-vous assigné.</div>' :
         list.map(apptCard).join('')}
     </div>
   `;
@@ -285,6 +329,21 @@ window.reloadAppointments = function (date) {
   renderAppointments(c);
 };
 
+function getConsentInfo(r) {
+  if (!cfModule || !loadedConsent) return '';
+  const submission = cfModule.findSubmission(r, loadedConsent.submissions);
+  if (submission) {
+    return `<span class="badge badge-green">Formulaire reçu</span>
+      <button class="btn btn-sm btn-secondary" style="margin-left:.3rem;" onclick="openConsentForAppt('${r.id}')">Voir</button>`;
+  }
+  const template = cfModule.matchTemplate(r, loadedConsent.templates, loadedConsent.serviceMap);
+  if (template) {
+    return `<span class="badge badge-gold">Formulaire requis</span>
+      <button class="btn btn-sm btn-primary" style="margin-left:.3rem;" onclick="openConsentForAppt('${r.id}')">Remplir</button>`;
+  }
+  return '<span class="badge badge-muted">Aucun formulaire</span>';
+}
+
 function apptCard(r) {
   const statusBadge = {
     CONFIRMED: 'badge-green', PENDING: 'badge-gold', AWAITING_PAYMENT: 'badge-gold',
@@ -292,27 +351,143 @@ function apptCard(r) {
   }[r.status] || 'badge-muted';
   const clientName = esc(r.user_name || 'Client');
   const svc = esc(r.service || 'Service');
-  return `<div class="list-item">
+  return `<div class="list-item" style="cursor:pointer;" onclick="openApptDetail('${r.id}')">
     <div class="avatar">${getInitials(r.user_name || 'C')}</div>
     <div style="flex:1;min-width:0;">
       <div style="font-weight:600;">${clientName} <span class="badge ${statusBadge}" style="margin-left:.3rem;">${esc(r.status)}</span></div>
-      <div style="color:var(--muted);font-size:.85rem;">${svc} · ${fmtTime(r.time)} · ${esc(r.location || '')}</div>
-      ${r.phone ? `<div style="color:var(--muted);font-size:.8rem;">📞 ${esc(r.phone)}</div>` : ''}
-      ${r.notes ? `<div style="color:var(--muted);font-size:.8rem;margin-top:.2rem;">📝 ${esc(r.notes)}</div>` : ''}
+      <div style="color:var(--admin-text-muted);font-size:.85rem;">${svc} · ${fmtDate(r.date)} · ${fmtTime(r.time)} · ${esc(r.location || '')}</div>
     </div>
-    <button class="btn btn-green btn-sm" onclick="startServiceFromAppt('${r.id}')">Démarrer</button>
+    <div style="display:flex;gap:.4rem;align-items:center;" onclick="event.stopPropagation()">
+      <button class="btn btn-green btn-sm" onclick="startServiceFromAppt('${r.id}')">Démarrer</button>
+    </div>
   </div>`;
 }
 
-window.startServiceFromAppt = async function (reservationId) {
+window.openApptDetail = function (reservationId) {
+  const r = loadedAppointments.find(a => a.id === reservationId);
+  if (!r) return;
+  const email = esc(r.user_email || r.email || '');
+  const consentInfo = getConsentInfo(r);
+  const statusBadge = {
+    CONFIRMED: 'badge-green', PENDING: 'badge-gold', AWAITING_PAYMENT: 'badge-gold',
+    COMPLETED: 'badge-blue', NO_SHOW: 'badge-muted'
+  }[r.status] || 'badge-muted';
+
+  const overlay = document.createElement('div');
+  overlay.id = 'appt-detail-overlay';
+  overlay.style = 'position:fixed;inset:0;background:rgba(15,17,23,.55);z-index:9998;display:flex;align-items:center;justify-content:center;padding:1.5rem;';
+  overlay.innerHTML = `
+    <div class="card" style="max-width:480px;width:100%;margin:0;max-height:85vh;overflow-y:auto;">
+      <div class="card-title">
+        Rendez-vous
+        <button class="btn btn-ghost btn-sm" onclick="closeApptDetail()">${lucideIcon('x', 16)}</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:.9rem;margin-bottom:1rem;">
+        <div class="avatar" style="width:56px;height:56px;font-size:1.1rem;">${getInitials(r.user_name || 'C')}</div>
+        <div>
+          <div style="font-weight:700;font-size:1.05rem;">${esc(r.user_name || 'Client')}</div>
+          <span class="badge ${statusBadge}">${esc(r.status)}</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.6rem;font-size:.9rem;color:var(--admin-text);">
+        <div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('sparkles')} <span>${esc(r.service || 'Service')}</span></div>
+        <div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('calendar')} <span>${fmtDate(r.date)}</span></div>
+        <div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('clock')} <span>${fmtTime(r.time)}</span></div>
+        <div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('map-pin')} <span>${esc(r.location || '—')}</span></div>
+        ${r.phone ? `<div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('phone')} <span>${esc(r.phone)}</span></div>` : ''}
+        ${email ? `<div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('mail')} <span>${email}</span></div>` : ''}
+        ${r.notes ? `<div style="display:flex;align-items:flex-start;gap:.6rem;">${lucideIcon('file-text')} <span>${esc(r.notes)}</span></div>` : ''}
+        ${r.duration_minutes ? `<div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('hourglass')} <span>Durée prévue: ${r.duration_minutes} min</span></div>` : ''}
+        ${(r.reservation_employees || []).length ? `<div style="display:flex;align-items:flex-start;gap:.6rem;">${lucideIcon('users')} <span>Équipe: ${r.reservation_employees.map(e => esc(e.employee_name || e.employee_id)).join(', ')}</span></div>` : ''}
+      </div>
+      <div style="margin-top:1.2rem;padding-top:1rem;border-top:1px solid var(--admin-border);">
+        <div style="font-size:.8rem;color:var(--admin-text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;">Formulaire de consentement</div>
+        <div>${consentInfo}</div>
+      </div>
+      <div style="margin-top:1.2rem;display:flex;gap:.6rem;flex-wrap:wrap;">
+        <button class="btn btn-green" onclick="closeApptDetail();startServiceFromAppt('${r.id}')">${lucideIcon('play')} Démarrer le service</button>
+        <button class="btn btn-ghost" onclick="closeApptDetail()">Fermer</button>
+      </div>
+    </div>`;
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeApptDetail(); });
+  document.body.appendChild(overlay);
+  if (window.lucide) lucide.createIcons();
+};
+window.closeApptDetail = function () {
+  document.getElementById('appt-detail-overlay')?.remove();
+};
+
+window.startServiceFromAppt = function (reservationId) {
   const r = loadedAppointments.find(a => a.id === reservationId);
   if (!r) { toast('Rendez-vous introuvable', 'error'); return; }
-  await createSession({
-    reservation_id: r.id, client_name: r.user_name || 'Client', client_phone: r.phone || null,
-    service_name: r.service || 'Service', location: r.location || 'Spa',
+  openTimerModal(r.duration_minutes, async (minutes) => {
+    await createSession({
+      reservation_id: r.id, client_name: r.user_name || 'Client', client_phone: r.phone || null,
+      service_name: r.service || 'Service', location: r.location || 'Spa', planned_duration_minutes: minutes,
+    });
+    showSection('service');
   });
-  showSection('service');
 };
+
+window.openConsentForAppt = async function (reservationId) {
+  const r = loadedAppointments.find(a => a.id === reservationId);
+  if (!r || !cfModule || !loadedConsent) return;
+  const submission = cfModule.findSubmission(r, loadedConsent.submissions);
+  const template = submission ? null : cfModule.matchTemplate(r, loadedConsent.templates, loadedConsent.serviceMap);
+  if (!submission && !template) { toast('Aucun formulaire pour ce rendez-vous', 'warning'); return; }
+  r.user_email = r.user_email || r.email || '';
+  cfModule.openConsentModal({
+    supabase: sb,
+    reservation: r,
+    template: template || null,
+    submission: submission || null,
+    onSubmitted: () => renderAppointments(document.getElementById('section-content')),
+  });
+};
+
+// ---- SERVICE helpers -----------------------------------------
+function playFinishSound() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const o = ctx.createOscillator();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(880, ctx.currentTime);
+    o.frequency.setValueAtTime(1100, ctx.currentTime + 0.15);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.08, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(); o.stop(ctx.currentTime + 0.4);
+    setTimeout(() => { try { ctx.close(); } catch {} }, 600);
+  } catch (e) { console.warn('sound error', e); }
+}
+
+function openTimerModal(defaultMinutes, onConfirm) {
+  const overlay = document.createElement('div');
+  overlay.id = 'timer-modal-overlay';
+  overlay.style = 'position:fixed;inset:0;background:rgba(15,17,23,.55);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1.5rem;';
+  overlay.innerHTML = `
+    <div class="card" style="max-width:360px;width:100%;margin:0;">
+      <div class="card-title">Choisir la durée du minuteur</div>
+      <div class="form-group" style="margin-bottom:1.2rem;">
+        <label>Durée (minutes)</label>
+        <input type="number" id="timer-minutes" class="form-input" value="${defaultMinutes || 60}" min="1">
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:.6rem;">
+        <button class="btn btn-ghost" onclick="document.getElementById('timer-modal-overlay')?.remove()">Annuler</button>
+        <button class="btn btn-green" id="timer-confirm">Démarrer</button>
+      </div>
+    </div>`;
+  overlay.querySelector('#timer-confirm').addEventListener('click', () => {
+    const minutes = Number(document.getElementById('timer-minutes').value) || 0;
+    if (minutes < 1) return;
+    overlay.remove();
+    onConfirm(minutes);
+  });
+  document.body.appendChild(overlay);
+}
 
 // ---- SERVICE (chronometer) -----------------------------------------
 async function renderService(c) {
@@ -330,9 +505,11 @@ async function renderService(c) {
   let activeHtml;
   if (activeSession) {
     activeHtml = `<div class="chrono-box">
+      <div id="chrono-label" style="font-size:.85rem;color:var(--admin-text-muted);margin-bottom:.4rem;">${activeSession.planned_end_at ? 'Temps restant' : 'Chronomètre'}</div>
       <div class="chrono-time" id="chrono-display">00:00:00</div>
       <div class="chrono-service">${esc(activeSession.service_name)}</div>
       <div class="chrono-client">${esc(activeSession.client_name || 'Client')}${activeSession.client_phone ? ' · ' + esc(activeSession.client_phone) : ''}</div>
+      ${activeSession.planned_duration_minutes ? `<div class="chrono-client" style="font-size:.85rem;color:var(--admin-text-muted);">Durée: ${activeSession.planned_duration_minutes} min</div>` : ''}
       <div class="row-actions">
         <button class="btn btn-red" onclick="stopSession()">Terminer le service</button>
         <button class="btn btn-ghost btn-sm" onclick="cancelSession()">Annuler</button>
@@ -343,6 +520,7 @@ async function renderService(c) {
       <div style="color:var(--muted);margin-bottom:1rem;">Aucun service en cours</div>
       <div class="form-group" style="text-align:left;"><label>Service</label><input class="input" id="new-svc" placeholder="Ex: Massage relaxant"></div>
       <div class="form-group" style="text-align:left;"><label>Client (optionnel)</label><input class="input" id="new-client" placeholder="Nom du client"></div>
+      <div class="form-group" style="text-align:left;"><label>Durée (min)</label><input class="input" type="number" id="new-minutes" placeholder="Optionnel — ex: 60" min="1"></div>
       <button class="btn btn-green" onclick="startManualSession()">Démarrer le chronomètre</button>
     </div>`;
   }
@@ -368,15 +546,31 @@ function fmtDuration(secs) {
 
 function startChronoDisplay() {
   if (chronoTimer) clearInterval(chronoTimer);
-  const start = new Date(activeSession.started_at).getTime();
-  const update = () => {
-    const diff = Math.floor((Date.now() - start) / 1000);
-    const h = Math.floor(diff / 3600), m = Math.floor((diff % 3600) / 60), s = diff % 60;
-    const el = document.getElementById('chrono-display');
-    if (el) el.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  };
-  update();
-  chronoTimer = setInterval(update, 1000);
+  const el = document.getElementById('chrono-display');
+  const labelEl = document.getElementById('chrono-label');
+  if (activeSession.planned_end_at) {
+    activeSession._soundPlayed = false;
+    const planned = new Date(activeSession.planned_end_at).getTime();
+    const update = () => {
+      const remaining = Math.max(0, Math.ceil((planned - Date.now()) / 1000));
+      const h = Math.floor(remaining / 3600), m = Math.floor((remaining % 3600) / 60), s = remaining % 60;
+      if (el) el.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      if (labelEl) labelEl.textContent = 'Temps restant';
+      if (remaining <= 1 && !activeSession._soundPlayed) { activeSession._soundPlayed = true; playFinishSound(); }
+    };
+    update();
+    chronoTimer = setInterval(update, 1000);
+  } else {
+    const start = new Date(activeSession.started_at).getTime();
+    const update = () => {
+      const diff = Math.floor((Date.now() - start) / 1000);
+      const h = Math.floor(diff / 3600), m = Math.floor((diff % 3600) / 60), s = diff % 60;
+      if (el) el.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      if (labelEl) labelEl.textContent = 'Chronomètre';
+    };
+    update();
+    chronoTimer = setInterval(update, 1000);
+  }
 }
 
 async function createSession(payload) {
@@ -384,9 +578,13 @@ async function createSession(payload) {
     .select('id').eq('employee_id', currentEmployee.id).eq('status', 'in_progress').maybeSingle();
   if (existing) { toast('Vous avez déjà un service en cours', 'warning'); return; }
 
-  const { error } = await sb.from('service_sessions').insert({
-    employee_id: currentEmployee.id, status: 'in_progress', started_at: new Date().toISOString(), ...payload,
-  });
+  const minutes = payload.planned_duration_minutes;
+  const planned_end_at = minutes ? new Date(Date.now() + minutes * 60000).toISOString() : null;
+  const insertPayload = {
+    employee_id: currentEmployee.id, status: 'in_progress', started_at: new Date().toISOString(),
+    ...payload, planned_duration_minutes: minutes || null, planned_end_at,
+  };
+  const { error } = await sb.from('service_sessions').insert(insertPayload);
   if (error) { toast('Erreur: ' + error.message, 'error'); return; }
   toast('Service démarré', 'success');
 }
@@ -394,8 +592,9 @@ async function createSession(payload) {
 window.startManualSession = async function () {
   const svc = document.getElementById('new-svc').value.trim();
   const client = document.getElementById('new-client').value.trim();
+  const minutes = Number(document.getElementById('new-minutes').value) || 0;
   if (!svc) { toast('Indiquez le service', 'warning'); return; }
-  await createSession({ service_name: svc, client_name: client || null, location: 'Spa' });
+  await createSession({ service_name: svc, client_name: client || null, location: 'Spa', planned_duration_minutes: minutes || undefined });
   showSection('service');
 };
 
@@ -449,7 +648,7 @@ async function renderStats(c) {
     </div>
   `;
 
-  const gridColor = 'rgba(255,255,255,.06)', tickColor = '#9aa3b2';
+  const gridColor = '#e8ebf2', tickColor = '#64748b';
   new Chart(document.getElementById('chart-posts'), {
     type: 'bar',
     data: { labels: months.map(m => m.label), datasets: [{ label: 'Posts', data: months.map(m => m.count), backgroundColor: 'rgba(139,92,246,.6)', borderRadius: 6 }] },
@@ -512,8 +711,8 @@ function reportCard(r) {
     </div>
     <div style="color:var(--muted);font-size:.82rem;margin:.3rem 0;">${new Date(r.created_at).toLocaleString('fr-FR')}</div>
     ${r.content ? `<div style="font-size:.86rem;line-height:1.5;">${esc(r.content)}</div>` : ''}
-    ${metricStr ? `<div style="color:var(--muted);font-size:.8rem;margin-top:.3rem;">📊 ${esc(metricStr)}</div>` : ''}
-    ${r.admin_feedback ? `<div style="margin-top:.4rem;padding:.5rem .7rem;background:var(--gold-soft);border-radius:8px;font-size:.83rem;">💬 <strong>Admin:</strong> ${esc(r.admin_feedback)}</div>` : ''}
+    ${metricStr ? `<div style="color:var(--muted);font-size:.8rem;margin-top:.3rem;display:flex;align-items:center;gap:.4rem;">${lucideIcon('bar-chart-2', 14)} ${esc(metricStr)}</div>` : ''}
+    ${r.admin_feedback ? `<div style="margin-top:.4rem;padding:.5rem .7rem;background:var(--gold-soft);border-radius:8px;font-size:.83rem;display:flex;align-items:flex-start;gap:.4rem;">${lucideIcon('message-circle', 14)} <span><strong>Admin:</strong> ${esc(r.admin_feedback)}</span></div>` : ''}
   </div>`;
 }
 window.submitReport = async function () {
@@ -567,7 +766,9 @@ async function renderEvaluations(c) {
 
   c.innerHTML = evals.length ? evals.map(e => {
     const ratings = e.ratings && typeof e.ratings === 'object' ? e.ratings : {};
-    const stars = n => '★'.repeat(Math.round(n)) + '☆'.repeat(Math.max(0, 5 - Math.round(n)));
+    const filledStar = '<i data-lucide="star" style="width:14px;height:14px;vertical-align:-2px;fill:currentColor;"></i>';
+    const emptyStar = '<i data-lucide="star" style="width:14px;height:14px;vertical-align:-2px;opacity:.25;"></i>';
+    const stars = n => filledStar.repeat(Math.round(n)) + emptyStar.repeat(Math.max(0, 5 - Math.round(n)));
     return `<div class="card" style="margin-bottom:1rem;">
       <div class="card-title">${esc(e.period || 'Évaluation')} <span class="badge badge-gold">Note ${e.overall_score ?? '—'}/5</span></div>
       <div style="color:var(--muted);font-size:.82rem;margin-bottom:.8rem;">Par ${esc(e.evaluator)} · ${new Date(e.created_at).toLocaleDateString('fr-FR')}</div>

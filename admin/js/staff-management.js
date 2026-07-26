@@ -21,6 +21,7 @@ let assignReservations = [];
 let sessionsData = [];
 let reportsData = [];
 let evalsData = [];
+let assignModalState = null;
 
 function sb() {
   return window.adminCore?.supabase || window.dalightAdminSupabase || window.supabaseClient;
@@ -39,11 +40,8 @@ function fmtDate(d) {
 function normalizeRoles(e) { let r = e?.roles || []; if (typeof r === 'string') { try { r = JSON.parse(r); } catch { r = []; } } return Array.isArray(r) ? r : []; }
 
 function getPortalBaseUrl() {
-  const origin = window.location.origin;
-  const path = window.location.pathname;
-  const adminIdx = path.indexOf('/admin/');
-  const base = adminIdx >= 0 ? path.slice(0, adminIdx) : '';
-  return `${origin}${base}/staff.html`;
+  // Pòtay anplwaye sou sit ki deplwaye a
+  return 'https://dalightbeauty.com/staff.html';
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -85,7 +83,7 @@ async function loadEmployees() {
 
 async function loadStats() {
   const active = allEmployees.filter(e => e.is_active).length;
-  const portals = allEmployees.filter(e => e.portal_enabled && e.access_code).length;
+  const portals = allEmployees.filter(e => e.portal_enabled && e.username).length;
   document.getElementById('stat-employees').textContent = active;
   document.getElementById('stat-portals').textContent = portals;
 
@@ -105,7 +103,7 @@ async function loadAssignments() {
   const tbody = document.getElementById('assign-table');
   tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:2rem;">Chargement...</td></tr>';
 
-  let query = sb().from('reservations').select('*');
+  let query = sb().from('reservations').select('*, reservation_employees(*)');
   if (date) {
     query = query.eq('date', date);
   } else {
@@ -127,19 +125,22 @@ window.renderAssignments = function () {
 
   let list = assignReservations;
   if (search) list = list.filter(r => (r.user_name || '').toLowerCase().includes(search) || (r.service || '').toLowerCase().includes(search));
-  if (filterEmp) list = list.filter(r => r.assigned_employee_id === filterEmp);
-  if (filterState === 'assigned') list = list.filter(r => !!r.assigned_employee_id);
-  if (filterState === 'unassigned') list = list.filter(r => !r.assigned_employee_id);
+  if (filterEmp) list = list.filter(r =>
+    r.assigned_employee_id === filterEmp ||
+    (r.reservation_employees || []).some(re => re.employee_id === filterEmp)
+  );
+  if (filterState === 'assigned') list = list.filter(r => !!(r.assigned_employee_id || (r.reservation_employees || []).length));
+  if (filterState === 'unassigned') list = list.filter(r => !(r.assigned_employee_id || (r.reservation_employees || []).length));
 
   if (!list.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:2rem;">Aucun rendez-vous.</td></tr>'; return; }
 
-  // provider employees for the dropdown (fallback: all active)
-  const providers = allEmployees.filter(e => e.is_active && (normalizeRoles(e).some(r => PROVIDER_ROLES.includes(r))));
-  const dropdownEmps = providers.length ? providers : allEmployees.filter(e => e.is_active);
-
   const statusBadge = s => ({ CONFIRMED: 'badge-success', PENDING: 'badge-warning', AWAITING_PAYMENT: 'badge-warning', COMPLETED: 'badge-secondary', NO_SHOW: 'badge-secondary' }[s] || 'badge-secondary');
 
-  tbody.innerHTML = list.map(r => `
+  tbody.innerHTML = list.map(r => {
+    const emps = (r.reservation_employees || []).length
+      ? r.reservation_employees.map(e => esc(e.employee_name || e.employee_id)).join(', ')
+      : (r.assigned_employee_name ? esc(r.assigned_employee_name) : '<span class="text-muted">Non assigné</span>');
+    return `
     <tr>
       <td>${fmtDate(r.date)}</td>
       <td style="font-weight:600;">${fmtTime(r.time)}</td>
@@ -154,41 +155,166 @@ window.renderAssignments = function () {
       <td>${esc(r.location || '—')}</td>
       <td><span class="badge ${statusBadge(r.status)}">${esc(r.status)}</span></td>
       <td>
-        <select class="form-input assign-select" onchange="assignReservation('${r.id}', this.value)">
-          <option value="">— Non assigné —</option>
-          ${dropdownEmps.map(e => `<option value="${e.id}" ${r.assigned_employee_id === e.id ? 'selected' : ''}>${esc(e.full_name)}</option>`).join('')}
-        </select>
+        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+          <span style="font-size:.85rem;">${emps}</span>
+          ${r.duration_minutes ? `<span class="badge badge-secondary" style="font-size:.7rem;">${r.duration_minutes} min</span>` : ''}
+          <button class="btn btn-secondary btn-sm" onclick="openAssignModal('${r.id}')">${r.assigned_employee_id || (r.reservation_employees || []).length ? 'Modifier' : 'Assigner'}</button>
+        </div>
       </td>
-    </tr>
-  `).join('');
+    </tr>`;
+  }).join('');
 };
 
-window.assignReservation = async function (resId, empId) {
-  const emp = allEmployees.find(e => e.id === empId);
+function renderAssignModal() {
+  const { resId, step, required_employees, duration_minutes, selections } = assignModalState;
   const r = assignReservations.find(x => x.id === resId);
-  const previousEmployeeId = r?.assigned_employee_id || null;
-  try {
-    const { error } = await sb().from('reservations').update({
-      assigned_employee_id: empId || null,
-      assigned_employee_name: emp ? emp.full_name : null,
-      assigned_at: empId ? new Date().toISOString() : null,
-    }).eq('id', resId);
-    if (error) throw error;
-    if (r) { r.assigned_employee_id = empId || null; r.assigned_employee_name = emp ? emp.full_name : null; }
+  if (!r) return;
+  let overlay = document.getElementById('assign-modal-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'assign-modal-overlay';
+    overlay.style = 'position:fixed;inset:0;background:rgba(15,17,23,.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1.5rem;';
+    document.body.appendChild(overlay);
+  }
+  overlay.style.display = 'flex';
+  const providers = allEmployees.filter(e => e.is_active && normalizeRoles(e).some(role => PROVIDER_ROLES.includes(role)));
+  const empOptions = (sel = '') => `<option value="">— Choisir —</option>` + providers.map(e => `<option value="${e.id}" ${sel === e.id ? 'selected' : ''}>${esc(e.full_name)}</option>`).join('');
+  let body = '';
+  if (step === 1) {
+    body = `
+      <div class="card-title" style="margin-bottom:1rem;">Assigner le rendez-vous</div>
+      <div style="margin-bottom:1rem;font-size:.9rem;color:var(--admin-text-muted);">
+        <strong>${esc(r.service)}</strong> · ${esc(r.user_name)} · ${fmtDate(r.date)} à ${fmtTime(r.time)}
+      </div>
+      <div class="form-group" style="margin-bottom:1rem;">
+        <label>Nombre d'employés requis</label>
+        <select id="am-required" class="form-input">${[1,2,3,4,5,6].map(n => `<option value="${n}" ${n == required_employees ? 'selected' : ''}>${n}</option>`).join('')}</select>
+      </div>
+      <div class="form-group" style="margin-bottom:1.5rem;">
+        <label>Durée du service (minutes)</label>
+        <input type="number" id="am-duration" class="form-input" value="${duration_minutes === 0 ? 0 : (duration_minutes || '')}" placeholder="Ex: 60" min="5">
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:.6rem;">
+        <button class="btn btn-ghost" onclick="closeAssignModal()">Annuler</button>
+        <button class="btn btn-primary" onclick="assignModalGoStep(2)">Suivant</button>
+      </div>`;
+  } else {
+    const slots = Array.from({ length: required_employees }, (_, i) => i);
+    body = `
+      <div class="card-title" style="margin-bottom:1rem;">Sélectionner les employés</div>
+      <div style="margin-bottom:1rem;font-size:.9rem;color:var(--admin-text-muted);">
+        ${esc(r.service)} · ${required_employees} employé(s) · ${duration_minutes || '—'} min
+      </div>
+      ${slots.map(i => `
+        <div class="form-group" style="margin-bottom:.75rem;">
+          <label>Employé ${i + 1}${i === 0 ? ' (principal)' : ''}</label>
+          <select id="am-emp-${i}" class="form-input">${empOptions(selections[i] || '')}</select>
+        </div>
+      `).join('')}
+      <div style="display:flex;justify-content:flex-end;gap:.6rem;margin-top:1rem;">
+        <button class="btn btn-ghost" onclick="assignModalGoStep(1)">Retour</button>
+        <button class="btn btn-primary" onclick="saveAssignModal()">Enregistrer</button>
+      </div>`;
+  }
+  overlay.innerHTML = `<div class="glass-card" style="max-width:420px;width:100%;margin:0;">${body}</div>`;
+}
 
-    // Notify the newly assigned employee
-    if (empId && empId !== previousEmployeeId && emp) {
-      await sb().from('staff_notifications').insert({
-        employee_id: emp.id,
-        type: 'assignment',
-        title: 'Nouveau rendez-vous assigné',
-        body: `Vous avez un rendez-vous le ${r.date} à ${fmtTime(r.time)} — ${r.user_name || 'Client'} (${r.service || 'Service'}).`,
-        data: { reservation_id: resId },
-        read: false,
-      });
+window.openAssignModal = function (resId) {
+  const r = assignReservations.find(x => x.id === resId);
+  if (!r) return;
+  const existing = (r.reservation_employees || []).sort((a, b) => (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0));
+  assignModalState = {
+    resId,
+    step: 1,
+    required_employees: r.required_employees || existing.length || 1,
+    duration_minutes: r.duration_minutes === 0 ? 0 : (r.duration_minutes || ''),
+    selections: existing.map(re => re.employee_id)
+  };
+  renderAssignModal();
+};
+
+window.closeAssignModal = function () {
+  const overlay = document.getElementById('assign-modal-overlay');
+  if (overlay) { overlay.style.display = 'none'; overlay.innerHTML = ''; }
+  assignModalState = null;
+};
+
+window.assignModalGoStep = function (step) {
+  if (!assignModalState) return;
+  const max = step === 2 ? assignModalState.required_employees : assignModalState.required_employees;
+  const current = [];
+  for (let i = 0; i < max; i++) {
+    const el = document.getElementById('am-emp-' + i);
+    current.push(el ? el.value : (assignModalState.selections[i] || ''));
+  }
+  assignModalState.selections = current;
+  if (step === 2) {
+    assignModalState.required_employees = Number(document.getElementById('am-required').value) || 1;
+    assignModalState.duration_minutes = document.getElementById('am-duration').value;
+  }
+  assignModalState.step = step;
+  renderAssignModal();
+};
+
+window.saveAssignModal = async function () {
+  if (!assignModalState) return;
+  const { resId, required_employees, duration_minutes } = assignModalState;
+  const selections = [];
+  for (let i = 0; i < required_employees; i++) {
+    const el = document.getElementById('am-emp-' + i);
+    selections.push(el ? el.value : '');
+  }
+  assignModalState.selections = selections;
+  const empIds = selections.filter(id => id);
+  if (empIds.length < required_employees) { toast('Veuillez sélectionner tous les employés.', 'warning'); return; }
+  if (new Set(empIds).size !== empIds.length) { toast('Chaque employé ne peut être sélectionné qu\'une fois.', 'warning'); return; }
+
+  const r = assignReservations.find(x => x.id === resId);
+  const emps = empIds.map(id => allEmployees.find(e => e.id === id)).filter(Boolean);
+  const primary = emps[0];
+  const prevIds = new Set((r.reservation_employees || []).map(re => re.employee_id));
+
+  try {
+    const { error: updErr } = await sb().from('reservations').update({
+      duration_minutes: duration_minutes === '' ? null : Number(duration_minutes),
+      required_employees: Number(required_employees) || 1,
+      assigned_employee_id: primary ? primary.id : null,
+      assigned_employee_name: primary ? primary.full_name : null,
+      assigned_at: primary ? new Date().toISOString() : null,
+    }).eq('id', resId);
+    if (updErr) throw updErr;
+
+    const { error: delErr } = await sb().from('reservation_employees').delete().eq('reservation_id', resId);
+    if (delErr) throw delErr;
+
+    if (emps.length) {
+      const { error: insErr } = await sb().from('reservation_employees').insert(
+        emps.map((e, i) => ({ reservation_id: resId, employee_id: e.id, employee_name: e.full_name, is_primary: i === 0 }))
+      );
+      if (insErr) throw insErr;
     }
 
-    toast(empId ? `Assigné à ${emp.full_name}` : 'Assignation retirée', 'success');
+    for (const e of emps) {
+      if (!prevIds.has(e.id)) {
+        await sb().from('staff_notifications').insert({
+          employee_id: e.id,
+          type: 'assignment',
+          title: 'Nouveau rendez-vous assigné',
+          body: `Vous avez un rendez-vous le ${r.date} à ${fmtTime(r.time)} — ${r.user_name || 'Client'} (${r.service || 'Service'}).`,
+          data: { reservation_id: resId },
+          read: false,
+        });
+      }
+    }
+
+    r.duration_minutes = duration_minutes === '' ? null : Number(duration_minutes);
+    r.required_employees = Number(required_employees) || 1;
+    r.assigned_employee_id = primary ? primary.id : null;
+    r.assigned_employee_name = primary ? primary.full_name : null;
+    r.reservation_employees = emps.map((e, i) => ({ employee_id: e.id, employee_name: e.full_name, is_primary: i === 0 }));
+    closeAssignModal();
+    renderAssignments();
+    toast('Assignation enregistrée', 'success');
   } catch (err) {
     console.error(err);
     toast('Erreur: ' + (err?.message || err), 'error');
@@ -209,10 +335,10 @@ window.renderTeam = function () {
   tbody.innerHTML = list.map(e => {
     const roles = normalizeRoles(e);
     const rolePills = roles.map(r => `<span class="role-pill">${esc(ROLE_LABELS[r] || r)}</span>`).join('') || '<span class="text-muted" style="font-size:.8rem;">—</span>';
-    const portalStatus = e.portal_enabled && e.access_code
+    const portalStatus = e.portal_enabled && e.username
       ? '<span class="badge badge-success">Activé</span>'
       : '<span class="badge badge-secondary">Désactivé</span>';
-    const link = e.access_code ? `${getPortalBaseUrl()}?code=${e.access_code}` : '';
+    const link = e.username ? getPortalBaseUrl() : '';
     return `<tr>
       <td>
         <div style="display:flex;align-items:center;gap:.5rem;">
@@ -222,7 +348,7 @@ window.renderTeam = function () {
       </td>
       <td>${rolePills}</td>
       <td>${portalStatus}</td>
-      <td>${e.access_code ? `<strong style="letter-spacing:1px;">${esc(e.access_code)}</strong>` : '—'}</td>
+      <td>${e.username ? `<strong style="letter-spacing:1px;">${esc(e.username)}</strong>` : '—'}</td>
       <td>${link ? `<button class="btn btn-secondary btn-sm" onclick="copyLink('${link}')">Copier le lien</button>` : '<span class="text-muted" style="font-size:.8rem;">—</span>'}</td>
     </tr>`;
   }).join('');

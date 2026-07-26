@@ -176,15 +176,26 @@ CREATE OR REPLACE FUNCTION prevent_double_booking()
 RETURNS TRIGGER AS $$
 DECLARE
     v_check RECORD;
+    v_is_admin BOOLEAN;
 BEGIN
-    -- Verifye avilabilite
+    -- Admin ka kreye rezèvasyon san limit avilabilite
+    SELECT EXISTS (
+        SELECT 1 FROM profiles
+        WHERE id = auth.uid() AND role = 'admin'
+    ) INTO v_is_admin;
+
+    IF v_is_admin THEN
+        RETURN NEW;
+    END IF;
+
+    -- Verifye avilabilite pou lòt itilizatè yo
     SELECT * INTO v_check
     FROM check_availability(NEW.date, NEW.time);
-    
+
     IF NOT v_check.is_available THEN
         RAISE EXCEPTION 'Tan sa pa disponib: %', v_check.message;
     END IF;
-    
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

@@ -615,13 +615,19 @@
           <label style="font-size:.8rem;font-weight:600;color:#6b7280;">Rôles / Attributions (plusieurs possibles)</label>
           <div id="portal-roles" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.5rem;margin:.5rem 0 1.25rem;"></div>
 
-          <label style="font-size:.8rem;font-weight:600;color:#6b7280;">Code d'accès</label>
+          <label style="font-size:.8rem;font-weight:600;color:#6b7280;">Nom d'utilisateur</label>
           <div style="display:flex;gap:.5rem;align-items:center;margin:.5rem 0 1rem;">
-            <input type="text" id="portal-code" class="form-input" style="text-transform:uppercase;font-weight:700;letter-spacing:2px;max-width:160px;" maxlength="6" placeholder="Aucun">
-            <button class="btn btn-secondary" onclick="generatePortalCode()">Générer</button>
+            <input type="text" id="portal-username" class="form-input" style="max-width:220px;" placeholder="Ex: jsimon" autocomplete="off">
+            <button class="btn btn-secondary" onclick="generatePortalUsername()">Suggérer</button>
           </div>
 
-          <label style="font-size:.8rem;font-weight:600;color:#6b7280;">Lien direct</label>
+          <label style="font-size:.8rem;font-weight:600;color:#6b7280;">Mot de passe</label>
+          <div style="display:flex;gap:.5rem;align-items:center;margin:.5rem 0 1rem;">
+            <input type="text" id="portal-password" class="form-input" style="max-width:220px;font-weight:600;letter-spacing:1px;" placeholder="Aucun" autocomplete="off">
+            <button class="btn btn-secondary" onclick="generatePortalPassword()">Générer</button>
+          </div>
+
+          <label style="font-size:.8rem;font-weight:600;color:#6b7280;">Lien du portail</label>
           <div style="display:flex;gap:.5rem;align-items:center;margin:.5rem 0 1rem;">
             <input type="text" id="portal-link" class="form-input" readonly style="font-size:.82rem;">
             <button class="btn btn-secondary" onclick="copyPortalLink()">Copier</button>

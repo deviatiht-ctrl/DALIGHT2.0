@@ -241,7 +241,7 @@ function renderFieldControl(f, idx) {
 // ── Read only view (already submitted) ──────────────────────
 function renderReadOnly(submission) {
   const answers = Array.isArray(submission.answers) ? submission.answers : [];
-  return answers.map(a => {
+  const clientHtml = answers.map(a => {
     if (a.role === 'practitioner' || isPractitionerField(a.label)) return '';
     if (a.type === 'section') return `<div class="cf-section-title">${esc(a.label)}</div>`;
     let val = a.value;
@@ -251,6 +251,20 @@ function renderReadOnly(submission) {
   }).join('') + (submission.signature_data ? `
     <div class="cf-field"><label class="cf-q">Signature</label>
     <img src="${submission.signature_data}" style="max-width:280px;border:1px solid #e5ddd3;border-radius:8px;background:#fff;"></div>` : '');
+
+  const pd = Array.isArray(submission.practitioner_data) ? submission.practitioner_data : [];
+  const practitionerHtml = pd.length ? `
+    <div class="cf-section-title">Partie praticien</div>
+    ${pd.map(a => {
+      let val = a.value;
+      if (Array.isArray(val)) val = val.join(', ');
+      if (a.type === 'signature') {
+        return `<div class="cf-field"><label class="cf-q">${esc(a.label)}</label>${val ? `<img src="${val}" style="max-width:280px;border:1px solid #e5ddd3;border-radius:8px;background:#fff;">` : '<div class="cf-readonly">—</div>'}</div>`;
+      }
+      return `<div class="cf-field"><label class="cf-q">${esc(a.label)}</label><div class="cf-readonly">${esc(val || '—')}</div></div>`;
+    }).join('')}` : '';
+
+  return clientHtml + practitionerHtml;
 }
 
 function closeModal() {
@@ -457,6 +471,18 @@ export function downloadSubmission(s) {
     if (a.type === 'consent') val = (val === 'oui' || val === true || val === 'true') ? 'Accepté' : (val || '—');
     return `<div style="margin-bottom:10px;"><div style="font-weight:600;color:#3a2a1a;">${esc(a.label)}</div><div style="color:#333;">${esc(val || '—')}</div></div>`;
   }).join('');
+
+  const pd = Array.isArray(s.practitioner_data) ? s.practitioner_data : [];
+  const practitionerRows = pd.length ? `
+    <h3 style="margin:18px 0 4px;color:#4A3728;">Partie praticien</h3>
+    ${pd.map(a => {
+      let val = a.value;
+      if (Array.isArray(val)) val = val.join(', ');
+      if (a.type === 'signature') {
+        return `<div style="margin-bottom:10px;"><div style="font-weight:600;color:#3a2a1a;">${esc(a.label)}</div>${val ? `<img src="${val}" style="max-width:280px;border:1px solid #e5ddd3;border-radius:8px;background:#fff;">` : '<div style="color:#333;">—</div>'}</div>`;
+      }
+      return `<div style="margin-bottom:10px;"><div style="font-weight:600;color:#3a2a1a;">${esc(a.label)}</div><div style="color:#333;">${esc(val || '—')}</div></div>`;
+    }).join('')}` : '';
   const d = new Date(s.submitted_at || Date.now()).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   const win = window.open('', '_blank');
   win.document.write(`
@@ -476,6 +502,7 @@ export function downloadSubmission(s) {
       </div>
       ${rows}
       ${s.signature_data ? `<div style="margin-top:22px;"><div style="font-weight:600;color:#3a2a1a;">Signature:</div><img src="${s.signature_data}" style="max-width:280px;border:1px solid #ccc;border-radius:8px;"></div>` : ''}
+      ${practitionerRows}
       <script>window.onload=function(){setTimeout(function(){window.print();},250);}<\/script>
     </body></html>`);
   win.document.close();

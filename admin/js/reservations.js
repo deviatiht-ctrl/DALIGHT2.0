@@ -73,11 +73,6 @@ async function loadReservations() {
   const { fetchReservations, supabase } = window.adminCore;
   
   try {
-    // Safety net: confirm any paid-but-pending PLOP reservations server-side first
-    try {
-      await supabase?.functions?.invoke('plop-payment', { body: { action: 'reconcile' } });
-    } catch (_) {}
-
     allReservations = await fetchReservations();
     renderReservations();
   } catch (err) {
@@ -168,13 +163,7 @@ function renderReservations() {
             : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>`}
           ${formatPaymentMethod(r.payment_method)}
         </div>
-        ${['moncash','natcash'].includes(r.payment_method)
-          ? (r.plop_client_id
-              ? `<div style="font-size:.72rem;color:#0369a1;margin-top:.2rem;">ID: ${r.plop_client_id}</div>`
-              : `<div style="font-size:.72rem;color:#92400e;margin-top:.2rem;">Plop en attente</div>`)
-          : (r.payment_proof_url
-              ? `<div style="font-size:.72rem;color:#22c55e;margin-top:.2rem;">Preuve reçue</div>`
-              : '')}
+        ${r.payment_proof_url ? `<div style="font-size:.72rem;color:#22c55e;margin-top:.2rem;">Preuve reçue</div>` : ''}
       </td>
       <td>${getStatusBadge(r.status)}</td>
       <td>
@@ -198,9 +187,9 @@ function renderReservations() {
             </button>
           ` : ''}
           ${r.status === 'AWAITING_PAYMENT' ? `
-            <button class="btn btn-icon btn-secondary btn-sm" onclick="verifyReservationPayment('${r.id}')" title="Vérifier paiement">
+            <button class="btn btn-icon btn-success btn-sm" onclick="updateStatus('${r.id}', 'CONFIRMED')" title="Confirmer">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
               </svg>
             </button>
             <button class="btn btn-icon btn-danger btn-sm" onclick="updateStatus('${r.id}', 'CANCELLED')" title="Annuler">
@@ -285,8 +274,8 @@ window.openDetailModal = function(id) {
     </div>` : '';
 
   // ── Payment proof ─────────────────────────────────────────────
-  // Show for bank always; for moncash/natcash only if it's a legacy (pre-Plop) reservation
-  // Legacy = moncash/natcash paid via manual screenshot (proof exists, no Plop reference)
+  // Show for bank always; for moncash/natcash only if it's a legacy screenshot reservation
+  // Legacy = moncash/natcash paid via manual screenshot (proof exists, no external reference)
   const isLegacyMobilePay = isMobilePay && !r.payment_reference && !!r.payment_proof_url;
   let proofs = Array.isArray(r.payment_proofs) ? r.payment_proofs : [];
   if (proofs.length === 0 && r.payment_proof_url) proofs = [r.payment_proof_url];
@@ -305,35 +294,6 @@ window.openDetailModal = function(id) {
             </div>
           </div>`).join('')}
       </div>
-    </div>` : '';
-
-  // ── Plop Plop section (moncash/natcash only, always shown) ────
-  const plopRow = (label, val, highlight = false) => `
-    <div style="display:flex;justify-content:space-between;align-items:center;${highlight ? 'background:#e0f2fe;padding:.4rem .6rem;border-radius:6px;' : 'padding:.25rem 0;'}font-size:.82rem;margin-top:.3rem;">
-      <span style="color:${highlight ? '#0369a1' : 'var(--admin-text-muted)'};font-weight:${highlight ? '600' : '400'};">${label}</span>
-      <code style="font-size:.78rem;font-weight:${highlight ? '700' : '400'};color:${highlight ? '#0369a1' : 'inherit'};">${val}</code>
-    </div>`;
-
-  // ── Plop Plop section — all moncash/natcash except legacy screenshot ──
-  const plopHtml = isMobilePay && !isLegacyMobilePay ? `
-    <div style="background:#f0f9ff;border-radius:12px;padding:1rem;border:1px solid #bae6fd;">
-      <div style="display:flex;align-items:center;gap:.5rem;font-weight:600;color:#0369a1;margin-bottom:.6rem;font-size:.85rem;">
-        ${ico('M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1', 15, '#0369a1')}
-        Plop Plop — Vérification du paiement
-      </div>
-      ${r.payment_reference    ? plopRow('Référence', r.payment_reference) : ''}
-      ${r.plop_transaction_id  ? plopRow('ID Transaction', r.plop_transaction_id) : ''}
-      ${r.plop_client_id
-        ? plopRow('ID Client Plop Plop', r.plop_client_id, true)
-        : `<div style="display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:#92400e;background:#fef3c7;padding:.5rem .75rem;border-radius:6px;margin-top:.3rem;border:1px solid #fde68a;">
-            ${ico('M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z', 14, '#92400e')}
-            ID client Plop Plop non encore capturé
-          </div>`}
-      ${r.balance_payment_reference ? `
-        <div style="margin-top:.6rem;padding-top:.6rem;border-top:1px dashed #bae6fd;">
-          ${plopRow('Réf. solde restant', r.balance_payment_reference)}
-        </div>` : ''}
-      ${r.balance_plop_client_id ? plopRow('ID Client Plop (solde)', r.balance_plop_client_id, true) : ''}
     </div>` : '';
 
   // ── Content HTML ──────────────────────────────────────────────
@@ -422,7 +382,6 @@ window.openDetailModal = function(id) {
         ${priceBlock}
       </div>
 
-      ${plopHtml}
       ${proofHtml}
 
       ${r.id_type ? `
@@ -485,22 +444,6 @@ window.openDetailModal = function(id) {
       <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${r.id}','custom')">Vide</button>
     </div>`;
 
-  const plopVerifyHtml = isMobilePay && !isLegacyMobilePay ? `
-    <div style="width:100%;margin-bottom:.75rem;padding-bottom:.75rem;border-bottom:1px solid var(--admin-border);">
-      <button class="btn btn-sm" onclick="verifyReservationPayment('${r.id}')"
-        style="width:100%;background:#0369a1;color:#fff;border:none;display:flex;align-items:center;justify-content:center;gap:.4rem;padding:.55rem 1rem;border-radius:8px;font-weight:600;cursor:pointer;">
-        ${ico('M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1', 14, '#fff')}
-        Vérifier paiement Plop Plop
-      </button>
-      <div style="font-size:.72rem;text-align:center;margin-top:.3rem;${r.plop_client_id ? 'color:#059669;' : 'color:#92400e;'}">
-        ${r.plop_client_id
-          ? `Confirmé — ID client: ${r.plop_client_id}`
-          : r.payment_reference
-            ? `Réf: ${r.payment_reference} — non encore vérifié`
-            : `Aucune référence stockée — vous pouvez en entrer une manuellement`}
-      </div>
-    </div>` : '';
-
   const showBalanceBtn = balance > 0 && !isFull && r.status !== 'CANCELLED';
 
   let actions = `
@@ -521,7 +464,7 @@ window.openDetailModal = function(id) {
     actions = `
       <button class="btn btn-danger" onclick="updateStatus('${r.id}','CANCELLED');closeModal();">Annuler</button>
       <button class="btn btn-secondary" onclick="printReservationDetail('${r.id}')">${ico('M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z', 14)} Imprimer</button>
-      <button class="btn btn-primary" onclick="verifyReservationPayment('${r.id}');closeModal();" style="background:#0369a1;border:none;">Vérifier paiement</button>`;
+      <button class="btn btn-primary" onclick="updateStatus('${r.id}','CONFIRMED');closeModal();">Confirmer</button>`;
   } else if (r.status === 'CONFIRMED') {
     actions = `
       <button class="btn btn-secondary" onclick="closeModal()">Fermer</button>
@@ -530,7 +473,7 @@ window.openDetailModal = function(id) {
       ${showBalanceBtn ? `<button class="btn btn-primary" onclick="openBalanceModal('${r.id}')">${ico('M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', 14)} Payer solde</button>` : ''}`;
   }
 
-  footer.innerHTML = plopVerifyHtml + automaticButtonsHtml + emailButtonsHtml +
+  footer.innerHTML = automaticButtonsHtml + emailButtonsHtml +
     '<div style="display:flex;gap:.5rem;justify-content:flex-end;flex-wrap:wrap;width:100%;">' + actions + '</div>';
   footer.style.flexDirection = 'column';
   footer.style.alignItems    = 'stretch';
@@ -793,39 +736,7 @@ window.processBalancePayment = async function() {
       baseUpdates.status = 'CONFIRMED';
     }
 
-    // Mobile payment: create Plop Plop payment for balance/partial
-    if (selectedBalancePM === 'moncash' || selectedBalancePM === 'natcash') {
-      const { createPlopPayment } = await import('../../js/plop-payment.js?v=5.0.0');
-      const payment = await createPlopPayment(supabase, {
-        refference_id: reference,
-        montant: amountInput,
-        payment_method: selectedBalancePM,
-        context_type: 'reservation_balance',
-        context_id: r.id,
-        redirect_url: `${window.location.origin}${window.location.pathname}`,
-      });
-
-      if (!payment?.url) {
-        throw new Error('Plop Plop n\'a pas retourné de lien de paiement.');
-      }
-
-      // Save the pending balance payment before redirecting
-      const updates = {
-        ...baseUpdates,
-        balance_plop_transaction_id: payment.transaction_id || null,
-      };
-      const { error: updateErr } = await supabase.from('reservations').update(updates).eq('id', r.id);
-      if (updateErr) throw updateErr;
-
-      const idx = allReservations.findIndex(res => res.id === r.id);
-      if (idx !== -1) {
-        allReservations[idx] = { ...allReservations[idx], ...updates };
-      }
-
-      // Redirect to Plop Plop to complete payment
-      window.location.href = payment.url;
-      return;
-    }
+    // Mobile payments (moncash/natcash) are recorded directly without redirect.
 
     // Cash / bank / card / check / other: mark immediately
     const { error: updateErr } = await supabase.from('reservations').update(baseUpdates).eq('id', r.id);
@@ -1263,72 +1174,6 @@ window.printConsentSubmission = function(submissionId) {
   window.open(`forms.html?submission=${encodeURIComponent(submissionId)}`, '_blank');
 };
 
-// ── Vérification paiement Plop Plop ─────────────────────────────────────────
-window.verifyReservationPayment = async function(id) {
-  const r = allReservations.find(r => r.id === id);
-  if (!r) return;
-
-  let refferenceId = r.payment_reference;
-  if (!refferenceId) {
-    refferenceId = prompt('Entrez la référence Plop Plop pour cette réservation\n(ex: DL12345678-FULL ou DL12345678-DEP) :');
-    if (!refferenceId?.trim()) return;
-    refferenceId = refferenceId.trim();
-  }
-
-  const supabase = getSupabaseClient();
-  if (!supabase) {
-    window.adminCore.showToast('Connexion Supabase non disponible.', 'error');
-    return;
-  }
-
-  window.adminCore.showToast('Vérification en cours…');
-
-  try {
-    const { data, error } = await supabase.functions.invoke('plop-payment', {
-      body: { action: 'verify', refference_id: refferenceId },
-    });
-
-    if (error) throw new Error(error.message || 'Erreur invocation Edge Function.');
-    if (!data) throw new Error('Réponse vide de Plop Plop.');
-
-    if (data.trans_status === 'ok') {
-      const isFullPayment = refferenceId.endsWith('-FULL');
-      const updates = {
-        status: 'CONFIRMED',
-        plop_client_id:     data.id_client     || null,
-        plop_transaction_id: data.id_transaction || null,
-        payment_status:     isFullPayment ? 'fully_paid' : 'deposit_paid',
-      };
-
-      const { error: dbErr } = await supabase
-        .from('reservations')
-        .update(updates)
-        .eq('id', id);
-
-      if (dbErr) throw new Error('Erreur mise à jour DB: ' + dbErr.message);
-
-      const idx = allReservations.findIndex(r => r.id === id);
-      if (idx !== -1) Object.assign(allReservations[idx], updates);
-
-      window.adminCore.showToast('Paiement confirmé ! Réservation confirmée.', 'success');
-      window.adminCore.updatePendingBadge();
-      window.adminCore.updateAwaitingPaymentBadge();
-      renderReservations();
-      openDetailModal(id);
-    } else {
-      const method = data.method || r.payment_method || '';
-      const tid    = data.id_transaction || '—';
-      window.adminCore.showToast(
-        `Paiement non confirmé (statut: ${data.trans_status || 'no'}) · ID trans: ${tid}`,
-        'error'
-      );
-    }
-  } catch (err) {
-    console.error('[verifyReservationPayment]', err);
-    window.adminCore.showToast('Erreur: ' + err.message, 'error');
-  }
-};
-
 // ============================================
 // AUTOMATIC BREVO ACTIONS
 // ============================================
@@ -1688,7 +1533,7 @@ function exportToCSV() {
   ]);
   
   const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = window.URL.createObjectURL(blob);
   
   const a = document.createElement('a');

@@ -21,6 +21,7 @@
     .program-card h4 { margin:0 0 .25rem; font-size:1rem; }
     .program-card .meta { font-size:.8rem; color:var(--admin-text-muted); }
     .program-card .badge-row { display:flex; gap:.4rem; margin-top:.5rem; flex-wrap:wrap; }
+    .search-box { padding:.55rem .75rem; border-radius:8px; border:1px solid var(--admin-border); background:var(--admin-input-bg); color:var(--admin-text); width:100%; box-sizing:border-box; margin-bottom:.75rem; }
     .reservations-list { display:grid; gap:.75rem; }
     .reservation-card { background:var(--admin-card-bg); border:1px solid var(--admin-border); border-radius:12px; padding:1rem; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:.75rem; }
     .session-form { background:var(--admin-card-bg); border:1px solid var(--admin-border); border-radius:12px; padding:1.25rem; }
@@ -120,6 +121,7 @@
           <div>
             <div class="glass-card" style="margin-bottom:1rem;">
               <div class="card-header"><h3 class="card-title">Programmes</h3></div>
+              <input type="text" id="program-search" class="search-box" placeholder="Rechercher par nom ou email..." oninput="filterPrograms()">
               <div class="programs-list" id="programs-list"><div class="loading-spinner"></div>Chargement...</div>
             </div>
           </div>
@@ -132,6 +134,7 @@
       <div id="reservations-view" style="display:none;">
         <div class="glass-card">
           <div class="card-header"><h3 class="card-title">Réservations confirmées sans programme</h3><p class="card-subtitle">Sélectionnez une réservation pour démarrer un suivi.</p></div>
+          <input type="text" id="reservation-search" class="search-box" placeholder="Rechercher par nom ou email..." oninput="filterReservations()">
           <div class="reservations-list" id="reservations-list"><div class="loading-spinner"></div>Chargement...</div>
         </div>
       </div>
@@ -191,13 +194,13 @@
       }
     }
 
-    function renderProgramsList() {
+    function renderProgramsList(filtered = currentPrograms) {
       const list = document.getElementById('programs-list');
-      if (!currentPrograms.length) {
-        list.innerHTML = '<div class="empty-state">Aucun programme. Allez dans l’onglet « Créer depuis réservation ».</div>';
+      if (!filtered.length) {
+        list.innerHTML = '<div class="empty-state">Aucun programme trouvé.</div>';
         return;
       }
-      list.innerHTML = currentPrograms.map(p => `
+      list.innerHTML = filtered.map(p => `
         <div class="program-card ${selectedProgram?.id === p.id ? 'active' : ''}" onclick="selectProgram('${p.id}')">
           <h4>${escapeHtml(p.client_name)}</h4>
           <div class="meta">${escapeHtml(p.service_name)} · ${p.start_date || '—'}</div>
@@ -207,6 +210,17 @@
           </div>
         </div>
       `).join('');
+    }
+
+    function filterPrograms() {
+      const q = (document.getElementById('program-search')?.value || '').toLowerCase().trim();
+      if (!q) { renderProgramsList(currentPrograms); return; }
+      const filtered = currentPrograms.filter(p =>
+        (p.client_name && p.client_name.toLowerCase().includes(q)) ||
+        (p.client_email && p.client_email.toLowerCase().includes(q)) ||
+        (p.service_name && p.service_name.toLowerCase().includes(q))
+      );
+      renderProgramsList(filtered);
     }
 
     async function selectProgram(id) {
@@ -245,11 +259,19 @@
               <button class="btn btn-primary btn-sm" onclick="toggleStatus()">${selectedProgram.status === 'active' ? 'Terminer' : 'Réactiver'}</button>
             </div>
           </div>
+          <div style="display:flex;align-items:center;gap:.5rem;margin-top:.75rem;flex-wrap:wrap;">
+            <span style="font-size:.85rem;color:var(--admin-text-muted);">Total séances:</span>
+            <input type="number" id="program-total-sessions" value="${selectedProgram.total_sessions}" min="1" max="100" style="width:70px;padding:.4rem;border-radius:6px;border:1px solid var(--admin-border);background:var(--admin-input-bg);color:var(--admin-text);">
+            <button class="btn btn-secondary btn-sm" onclick="updateTotalSessions()">💾 Mettre à jour</button>
+          </div>
           <div class="progress-bar"><div style="width:${(completed / selectedProgram.total_sessions) * 100}%"></div></div>
           <div style="display:flex; justify-content:space-between; margin-top:.5rem; font-size:.85rem; color:var(--admin-text-muted);">
             <span>${completed} / ${selectedProgram.total_sessions} séances</span>
             <span>${remaining} restante(s)</span>
           </div>
+        </div>
+        <div style="margin-top:.5rem; font-size:.78rem; color:var(--admin-text-muted);">
+          Pour ajouter une séance, remplissez le formulaire ci-dessous avec un N° non utilisé. Pour supprimer, utilisez le bouton ❌ dans l’historique.
         </div>
         <div class="analysis-card" style="margin-bottom:1rem;">
           <h3 class="card-title">Analyse de progression</h3>
@@ -340,7 +362,10 @@
               ${s.massage_notes ? `<p><strong>Massage/soin:</strong> ${escapeHtml(s.massage_notes)}</p>` : ''}
               ${s.diet_notes ? `<p><strong>Alimentation:</strong> ${escapeHtml(s.diet_notes)}</p>` : ''}
               ${s.observations ? `<p><strong>Observations:</strong> ${escapeHtml(s.observations)}</p>` : ''}
-              <div style="margin-top:.5rem;"><button class="btn btn-secondary btn-sm" onclick="editSession('${s.id}')">Modifier</button></div>
+              <div style="margin-top:.5rem; display:flex; gap:.5rem;">
+                <button class="btn btn-secondary btn-sm" onclick="editSession('${s.id}')">Modifier</button>
+                <button class="btn btn-sm" onclick="deleteSession('${s.id}')" style="background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;" title="Supprimer cette séance">❌</button>
+              </div>
             </div>
           </div>
         `;
@@ -428,6 +453,39 @@
       }
     }
 
+    async function updateTotalSessions() {
+      if (!selectedProgram) return;
+      const newTotal = parseInt(document.getElementById('program-total-sessions')?.value, 10) || selectedProgram.total_sessions;
+      if (newTotal < 1) { window.adminCore?.showToast?.('Le total doit être au moins 1.', 'error'); return; }
+      try {
+        const { error } = await sb.from('client_programs').update({ total_sessions: newTotal }).eq('id', selectedProgram.id);
+        if (error) throw error;
+        selectedProgram.total_sessions = newTotal;
+        const idx = currentPrograms.findIndex(p => p.id === selectedProgram.id);
+        if (idx >= 0) currentPrograms[idx].total_sessions = newTotal;
+        renderProgramsList();
+        renderProgramDetail();
+        window.adminCore?.showToast?.('Total séances mis à jour', 'success');
+      } catch (err) {
+        console.error(err);
+        window.adminCore?.showToast?.('Erreur: ' + err.message, 'error');
+      }
+    }
+
+    async function deleteSession(id) {
+      if (!confirm('Supprimer cette séance ?')) return;
+      try {
+        const { error } = await sb.from('client_program_sessions').delete().eq('id', id);
+        if (error) throw error;
+        window.adminCore?.showToast?.('Séance supprimée', 'success');
+        await loadProgramSessions(selectedProgram.id);
+        renderProgramDetail();
+      } catch (err) {
+        console.error(err);
+        window.adminCore?.showToast?.('Erreur: ' + err.message, 'error');
+      }
+    }
+
     async function toggleStatus() {
       if (!selectedProgram) return;
       const newStatus = selectedProgram.status === 'active' ? 'completed' : 'active';
@@ -465,13 +523,13 @@
       }
     }
 
-    function renderReservationsList() {
+    function renderReservationsList(filtered = currentReservations) {
       const list = document.getElementById('reservations-list');
-      if (!currentReservations.length) {
+      if (!filtered.length) {
         list.innerHTML = '<div class="empty-state">Aucune réservation confirmée disponible pour un suivi.</div>';
         return;
       }
-      list.innerHTML = currentReservations.map(r => `
+      list.innerHTML = filtered.map(r => `
         <div class="reservation-card">
           <div>
             <div style="font-weight:600;">${escapeHtml(r.user_name || r.user_email)}</div>
@@ -483,6 +541,17 @@
           </div>
         </div>
       `).join('');
+    }
+
+    function filterReservations() {
+      const q = (document.getElementById('reservation-search')?.value || '').toLowerCase().trim();
+      if (!q) { renderReservationsList(currentReservations); return; }
+      const filtered = currentReservations.filter(r =>
+        (r.user_name && r.user_name.toLowerCase().includes(q)) ||
+        (r.user_email && r.user_email.toLowerCase().includes(q)) ||
+        (r.service && r.service.toLowerCase().includes(q))
+      );
+      renderReservationsList(filtered);
     }
 
     function updateStats() {

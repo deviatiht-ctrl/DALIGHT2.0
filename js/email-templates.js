@@ -112,7 +112,7 @@ export function clientConfirmationEmail(reservation) {
       <p class="message">Votre réservation est actuellement en attente de confirmation. Vous recevrez un email dès que notre équipe aura validé votre rendez-vous.</p>
       <p class="message">Si vous avez des questions, n'hésitez pas à nous contacter au +509 4747-7221 ou par email à dalightbeauty15mai@gmail.com.</p>
       
-      <a href="https://dalight.netlify.app/pages/orders.html" class="cta-button">Voir ma réservation</a>
+      <a href="https://dalightbeauty.com/pages/orders.html" class="cta-button">Voir ma réservation</a>
     </div>
     <div class="footer">
       <p>© ${new Date().getFullYear()} DALIGHT. Tous droits réservés.</p>
@@ -193,7 +193,7 @@ export function adminNotificationEmail(reservation) {
         </div>
       </div>
 
-      <a href="https://dalight.netlify.app/pages/admin.html" class="cta-button">Confirmer la réservation</a>
+      <a href="https://dalightbeauty.com/pages/admin.html" class="cta-button">Confirmer la réservation</a>
     </div>
     <div class="footer">
       <p>© ${new Date().getFullYear()} DALIGHT. Tous droits réservés.</p>
@@ -251,7 +251,7 @@ export function adminConfirmationEmail(reservation) {
 
       <p class="message">Veuillez arriver 10 minutes avant votre rendez-vous. Si vous devez annuler ou modifier, contactez-nous au moins 24 heures à l'avance.</p>
       
-      <a href="https://dalight.netlify.app/pages/orders.html" class="cta-button">Voir ma réservation</a>
+      <a href="https://dalightbeauty.com/pages/orders.html" class="cta-button">Voir ma réservation</a>
     </div>
     <div class="footer">
       <p>© ${new Date().getFullYear()} DALIGHT. Tous droits réservés.</p>

@@ -170,8 +170,8 @@ window.renderEmployees = function() {
     if (typeof roles === 'string') { try { roles = JSON.parse(roles); } catch { roles = []; } }
     if (!Array.isArray(roles)) roles = [];
     const rolesBadges = roles.map(r => `<span style="display:inline-block;background:var(--admin-accent-light);color:var(--admin-accent);padding:0.1rem 0.4rem;border-radius:4px;font-size:0.62rem;font-weight:700;margin:0.1rem 0.15rem 0 0;">${esc(ROLE_LABELS[r] || r)}</span>`).join('');
-    const portalBadge = e.portal_enabled && e.access_code
-      ? `<span style="display:inline-block;background:#10b981;color:white;padding:0.1rem 0.4rem;border-radius:4px;font-size:0.62rem;font-weight:700;">Portail: ${esc(e.access_code)}</span>`
+    const portalBadge = e.portal_enabled && e.username
+      ? `<span style="display:inline-block;background:#10b981;color:white;padding:0.1rem 0.4rem;border-radius:4px;font-size:0.62rem;font-weight:700;">Portail: ${esc(e.username)}</span>`
       : '';
     
     return `
@@ -1373,7 +1373,7 @@ window.exportAttendance = function() {
     .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
     .join('\n');
 
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -1490,7 +1490,7 @@ window.exportEmployeeAttendanceReport = function() {
     .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
     .join('\n');
 
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -2364,12 +2364,8 @@ window.exportAuditReport = function() {
 // ============================================
 
 function getPortalBaseUrl() {
-  // staff.html is at the site root; admin pages live under /admin/
-  const origin = window.location.origin;
-  let path = window.location.pathname;
-  const adminIdx = path.indexOf('/admin/');
-  const base = adminIdx >= 0 ? path.slice(0, adminIdx) : path.replace(/\/admin\/.*/, '').replace(/\/[^/]*$/, '');
-  return `${origin}${base}/staff.html`;
+  // Pòtay anplwaye sou sit ki deplwaye a
+  return 'https://dalightbeauty.com/staff.html';
 }
 
 function normalizeRoles(e) {
@@ -2386,7 +2382,8 @@ window.openPortalModal = function(id) {
 
   document.getElementById('portal-emp-name').textContent = e.full_name || '';
   document.getElementById('portal-enabled').checked = !!e.portal_enabled;
-  document.getElementById('portal-code').value = e.access_code || '';
+  document.getElementById('portal-username').value = e.username || '';
+  document.getElementById('portal-password').value = e.password || '';
 
   const roles = normalizeRoles(e);
   document.getElementById('portal-roles').innerHTML = ALL_ROLES.map(r => `
@@ -2421,26 +2418,37 @@ window.switchPortalTab = function(tab) {
 };
 
 function updatePortalLink() {
-  const code = (document.getElementById('portal-code').value || '').trim().toUpperCase();
   const linkEl = document.getElementById('portal-link');
-  linkEl.value = code ? `${getPortalBaseUrl()}?code=${code}` : `${getPortalBaseUrl()} (générez un code)`;
+  linkEl.value = getPortalBaseUrl();
 }
 
-window.generatePortalCode = function() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  const existing = new Set(allEmployees.map(e => e.access_code).filter(Boolean));
-  let code;
-  do {
-    code = '';
-    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
-  } while (existing.has(code));
-  document.getElementById('portal-code').value = code;
-  updatePortalLink();
+window.generatePortalUsername = function() {
+  if (!currentPortalEmployee) return;
+  const base = (currentPortalEmployee.full_name || 'employe')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z\s]/g, '')
+    .trim()
+    .split(/\s+/);
+  let suggestion = base.length > 1 ? (base[0][0] + base[base.length - 1]) : (base[0] || 'employe');
+  const existing = new Set(allEmployees.map(e => (e.username || '').toLowerCase()).filter(Boolean));
+  let username = suggestion, n = 1;
+  while (existing.has(username) && username !== (currentPortalEmployee.username || '').toLowerCase()) {
+    username = suggestion + (++n);
+  }
+  document.getElementById('portal-username').value = username;
+};
+
+window.generatePortalPassword = function() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  let pwd = '';
+  for (let i = 0; i < 8; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+  document.getElementById('portal-password').value = pwd;
 };
 
 window.copyPortalLink = function() {
   const val = document.getElementById('portal-link').value;
-  if (!val || val.includes('générez')) { showToast('Générez d\'abord un code', 'warning'); return; }
+  if (!val) { showToast('Aucun lien disponible', 'warning'); return; }
   navigator.clipboard.writeText(val).then(
     () => showToast('Lien copié', 'success'),
     () => showToast('Impossible de copier', 'error')
@@ -2453,15 +2461,16 @@ window.savePortalSettings = async function() {
   if (!supabase) return;
 
   const enabled = document.getElementById('portal-enabled').checked;
-  const code = (document.getElementById('portal-code').value || '').trim().toUpperCase() || null;
+  const username = (document.getElementById('portal-username').value || '').trim().toLowerCase() || null;
+  const password = (document.getElementById('portal-password').value || '').trim() || null;
   const roles = Array.from(document.querySelectorAll('.portal-role-cb:checked')).map(cb => cb.value);
 
-  if (enabled && !code) { showToast('Un code est requis pour activer le portail', 'warning'); return; }
+  if (enabled && (!username || !password)) { showToast('Un nom d\'utilisateur et un mot de passe sont requis pour activer le portail', 'warning'); return; }
 
-  // Check code uniqueness locally
-  if (code) {
-    const clash = allEmployees.find(e => e.access_code === code && e.id !== currentPortalEmployee.id);
-    if (clash) { showToast('Ce code est déjà utilisé par ' + clash.full_name, 'error'); return; }
+  // Check username uniqueness locally
+  if (username) {
+    const clash = allEmployees.find(e => (e.username || '').toLowerCase() === username && e.id !== currentPortalEmployee.id);
+    if (clash) { showToast('Ce nom d\'utilisateur est déjà utilisé par ' + clash.full_name, 'error'); return; }
   }
 
   const btn = document.getElementById('btn-save-portal');
@@ -2470,13 +2479,13 @@ window.savePortalSettings = async function() {
   try {
     const { error } = await supabase
       .from('presence_employees')
-      .update({ portal_enabled: enabled, access_code: code, roles })
+      .update({ portal_enabled: enabled, username, password, roles })
       .eq('id', currentPortalEmployee.id);
     if (error) throw error;
 
-    Object.assign(currentPortalEmployee, { portal_enabled: enabled, access_code: code, roles });
+    Object.assign(currentPortalEmployee, { portal_enabled: enabled, username, password, roles });
     const idx = allEmployees.findIndex(e => e.id === currentPortalEmployee.id);
-    if (idx !== -1) Object.assign(allEmployees[idx], { portal_enabled: enabled, access_code: code, roles });
+    if (idx !== -1) Object.assign(allEmployees[idx], { portal_enabled: enabled, username, password, roles });
 
     renderEmployees();
     showToast('Portail mis à jour', 'success');

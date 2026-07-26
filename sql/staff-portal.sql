@@ -38,6 +38,8 @@ CREATE TABLE IF NOT EXISTS service_sessions (
     started_at TIMESTAMPTZ DEFAULT NOW(),
     ended_at TIMESTAMPTZ,
     duration_seconds INTEGER,
+    planned_end_at TIMESTAMPTZ,
+    planned_duration_minutes INTEGER,
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -45,6 +47,22 @@ CREATE TABLE IF NOT EXISTS service_sessions (
 CREATE INDEX IF NOT EXISTS idx_service_sessions_employee ON service_sessions(employee_id);
 CREATE INDEX IF NOT EXISTS idx_service_sessions_status ON service_sessions(status);
 CREATE INDEX IF NOT EXISTS idx_service_sessions_started ON service_sessions(started_at);
+
+-- ============================================
+-- 2b. ASSIGNATION MULTI-EMPLOYÉS
+-- ============================================
+CREATE TABLE IF NOT EXISTS reservation_employees (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    reservation_id UUID REFERENCES reservations(id) ON DELETE CASCADE,
+    employee_id UUID REFERENCES presence_employees(id) ON DELETE CASCADE,
+    employee_name TEXT,
+    is_primary BOOLEAN DEFAULT false,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(reservation_id, employee_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_reservation_employees_reservation ON reservation_employees(reservation_id);
+CREATE INDEX IF NOT EXISTS idx_reservation_employees_employee ON reservation_employees(employee_id);
 
 -- ============================================
 -- 3. RAPPORTS DES EMPLOYÉS
@@ -135,6 +153,18 @@ CREATE POLICY "portal_read_attendance" ON attendance_logs
 DROP POLICY IF EXISTS "portal_read_reservations" ON reservations;
 CREATE POLICY "portal_read_reservations" ON reservations
   FOR SELECT TO anon USING (true);
+
+DROP POLICY IF EXISTS "portal_update_reservations" ON reservations;
+CREATE POLICY "portal_update_reservations" ON reservations
+  FOR UPDATE TO anon USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "portal_select_reservation_employees" ON reservation_employees;
+CREATE POLICY "portal_select_reservation_employees" ON reservation_employees
+  FOR SELECT TO anon USING (true);
+
+DROP POLICY IF EXISTS "authenticated_all_reservation_employees" ON reservation_employees;
+CREATE POLICY "authenticated_all_reservation_employees" ON reservation_employees
+  FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 -- ============================================
 -- 6. FONCTION: générer un code d'accès unique (6 caractères)

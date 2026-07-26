@@ -1,33 +1,16 @@
 -- ============================================
--- DALIGHT - ASSIGNATION DES RENDEZ-VOUS
--- Permet d'assigner une réservation à un employé (prestataire)
+-- DALIGHT - MIGRATION 31
+-- Multi-employés par réservation + durée de service + minuteur cible
 -- ============================================
 
 ALTER TABLE reservations
   ADD COLUMN IF NOT EXISTS assigned_employee_id UUID REFERENCES presence_employees(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS assigned_employee_name TEXT,
-  ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMPTZ;
-
-CREATE INDEX IF NOT EXISTS idx_reservations_assigned ON reservations(assigned_employee_id);
-
--- Le portail (anon) doit pouvoir mettre à jour l'assignation depuis l'admin
--- (l'admin est authentifié, mais on garde une policy anon pour cohérence portail).
-DROP POLICY IF EXISTS "portal_update_reservations" ON reservations;
-CREATE POLICY "portal_update_reservations" ON reservations
-  FOR UPDATE TO anon USING (true) WITH CHECK (true);
-
-SELECT 'Colonnes ajoutées à reservations' AS info;
-SELECT column_name, data_type FROM information_schema.columns
-WHERE table_name = 'reservations'
-AND column_name IN ('assigned_employee_id', 'assigned_employee_name', 'assigned_at')
-ORDER BY column_name;
-
--- ============================================
--- Multi-employé & durée de service
--- ============================================
-ALTER TABLE reservations
+  ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS duration_minutes INTEGER,
   ADD COLUMN IF NOT EXISTS required_employees INTEGER DEFAULT 1;
+
+CREATE INDEX IF NOT EXISTS idx_reservations_assigned ON reservations(assigned_employee_id);
 
 CREATE TABLE IF NOT EXISTS reservation_employees (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -46,6 +29,15 @@ ALTER TABLE service_sessions
   ADD COLUMN IF NOT EXISTS planned_end_at TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS planned_duration_minutes INTEGER;
 
+-- Policies portail / admin
+DROP POLICY IF EXISTS "portal_read_reservations" ON reservations;
+CREATE POLICY "portal_read_reservations" ON reservations
+  FOR SELECT TO anon USING (true);
+
+DROP POLICY IF EXISTS "portal_update_reservations" ON reservations;
+CREATE POLICY "portal_update_reservations" ON reservations
+  FOR UPDATE TO anon USING (true) WITH CHECK (true);
+
 DROP POLICY IF EXISTS "portal_select_reservation_employees" ON reservation_employees;
 CREATE POLICY "portal_select_reservation_employees" ON reservation_employees
   FOR SELECT TO anon USING (true);
@@ -53,3 +45,5 @@ CREATE POLICY "portal_select_reservation_employees" ON reservation_employees
 DROP POLICY IF EXISTS "authenticated_all_reservation_employees" ON reservation_employees;
 CREATE POLICY "authenticated_all_reservation_employees" ON reservation_employees
   FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+SELECT 'Migration 31 appliquée' AS info;
