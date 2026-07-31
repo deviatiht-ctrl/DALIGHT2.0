@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Carte de Fidélité — DALIGHT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',sans-serif; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:1.5rem;
+      background: radial-gradient(ellipse at 12% -5%, rgba(201,162,39,.10) 0%, transparent 42%), radial-gradient(ellipse at 90% 105%, rgba(139,92,246,.08) 0%, transparent 45%), #0f1117; color:#eef1f7; }
+    .wrap { width:100%; max-width:420px; }
+
+    /* Loading */
+    .loading { text-align:center; padding:3rem; color:#9aa3b2; }
+    .spinner { width:40px; height:40px; border:3px solid rgba(201,162,39,.2); border-top-color:#c9a227; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 1rem; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* Error */
+    .error-box { text-align:center; padding:2.5rem; }
+    .error-box h2 { font-size:1.3rem; margin-bottom:.5rem; color:#ef4444; }
+    .error-box p { color:#9aa3b2; font-size:.9rem; margin-bottom:1.5rem; }
+    .error-box a { color:#c9a227; font-weight:600; text-decoration:none; }
+
+    /* Card */
+    .loyalty-card {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      border-radius: 24px;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0,0,0,.5);
+    }
+    .loyalty-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, #c9a227, #f0d060, #c9a227);
+    }
+    .card-shine {
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,.03) 50%, transparent 60%);
+      pointer-events: none;
+    }
+    .card-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .card-logo span { color: #c9a227; }
+    .card-subtitle {
+      font-size: .7rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,.5);
+      margin-top: .2rem;
+    }
+    .card-divider { height: 1px; background: rgba(255,255,255,.1); margin: 1.2rem 0; }
+    .card-client-name { font-size: 1.2rem; font-weight: 700; }
+    .card-service { font-size: .85rem; color: rgba(255,255,255,.6); margin-top: .2rem; }
+
+    /* Stamps */
+    .stamps-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 1.2rem; }
+    .stamp {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .75rem; font-weight: 700;
+      transition: transform .2s;
+    }
+    .stamp.filled {
+      background: linear-gradient(135deg, #c9a227, #f0d060);
+      color: #1a1400;
+      box-shadow: 0 4px 12px rgba(201,162,39,.4);
+    }
+    .stamp.empty {
+      background: rgba(255,255,255,.06);
+      border: 1.5px dashed rgba(255,255,255,.15);
+      color: rgba(255,255,255,.3);
+    }
+    .stamp.reward {
+      background: linear-gradient(135deg, #22c55e, #4ade80);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(34,197,94,.4);
+      font-size: 1rem;
+    }
+
+    /* Progress */
+    .progress-info { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; font-size: .82rem; }
+    .progress-count { font-weight: 700; color: #c9a227; }
+    .progress-remaining { color: rgba(255,255,255,.5); }
+
+    /* Reward banner */
+    .reward-banner {
+      background: linear-gradient(135deg, rgba(34,197,94,.2), rgba(34,197,94,.05));
+      border: 1px solid rgba(34,197,94,.3);
+      border-radius: 14px;
+      padding: 1rem;
+      margin-top: 1.2rem;
+      text-align: center;
+    }
+    .reward-banner-icon { font-size: 1.5rem; }
+    .reward-banner-text { font-weight: 700; color: #4ade80; margin-top: .3rem; }
+    .reward-banner-desc { font-size: .8rem; color: rgba(255,255,255,.6); margin-top: .2rem; }
+
+    /* QR */
+    .qr-section {
+      background: rgba(255,255,255,.04);
+      border-radius: 14px;
+      padding: 1.2rem;
+      margin-top: 1.2rem;
+      text-align: center;
+    }
+    .qr-section canvas, .qr-section img {
+      border-radius: 10px;
+      margin: 0 auto;
+    }
+    .qr-label { font-size: .75rem; color: rgba(255,255,255,.4); margin-top: .6rem; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* Code */
+    .card-code {
+      font-family: monospace;
+      font-size: .78rem;
+      color: rgba(255,255,255,.4);
+      text-align: center;
+      margin-top: .8rem;
+      letter-spacing: .05em;
+    }
+
+    /* Actions */
+    .actions { display: flex; gap: .6rem; margin-top: 1.2rem; }
+    .btn {
+      flex: 1; padding: .8rem; border: none; border-radius: 12px;
+      font-weight: 600; font-size: .88rem; cursor: pointer; font-family: inherit;
+      display: flex; align-items: center; justify-content: center; gap: .4rem;
+      transition: all .18s;
+    }
+    .btn-gold { background: linear-gradient(135deg, #d9b53a, #b8941f); color: #1a1400; }
+    .btn-gold:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .btn-ghost { background: rgba(255,255,255,.06); color: #eef1f7; border: 1px solid rgba(255,255,255,.1); }
+    .btn-ghost:hover { background: rgba(255,255,255,.1); }
+
+    /* Expiry */
+    .expiry { font-size: .72rem; color: rgba(255,255,255,.3); text-align: center; margin-top: 1rem; }
+
+    /* Expired badge */
+    .status-badge {
+      display: inline-flex; align-items: center; gap: .3rem;
+      padding: .3rem .7rem; border-radius: 20px;
+      font-size: .72rem; font-weight: 600;
+    }
+    .status-active { background: rgba(34,197,94,.15); color: #4ade80; }
+    .status-redeemed { background: rgba(59,130,246,.15); color: #60a5fa; }
+    .status-expired { background: rgba(239,68,68,.15); color: #f87171; }
+
+    @media (max-width: 400px) {
+      .stamp { width: 30px; height: 30px; font-size: .65rem; }
+      .stamps-row { gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="card-container">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Chargement de votre carte…</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Supabase config — reuse same keys as main site
+    var SUPABASE_URL = 'https://rbwoiejztrkghfkpxquo.supabase.co';
+    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U';
+    var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    function esc(s) {
+      if (!s) return '';
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function getParam(name) {
+      var u = new URLSearchParams(window.location.search);
+      return u.get(name);
+    }
+
+    async function loadCard() {
+      var code = getParam('code');
+      if (!code) {
+        showError('Code manquant', 'Aucun code de carte fourni. Vérifiez le lien que vous avez reçu.');
+        return;
+      }
+
+      var r = await sb.from('loyalty_cards').select('*').eq('card_code', code).single();
+      if (r.error || !r.data) {
+        showError('Carte introuvable', 'Ce code de carte n\'existe pas ou a été supprimé.');
+        return;
+      }
+
+      var card = r.data;
+      renderCard(card);
+    }
+
+    function showError(title, msg) {
+      document.getElementById('card-container').innerHTML =
+        '<div class="error-box"><h2>' + esc(title) + '</h2><p>' + esc(msg) + '</p>' +
+        '<a href="../index.html">← Retour au site</a></div>';
+    }
+
+    function renderCard(card) {
+      var stamps = '';
+      for (var i = 0; i < card.total_required; i++) {
+        if (i < card.stamps_count) {
+          stamps += '<div class="stamp filled">✓</div>';
+        } else {
+          stamps += '<div class="stamp empty">' + (i + 1) + '</div>';
+        }
+      }
+      if (card.reward_earned && !card.reward_redeemed) {
+        stamps += '<div class="stamp reward"><i data-lucide="gift" style="width:18px;height:18px;"></i></div>';
+      }
+
+      var statusBadge = card.status === 'active' ? '<span class="status-badge status-active">● Active</span>' :
+        card.status === 'redeemed' ? '<span class="status-badge status-redeemed">✓ Utilisée</span>' :
+          card.status === 'expired' ? '<span class="status-badge status-expired">✕ Expirée</span>' : '';
+
+      var rewardBanner = '';
+      if (card.reward_earned && !card.reward_redeemed && card.status === 'active') {
+        rewardBanner = '<div class="reward-banner">' +
+          '<div class="reward-banner-icon"><i data-lucide="gift" style="width:24px;height:24px;color:#4ade80;"></i></div>' +
+          '<div class="reward-banner-text">Récompense débloquée!</div>' +
+          '<div class="reward-banner-desc">' + esc(card.reward_label || 'Présentez cette carte pour recevoir votre récompense') + '</div>' +
+        '</div>';
+      }
+
+      var remaining = Math.max(card.total_required - card.stamps_count, 0);
+      var expiryDate = card.expires_at ? new Date(card.expires_at).toLocaleDateString('fr-FR') : '—';
+
+      var html =
+        '<div class="loyalty-card">' +
+          '<div class="card-shine"></div>' +
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
+            '<div><img src="assets/images/logodaligth.png?v=2" alt="DALIGHT" style="height:32px;width:auto;display:block;margin-bottom:2px;filter:brightness(0) invert(1);"><div class="card-subtitle">Carte de Fidélité</div></div>' +
+            statusBadge +
+          '</div>' +
+          '<div class="card-divider"></div>' +
+          '<div class="card-client-name">' + esc(card.client_name) + '</div>' +
+          '<div class="card-service">' + esc(card.service_name) + '</div>' +
+          '<div class="stamps-row">' + stamps + '</div>' +
+          '<div class="progress-info">' +
+            '<span class="progress-count">' + card.stamps_count + ' / ' + card.total_required + '</span>' +
+            '<span class="progress-remaining">' + (remaining > 0 ? remaining + ' restante(s)' : 'Complet!') + '</span>' +
+          '</div>' +
+          rewardBanner +
+          '<div class="qr-section">' +
+            '<div id="qr-code"></div>' +
+            '<div class="qr-label">Scannez en caisse</div>' +
+          '</div>' +
+          '<div class="card-code">' + esc(card.card_code) + '</div>' +
+          '<div class="expiry">Valable jusqu\'au ' + esc(expiryDate) + '</div>' +
+        '</div>' +
+        '<div class="actions">' +
+          '<button class="btn btn-gold" onclick="downloadCard()"><i data-lucide="download" style="width:16px;height:16px;display:inline-block;vertical-align:-3px;margin-right:4px;"></i> Télécharger</button>' +
+          '<button class="btn btn-ghost" onclick="shareCard()"><i data-lucide="share-2" style="width:16px;height:16px;display:inline-block;vertical-align:-3px;margin-right:4px;"></i> Partager</button>' +
+        '</div>';
+
+      document.getElementById('card-container').innerHTML = html;
+      if (window.lucide) window.lucide.createIcons();
+
+      // Generate QR code
+      setTimeout(function () {
+        var qrEl = document.getElementById('qr-code');
+        if (qrEl && window.QRCode) {
+          qrEl.innerHTML = '';
+          new QRCode(qrEl, {
+            text: window.location.href,
+            width: 120,
+            height: 120,
+            colorDark: '#1a1a2e',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M,
+          });
+        }
+      }, 100);
+    }
+
+    window.downloadCard = function () {
+      var card = document.querySelector('.loyalty-card');
+      if (!card) return;
+      // Use html2canvas-like approach: create a screenshot via canvas
+      // Since we don't have html2canvas, we'll use the browser print to PDF
+      var win = window.open('', '_blank', 'width=420,height=700');
+      win.document.write('<html><head><title>Carte de Fidélité — DALIGHT</title><style>body{margin:0;padding:1rem;background:#0f1117;}</style></head><body>' + card.outerHTML + '</body></html>');
+      win.document.close();
+      setTimeout(function () { win.print(); }, 300);
+    };
+
+    window.shareCard = function () {
+      if (navigator.share) {
+        navigator.share({ title: 'Ma carte de fidélité DALIGHT', url: window.location.href });
+      } else {
+        var input = document.createElement('input');
+        input.value = window.location.href;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+        alert('Lien copié! Vous pouvez le partager.');
+      }
+    };
+
+    loadCard();
+  </script>
+</body>
+</html>

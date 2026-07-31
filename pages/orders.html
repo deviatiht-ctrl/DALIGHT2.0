@@ -21,7 +21,47 @@
     <script src="../js/toast.js?v=5.0.0"></script>
     <script type="module" src="../js/main.js?v=5.0.0"></script>
     <script type="module" src="../js/chat-widget.js?v=5.0.0" defer></script>
-    <script type="module" src="../js/orders.js?v=202607081620" defer></script>
+    <script type="module" src="../js/orders.js?v=202607311400" defer></script>
+    <style>
+      /* Loyalty cards section */
+      .lc-section { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+      .lc-section-title { font-family:'Playfair Display',serif; font-size:1.3rem; margin-bottom:1rem; display:flex; align-items:center; gap:.5rem; }
+      .lc-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1rem; }
+      .lc-card { background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%); border-radius:16px; padding:1.5rem; color:#eef1f7; position:relative; overflow:hidden; }
+      .lc-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:linear-gradient(90deg,#c9a227,#f0d060,#c9a227); }
+      .lc-card-header { display:flex; justify-content:space-between; align-items:flex-start; }
+      .lc-logo { font-family:'Playfair Display',serif; font-size:1.3rem; font-weight:700; }
+      .lc-logo span { color:#c9a227; }
+      .lc-subtitle { font-size:.65rem; text-transform:uppercase; letter-spacing:1.5px; color:rgba(255,255,255,.4); }
+      .lc-badge { padding:.25rem .6rem; border-radius:12px; font-size:.68rem; font-weight:600; }
+      .lc-badge-active { background:rgba(34,197,94,.15); color:#4ade80; }
+      .lc-badge-redeemed { background:rgba(59,130,246,.15); color:#60a5fa; }
+      .lc-badge-expired { background:rgba(239,68,68,.15); color:#f87171; }
+      .lc-divider { height:1px; background:rgba(255,255,255,.1); margin:1rem 0; }
+      .lc-service { font-size:.85rem; color:rgba(255,255,255,.6); margin-bottom:.8rem; }
+      .lc-stamps { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+      .lc-stamp { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.68rem; font-weight:700; }
+      .lc-stamp-on { background:linear-gradient(135deg,#c9a227,#f0d060); color:#1a1400; }
+      .lc-stamp-off { background:rgba(255,255,255,.06); border:1.5px dashed rgba(255,255,255,.15); color:rgba(255,255,255,.3); }
+      .lc-stamp-reward { background:linear-gradient(135deg,#22c55e,#4ade80); color:#fff; }
+      .lc-stamp-count { font-size:.72rem; color:rgba(255,255,255,.5); margin-left:.3rem; }
+      .lc-progress { display:flex; justify-content:space-between; margin-top:.8rem; font-size:.78rem; }
+      .lc-count { font-weight:700; color:#c9a227; }
+      .lc-remaining { color:rgba(255,255,255,.4); }
+      .lc-reward-banner { background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.3); border-radius:10px; padding:.6rem; margin-top:.8rem; font-size:.78rem; color:#4ade80; text-align:center; }
+      .lc-code { font-family:monospace; font-size:.72rem; color:rgba(255,255,255,.3); text-align:center; margin-top:.6rem; }
+      .lc-view-link { display:block; text-align:center; margin-top:.6rem; font-size:.8rem; color:#c9a227; text-decoration:none; font-weight:600; }
+      .lc-view-link:hover { text-decoration:underline; }
+      .lc-badge-bronze { background:rgba(205,127,50,.2); color:#e8a060; }
+      .lc-badge-argent { background:rgba(192,192,192,.2); color:#e8e8e8; }
+      .lc-badge-premium { background:rgba(201,162,39,.2); color:#f0d060; }
+      .tier-bronze-card { background:linear-gradient(135deg,#3d2817 0%,#5c3a1e 50%,#8b5a2b 100%) !important; }
+      .tier-bronze-card::before { background:linear-gradient(90deg,#cd7f32,#e8a060,#cd7f32) !important; }
+      .tier-argent-card { background:linear-gradient(135deg,#2a2a3e 0%,#3e3e5c 50%,#6b6b8a 100%) !important; }
+      .tier-argent-card::before { background:linear-gradient(90deg,#c0c0c0,#e8e8e8,#c0c0c0) !important; }
+      .tier-premium-card { background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%) !important; }
+      .tier-premium-card::before { background:linear-gradient(90deg,#c9a227,#f0d060,#c9a227) !important; }
+    </style>
     <script type="module">
       import { initChatWidget } from '../js/chat-widget.js?v=5.0.0';
       import { autoPollPlopPayments } from '../js/plop-payment.js?v=5.0.0';
@@ -325,6 +365,7 @@
           <a href="./shop.html">Boutique</a>
           <a href="./services.html">Réservation</a>
           <a href="./orders.html" class="active">Mes réservations</a>
+          <a href="./loyalty.html">Fidélité</a>
           
         <a href="./admin.html" class="admin-link">Admin</a>
         </div>
@@ -374,6 +415,9 @@
         <p>Réservez votre premier rituel DALIGHT et retrouvez-le ici.</p>
         <a class="btn" href="./services.html">Réserver maintenant</a>
       </section>
+
+      <!-- Loyalty cards section -->
+      <div id="loyalty-section"></div>
 
       <!-- Reservations list -->
       <div id="orders-list" class="orders-list" hidden>

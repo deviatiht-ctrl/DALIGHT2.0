@@ -93,6 +93,12 @@ input, select, textarea { font-family: inherit; }
   background: linear-gradient(135deg, var(--sc-primary), var(--sc-purple));
   animation: pulse 2s infinite;
 }
+.school-header-logo img.logo-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: cover;
+}
 .school-header-title { flex: 1; font-size: 1rem; font-weight: 600; color: var(--sc-text); }
 .school-header-actions { display: flex; align-items: center; gap: .75rem; }
 .header-avatar {

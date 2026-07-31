@@ -130,8 +130,19 @@ BEGIN
     WHERE day_of_week = v_day_of_week
       AND time_slot = p_time;
       
+    -- SI PA GEN REGLE → DISPONIB PA DEFAULT (kapasite 1)
     IF NOT FOUND THEN
-        RETURN QUERY SELECT false, 0, 0, 0, 'Pa gen règ pou tan sa'::TEXT;
+        SELECT COUNT(*) INTO v_current_bookings
+        FROM reservations
+        WHERE date = p_date
+          AND time = p_time
+          AND status NOT IN ('cancelled');
+
+        IF v_current_bookings >= v_capacity THEN
+            RETURN QUERY SELECT false, 0, v_capacity, v_current_bookings, 'Tan sa fen ranpli'::TEXT;
+        ELSE
+            RETURN QUERY SELECT true, (v_capacity - v_current_bookings), v_capacity, v_current_bookings, 'Disponib'::TEXT;
+        END IF;
         RETURN;
     END IF;
     

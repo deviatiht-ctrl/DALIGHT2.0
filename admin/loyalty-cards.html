@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cartes de Fidélité — DALIGHT Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css?v=202606271350">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .admin-table .btn { width:auto; }
+    .stamp-dot { display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;font-size:.65rem;font-weight:700;margin:0 2px; }
+    .stamp-on { background:var(--admin-accent);color:#fff; }
+    .stamp-off { background:var(--admin-muted-bg);border:1px solid var(--admin-border);color:var(--admin-text-muted); }
+    .stamp-reward { background:var(--admin-success);color:#fff; }
+    .reward-badge { display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .7rem;border-radius:20px;font-size:.75rem;font-weight:600; }
+    .reward-free { background:#dcfce7;color:#166534; }
+    .reward-pct { background:#dbeafe;color:#1e40af; }
+    .reward-points { background:#ede9fe;color:#5b21b6; }
+    .reward-free-svc { background:#fef3c7;color:#92400e; }
+    .tab-btn { padding:.6rem 1.2rem;border:none;background:transparent;font-weight:600;font-size:.9rem;color:var(--admin-text-muted);border-bottom:2px solid transparent;cursor:pointer;font-family:inherit; }
+    .tab-btn.active { color:var(--admin-accent);border-bottom-color:var(--admin-accent); }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+    /* Fix modal text color — ensure labels and text are dark on white modal bg */
+    .modal-body .form-label { color:#1e293b !important; font-weight:600; }
+    .modal-body select.form-control,
+    .modal-body input.form-control { color:#1e293b !important; background:#fff !important; border:1px solid #cbd5e1 !important; }
+    .modal-body select.form-control option { color:#1e293b; background:#fff; }
+    .modal-footer .btn-primary { color:#fff !important; }
+    @media (max-width:768px) { .header-right { flex-wrap:wrap;gap:.5rem; } .header-right .btn { width:auto; } }
+  </style>
+</head>
+<body>
+  <aside class="admin-sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="sidebar-logo">
+        <img src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" onerror="this.style.display='none'">
+        <div class="sidebar-logo-text">DALIGHT<span>Administration</span></div>
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Principal</div>
+        <a href="dashboard.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Dashboard</a>
+        <a href="reservations.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Réservations<span class="badge" id="pending-count">0</span></a>
+        <a href="client-tracking.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>Suivi clients</a>
+        <a href="loyalty-cards.html" class="nav-item active"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>Cartes de Fidélité</a>
+        <a href="pos.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>Caisse / POS</a>
+        <a href="employees.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Employés</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Contenu</div>
+        <a href="services.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>Services</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Utilisateurs</div>
+        <a href="clients.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>Clients</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Système</div>
+        <a href="settings.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Paramètres</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="user-avatar">A</div>
+        <div class="sidebar-user-info"><div class="sidebar-user-name" id="user-name">Admin</div><div class="sidebar-user-role">Administrateur</div></div>
+      </div>
+      <button class="btn-logout" id="logout-btn">Déconnexion</button>
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-header">
+      <div class="header-left">
+        <button class="mobile-menu-btn" id="mobile-menu-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <h1 class="page-title">Cartes de Fidélité</h1>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" onclick="backfillCards()" id="btn-backfill"><i data-lucide="refresh-cw"></i> Vérifier réservations passées</button>
+        <button class="btn btn-primary" onclick="openConfigModal()"><i data-lucide="plus"></i> Configurer un service</button>
+      </div>
+    </header>
+
+    <div class="admin-content">
+      <!-- Tabs -->
+      <div style="display:flex;border-bottom:2px solid var(--admin-border);margin-bottom:1.5rem;">
+        <button class="tab-btn active" onclick="switchTab('configs')" id="tab-configs">Configuration des services</button>
+        <button class="tab-btn" onclick="switchTab('cards')" id="tab-cards">Cartes des clients</button>
+      </div>
+
+      <!-- Tab: Configs -->
+      <div class="tab-content active" id="content-configs">
+        <div id="configs-list"></div>
+      </div>
+
+      <!-- Tab: Cards -->
+      <div class="tab-content" id="content-cards">
+        <div class="card" style="padding:1rem;margin-bottom:1rem;">
+          <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+            <input class="form-control" id="card-search" placeholder="Rechercher par nom, email, code..." style="flex:1;min-width:200px;" oninput="renderCards()">
+            <select class="form-control" id="card-filter-service" style="min-width:180px;" onchange="renderCards()">
+              <option value="">Tous les services</option>
+            </select>
+            <select class="form-control" id="card-filter-status" style="min-width:120px;" onchange="renderCards()">
+              <option value="">Tous statuts</option>
+              <option value="active">Actif</option>
+              <option value="redeemed">Récompense obtenue</option>
+              <option value="expired">Expiré</option>
+            </select>
+          </div>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <table class="admin-table" id="cards-table">
+            <thead><tr><th>Client</th><th>Service</th><th>Progression</th><th>Récompense</th><th>Statut</th><th>Code carte</th><th>Actions</th></tr></thead>
+            <tbody id="cards-tbody"><tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--admin-text-muted);">Chargement…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Config Modal -->
+  <div class="modal-overlay" id="modal-config">
+    <div class="modal" style="max-width:560px;">
+      <div class="modal-header"><h3 class="modal-title" id="config-title">Configurer la fidélité</h3><button class="modal-close" onclick="closeConfigModal()">&times;</button></div>
+      <div class="modal-body">
+        <input type="hidden" id="cfg-id">
+        <div class="form-group"><label class="form-label">Service <span style="color:red">*</span></label>
+          <select class="form-control" id="cfg-service" multiple size="5" style="min-height:140px;"></select>
+          <small style="display:block;margin-top:.4rem;color:#64748b;font-size:.78rem;">Maintenez Ctrl/Cmd pour sélectionner plusieurs services, ou choisissez « Tous les services ».</small>
+        </div>
+        <div class="form-group"><label class="form-label">Type de récompense</label>
+          <select class="form-control" id="cfg-reward-type" onchange="toggleRewardFields()">
+            <option value="free_session">Séance gratuite (après N séances)</option>
+            <option value="percentage">Pourcentage de réduction</option>
+            <option value="points">Points de fidélité</option>
+            <option value="free_service">Service gratuit (après N séances)</option>
+          </select>
+        </div>
+        <div class="form-group" id="fg-threshold"><label class="form-label">Nombre de séances requises</label><input type="number" class="form-control" id="cfg-threshold" value="10" min="1" max="100"></div>
+        <div class="form-group" id="fg-pct" style="display:none;"><label class="form-label">Pourcentage de réduction (%)</label><input type="number" class="form-control" id="cfg-pct" value="10" min="1" max="100"></div>
+        <div class="form-group" id="fg-points" style="display:none;"><label class="form-label">Points par séance</label><input type="number" class="form-control" id="cfg-pps" value="1" min="1" max="100"></div>
+        <div class="form-group"><label class="form-label">Libellé de la récompense (visible par le client)</label><input type="text" class="form-control" id="cfg-label" placeholder="Ex: 10ème séance gratuite!"></div>
+        <div class="form-group"><label class="form-label">Durée de validité (mois)</label><input type="number" class="form-control" id="cfg-months" value="12" min="1" max="60"></div>
+        <div class="form-group" style="display:flex;align-items:center;gap:.5rem;">
+          <input type="checkbox" id="cfg-active" checked style="width:16px;height:16px;">
+          <label for="cfg-active" style="font-size:.875rem;font-weight:500;">Programme actif</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeConfigModal()">Annuler</button>
+        <button class="btn btn-primary" onclick="saveConfig()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card Detail Modal -->
+  <div class="modal-overlay" id="modal-card">
+    <div class="modal" style="max-width:480px;">
+      <div class="modal-header"><h3 class="modal-title">Détail de la carte</h3><button class="modal-close" onclick="closeCardModal()">&times;</button></div>
+      <div class="modal-body" id="card-detail-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeCardModal()">Fermer</button>
+        <button class="btn btn-primary" onclick="redeemCard()" id="btn-redeem" style="display:none;">Marquer récompense utilisée</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/admin-core.js?v=202607311310"></script>
+  <script src="js/loyalty-cards.js?v=1"></script>
+</body>
+</html>

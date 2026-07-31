@@ -43,6 +43,29 @@
 </head>
 
 <body data-page="services">
+  <!-- Fallback nav toggle for hamburger menu -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var nav = document.querySelector('.top-nav');
+      var toggle = document.querySelector('.nav-toggle');
+      if (!nav || !toggle) return;
+      // Avoid double-binding if main.js already did it
+      if (toggle.dataset.bound === '1') return;
+      toggle.dataset.bound = '1';
+      toggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        nav.classList.toggle('open');
+        toggle.classList.toggle('active');
+      });
+      document.addEventListener('click', function(e) {
+        if (nav.classList.contains('open') && !nav.contains(e.target)) {
+          nav.classList.remove('open');
+          toggle.classList.remove('active');
+        }
+      });
+    });
+  </script>
   <header class="site-header internal">
     <nav class="top-nav">
       <a class="brand" href="../index.html">
@@ -63,6 +86,7 @@
         <a href="./shop.html">Boutique</a>
         <a href="./services.html">Réservation</a>
         <a href="./orders.html">Mes réservations</a>
+        <a href="./loyalty.html">Fidélité</a>
         <a href="./follow.html">Suivre</a>
         <a href="./login.html" class="mobile-auth-link" style="color:var(--gold-500);"><i data-lucide="user" style="width:16px;height:16px;display:inline-block;margin-right:4px;vertical-align:-3px;"></i> Connexion</a>
         <a href="../admin/dashboard.html" class="admin-link">Admin</a>

@@ -1,6 +1,7 @@
 import { formatDate, formatTime, getSupabase } from './main.js?v=5.0.0';
 import { createPlopPayment, verifyPlopPayment, isAutomaticPlopPayment, isBankPayment } from './plop-payment.js';
 import { loadConsentData, matchTemplate, findSubmission, openConsentModal } from './consent-forms.js?v=202607121600';
+import { loadLoyaltyCards, renderLoyaltySection } from './loyalty-client.js?v=1';
 
 let supabase = getSupabase();
 
@@ -702,6 +703,16 @@ async function loadReservations() {
     allReservations = Array.isArray(data) ? data : [];
     await verifyPendingPlopPayments(allReservations);
     consentData = await loadConsentData(supabase, session.user.id);
+
+    // Load loyalty cards for this user
+    const userEmail = session.user.email;
+    const cards = await loadLoyaltyCards(supabase, userEmail);
+    const loyaltySection = document.getElementById('loyalty-section');
+    if (loyaltySection) {
+      loyaltySection.innerHTML = renderLoyaltySection(cards);
+      if (window.lucide) window.lucide.createIcons();
+    }
+
     const hasRows = allReservations.length > 0;
     toggleSections(hasRows);
     updateMetrics(allReservations);

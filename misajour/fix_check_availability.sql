@@ -68,8 +68,19 @@ BEGIN
   ORDER BY CASE WHEN service_type = p_service_type THEN 0 ELSE 1 END
   LIMIT 1;
 
+  -- SI PA GEN REGLE → DISPONIB PA DEFAULT (kapasite 1)
   IF NOT FOUND THEN
-    RETURN QUERY SELECT false, 0, 0, 0, 'Pa gen règ pou tan sa'::TEXT;
+    SELECT COUNT(*) INTO v_current_bookings
+    FROM reservations
+    WHERE date = p_date
+      AND time = p_time
+      AND status NOT IN ('cancelled');
+
+    IF v_current_bookings >= v_capacity THEN
+      RETURN QUERY SELECT false, 0, v_capacity, v_current_bookings, 'Tan sa fen ranpli'::TEXT;
+    ELSE
+      RETURN QUERY SELECT true, (v_capacity - v_current_bookings), v_capacity, v_current_bookings, 'Disponib'::TEXT;
+    END IF;
     RETURN;
   END IF;
 

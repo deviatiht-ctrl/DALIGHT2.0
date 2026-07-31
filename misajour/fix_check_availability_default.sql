@@ -1,53 +1,32 @@
--- ============================================================
--- DALIGHT — FIX DEFINITIF: check_availability(date, time) is not unique
--- ============================================================
--- KOZ PWOBLEM: Plizyè script (dateheure.sql, repairfic.sql,
--- fix_check_availability.sql, 04_creneaux_fix.sql) te kreye plizyè
--- vèsyon check_availability() ki sipèpoze youn ak lòt (defaults),
--- kidonk Postgres pa ka deside kilès pou l rele lè trigger a
--- rele check_availability(NEW.date, NEW.time) ak 2 agiman sèlman.
+-- =============================================
+-- DALIGHT — Fix: check_availability default to available when no rule exists
+-- Kouri nan Supabase SQL Editor
+-- =============================================
+-- PWOBLEM: check_availability() retounen "pa disponib" lè pa gen règ
+-- nan availability_rules pou jou/tan sa a. Sa lakòz frontend la (ki
+-- konsidere slot disponib pa default) ak baz done a (ki refize insert)
+-- pa dakò. Rezilta: "Erreur base de données" pandan ke slot la parèt
+-- disponib nan admin ak sou sit la.
 --
--- SOLISYON: Efase TOUT ansyen vèsyon yo (tout sinati posib),
--- rekreye YON SÈL vèsyon final ki sipòte service_type (vèsyon
--- ki pi konplè a, konpatib ak admin_block_slot).
--- Kouri fichye sa YON SÈL FWA nan Supabase SQL Editor.
--- ============================================================
+-- SOLISYON: Lè pa gen règ nan availability_rules, konsidere slot la
+-- DISPONIB pa default ak kapasite 1, olye pou l refize.
+-- =============================================
 
--- 1. Drop trigger anvan (pou evite depandans pandan drop)
-DROP TRIGGER IF EXISTS check_availability_trigger ON reservations;
-
--- 2. Drop TOUT sinati posib check_availability ki ka egziste
+-- 1. Drop tout ansyen vèsyon check_availability
 DROP FUNCTION IF EXISTS check_availability(DATE, TIME) CASCADE;
 DROP FUNCTION IF EXISTS check_availability(DATE, TIME, UUID) CASCADE;
 DROP FUNCTION IF EXISTS check_availability(DATE, TIME, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS check_availability(DATE, TIME, UUID, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS check_availability() CASCADE;
 
--- 3. Drop fonksyon depandan (yo pral rekreye pi ba)
-DROP FUNCTION IF EXISTS get_month_availability(INTEGER, INTEGER) CASCADE;
-DROP FUNCTION IF EXISTS get_month_availability(INTEGER, INTEGER, TEXT) CASCADE;
-DROP FUNCTION IF EXISTS get_next_available_slots(DATE, INTEGER) CASCADE;
+-- 2. Drop prevent_double_booking (depann de check_availability)
 DROP FUNCTION IF EXISTS prevent_double_booking() CASCADE;
 
--- 4. Asire kolòn service_type egziste (idempotan)
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'availability_exceptions' AND column_name = 'service_type'
-  ) THEN
-    ALTER TABLE availability_exceptions ADD COLUMN service_type TEXT DEFAULT 'all';
-  END IF;
+-- 3. Drop get_month_availability (depann de availability_rules)
+DROP FUNCTION IF EXISTS get_month_availability(INTEGER, INTEGER) CASCADE;
+DROP FUNCTION IF EXISTS get_month_availability(INTEGER, INTEGER, TEXT) CASCADE;
 
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'availability_rules' AND column_name = 'service_type'
-  ) THEN
-    ALTER TABLE availability_rules ADD COLUMN service_type TEXT DEFAULT 'all';
-  END IF;
-END $$;
-
--- 5. REKREYE YON SÈL vèsyon check_availability (final, kanonik)
+-- 4. Rekreye check_availability — default DISPONIB si pa gen règ
 CREATE FUNCTION check_availability(
   p_date DATE,
   p_time TIME,
@@ -66,10 +45,11 @@ DECLARE
   v_rule RECORD;
   v_exception RECORD;
   v_current_bookings INTEGER;
-  v_capacity INTEGER;
+  v_capacity INTEGER := 1;  -- Default capacity lè pa gen règ
 BEGIN
   v_day_of_week := EXTRACT(DOW FROM p_date);
 
+  -- 1. Tcheke eksepsyon espesifik pou dat/tan sa
   SELECT * INTO v_exception
   FROM availability_exceptions
   WHERE exception_date = p_date
@@ -87,6 +67,7 @@ BEGIN
     v_capacity := v_exception.max_capacity;
   END IF;
 
+  -- 2. Tcheke règ jeneral (si egziste)
   SELECT * INTO v_rule
   FROM availability_rules
   WHERE day_of_week = v_day_of_week
@@ -96,7 +77,9 @@ BEGIN
   LIMIT 1;
 
   -- SI PA GEN REGLE → DISPONIB PA DEFAULT (kapasite 1)
+  -- (Anvan sa te retounen false — sa t lakòz pwoblèm lan)
   IF NOT FOUND THEN
+    -- Konte rezèvasyon ki egziste deja
     SELECT COUNT(*) INTO v_current_bookings
     FROM reservations
     WHERE date = p_date
@@ -111,15 +94,18 @@ BEGIN
     RETURN;
   END IF;
 
+  -- Si gen règ epi li pa disponib
   IF NOT v_rule.is_available THEN
     RETURN QUERY SELECT false, 0, 0, 0, 'Tan sa pa disponib'::TEXT;
     RETURN;
   END IF;
 
-  IF v_capacity IS NULL THEN
+  -- Si gen règ, itilize kapasite règ la (si pa deja defini pa eksepsyon)
+  IF v_capacity IS NULL OR v_capacity = 1 THEN
     v_capacity := v_rule.max_capacity;
   END IF;
 
+  -- 3. Konte rezèvasyon ki egziste
   SELECT COUNT(*) INTO v_current_bookings
   FROM reservations
   WHERE date = p_date
@@ -138,14 +124,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 6. Rekreye prevent_double_booking (li rele check_availability ak 2 agiman,
---    OK kounye a paske gen SÈLMAN yon sinati ki gen defaults)
+-- 5. Rekreye prevent_double_booking
 CREATE FUNCTION prevent_double_booking()
 RETURNS TRIGGER AS $$
 DECLARE
   v_check RECORD;
   v_is_admin BOOLEAN;
 BEGIN
+  -- Admin ka kreye rezèvasyon san limit
   SELECT EXISTS (
     SELECT 1 FROM profiles
     WHERE id = auth.uid() AND role = 'admin'
@@ -155,6 +141,7 @@ BEGIN
     RETURN NEW;
   END IF;
 
+  -- Verifye avilabilite
   SELECT * INTO v_check
   FROM check_availability(NEW.date, NEW.time);
 
@@ -166,6 +153,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- 6. Rekreye trigger
+DROP TRIGGER IF EXISTS check_availability_trigger ON reservations;
 CREATE TRIGGER check_availability_trigger
   BEFORE INSERT OR UPDATE ON reservations
   FOR EACH ROW
@@ -245,10 +234,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 8. VERIFIKASYON — dwe retounen SÈL YON LIY
+-- 8. VERIFIKASYON
 SELECT proname AS function_name, pg_get_function_identity_arguments(oid) AS arguments
 FROM pg_proc
 WHERE proname = 'check_availability';
 
--- 9. Test rapid
+-- 9. Test rapid — dwe retounen is_available=true kounye a
 SELECT * FROM check_availability(CURRENT_DATE + 1, '09:00');
