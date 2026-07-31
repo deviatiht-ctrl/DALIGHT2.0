@@ -114,4 +114,10 @@ async function deleteCourse(id, name) {
   else { if (window.adminCore) window.adminCore.showToast('Cours supprimé.'); initCourses(); }
 }
 
-document.addEventListener('DOMContentLoaded', function() { startSchoolCourses(); });
+document.addEventListener('DOMContentLoaded', async function() {
+  await new Promise(function(r) { setTimeout(r, 150); });
+  if (!window.adminCore) { startSchoolCourses(); return; }
+  var session = await window.adminCore.initAdminCore();
+  if (!session) return;
+  startSchoolCourses();
+});

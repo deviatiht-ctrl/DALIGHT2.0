@@ -36,7 +36,7 @@ async function init() {
     lucide.createIcons();
     renderTable();
   } catch(e) {
-    tbody.innerHTML = '<tr><td colspan="6" style="padding:1.25rem;color:#b91c1c;background:#fee2e2;">Erreur: ' + e.message + '</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="padding:1.25rem;color:#b91c1c;background:#fee2e2;">Erreur: ' + e.message + '</td></tr>';
     console.error('[DALIGHT SCHOOL students]', e);
   }
 }
@@ -53,7 +53,7 @@ function renderTable() {
   });
   var tbody = document.getElementById('students-tbody');
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--admin-text-muted);">Aucun résultat</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--admin-text-muted);">Aucun résultat</td></tr>';
     return;
   }
   tbody.innerHTML = list.map(function(s) {
@@ -73,6 +73,9 @@ function renderTable() {
       '<td>' + ch + '</td>' +
       '<td><span class="school-badge ' + sc + '">' + st2 + '</span></td>' +
       '<td style="font-size:.8rem;color:var(--admin-text-muted);">' + dt + '</td>' +
+      '<td><button class="btn btn-icon btn-sm" onclick="copyPortalLink(\'' + safeCode + '\')" title="Copier le lien du portail"><i data-lucide="link"></i></button>' +
+        (s.email ? '<button class="btn btn-icon btn-sm" onclick="sendStudentEmail(\'' + s.id + '\')" title="Envoyer code + lien par email"><i data-lucide="mail"></i></button>' : '') +
+      '</td>' +
       '<td><div style="display:flex;gap:.4rem;">' +
         '<button class="btn btn-icon btn-sm" onclick="editStudent(\'' + s.id + '\')" title="Modifier"><i data-lucide="pencil"></i></button>' +
         '<button class="btn btn-icon btn-sm" onclick="printCode(\'' + safeName + '\',\'' + safeCode + '\')" title="Imprimer"><i data-lucide="printer"></i></button>' +
@@ -82,8 +85,21 @@ function renderTable() {
   lucide.createIcons();
 }
 
+function secureRandomBlock(length) {
+  var chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // pa gen 0/O/1/I/L pou evite konfizyon
+  var arr = new Uint32Array(length);
+  (window.crypto || window.msCrypto).getRandomValues(arr);
+  var out = '';
+  for (var i = 0; i < length; i++) out += chars[arr[i] % chars.length];
+  return out;
+}
+
 function generateCode() {
-  document.getElementById('f-code').value = 'ETU-' + new Date().getFullYear() + '-' + String(allStudents.length + 1).padStart(4, '0');
+  var code;
+  do {
+    code = 'ETU-' + secureRandomBlock(4) + '-' + secureRandomBlock(4);
+  } while (allStudents.some(function(s) { return s.code_acces === code; }));
+  document.getElementById('f-code').value = code;
 }
 
 function openAddModal() {
@@ -127,7 +143,8 @@ async function saveStudent() {
   if (!name || !code) { alert('Nom et code requis.'); return; }
   var btn = document.getElementById('btn-save');
   btn.disabled = true; btn.textContent = 'Enregistrement…';
-  var payload = { name: name, code_acces: code, email: document.getElementById('f-email').value.trim()||null, notes: document.getElementById('f-notes').value.trim()||null, is_active: document.getElementById('f-active').checked, updated_at: new Date().toISOString() };
+  var email = document.getElementById('f-email').value.trim();
+  var payload = { name: name, code_acces: code, email: email||null, notes: document.getElementById('f-notes').value.trim()||null, is_active: document.getElementById('f-active').checked, updated_at: new Date().toISOString() };
   var studentId = editingId, error;
   if (editingId) {
     var r = await sb.from('dalightschool_students').update(payload).eq('id', editingId);
@@ -144,6 +161,11 @@ async function saveStudent() {
   }
   closeModal();
   init();
+  if (email && !error) {
+    var checkedCourseIds = studentId ? Array.from(document.querySelectorAll('#course-checkboxes input:checked')).map(function(i) { return i.value; }) : [];
+    var courseNames = checkedCourseIds.map(function(cId) { var c = allCourses.find(function(x) { return x.id === cId; }); return c ? c.name : ''; }).filter(Boolean);
+    sendStudentCredentialsEmail(name, email, code, courseNames);
+  }
 }
 
 async function toggleActive(id, cur) {
@@ -155,9 +177,55 @@ function copyCode(code) {
   navigator.clipboard.writeText(code).then(function() { if (window.adminCore) window.adminCore.showToast('Code copié: ' + code); });
 }
 
+function copyPortalLink(code) {
+  var url = 'https://dalightbeauty.com/dalight-school/';
+  navigator.clipboard.writeText(url).then(function() { if (window.adminCore) window.adminCore.showToast('Lien copié: ' + url); });
+}
+
+function sendStudentEmail(id) {
+  var s = allStudents.find(function(x) { return x.id === id; });
+  if (!s || !s.email) { alert('Cet étudiant n\'a pas d\'email.'); return; }
+  var enr = allEnrollments.filter(function(e) { return e.student_id === s.id; });
+  var courseNames = enr.map(function(e) { var c = allCourses.find(function(x) { return x.id === e.course_id; }); return c ? c.name : ''; }).filter(Boolean);
+  sendStudentCredentialsEmail(s.name, s.email, s.code_acces, courseNames);
+}
+
+async function sendStudentCredentialsEmail(name, email, code, courseNames) {
+  var portalUrl = 'https://dalightbeauty.com/dalight-school/';
+  var courseList = courseNames.length
+    ? '<ul style="padding-left:1.2rem;">' + courseNames.map(function(n) { return '<li>' + n + '</li>'; }).join('') + '</ul>'
+    : '<p>Aucun cours assigné pour le moment.</p>';
+  var html = '<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;">' +
+    '<h2 style="color:#4f46e5;">DALIGHT SCHOOL</h2>' +
+    '<p>Bonjour <strong>' + name + '</strong>,</p>' +
+    '<p>Voici vos informations de connexion au portail DALIGHT SCHOOL :</p>' +
+    '<div style="background:#f1f5f9;padding:1rem;border-radius:8px;margin:1rem 0;">' +
+    '<p style="margin:.2rem 0;font-size:1.1rem;font-weight:700;font-family:monospace;">Code d\'accès : ' + code + '</p>' +
+    '</div>' +
+    '<p><strong>Cours inscrits :</strong></p>' + courseList +
+    '<p>Pour accéder au portail, cliquez sur le lien suivant :</p>' +
+    '<p><a href="' + portalUrl + '" style="color:#4f46e5;font-weight:600;">' + portalUrl + '</a></p>' +
+    '<p style="margin-top:1.5rem;color:#777;">— L\'équipe DALIGHT SCHOOL</p>' +
+    '</div>';
+  try {
+    if (window.adminCore) window.adminCore.showToast('Envoi de l\'email à ' + email + '…', 'warning');
+    console.log('[DALIGHT SCHOOL] sendStudentEmail → to:', email, 'subject: Vos accès au portail DALIGHT SCHOOL');
+    var r = await sb.functions.invoke('send-email', { body: { to: email, subject: 'Vos accès au portail DALIGHT SCHOOL', html: html, isAdmin: false } });
+    console.log('[DALIGHT SCHOOL] sendStudentEmail ← response:', JSON.stringify(r));
+    if (r.error) { console.error('[DALIGHT SCHOOL] Edge Function error:', r.error); throw r.error; }
+    if (r.data && r.data.success === false) { console.error('[DALIGHT SCHOOL] Brevo returned failure:', r.data); throw new Error(r.data.error || 'Échec de l\'envoi'); }
+    console.log('[DALIGHT SCHOOL] Brevo success data:', r.data);
+    if (window.adminCore) window.adminCore.showToast('Email envoyé à ' + email, 'success');
+  } catch(err) {
+    var errMsg = err.message || err.toString();
+    console.error('[DALIGHT SCHOOL] sendStudentEmail FAILED:', errMsg, err);
+    if (window.adminCore) window.adminCore.showToast('Erreur envoi email: ' + errMsg, 'error');
+  }
+}
+
 function printCode(name, code) {
   var w = window.open('', '_blank', 'width=400,height=300');
-  w.document.write('<html><body onload="print()" style="font-family:Inter,sans-serif;text-align:center;padding:2rem;"><h2 style="color:#4f46e5;">DALIGHT SCHOOL</h2><p>Étudiant: <strong>' + name + '</strong></p><p style="font-size:1.5rem;font-weight:800;background:#e0e7ff;padding:.75rem 1.5rem;border-radius:8px;display:inline-block;">' + code + '</p><p style="font-size:.8rem;color:#666;">Portail: ' + window.location.origin + '/dalight-school/</p></body></html>');
+  w.document.write('<html><body onload="print()" style="font-family:Inter,sans-serif;text-align:center;padding:2rem;"><h2 style="color:#4f46e5;">DALIGHT SCHOOL</h2><p>Étudiant: <strong>' + name + '</strong></p><p style="font-size:1.5rem;font-weight:800;background:#e0e7ff;padding:.75rem 1.5rem;border-radius:8px;display:inline-block;">' + code + '</p><p style="font-size:.8rem;color:#666;">Portail: https://dalightbeauty.com/dalight-school/</p></body></html>');
   w.document.close();
 }
 
@@ -168,6 +236,12 @@ function exportCSV() {
   var a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv); a.download = 'etudiants.csv'; a.click();
 }
 
-document.addEventListener('DOMContentLoaded', function() { startSchoolStudents(); });
+document.addEventListener('DOMContentLoaded', async function() {
+  await new Promise(function(r) { setTimeout(r, 150); });
+  if (!window.adminCore) { startSchoolStudents(); return; }
+  var session = await window.adminCore.initAdminCore();
+  if (!session) return;
+  startSchoolStudents();
+});
 
 console.log('[DALIGHT SCHOOL] school-students.js loaded OK');

@@ -19,6 +19,18 @@
     .code-box:hover { background:#e0e7ff;color:#4338ca; }
     .admin-table .btn { width:auto; }
     @media (max-width:768px) { .header-right { flex-wrap:wrap; gap:.5rem; } .header-right .btn { width:auto; } }
+    /* Responsive modal */
+    .modal-overlay { padding:.5rem; }
+    .modal { max-width:520px; width:100%; max-height:92vh; overflow-y:auto; }
+    @media (max-width:600px) {
+      .modal { max-width:100%; max-height:95vh; border-radius:12px; }
+      .modal-body { padding:1rem; }
+      .modal-header { padding:.75rem 1rem; }
+      .modal-footer { padding:.75rem 1rem; flex-wrap:wrap; }
+      .modal-footer .btn { width:auto; }
+      .modal-body .form-group > div[style*="display:flex"] { flex-wrap:wrap; }
+      .modal-body .form-group > div[style*="display:flex"] .btn { width:auto; }
+    }
   </style>
 </head>
 <body>
@@ -91,8 +103,8 @@
       <!-- Table -->
       <div class="card" style="padding:0;overflow:hidden;">
         <table class="admin-table" id="students-table">
-          <thead><tr><th>Nom</th><th>Code d'accès</th><th>Cours inscrits</th><th>Statut</th><th>Créé le</th><th>Actions</th></tr></thead>
-          <tbody id="students-tbody"><tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--admin-text-muted);">Chargement…</td></tr></tbody>
+          <thead><tr><th>Nom</th><th>Code d'accès</th><th>Cours inscrits</th><th>Statut</th><th>Créé le</th><th>Lien portail</th><th>Actions</th></tr></thead>
+          <tbody id="students-tbody"><tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--admin-text-muted);">Chargement…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -100,7 +112,7 @@
 
   <!-- Add/Edit Modal -->
   <div class="modal-overlay" id="modal-add">
-    <div class="modal" style="max-width:520px;">
+    <div class="modal">
       <div class="modal-header"><h3 class="modal-title" id="modal-title">Nouvel étudiant</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
       <div class="modal-body">
         <div class="form-group"><label class="form-label">Nom complet <span style="color:red">*</span></label><input class="form-control" id="f-name" placeholder="Ex: Jean Dupont"></div>
@@ -130,8 +142,8 @@
     </div>
   </div>
 
-  <script src="js/admin-core.js?v=202607081600"></script>
-  <script src="js/school-students.js?v=202607081600"></script>
+  <script src="js/admin-core.js?v=202607311310"></script>
+  <script src="js/school-students.js?v=202607311310"></script>
 
 </body>
 </html>

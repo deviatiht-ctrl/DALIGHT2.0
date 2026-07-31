@@ -794,17 +794,23 @@ async function updateAwaitingPaymentBadge() {
 // INITIALIZE
 // ============================================
 
+let _adminCoreInitPromise = null;
+
 async function initAdminCore() {
-  const session = await checkAdminAuth();
-  if (!session) return null;
-  
-  initSidebar();
-  initLogout();
-  updatePendingBadge();
-  updateAwaitingPaymentBadge();
-  initRealtimeNotifications();
-  
-  return session;
+  if (_adminCoreInitPromise) return _adminCoreInitPromise;
+  _adminCoreInitPromise = (async () => {
+    const session = await checkAdminAuth();
+    if (!session) return null;
+    
+    initSidebar();
+    initLogout();
+    updatePendingBadge();
+    updateAwaitingPaymentBadge();
+    initRealtimeNotifications();
+    
+    return session;
+  })();
+  return _adminCoreInitPromise;
 }
 
 // ============================================

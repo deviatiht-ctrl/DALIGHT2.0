@@ -6,6 +6,7 @@
 const SB_URL = 'https://rbwoiejztrkghfkpxquo.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U';
 const sb = supabase.createClient(SB_URL, SB_KEY);
+window.staffSb = sb;
 
 // ---- Role catalogue -------------------------------------------------
 const ROLE_META = {
@@ -116,6 +117,7 @@ function buildNav() {
   }
   if (hasProvider) {
     items.push({ id: 'service', label: 'Service en cours', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' });
+    items.push({ id: 'clients', label: 'Suivi clients', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' });
   }
   if (isCM || isManager) {
     items.push({ id: 'stats', label: 'Statistiques', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' });
@@ -154,6 +156,7 @@ const SECTION_META = {
   home:        { title: 'Accueil', sub: 'Vue d\'ensemble de votre journée' },
   appointments:{ title: 'Rendez-vous', sub: 'Vos clients et prestations' },
   service:     { title: 'Service en cours', sub: 'Chronomètre de prestation' },
+  clients:     { title: 'Suivi clients', sub: 'Historique, mesures et progression de vos clients' },
   stats:       { title: 'Statistiques', sub: 'Performance et engagement' },
   reports:     { title: 'Mes rapports', sub: 'Soumettre et consulter vos rapports' },
   attendance:  { title: 'Mes présences', sub: 'Historique de vos entrées / sorties' },
@@ -172,6 +175,7 @@ function showSection(id) {
 
   const map = {
     home: renderHome, appointments: renderAppointments, service: renderService,
+    clients: (el) => (window.renderClientTracking ? window.renderClientTracking(el) : (el.innerHTML = '<div class="empty">Module suivi clients non chargé.</div>')),
     stats: renderStats, reports: renderReports, attendance: renderAttendance,
     evaluations: renderEvaluations, profile: renderProfile,
   };
@@ -601,14 +605,37 @@ window.startManualSession = async function () {
 window.stopSession = async function () {
   if (!activeSession) return;
   const secs = Math.floor((Date.now() - new Date(activeSession.started_at).getTime()) / 1000);
+  const finished = activeSession;
   const { error } = await sb.from('service_sessions').update({
     status: 'completed', ended_at: new Date().toISOString(), duration_seconds: secs,
-  }).eq('id', activeSession.id);
+  }).eq('id', finished.id);
   if (error) { toast('Erreur: ' + error.message, 'error'); return; }
   if (chronoTimer) clearInterval(chronoTimer);
   toast('Service terminé (' + fmtDuration(secs) + ')', 'success');
   showSection('service');
+  if (employeeRoles().some(isProviderRole)) openPostServiceTask(finished);
 };
+
+// ---- Tâche après le service (suivi client) --------------------------
+function openPostServiceTask(session) {
+  const overlay = document.createElement('div');
+  overlay.id = 'post-service-overlay';
+  overlay.style = 'position:fixed;inset:0;background:rgba(15,17,23,.55);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1.5rem;';
+  overlay.innerHTML = `
+    <div class="card" style="max-width:400px;width:100%;margin:0;">
+      <div class="card-title">Service terminé</div>
+      <p style="color:var(--admin-text-muted);font-size:.9rem;margin-bottom:1.2rem;">
+        Voulez-vous enregistrer une séance de suivi (mesures, notes, rappel) pour ${esc(session.client_name || 'ce client')} ?
+      </p>
+      <div style="display:flex;justify-content:flex-end;gap:.6rem;">
+        <button class="btn btn-ghost" id="pst-skip">Plus tard</button>
+        <button class="btn btn-gold" id="pst-go">Ouvrir Suivi clients</button>
+      </div>
+    </div>`;
+  overlay.querySelector('#pst-skip').addEventListener('click', () => overlay.remove());
+  overlay.querySelector('#pst-go').addEventListener('click', () => { overlay.remove(); showSection('clients'); });
+  document.body.appendChild(overlay);
+}
 
 window.cancelSession = async function () {
   if (!activeSession) return;
@@ -875,6 +902,10 @@ window.staffLogin = staffLogin;
 window.staffLogout = staffLogout;
 window.showSection = showSection;
 window.toggleBellPanel = toggleBellPanel;
+window.getCurrentEmployee = function () { return currentEmployee; };
+window.staffToast = toast;
+window.staffEsc = esc;
+window.staffFmtDate = fmtDate;
 
 // boot
 tryAutoLogin();

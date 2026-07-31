@@ -646,19 +646,31 @@
       window.print();
     }
 
-    function emailProgramReport() {
+    async function emailProgramReport() {
       if (!selectedProgram) return;
       const first = sessionsCache[0];
       const last = sessionsCache[sessionsCache.length - 1];
       const weightDiff = (first?.weight_kg && last?.weight_kg) ? (last.weight_kg - first.weight_kg).toFixed(1) : null;
-      const subject = encodeURIComponent('Votre progression chez DALIGHT');
-      let body = `Bonjour ${selectedProgram.client_name},\n\nVoici votre rapport de suivi pour le service ${selectedProgram.service_name}.\n\n`;
-      body += `Séances réalisées: ${sessionsCache.length} / ${selectedProgram.total_sessions}\n`;
-      if (weightDiff !== null) body += `Variation de poids: ${weightDiff > 0 ? '+' : ''}${weightDiff} kg\n`;
-      if (last?.measurements?.waist) body += `Ventre: ${last.measurements.waist} cm\n`;
-      if (last?.measurements?.thigh) body += `Cuisse: ${last.measurements.thigh} cm\n`;
-      body += `\nMerci de votre confiance.\nL’équipe DALIGHT`;
-      window.location.href = `mailto:${encodeURIComponent(selectedProgram.client_email)}?subject=${subject}&body=${encodeURIComponent(body)}`;
+      const rows = sessionsCache.map(s => `<tr><td style="padding:6px;border:1px solid #ddd;">#${s.session_number}</td><td style="padding:6px;border:1px solid #ddd;">${s.session_date}</td><td style="padding:6px;border:1px solid #ddd;">${s.weight_kg || '—'}</td><td style="padding:6px;border:1px solid #ddd;">${s.measurements?.waist || '—'}</td></tr>`).join('');
+      const html = `
+        <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;">
+          <h2 style="color:#b8941f;">Votre bilan de progression — DALIGHT</h2>
+          <p>Bonjour ${escapeHtml(selectedProgram.client_name)},</p>
+          <p>Voici votre rapport de suivi pour <strong>${escapeHtml(selectedProgram.service_name)}</strong> (${sessionsCache.length} / ${selectedProgram.total_sessions} séances).</p>
+          ${weightDiff !== null ? `<p><strong>Variation de poids:</strong> ${weightDiff > 0 ? '+' : ''}${weightDiff} kg</p>` : ''}
+          <table style="border-collapse:collapse;width:100%;margin-top:1rem;">
+            <thead><tr><th style="padding:6px;border:1px solid #ddd;background:#f7f7f7;">Séance</th><th style="padding:6px;border:1px solid #ddd;background:#f7f7f7;">Date</th><th style="padding:6px;border:1px solid #ddd;background:#f7f7f7;">Poids</th><th style="padding:6px;border:1px solid #ddd;background:#f7f7f7;">Ventre</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <p style="margin-top:1.5rem;">Merci de votre confiance.<br>L'équipe DALIGHT</p>
+        </div>`;
+      try {
+        const { error } = await sb.functions.invoke('send-email', { body: { to: selectedProgram.client_email, subject: 'Votre bilan de progression — DALIGHT', html, isAdmin: false } });
+        if (error) throw error;
+        window.adminCore?.showToast?.('Bilan envoyé par email', 'success');
+      } catch (err) {
+        window.adminCore?.showToast?.('Erreur envoi: ' + err.message, 'error');
+      }
     }
 
     function escapeHtml(text) {
