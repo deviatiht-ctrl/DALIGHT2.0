@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hors Ligne — DALIGHT</title>
+  <link rel="icon" href="./assets/images/logodaligth.png?v=2" type="image/png" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Montserrat', Arial, sans-serif;
+      background: linear-gradient(135deg, #4A3728 0%, #2C1810 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+    }
+    .offline-container {
+      max-width: 500px;
+    }
+    .offline-logo {
+      width: 120px;
+      height: auto;
+      margin: 0 auto 2rem;
+      display: block;
+      opacity: 0.9;
+    }
+    h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      color: #D4A574;
+    }
+    p {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+      opacity: 0.85;
+    }
+    .retry-btn {
+      display: inline-block;
+      background: #D4A574;
+      color: #2C1810;
+      padding: 14px 36px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+    }
+    .retry-btn:hover {
+      background: #E6B885;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(212, 165, 116, 0.3);
+    }
+    .offline-icon {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-container">
+    <img src="./assets/images/logodaligth.png" alt="DALIGHT" class="offline-logo" onerror="this.style.display='none'" />
+    <div class="offline-icon">&#128268;</div>
+    <h1>Vous &ecirc;tes hors ligne</h1>
+    <p>Nous n'avons pas pu charger cette page. V&eacute;rifiez votre connexion internet et r&eacute;essayez.</p>
+    <button class="retry-btn" onclick="window.location.reload()">R&eacute;essayer</button>
+  </div>
+</body>
+</html>

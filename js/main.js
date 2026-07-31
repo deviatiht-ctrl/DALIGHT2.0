@@ -160,8 +160,10 @@ function loadSupabaseCDN() {
     
     console.log('📦 Loading Supabase from CDN...');
     
-    // Try multiple CDN sources
+    // Try local vendor first, then CDN sources as fallback
     const cdnSources = [
+      './vendor/supabase/supabase.min.js',
+      '../vendor/supabase/supabase.min.js',
       'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js',
       'https://unpkg.com/@supabase/supabase-js@2.45.1/dist/umd/supabase.min.js',
       'https://cdnjs.cloudflare.com/ajax/libs/supabase.js/2.45.1/supabase.min.js'
