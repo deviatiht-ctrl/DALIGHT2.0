@@ -17,11 +17,32 @@
 DROP TRIGGER IF EXISTS check_availability_trigger ON reservations;
 
 -- 2. Drop TOUT sinati posib check_availability ki ka egziste
+--     (TIME = TIME WITHOUT TIME ZONE nan Postgres, men nou mete tou de pou safety)
 DROP FUNCTION IF EXISTS check_availability(DATE, TIME) CASCADE;
+DROP FUNCTION IF EXISTS check_availability(DATE, TIME WITHOUT TIME ZONE) CASCADE;
 DROP FUNCTION IF EXISTS check_availability(DATE, TIME, UUID) CASCADE;
+DROP FUNCTION IF EXISTS check_availability(DATE, TIME WITHOUT TIME ZONE, UUID) CASCADE;
 DROP FUNCTION IF EXISTS check_availability(DATE, TIME, TEXT) CASCADE;
+DROP FUNCTION IF EXISTS check_availability(DATE, TIME WITHOUT TIME ZONE, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS check_availability(DATE, TIME, UUID, TEXT) CASCADE;
+DROP FUNCTION IF EXISTS check_availability(DATE, TIME WITHOUT TIME ZONE, UUID, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS check_availability() CASCADE;
+
+-- 2b. Drop agresiv: chache epi efase TOUT vèsyon check_availability ki gen egziste
+--     (pou ka kote DROP IF EXISTS pa matche ak yon kalite tip ki pa egzak)
+DO $$
+DECLARE
+  r RECORD;
+BEGIN
+  FOR r IN
+    SELECT oid::regprocedure AS func_sig
+    FROM pg_proc
+    WHERE proname = 'check_availability'
+      AND pronamespace = 'public'::regnamespace
+  LOOP
+    EXECUTE format('DROP FUNCTION IF EXISTS %s CASCADE', r.func_sig);
+  END LOOP;
+END $$;
 
 -- 3. Drop fonksyon depandan (yo pral rekreye pi ba)
 DROP FUNCTION IF EXISTS get_month_availability(INTEGER, INTEGER) CASCADE;

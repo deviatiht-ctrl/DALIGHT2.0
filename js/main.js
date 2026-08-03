@@ -103,6 +103,48 @@ const loginPath = isInsidePagesDir ? './login.html' : './pages/login.html';
 const registerPath = isInsidePagesDir ? './register.html' : './pages/register.html';
 const protectedPages = new Set(['reservation', 'payment', 'orders', 'admin', 'reservation-v2']);
 
+// ── Mobile bottom nav (Telegram-style glass bar) ────────────────────
+const NAV_TABS = {
+  home: { icon: 'home', label: 'Accueil', file: null },
+  services: { icon: 'sparkles', label: 'Réserver', file: 'services.html' },
+  shop: { icon: 'shopping-bag', label: 'Boutique', file: 'shop.html' },
+  orders: { icon: 'calendar-check', label: 'Réservations', file: 'orders.html' },
+  loyalty: { icon: 'crown', label: 'Fidélité', file: 'loyalty.html' },
+  login: { icon: 'user', label: 'Compte', file: 'login.html' },
+};
+
+const NAV_FULL = ['home', 'services', 'shop', 'orders', 'loyalty', 'login'];
+
+// Which tabs show up per page — main pages get the full bar,
+// secondary/flow pages only get what's actually useful to them.
+const NAV_CONFIG = {
+  home: NAV_FULL,
+  services: NAV_FULL,
+  soins: NAV_FULL,
+  shop: NAV_FULL,
+  orders: NAV_FULL,
+  loyalty: NAV_FULL,
+  login: ['home', 'services', 'login'],
+  register: ['home', 'services', 'login'],
+  product: ['home', 'services', 'shop', 'orders', 'login'],
+  payment: ['home', 'shop', 'orders', 'login'],
+  checkout: ['home', 'shop', 'orders', 'login'],
+  cart: ['home', 'shop', 'orders', 'login'],
+  'order-confirmation': ['home', 'shop', 'orders', 'login'],
+  'reservation-v2': ['home', 'services', 'orders', 'login'],
+  formation: ['home', 'services', 'shop', 'login'],
+  follow: ['home', 'services', 'shop', 'login'],
+  giveaway: ['home', 'services', 'loyalty', 'login'],
+  about: ['home', 'services', 'shop', 'login'],
+};
+
+// Pages whose pageId doesn't map 1:1 to a tab id, but should still
+// highlight the closest matching tab as active.
+const NAV_ACTIVE_OVERRIDE = {
+  soins: 'services',
+  'reservation-v2': 'services',
+};
+
 const runtimeConfig = {
   supabaseUrl: window.__ENV__?.SUPABASE_URL || DEFAULT_CONFIG.supabaseUrl,
   supabaseAnonKey: window.__ENV__?.SUPABASE_ANON_KEY || DEFAULT_CONFIG.supabaseAnonKey,
@@ -298,7 +340,7 @@ async function init() {
   setupNavToggle();
   syncMobileNavVisibility();
   handleServiceShortcuts();
-  highlightMobileNav();
+  renderMobileNav();
   
   // Initialize Supabase (non-blocking for UI)
   initSupabase().then(() => {
@@ -374,20 +416,44 @@ function syncMobileNavVisibility() {
   const mobileNav = document.querySelector('.mobile-nav');
   if (!mobileNav) return;
   const shouldDisplay = window.matchMedia('(max-width: 720px)').matches;
-  mobileNav.style.display = shouldDisplay ? 'grid' : 'none';
+  mobileNav.style.display = shouldDisplay ? 'flex' : 'none';
 }
 
-function highlightMobileNav() {
+function renderMobileNav() {
   const mobileNav = document.querySelector('.mobile-nav');
   if (!mobileNav || !pageId) return;
-  const links = mobileNav.querySelectorAll('a');
-  links.forEach((link) => {
-    if (link.dataset.page === pageId) {
-      link.classList.add('active');
-    } else {
-      link.classList.remove('active');
-    }
+
+  const tabIds = NAV_CONFIG[pageId] || ['home', 'shop', 'orders', 'login'];
+  const activeId = NAV_ACTIVE_OVERRIDE[pageId] || pageId;
+  const rootPrefix = isInsidePagesDir ? '../' : './';
+  const pagesPrefix = isInsidePagesDir ? './' : './pages/';
+
+  mobileNav.innerHTML = tabIds
+    .map((id) => {
+      const tab = NAV_TABS[id];
+      if (!tab) return '';
+      const href = tab.file ? `${pagesPrefix}${tab.file}` : `${rootPrefix}index.html`;
+      const classes = [id === activeId ? 'active' : '', id === 'loyalty' ? 'tab-loyalty' : '']
+        .filter(Boolean)
+        .join(' ');
+      return `<a href="${href}" data-page="${id}"${classes ? ` class="${classes}"` : ''}>
+        <i data-lucide="${tab.icon}"></i>
+        <span>${tab.label}</span>
+      </a>`;
+    })
+    .join('');
+
+  // Apple-style icon "zoom" bounce on tap, before the page navigates away.
+  mobileNav.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', () => {
+      mobileNav.querySelectorAll('a').forEach((l) => l.classList.remove('nav-tap'));
+      link.classList.add('nav-tap');
+    });
   });
+
+  if (window.lucide) {
+    lucide.createIcons();
+  }
 }
 
 function setupRevealOnScroll() {

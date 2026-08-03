@@ -160,7 +160,7 @@
             <h3 class="card-title">Gestion des catégories</h3>
             <p class="card-subtitle">Créez, modifiez ou supprimez les types de services</p>
           </div>
-          <span id="cat-toggle-icon" style="font-size:1.2rem;transition:.25s;">——</span>
+          <span id="cat-toggle-icon" style="font-size:1.2rem;transition:.25s;">▸</span>
         </div>
         <div id="cat-body" style="display:none;padding:0 1.5rem 1.5rem;">
           <div style="display:flex;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap;align-items:flex-end;">
@@ -197,15 +197,15 @@
         <div class="card-header" style="cursor:pointer;" onclick="toggleHeadSpaPricing()">
           <div>
             <h3 class="card-title">Prix Head Spa par Type de Cheveux</h3>
-            <p class="card-subtitle">Ajoutez, modifiez ou supprimez n'importe quel type — contrôle total</p>
+            <p class="card-subtitle">Ajoutez, modifiez ou supprimez n'importe quel type — contrôle total</p>
           </div>
-          <span id="headspa-toggle-icon" style="font-size:1.2rem;transition:.25s;">——</span>
+          <span id="headspa-toggle-icon" style="font-size:1.2rem;transition:.25s;">▸</span>
         </div>
         <div id="headspa-pricing-body" style="display:none;padding:0 1.5rem 1.5rem;">
 
           <!-- Formulaire Ajouter / Modifier -->
           <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:1rem;margin-bottom:1.25rem;">
-            <div style="font-size:.8rem;font-weight:600;margin-bottom:.75rem;color:rgba(255,255,255,.6);" id="headspa-form-title">—~" Ajouter un type de cheveux</div>
+            <div style="font-size:.8rem;font-weight:600;margin-bottom:.75rem;color:rgba(255,255,255,.6);" id="headspa-form-title">Ajouter un type de cheveux</div>
             <input type="hidden" id="headspa-edit-id">
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;gap:.6rem;align-items:flex-end;flex-wrap:wrap;">
               <div class="form-group" style="margin-bottom:0;">
@@ -520,10 +520,10 @@
       const icon = document.getElementById('cat-toggle-icon');
       if (body.style.display === 'none') {
         body.style.display = 'block';
-        icon.textContent = '——';
+        icon.textContent = '▾';
       } else {
         body.style.display = 'none';
-        icon.textContent = '——';
+        icon.textContent = '▸';
       }
     }
 
@@ -644,11 +644,11 @@
       const icon = document.getElementById('headspa-toggle-icon');
       if (body.style.display === 'none') {
         body.style.display = 'block';
-        icon.textContent = '——';
+        icon.textContent = '▾';
         loadHeadSpaPricing();
       } else {
         body.style.display = 'none';
-        icon.textContent = '——';
+        icon.textContent = '▸';
       }
     }
 

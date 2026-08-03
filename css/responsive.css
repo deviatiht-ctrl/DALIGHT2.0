@@ -321,20 +321,16 @@
   }
 
   .mobile-nav {
-    display: grid;
+    display: flex;
   }
 
   .mobile-nav a {
-    padding: 0.65rem 0.75rem;
-  }
-
-  .mobile-nav a span {
-    display: none;
+    padding: 0.5rem 0.65rem;
   }
 
   .mobile-nav a i {
-    width: 22px;
-    height: 22px;
+    width: 21px;
+    height: 21px;
   }
 
   .site-header {
