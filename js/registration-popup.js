@@ -238,9 +238,8 @@ function injectBanner() {
   const bannerHtml = `
     <div class="dl-alert-banner" id="dalight-alert-banner" role="alert">
       <div class="dl-alert-content">
-        <span class="dl-alert-icon">✨</span>
         <p class="dl-alert-text">
-          Nouveau chez <strong>DALIGHT</strong> ? Pour planifier vos rituels bien-être et simplifier vos achats :
+          Nouveau chez <strong>DALIGHT</strong> ? Pour planifier vos services bien-\u00eatre et simplifier vos achats :
         </p>
         <div class="dl-alert-buttons">
           <a href="${registerUrl}" class="dl-alert-btn">Créer un compte</a>

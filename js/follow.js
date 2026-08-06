@@ -298,7 +298,7 @@ function updateSpotlightVideo(videos) {
   if (!latestVideo) {
     videoEl.removeAttribute('src');
     videoEl.load();
-    captionEl.textContent = 'Publiez une vidéo pour présenter vos rituels.';
+    captionEl.textContent = 'Publiez une vidéo pour présenter vos services.';
     dateEl.textContent = 'Ajoutez une capsule via l\'interface admin.';
     emptyState.hidden = false;
     return;
@@ -320,7 +320,7 @@ function shareVideo(videoUrl, caption = '') {
   if (!videoUrl) return;
   const shareData = {
     title: 'Capsule DALIGHT Head Spa',
-    text: caption || 'Découvrez ce rituel DALIGHT',
+    text: caption || 'Découvrez ce service DALIGHT',
     url: videoUrl,
   };
   if (navigator.share) {

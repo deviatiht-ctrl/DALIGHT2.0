@@ -126,6 +126,7 @@ CREATE TRIGGER trg_client_program_sessions_updated_at
 -- ============================================================
 -- 5. VUE programmes avec progression
 -- ============================================================
+DROP VIEW IF EXISTS client_program_progress;
 CREATE OR REPLACE VIEW client_program_progress AS
 SELECT
   cp.*,

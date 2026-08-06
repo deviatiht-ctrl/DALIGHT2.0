@@ -25,11 +25,37 @@
     const emp = window.getCurrentEmployee();
     if (!emp) { container.innerHTML = '<div class="empty">Session expirée.</div>'; return; }
 
-    const [progRes, apptRes] = await Promise.all([
+    const [progRes, apptRes, empResRes] = await Promise.all([
       sb.from('client_programs').select('*').eq('assigned_employee_id', emp.id).order('updated_at', { ascending: false }),
       sb.from('reservations').select('*').eq('assigned_employee_id', emp.id).neq('status', 'CANCELLED').order('date', { ascending: false }),
+      sb.from('reservation_employees').select('reservation_id').eq('employee_id', emp.id),
     ]);
+
+    const empResIds = new Set((empResRes.data || []).map(r => r.reservation_id));
+
     ctPrograms = progRes.data || [];
+
+    if (empResIds.size > 0) {
+      const { data: extraProgs, error: epErr } = await sb.from('client_programs')
+        .select('*')
+        .in('reservation_id', Array.from(empResIds))
+        .order('updated_at', { ascending: false });
+      if (!epErr && extraProgs) {
+        const existingIds = new Set(ctPrograms.map(p => p.id));
+        extraProgs.forEach(p => { if (!existingIds.has(p.id)) ctPrograms.push(p); });
+      }
+
+      const { data: extraAppts, error: eaErr } = await sb.from('reservations')
+        .select('*')
+        .in('id', Array.from(empResIds))
+        .neq('status', 'CANCELLED')
+        .order('date', { ascending: false });
+      if (!eaErr && extraAppts) {
+        const apptIds = new Set((apptRes.data || []).map(r => r.id));
+        extraAppts.forEach(r => { if (!apptIds.has(r.id)) (apptRes.data || (apptRes.data = [])).push(r); });
+      }
+    }
+
     const usedResIds = new Set(ctPrograms.map(p => p.reservation_id).filter(Boolean));
     ctAvailableReservations = (apptRes.data || []).filter(r => !usedResIds.has(r.id));
 
@@ -170,8 +196,8 @@
         <div class="card-title" style="flex-wrap:wrap;gap:.5rem;">
           ${esc(p.client_name)}
           <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-            <button class="btn btn-ghost btn-sm" style="width:auto;margin:0;" onclick="window.__ctPrintReport()">🖨 Imprimer</button>
-            <button class="btn btn-blue btn-sm" style="width:auto;margin:0;" onclick="window.__ctEmailReport()">✉ Envoyer le bilan</button>
+            <button class="btn btn-ghost btn-sm" style="width:auto;margin:0;" onclick="window.__ctPrintReport()"><i data-lucide="printer" style="width:16px;height:16px;vertical-align:-3px;"></i> Imprimer</button>
+            <button class="btn btn-blue btn-sm" style="width:auto;margin:0;" onclick="window.__ctEmailReport()"><i data-lucide="mail" style="width:16px;height:16px;vertical-align:-3px;"></i> Envoyer le bilan</button>
             <button class="btn btn-gold btn-sm" style="width:auto;margin:0;" onclick="window.__ctToggleStatus()">${p.status === 'active' ? 'Terminer' : 'Réactiver'}</button>
           </div>
         </div>
@@ -179,7 +205,7 @@
         <div style="margin-top:.8rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
           <span style="font-size:.85rem;color:var(--admin-text-muted,var(--muted));">Total séances:</span>
           <input type="number" id="ct-total-sessions" value="${p.total_sessions}" min="1" max="100" style="width:70px;padding:.4rem;border-radius:6px;border:1px solid var(--admin-border,var(--border));background:var(--admin-input-bg,var(--surface-2));color:var(--admin-text,var(--text));">
-          <button class="btn btn-ghost btn-sm" style="width:auto;margin:0;" onclick="window.__ctUpdateTotal()">💾 Mettre à jour</button>
+          <button class="btn btn-ghost btn-sm" style="width:auto;margin:0;" onclick="window.__ctUpdateTotal()"><i data-lucide="save" style="width:16px;height:16px;vertical-align:-3px;"></i> Mettre à jour</button>
         </div>
         <div style="height:8px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;margin-top:.8rem;"><div style="height:100%;width:${progressPct}%;background:var(--admin-accent,#c9a227);border-radius:4px;transition:width .3s;"></div></div>
         <div style="display:flex;justify-content:space-between;margin-top:.4rem;font-size:.82rem;color:var(--admin-text-muted,var(--muted));">
@@ -191,8 +217,14 @@
       <div class="card" style="margin-bottom:1rem;">
         <div class="card-title">Analyse de progression</div>
         <div id="ct-analysis-grid" style="display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin:1rem 0;"></div>
-        <div class="chart-wrap"><canvas id="ct-chart"></canvas></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="chart-wrap"><canvas id="ct-chart"></canvas></div>
+          <div class="chart-wrap"><canvas id="ct-measures-chart"></canvas></div>
+        </div>
+        <div id="ct-summary-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin-top:1rem;"></div>
       </div>
+
+      <div id="ct-ai-section"></div>
 
       <div class="grid cards-2">
         <div class="card">
@@ -216,7 +248,7 @@
           <div class="form-group"><label>Alimentation / régime suivi</label><textarea class="textarea" id="ct-s-diet"></textarea></div>
           <div class="form-group"><label>Observations générales</label><textarea class="textarea" id="ct-s-obs"></textarea></div>
           <div style="display:flex;gap:.5rem;">
-            <button class="btn btn-gold" style="width:auto;margin:0;" onclick="window.__ctSaveSession()">💾 Enregistrer</button>
+            <button class="btn btn-gold" style="width:auto;margin:0;" onclick="window.__ctSaveSession()"><i data-lucide="save" style="width:16px;height:16px;vertical-align:-3px;"></i> Enregistrer</button>
             <button class="btn btn-ghost" style="width:auto;margin:0;" onclick="window.__ctClearForm()">Nouvelle saisie</button>
           </div>
         </div>
@@ -240,6 +272,11 @@
     renderCustomRows([]);
     renderAnalysis();
     drawChart();
+    if (window.dalightAI) {
+      const aiEl = document.getElementById('ct-ai-section');
+      if (aiEl) window.dalightAI.renderAssistant(aiEl, p.service_name, ctSessions, p.client_name);
+    }
+    if (window.lucide) lucide.createIcons();
   }
 
   function renderAnalysis() {
@@ -286,7 +323,7 @@
       ${s.observations ? `<div style="font-size:.85rem;"><strong>Observations:</strong> ${esc(s.observations)}</div>` : ''}
       <div style="margin-top:.5rem;display:flex;gap:.5rem;">
         <button class="btn btn-ghost btn-sm" style="width:auto;margin:0;" onclick="window.__ctEditSession('${s.id}')">Modifier</button>
-        <button class="btn btn-red btn-sm" style="width:auto;margin:0;" onclick="window.__ctDeleteSession('${s.id}')" title="Supprimer cette séance">❌</button>
+        <button class="btn btn-red btn-sm" style="width:auto;margin:0;" onclick="window.__ctDeleteSession('${s.id}')" title="Supprimer cette séance"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
       </div>
     </div>`;
   }
@@ -312,9 +349,10 @@
       <input type="text" class="input ct-c-label" placeholder="Nom (ex: contour ventre)" value="${esc(label || '')}" style="flex:1;">
       <input type="number" step="0.1" class="input ct-c-value" placeholder="Valeur" value="${value != null ? value : ''}" style="width:100px;">
       <input type="text" class="input ct-c-unit" placeholder="Unité (cm, kg...)" value="${esc(unit || 'cm')}" style="width:100px;">
-      <button type="button" class="btn btn-red btn-sm" onclick="this.parentElement.remove()">✕</button>
+      <button type="button" class="btn btn-red btn-sm" onclick="this.parentElement.remove()"><i data-lucide="x" style="width:14px;height:14px;"></i></button>
     `;
     list.appendChild(row);
+    if (window.lucide) lucide.createIcons();
   };
 
   function renderCustomRows(rows) {
@@ -334,6 +372,8 @@
     }).filter(Boolean);
   }
 
+  let ctMeasuresChart = null;
+
   function drawChart() {
     const canvas = document.getElementById('ct-chart');
     if (!canvas || !window.Chart) return;
@@ -344,6 +384,55 @@
       data: { labels: ctSessions.map(s => '#' + s.session_number), datasets: [{ label: 'Poids (kg)', data: ctSessions.map(s => s.weight_kg || null), borderColor: '#c9a227', backgroundColor: 'rgba(201,162,39,.15)', fill: true, tension: .3 }] },
       options: { responsive: true, maintainAspectRatio: false },
     });
+    drawMeasuresChart();
+    renderSummaryStats();
+  }
+
+  function drawMeasuresChart() {
+    const canvas = document.getElementById('ct-measures-chart');
+    if (!canvas || !window.Chart || ctSessions.length < 2) return;
+    if (ctMeasuresChart) ctMeasuresChart.destroy();
+    const labels = ctSessions.map(s => '#' + s.session_number);
+    const datasets = [
+      { label: 'Ventre', data: ctSessions.map(s => getMeas(s,'waist')), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,.1)', tension: .3, pointRadius: 3 },
+      { label: 'Hanches', data: ctSessions.map(s => getMeas(s,'hips')), borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,.1)', tension: .3, pointRadius: 3 },
+      { label: 'Cuisse', data: ctSessions.map(s => getMeas(s,'thigh')), borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,.1)', tension: .3, pointRadius: 3 },
+      { label: 'Bras', data: ctSessions.map(s => getMeas(s,'arm')), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,.1)', tension: .3, pointRadius: 3 },
+    ];
+    ctMeasuresChart = new Chart(canvas, {
+      type: 'line',
+      data: { labels, datasets },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, labels: { boxWidth: 12, font: { size: 10 } } } }, scales: { y: { beginAtZero: false } } },
+    });
+  }
+
+  function renderSummaryStats() {
+    const el = document.getElementById('ct-summary-stats');
+    if (!el || ctSessions.length < 1) return;
+    const first = ctSessions[0];
+    const last = ctSessions[ctSessions.length - 1];
+    const wDiff = (first.weight_kg && last.weight_kg) ? (last.weight_kg - first.weight_kg) : null;
+    const waDiff = (getMeas(first,'waist') && getMeas(last,'waist')) ? (getMeas(last,'waist') - getMeas(first,'waist')) : null;
+    const hiDiff = (getMeas(first,'hips') && getMeas(last,'hips')) ? (getMeas(last,'hips') - getMeas(first,'hips')) : null;
+    const thDiff = (getMeas(first,'thigh') && getMeas(last,'thigh')) ? (getMeas(last,'thigh') - getMeas(first,'thigh')) : null;
+    const arDiff = (getMeas(first,'arm') && getMeas(last,'arm')) ? (getMeas(last,'arm') - getMeas(first,'arm')) : null;
+    const avgW = wDiff !== null ? (wDiff / ctSessions.length).toFixed(2) : null;
+    const totalCm = [waDiff, hiDiff, thDiff, arDiff].filter(v => v !== null).reduce((s,v) => s+v, 0);
+    const items = [
+      { label: 'Perte/Gain poids', value: wDiff !== null ? (wDiff > 0 ? '+' : '') + wDiff.toFixed(1) + ' kg' : '—', color: wDiff < 0 ? '#22c55e' : (wDiff > 0 ? '#ef4444' : '') },
+      { label: 'Variation ventre', value: waDiff !== null ? (waDiff > 0 ? '+' : '') + waDiff.toFixed(1) + ' cm' : '—', color: waDiff < 0 ? '#22c55e' : (waDiff > 0 ? '#ef4444' : '') },
+      { label: 'Variation hanches', value: hiDiff !== null ? (hiDiff > 0 ? '+' : '') + hiDiff.toFixed(1) + ' cm' : '—', color: hiDiff < 0 ? '#22c55e' : (hiDiff > 0 ? '#ef4444' : '') },
+      { label: 'Variation cuisse', value: thDiff !== null ? (thDiff > 0 ? '+' : '') + thDiff.toFixed(1) + ' cm' : '—', color: thDiff < 0 ? '#22c55e' : (thDiff > 0 ? '#ef4444' : '') },
+      { label: 'Variation bras', value: arDiff !== null ? (arDiff > 0 ? '+' : '') + arDiff.toFixed(1) + ' cm' : '—', color: arDiff < 0 ? '#22c55e' : (arDiff > 0 ? '#ef4444' : '') },
+      { label: 'Perte moyenne/séance', value: avgW !== null ? (avgW > 0 ? '+' : '') + avgW + ' kg' : '—', color: avgW < 0 ? '#22c55e' : '' },
+      { label: 'Total cm', value: totalCm !== 0 ? (totalCm > 0 ? '+' : '') + totalCm.toFixed(1) + ' cm' : '—', color: totalCm < 0 ? '#22c55e' : (totalCm > 0 ? '#ef4444' : '') },
+      { label: 'Séances', value: ctSessions.length + ' au total', color: '' },
+    ];
+    el.innerHTML = items.map(it => `
+      <div style="text-align:center;padding:.75rem;border-radius:10px;background:rgba(255,255,255,.04);">
+        <div style="font-size:1.2rem;font-weight:700;color:${it.color || 'var(--admin-accent,#c9a227)'};">${it.value}</div>
+        <div style="font-size:.72rem;color:var(--admin-text-muted,var(--muted));text-transform:uppercase;margin-top:.2rem;">${it.label}</div>
+      </div>`).join('');
   }
 
   window.__ctSaveSession = async function () {

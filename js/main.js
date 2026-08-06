@@ -35,12 +35,12 @@ const servicesCatalog = [
     priceId: 'price_head_spa_signature',
   },
   {
-    id: 'rituel-zen-imperial',
-    name: 'Rituel Zen Impérial',
+    id: 'service-zen-imperial',
+    name: 'Service Zen Impérial',
     price: 125,
     priceHtg: 15000,
     duration: '90 min',
-    priceId: 'price_rituel_zen_imperial',
+    priceId: 'price_service_zen_imperial',
   },
   {
     id: 'soin-detox-equilibre',
@@ -67,12 +67,12 @@ const servicesCatalog = [
     priceId: 'price_duo_serenite',
   },
   {
-    id: 'rituel-renaissance-4',
-    name: 'Rituel Renaissance 4',
+    id: 'service-renaissance-4',
+    name: 'Service Renaissance 4',
     price: 300,
     priceHtg: 35000,
-    duration: '4 rituels',
-    priceId: 'price_rituel_renaissance_4',
+    duration: '4 services',
+    priceId: 'price_service_renaissance_4',
   },
   {
     id: 'love-zen-package',
@@ -87,7 +87,7 @@ const servicesCatalog = [
     name: 'Cure Vitalité Intense (6)',
     price: 420,
     priceHtg: 50000,
-    duration: '6 rituels',
+    duration: '6 services',
     priceId: 'price_cure_vitalite_6',
   },
 ];
@@ -504,7 +504,7 @@ function handleServiceShortcuts() {
 export function createOptionsForServices(selectEl) {
   if (!selectEl) return;
   selectEl.innerHTML =
-    '<option value="" disabled selected>Sélectionnez un rituel</option>' +
+    '<option value="" disabled selected>Sélectionnez un service</option>' +
     servicesCatalog
       .map(
         (service) =>

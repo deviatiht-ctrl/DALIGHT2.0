@@ -138,6 +138,7 @@ async function handleRegister(event) {
   const email = formData.get('email');
   const password = formData.get('password');
   const fullName = formData.get('full_name');
+  const loyaltyTier = formData.get('loyalty_tier') || 'bronze';
 
   console.log('📧 Attempting registration for:', email);
   setMessage(registerMessage, 'success', 'Creating your profile...');
@@ -149,6 +150,7 @@ async function handleRegister(event) {
       options: {
         data: {
           full_name: fullName,
+          loyalty_tier_goal: loyaltyTier,
         },
       },
     });

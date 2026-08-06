@@ -34,7 +34,7 @@ DALIGHT
 `.trim(),
   },
   COMPLETED: {
-    subject: () => 'Merci pour votre rituel DALIGHT',
+    subject: () => 'Merci pour votre service DALIGHT',
     body: (reservation) => `
 Bonjour ${reservation.user_name || ''},
 

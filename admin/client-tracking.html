@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="css/admin.css?v=202607101000">
   <script src="../vendor/supabase/supabase.min.js"></script>
   <script src="../vendor/chartjs/chart.umd.min.js"></script>
+  <script src="../vendor/lucide/lucide.min.js"></script>
   <style>
     .tracking-tabs { display:flex; gap:.5rem; margin-bottom:1rem; border-bottom:1px solid var(--admin-border); padding-bottom:.5rem; }
     .tracking-tab { padding:.5rem 1rem; border-radius:8px; cursor:pointer; font-weight:500; color:var(--admin-text-muted); background:transparent; border:none; }
@@ -145,6 +146,7 @@
   <div id="print-area" class="print-only"></div>
 
   <script src="js/admin-core.js?v=202607101000"></script>
+  <script src="../js/ai-assistant.js?v=1"></script>
   <script>
     const { supabase: sb } = window.adminCore || {};
     let currentPrograms = [];
@@ -255,15 +257,15 @@
               <p class="card-subtitle">${escapeHtml(selectedProgram.service_name)} · ${selectedProgram.client_email}</p>
             </div>
             <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
-              <button class="btn btn-secondary btn-sm" onclick="printProgramReport()">🖨️ Imprimer</button>
-              <button class="btn btn-secondary btn-sm" onclick="emailProgramReport()">✉️ Envoyer au client</button>
+              <button class="btn btn-secondary btn-sm" onclick="printProgramReport()"><i data-lucide="printer" style="width:16px;height:16px;vertical-align:-3px;"></i> Imprimer</button>
+              <button class="btn btn-secondary btn-sm" onclick="emailProgramReport()"><i data-lucide="mail" style="width:16px;height:16px;vertical-align:-3px;"></i> Envoyer au client</button>
               <button class="btn btn-primary btn-sm" onclick="toggleStatus()">${selectedProgram.status === 'active' ? 'Terminer' : 'Réactiver'}</button>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:.5rem;margin-top:.75rem;flex-wrap:wrap;">
             <span style="font-size:.85rem;color:var(--admin-text-muted);">Total séances:</span>
             <input type="number" id="program-total-sessions" value="${selectedProgram.total_sessions}" min="1" max="100" style="width:70px;padding:.4rem;border-radius:6px;border:1px solid var(--admin-border);background:var(--admin-input-bg);color:var(--admin-text);">
-            <button class="btn btn-secondary btn-sm" onclick="updateTotalSessions()">💾 Mettre à jour</button>
+            <button class="btn btn-secondary btn-sm" onclick="updateTotalSessions()"><i data-lucide="save" style="width:16px;height:16px;vertical-align:-3px;"></i> Mettre à jour</button>
           </div>
           <div class="progress-bar"><div style="width:${(completed / selectedProgram.total_sessions) * 100}%"></div></div>
           <div style="display:flex; justify-content:space-between; margin-top:.5rem; font-size:.85rem; color:var(--admin-text-muted);">
@@ -272,13 +274,18 @@
           </div>
         </div>
         <div style="margin-top:.5rem; font-size:.78rem; color:var(--admin-text-muted);">
-          Pour ajouter une séance, remplissez le formulaire ci-dessous avec un N° non utilisé. Pour supprimer, utilisez le bouton ❌ dans l’historique.
+          Pour ajouter une séance, remplissez le formulaire ci-dessous avec un N° non utilisé. Pour supprimer, utilisez le bouton de suppression dans l'historique.
         </div>
         <div class="analysis-card" style="margin-bottom:1rem;">
           <h3 class="card-title">Analyse de progression</h3>
           <div class="analysis-grid" id="analysis-grid"></div>
-          <div style="height:220px; margin-top:1rem;"><canvas id="weightChart"></canvas></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;">
+            <div style="height:220px;"><canvas id="weightChart"></canvas></div>
+            <div style="height:220px;"><canvas id="measuresChart"></canvas></div>
+          </div>
+          <div style="margin-top:1rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;" id="summary-stats"></div>
         </div>
+        <div id="ai-section"></div>
         <div class="session-form" style="margin-bottom:1rem;">
           <h3>Ajouter / modifier la séance ${nextSession}</h3>
           <form id="session-form" onsubmit="saveSession(event)">
@@ -303,7 +310,7 @@
               <div class="form-group"><label>Observations générales</label><textarea id="observations" rows="2"></textarea></div>
             </div>
             <div style="margin-top:1rem; display:flex; gap:.5rem;">
-              <button type="submit" class="btn btn-primary">💾 Enregistrer la séance</button>
+              <button type="submit" class="btn btn-primary"><i data-lucide="save" style="width:16px;height:16px;vertical-align:-3px;"></i> Enregistrer la séance</button>
               <button type="button" class="btn btn-secondary" onclick="clearSessionForm()">Nouvelle saisie</button>
             </div>
           </form>
@@ -316,6 +323,12 @@
       renderCustomMeasurements();
       renderAnalysis();
       renderSessionsTimeline();
+      drawWeightChart();
+      if (window.dalightAI) {
+        const aiEl = document.getElementById('ai-section');
+        if (aiEl) window.dalightAI.renderAssistant(aiEl, selectedProgram.service_name, sessionsCache, selectedProgram.client_name);
+      }
+      if (window.lucide) lucide.createIcons();
     }
 
     function renderAnalysis() {
@@ -376,13 +389,16 @@
               ${s.observations ? `<p><strong>Observations:</strong> ${escapeHtml(s.observations)}</p>` : ''}
               <div style="margin-top:.5rem; display:flex; gap:.5rem;">
                 <button class="btn btn-secondary btn-sm" onclick="editSession('${s.id}')">Modifier</button>
-                <button class="btn btn-sm" onclick="deleteSession('${s.id}')" style="background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;" title="Supprimer cette séance">❌</button>
+                <button class="btn btn-sm" onclick="deleteSession('${s.id}')" style="background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;" title="Supprimer cette séance"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
               </div>
             </div>
           </div>
         `;
       }).join('');
+      if (window.lucide) lucide.createIcons();
     }
+
+    let measuresChart = null;
 
     function drawWeightChart() {
       const canvas = document.getElementById('weightChart');
@@ -394,6 +410,56 @@
         data: { labels: sessionsCache.map(s => '#'+s.session_number), datasets: [{ label: 'Poids (kg)', data: sessionsCache.map(s => s.weight_kg || null), borderColor: '#B89327', backgroundColor: 'rgba(184,147,39,.15)', fill: true, tension: 0.3, pointRadius: 4 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } }, scales: { y: { beginAtZero: false } } }
       });
+      drawMeasuresChart();
+      renderSummaryStats();
+    }
+
+    function drawMeasuresChart() {
+      const canvas = document.getElementById('measuresChart');
+      if (!canvas || sessionsCache.length < 2) return;
+      const ctx = canvas.getContext('2d');
+      if (measuresChart) measuresChart.destroy();
+      const labels = sessionsCache.map(s => '#'+s.session_number);
+      const datasets = [
+        { label: 'Ventre (cm)', data: sessionsCache.map(s => getMeas(s,'waist')), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,.1)', tension: .3, pointRadius: 3 },
+        { label: 'Hanches (cm)', data: sessionsCache.map(s => getMeas(s,'hips')), borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,.1)', tension: .3, pointRadius: 3 },
+        { label: 'Cuisse (cm)', data: sessionsCache.map(s => getMeas(s,'thigh')), borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,.1)', tension: .3, pointRadius: 3 },
+        { label: 'Bras (cm)', data: sessionsCache.map(s => getMeas(s,'arm')), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,.1)', tension: .3, pointRadius: 3 },
+      ];
+      measuresChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, labels: { boxWidth: 12, font: { size: 10 } } } }, scales: { y: { beginAtZero: false } } }
+      });
+    }
+
+    function renderSummaryStats() {
+      const el = document.getElementById('summary-stats');
+      if (!el || sessionsCache.length < 1) return;
+      const first = sessionsCache[0];
+      const last = sessionsCache[sessionsCache.length - 1];
+      const wDiff = (first.weight_kg && last.weight_kg) ? (last.weight_kg - first.weight_kg) : null;
+      const waDiff = (getMeas(first,'waist') && getMeas(last,'waist')) ? (getMeas(last,'waist') - getMeas(first,'waist')) : null;
+      const hiDiff = (getMeas(first,'hips') && getMeas(last,'hips')) ? (getMeas(last,'hips') - getMeas(first,'hips')) : null;
+      const thDiff = (getMeas(first,'thigh') && getMeas(last,'thigh')) ? (getMeas(last,'thigh') - getMeas(first,'thigh')) : null;
+      const arDiff = (getMeas(first,'arm') && getMeas(last,'arm')) ? (getMeas(last,'arm') - getMeas(first,'arm')) : null;
+      const avgWeightLoss = wDiff !== null ? (wDiff / sessionsCache.length).toFixed(2) : null;
+      const totalCm = [waDiff, hiDiff, thDiff, arDiff].filter(v => v !== null).reduce((s,v) => s+v, 0);
+      const items = [
+        { label: 'Perte/Gain poids', value: wDiff !== null ? (wDiff > 0 ? '+' : '') + wDiff.toFixed(1) + ' kg' : '—', color: wDiff < 0 ? '#22c55e' : (wDiff > 0 ? '#ef4444' : '') },
+        { label: 'Variation ventre', value: waDiff !== null ? (waDiff > 0 ? '+' : '') + waDiff.toFixed(1) + ' cm' : '—', color: waDiff < 0 ? '#22c55e' : (waDiff > 0 ? '#ef4444' : '') },
+        { label: 'Variation hanches', value: hiDiff !== null ? (hiDiff > 0 ? '+' : '') + hiDiff.toFixed(1) + ' cm' : '—', color: hiDiff < 0 ? '#22c55e' : (hiDiff > 0 ? '#ef4444' : '') },
+        { label: 'Variation cuisse', value: thDiff !== null ? (thDiff > 0 ? '+' : '') + thDiff.toFixed(1) + ' cm' : '—', color: thDiff < 0 ? '#22c55e' : (thDiff > 0 ? '#ef4444' : '') },
+        { label: 'Variation bras', value: arDiff !== null ? (arDiff > 0 ? '+' : '') + arDiff.toFixed(1) + ' cm' : '—', color: arDiff < 0 ? '#22c55e' : (arDiff > 0 ? '#ef4444' : '') },
+        { label: 'Perte moyenne/séance', value: avgWeightLoss !== null ? (avgWeightLoss > 0 ? '+' : '') + avgWeightLoss + ' kg' : '—', color: avgWeightLoss < 0 ? '#22c55e' : '' },
+        { label: 'Total cm perdus', value: totalCm !== 0 ? (totalCm > 0 ? '+' : '') + totalCm.toFixed(1) + ' cm' : '—', color: totalCm < 0 ? '#22c55e' : (totalCm > 0 ? '#ef4444' : '') },
+        { label: 'Durée suivi', value: sessionsCache.length + ' séance(s)', color: '' },
+      ];
+      el.innerHTML = items.map(it => `
+        <div style="text-align:center;padding:.75rem;border-radius:10px;background:rgba(255,255,255,.04);">
+          <div style="font-size:1.2rem;font-weight:700;color:${it.color || 'var(--admin-accent)'};">${it.value}</div>
+          <div style="font-size:.72rem;color:var(--admin-text-muted);text-transform:uppercase;margin-top:.2rem;">${it.label}</div>
+        </div>`).join('');
     }
 
     function renderCustomMeasurements(custom = []) {
@@ -413,9 +479,10 @@
       row.innerHTML = `
         <input type="text" class="cm-label form-control" placeholder="Nom (ex: contour ventre)" value="${escapeHtml(label)}" style="flex:1;">
         <input type="number" step="0.1" class="cm-value form-control" placeholder="cm" value="${value !== '' ? value : ''}" style="width:100px;">
-        <button type="button" class="btn btn-sm" onclick="this.parentElement.remove()" style="background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;">❌</button>
+        <button type="button" class="btn btn-sm" onclick="this.parentElement.remove()" style="background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;"><i data-lucide="x" style="width:14px;height:14px;"></i></button>
       `;
       list.appendChild(row);
+      if (window.lucide) lucide.createIcons();
     }
 
     function getCustomMeasurements() {

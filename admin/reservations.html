@@ -218,7 +218,7 @@
               <thead>
                 <tr>
                   <th>Client</th>
-                  <th>Rituel</th>
+                  <th>Service</th>
                   <th>Date & Heure</th>
                   <th>Lieu</th>
                   <th>Paiement</th>
@@ -524,13 +524,30 @@
       <div class="modal-body" id="create-reservation-body" style="overflow-y: auto; flex: 1;">
         <form id="create-reservation-form">
           <div class="form-group">
-            <label>Email client (compte existant) *</label>
+            <label>Email client *</label>
             <div class="d-flex gap-1" style="flex-wrap: wrap;">
               <input type="email" id="create-email" class="form-input" placeholder="client@email.com" required style="flex: 1;">
               <button type="button" class="btn btn-secondary" onclick="searchClientByEmail()">Rechercher</button>
             </div>
             <div id="create-client-info" style="margin-top: .5rem; font-size: .9rem; color: #16a34a;"></div>
             <div id="create-client-error" style="margin-top: .5rem; font-size: .9rem; color: #dc2626; display: none;"></div>
+          </div>
+
+          <div class="form-group" id="create-no-account-block" style="display: none; border: 1px dashed var(--admin-border); border-radius: 8px; padding: .75rem;">
+            <p style="margin: 0 0 .6rem 0; font-size: .85rem; color: var(--admin-text-muted);">
+              Aucun compte trouvé. Renseignez ces infos : un compte + mot de passe seront créés automatiquement et envoyés par email au client.
+            </p>
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Nom complet *</label>
+                <input type="text" id="create-new-client-name" class="form-input" placeholder="Nom du client">
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Téléphone</label>
+                <input type="text" id="create-new-client-phone" class="form-input" placeholder="+509 ...">
+              </div>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" style="margin-top: .6rem;" onclick="createClientAccountForReservation()">Créer le compte client</button>
           </div>
 
           <div class="form-group">

@@ -523,7 +523,7 @@ window.printReservationDetail = function(id) {
         <div style="font-size:10px;color:#6b7280;">${r.phone || '—'}</div>
       </div>
       <div style="margin-bottom:6mm;">
-        <div style="font-size:11px;font-weight:700;margin-bottom:3px;">Service / Rituel</div>
+        <div style="font-size:11px;font-weight:700;margin-bottom:3px;">Service</div>
         <div style="font-size:10px;">${r.service || '—'}</div>
         <div style="font-size:10px;color:#6b7280;">${formatDate(r.date)} à ${formatTime(r.time)} — ${r.location === 'Spa' ? 'Au Spa' : 'À domicile'}</div>
       </div>
@@ -590,7 +590,7 @@ window.printReservationsList = function() {
         <thead>
           <tr>
             <th style="text-align:left;padding:6px;border-bottom:2px solid #1a1a1a;font-size:9px;">Client</th>
-            <th style="text-align:left;padding:6px;border-bottom:2px solid #1a1a1a;font-size:9px;">Rituel</th>
+            <th style="text-align:left;padding:6px;border-bottom:2px solid #1a1a1a;font-size:9px;">Service</th>
             <th style="text-align:left;padding:6px;border-bottom:2px solid #1a1a1a;font-size:9px;">Date & Heure</th>
             <th style="text-align:left;padding:6px;border-bottom:2px solid #1a1a1a;font-size:9px;">Lieu</th>
             <th style="text-align:left;padding:6px;border-bottom:2px solid #1a1a1a;font-size:9px;">Paiement</th>
@@ -1444,7 +1444,7 @@ Votre avis compte énormément pour nous. N'hésitez pas à nous laisser un comm
 • Instagram : @dalightbeauty
 • TikTok    : @dalightbeauty
 
-Nous serions ravis de vous revoir très bientôt pour un nouveau rituel.
+Nous serions ravis de vous revoir très bientôt pour un nouveau service.
 
 À bientôt,
 L'équipe DALIGHT
@@ -2593,18 +2593,70 @@ async function searchClientByEmail() {
       .maybeSingle();
 
     if (error) throw error;
+    const noAccountBlock = document.getElementById('create-no-account-block');
     if (!data) {
-      errorEl.textContent = 'Aucun compte trouvé avec cet email. Le client doit d\'abord créer un compte.';
+      errorEl.textContent = 'Aucun compte trouvé avec cet email.';
       errorEl.style.display = 'block';
+      if (noAccountBlock) noAccountBlock.style.display = 'block';
       return;
     }
 
+    if (noAccountBlock) noAccountBlock.style.display = 'none';
     createReservationClient = data;
     infoEl.innerHTML = `✅ Compte trouvé : <strong>${escapeHtml(data.full_name || 'Sans nom')}</strong> (${escapeHtml(data.email || '')})`;
   } catch (err) {
     console.error('Error searching client:', err);
     errorEl.textContent = 'Erreur recherche : ' + err.message;
     errorEl.style.display = 'block';
+  }
+}
+
+async function createClientAccountForReservation() {
+  const email = document.getElementById('create-email').value.trim().toLowerCase();
+  const fullName = document.getElementById('create-new-client-name').value.trim();
+  const phone = document.getElementById('create-new-client-phone').value.trim();
+  const infoEl = document.getElementById('create-client-info');
+  const errorEl = document.getElementById('create-client-error');
+
+  if (!email || !email.includes('@')) {
+    window.adminCore?.showToast('Veuillez entrer un email valide.', 'error');
+    return;
+  }
+  if (!fullName) {
+    window.adminCore?.showToast('Le nom complet du client est requis.', 'error');
+    return;
+  }
+
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    window.adminCore?.showToast('Supabase non connecté.', 'error');
+    return;
+  }
+
+  try {
+    window.adminCore?.showToast('Création du compte en cours...');
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
+
+    const { data, error } = await supabase.functions.invoke('admin-create-client', {
+      body: { email, full_name: fullName, phone },
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+    });
+
+    if (error) throw error;
+    if (data?.success === false) throw new Error(data.error || 'Échec de la création du compte');
+
+    createReservationClient = data.profile;
+    errorEl.style.display = 'none';
+    document.getElementById('create-no-account-block').style.display = 'none';
+    infoEl.innerHTML = data.alreadyExisted
+      ? `✅ Compte déjà existant : <strong>${escapeHtml(data.profile.full_name || '')}</strong> (${escapeHtml(data.profile.email || '')})`
+      : `✅ Compte créé et identifiants envoyés par email : <strong>${escapeHtml(data.profile.full_name || '')}</strong> (${escapeHtml(data.profile.email || '')})`;
+
+    window.adminCore?.showToast('Compte client prêt ✓', 'success');
+  } catch (err) {
+    console.error('Error creating client account:', err);
+    window.adminCore?.showToast('Erreur : ' + err.message, 'error');
   }
 }
 
@@ -2807,6 +2859,7 @@ function withFeeUSD(p) { return Number((Number(p) * 1.03).toFixed(2)); }
 window.openCreateReservationModal = openCreateReservationModal;
 window.closeCreateReservationModal = closeCreateReservationModal;
 window.searchClientByEmail = searchClientByEmail;
+window.createClientAccountForReservation = createClientAccountForReservation;
 window.submitCreateReservation = submitCreateReservation;
 window.updateCreateReservationTotal = updateCreateReservationTotal;
 window.onCreateServiceToggle = onCreateServiceToggle;

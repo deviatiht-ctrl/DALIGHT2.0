@@ -1181,14 +1181,14 @@ function buildFollowEmailHTML(data) {
             <p class="greeting">Cher(e) membre DALIGHT,</p>
             
             <p style="color: #666; line-height: 1.8; margin-bottom: 25px;">
-              En suivant DALIGHT, vous avez accès à du contenu exclusif et restez informé de nos dernières actualités, promotions et nouveaux rituels.
+              En suivant DALIGHT, vous avez accès à du contenu exclusif et restez informé de nos dernières actualités, promotions et nouveaux services.
             </p>
 
             <div class="benefits-box">
               <h3 class="benefits-title">✨ Vos avantages d'abonné:</h3>
               <div class="benefit-item">
                 <span class="benefit-icon">🎥</span>
-                <span>Accès à nos vidéos exclusives de rituels bien-être</span>
+                <span>Accès à nos vidéos exclusives de services bien-être</span>
               </div>
               <div class="benefit-item">
                 <span class="benefit-icon">🎁</span>
@@ -1206,7 +1206,7 @@ function buildFollowEmailHTML(data) {
 
             <div class="cta-box">
               <h3 style="color: #2e7d32; margin: 0 0 10px 0;">🎯 Découvrez nos services</h3>
-              <p style="color: #666; margin: 0 0 15px 0;">Explorez notre gamme complète de soins et trouvez le rituel parfait pour vous</p>
+              <p style="color: #666; margin: 0 0 15px 0;">Explorez notre gamme complète de soins et trouvez le service parfait pour vous</p>
               <a href="https://dalight-headspa.com/pages/services.html" class="cta-button">Voir nos Services</a>
             </div>
 
