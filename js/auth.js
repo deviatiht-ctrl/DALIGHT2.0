@@ -232,3 +232,73 @@ if (loginForm) {
 if (registerForm) {
   registerForm.addEventListener('submit', handleRegister);
 }
+
+// ============================================
+// MOT DE PASSE OUBLIÉ
+// ============================================
+const forgotLink = document.getElementById('forgot-password-link');
+const forgotModal = document.getElementById('forgot-modal');
+const forgotForm = document.getElementById('forgot-form');
+const forgotMessage = document.getElementById('forgot-message');
+const forgotCancel = document.getElementById('forgot-cancel');
+
+if (forgotLink && forgotModal) {
+  forgotLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    // Pre-rempli ak imèl ki nan fòm login lan si li genyen
+    const loginEmail = document.getElementById('login-email')?.value;
+    const forgotEmailInput = document.getElementById('forgot-email');
+    if (loginEmail && forgotEmailInput) forgotEmailInput.value = loginEmail;
+    forgotModal.style.display = 'flex';
+  });
+}
+
+if (forgotCancel && forgotModal) {
+  forgotCancel.addEventListener('click', () => {
+    forgotModal.style.display = 'none';
+  });
+  forgotModal.addEventListener('click', (e) => {
+    if (e.target === forgotModal) forgotModal.style.display = 'none';
+  });
+}
+
+async function handleForgotPassword(event) {
+  event.preventDefault();
+  const ready = await waitForSupabase();
+  if (!ready) {
+    setMessage(forgotMessage, 'error', 'Supabase is not configured.');
+    return;
+  }
+
+  const email = new FormData(forgotForm).get('email');
+  const submitBtn = document.getElementById('forgot-submit');
+  if (submitBtn) submitBtn.disabled = true;
+  setMessage(forgotMessage, 'success', 'Voye lyen an...');
+
+  try {
+    const redirectTo = window.location.origin + '/pages/reset-password.html';
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+
+    if (error) {
+      console.error('❌ Reset password error:', error.message);
+      setMessage(forgotMessage, 'error', error.message);
+      return;
+    }
+
+    setMessage(forgotMessage, 'success', '✓ Lyen an voye! Tcheke imèl ou (ak spam).');
+    setTimeout(() => {
+      forgotModal.style.display = 'none';
+      forgotForm.reset();
+      setMessage(forgotMessage, '', '');
+    }, 4000);
+  } catch (err) {
+    console.error('❌ Unexpected reset error:', err);
+    setMessage(forgotMessage, 'error', 'Erè enprevi: ' + err.message);
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
+  }
+}
+
+if (forgotForm) {
+  forgotForm.addEventListener('submit', handleForgotPassword);
+}

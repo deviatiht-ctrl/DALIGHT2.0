@@ -335,10 +335,25 @@
         <div id="order-items">
           <!-- Order items will be rendered here -->
         </div>
+
+        <!-- Code promo -->
+        <div style="margin-top:1rem;padding:1rem;background:#faf8f6;border-radius:10px;border:1px solid #e5e7eb;">
+          <label style="font-size:.85rem;font-weight:600;color:#374151;">🏷️ Code promo</label>
+          <div style="display:flex;gap:.5rem;margin-top:.5rem;">
+            <input type="text" id="promo-code-input" placeholder="Ex: SOLDA10" style="flex:1;padding:.6rem;border:2px solid #e5e7eb;border-radius:8px;text-transform:uppercase;font-size:.9rem;">
+            <button type="button" id="btn-apply-promo" style="padding:.6rem 1rem;background:#4a3728;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Appliquer</button>
+          </div>
+          <div id="promo-message" style="margin-top:.5rem;font-size:.82rem;display:none;"></div>
+        </div>
+
         <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #e5e7eb;">
           <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
             <span>Sous-total</span>
             <span id="subtotal">0 HTG</span>
+          </div>
+          <div id="discount-row" style="display: none; justify-content: space-between; margin-bottom: 0.5rem; color: #16a34a;">
+            <span>Rabais (<span id="promo-code-label"></span>)</span>
+            <span id="discount-amount">-0 HTG</span>
           </div>
           <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
             <span>Taxe (0%)</span>
@@ -390,7 +405,6 @@
     <div class="footer-links">
       <a href="./login.html">Espace client</a>
       <a href="./services.html">Nos Services</a>
-      <a href="./shop.html">Boutique</a>
       <a href="mailto:dalightbeauty15mai@gmail.com">dalightbeauty15mai@gmail.com</a>
     </div>
     <div class="footer-credit">

@@ -6,6 +6,7 @@ let supabase;
 let selectedPaymentMethod = null;
 let selectedPaymentMethodObj = null;
 let paymentMethodsList = [];
+let appliedPromo = null; // { id, code, discount_type, discount_value, owner_type, owner_email }
 
 // Wait for Supabase
 async function waitForSupabase() {
@@ -40,6 +41,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   await waitForSupabase();
   loadOrderSummary();
   loadPaymentMethodsFromDB();
+
+  // Kòd promo
+  document.getElementById('btn-apply-promo')?.addEventListener('click', applyPromoCode);
+  document.getElementById('promo-code-input')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); applyPromoCode(); }
+  });
   
   // Try to auto-fill if user has local profile or is logged in
   try {
@@ -102,10 +109,88 @@ function loadOrderSummary() {
     </div>
   `).join('');
   
-  // Calculate totals
-  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  refreshTotals();
+}
+
+function getCartSubtotal() {
+  const cart = JSON.parse(localStorage.getItem('dalight_cart') || '[]');
+  return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+}
+
+function getCheckoutDiscount(subtotal) {
+  if (!appliedPromo) return 0;
+  let d = 0;
+  if (appliedPromo.discount_type === 'percentage') d = Math.round(subtotal * Number(appliedPromo.discount_value) / 100);
+  else if (appliedPromo.discount_type === 'fixed_htg') d = Math.round(Number(appliedPromo.discount_value));
+  return Math.min(Math.max(d, 0), subtotal);
+}
+
+function refreshTotals() {
+  const subtotal = getCartSubtotal();
+  const discount = getCheckoutDiscount(subtotal);
+  const total = subtotal - discount;
   document.getElementById('subtotal').textContent = `${subtotal.toFixed(2)} HTG`;
-  document.getElementById('total').textContent = `${subtotal.toFixed(2)} HTG`;
+  document.getElementById('total').textContent = `${total.toFixed(2)} HTG`;
+  const dRow = document.getElementById('discount-row');
+  if (dRow) {
+    dRow.style.display = discount > 0 ? 'flex' : 'none';
+    if (discount > 0) {
+      document.getElementById('promo-code-label').textContent = appliedPromo.code;
+      document.getElementById('discount-amount').textContent = `-${discount.toFixed(2)} HTG`;
+    }
+  }
+}
+
+function showCheckoutPromoMsg(ok, text) {
+  const el = document.getElementById('promo-message');
+  if (!el) return;
+  el.style.display = 'block';
+  el.style.color = ok ? '#16a34a' : '#dc2626';
+  el.textContent = text;
+}
+
+async function applyPromoCode() {
+  const input = document.getElementById('promo-code-input');
+  const code = (input?.value || '').trim().toUpperCase();
+  if (!code) { showCheckoutPromoMsg(false, 'Antre yon kòd promo.'); return; }
+  if (!supabase) { showCheckoutPromoMsg(false, 'Connexion indisponible.'); return; }
+
+  const btn = document.getElementById('btn-apply-promo');
+  if (btn) btn.disabled = true;
+  try {
+    const { data, error } = await supabase
+      .from('promo_codes')
+      .select('*')
+      .ilike('code', code)
+      .eq('is_active', true)
+      .limit(1);
+    if (error) throw error;
+    const promo = data?.[0];
+    if (!promo) { appliedPromo = null; showCheckoutPromoMsg(false, 'Kòd sa a pa valide.'); refreshTotals(); return; }
+    if (promo.valid_until && new Date(promo.valid_until) < new Date()) {
+      appliedPromo = null; showCheckoutPromoMsg(false, 'Kòd sa a ekspire.'); refreshTotals(); return;
+    }
+    if (promo.max_uses && promo.uses_count >= promo.max_uses) {
+      appliedPromo = null; showCheckoutPromoMsg(false, 'Limit itilizasyon kòd sa a rive.'); refreshTotals(); return;
+    }
+    if (promo.applies_to && !['all', 'products'].includes(promo.applies_to)) {
+      appliedPromo = null; showCheckoutPromoMsg(false, 'Kòd sa a valab pou sèvis sèlman.'); refreshTotals(); return;
+    }
+    const clientEmail = (document.getElementById('customer-email')?.value || '').toLowerCase();
+    if (promo.owner_type === 'client' && promo.owner_email && promo.owner_email.toLowerCase() === clientEmail) {
+      appliedPromo = null; showCheckoutPromoMsg(false, 'Ou pa ka itilize pwòp kòd parrainage ou.'); refreshTotals(); return;
+    }
+
+    appliedPromo = promo;
+    const d = getCheckoutDiscount(getCartSubtotal());
+    showCheckoutPromoMsg(true, `✓ Kòd "${promo.code}" aplike: −${d.toLocaleString()} HTG`);
+    refreshTotals();
+  } catch (err) {
+    console.error('Promo validation error:', err);
+    showCheckoutPromoMsg(false, 'Erè pandan validasyon kòd la.');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 // Load payment methods dynamically from DB
@@ -268,6 +353,8 @@ document.getElementById('place-order-btn')?.addEventListener('click', async () =
   try {
     const cart = JSON.parse(localStorage.getItem('dalight_cart') || '[]');
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const discountAmount = getCheckoutDiscount(subtotal);
+    const total = subtotal - discountAmount;
 
     // Generate order number
     const orderNumber = 'DL-' + Date.now() + '-' + Math.random().toString(36).substring(7).toUpperCase();
@@ -294,7 +381,9 @@ document.getElementById('place-order-btn')?.addEventListener('click', async () =
       payment_proof_url: paymentProofUrl,
       subtotal: subtotal,
       tax: 0,
-      total: subtotal,
+      total: total,
+      promo_code: appliedPromo ? appliedPromo.code : null,
+      discount_amount: discountAmount,
       shipping_address: address,
       customer_name: name,
       customer_email: email,
@@ -324,6 +413,19 @@ document.getElementById('place-order-btn')?.addEventListener('click', async () =
       .insert(orderItems);
     
     if (itemsError) throw itemsError;
+
+    // Anrejistre itilizasyon kòd promo a
+    if (appliedPromo) {
+      try {
+        await supabase.rpc('record_promo_use', {
+          p_code: appliedPromo.code,
+          p_reservation_id: null,
+          p_order_id: order.id,
+          p_client_email: email,
+          p_discount_amount: discountAmount,
+        });
+      } catch (e) { console.warn('record_promo_use:', e); }
+    }
     
     // Send email notifications
     const orderEmailData = {
@@ -335,7 +437,9 @@ document.getElementById('place-order-btn')?.addEventListener('click', async () =
       payment_method: selectedPaymentMethod,
       payment_status: selectedPaymentMethod === 'cash' || selectedPaymentMethod === 'bank' ? 'pending' : 'pending',
       subtotal: subtotal,
-      total: subtotal,
+      total: total,
+      discount_amount: discountAmount,
+      promo_code: appliedPromo ? appliedPromo.code : null,
       notes: document.getElementById('order-notes')?.value || null,
       items: cart.map(item => ({
         name: item.name,
@@ -351,7 +455,7 @@ document.getElementById('place-order-btn')?.addEventListener('click', async () =
     if (isAutomaticPlopPayment(selectedPaymentMethod)) {
       const payment = await createPlopPayment(supabase, {
         refference_id: orderNumber,
-        montant: subtotal,
+        montant: total,
         payment_method: selectedPaymentMethod,
         context_type: 'order',
         context_id: order.id,

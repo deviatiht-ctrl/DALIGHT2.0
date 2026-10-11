@@ -528,6 +528,7 @@ window.printReservationDetail = function(id) {
         <div style="font-size:10px;color:#6b7280;">${formatDate(r.date)} à ${formatTime(r.time)} — ${r.location === 'Spa' ? 'Au Spa' : 'À domicile'}</div>
       </div>
       <hr style="border:none;border-top:1px dashed #d1d5db;margin:5mm 0;">
+      ${r.promo_code ? `<div style="font-size:10px;display:flex;justify-content:space-between;margin-bottom:3px;"><span>Code promo</span><span><strong>${r.promo_code}</strong>${r.discount_amount ? ' (−' + fmtHTG(r.discount_amount) + ')' : ''}</span></div>` : ''}
       <div style="font-size:10px;display:flex;justify-content:space-between;margin-bottom:3px;"><span>Total service</span><span>${fmtHTG(totalAmt)}</span></div>
       <div style="font-size:10px;display:flex;justify-content:space-between;margin-bottom:3px;"><span>Acompte / Payé</span><span>${fmtHTG(amtPaid)}</span></div>
       ${balance > 0 ? `<div style="font-size:11px;display:flex;justify-content:space-between;margin-top:4px;font-weight:700;color:#92400e;"><span>SOLDE RESTANT</span><span>${fmtHTG(balance)}</span></div>` : `<div style="font-size:11px;display:flex;justify-content:space-between;margin-top:4px;font-weight:700;color:#059669;"><span>PAIEMENT COMPLET</span><span>${fmtHTG(totalAmt)}</span></div>`}
@@ -2412,6 +2413,7 @@ function openSetCapacityModal() {
 let createReservationClient = null;
 let createReservationServices = [];
 let createReservationHeadSpaPricing = [];
+let createReservationExtras = []; // sèvis "extra" kreye a la vole (kache sou sit la)
 const HAIR_TYPE_LABELS = { dreadlocks: 'Dreadlocks', defrises: 'Cheveux Défrisés', naturels: 'Cheveux Naturels' };
 
 function withFee(p) { return Math.round(Number(p) * 1.03); }
@@ -2431,6 +2433,16 @@ function openCreateReservationModal() {
   document.getElementById('create-moncash-fee-display').textContent = '';
   document.getElementById('create-services-config').innerHTML = '';
   createReservationClient = null;
+  // Reset sèvis extra
+  createReservationExtras = [];
+  const extraList = document.getElementById('extra-services-list');
+  if (extraList) extraList.innerHTML = '';
+  const extraForm = document.getElementById('extra-service-form');
+  if (extraForm) extraForm.style.display = 'none';
+  ['extra-svc-name', 'extra-svc-price', 'extra-svc-duration'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
   loadCreateReservationServices();
 
   // Default date = tomorrow
@@ -2460,7 +2472,7 @@ async function loadCreateReservationServices() {
 
   try {
     const [{ data: services, error: svcErr }, { data: pricing, error: priceErr }] = await Promise.all([
-      supabase.from('services').select('id, name, price_htg, price_usd, duration, category').eq('is_active', true).order('name'),
+      supabase.from('services').select('id, name, price_htg, price_usd, duration, category, is_visible, is_extra').eq('is_active', true).order('name'),
       supabase.from('head_spa_pricing').select('*').eq('is_active', true).order('sort_order')
     ]);
 
@@ -2475,11 +2487,12 @@ async function loadCreateReservationServices() {
 
     listEl.innerHTML = createReservationServices.map((s, i) => {
       const isHeadSpa = String(s.category || '').toLowerCase() === 'headspa';
+      const isExtra = s.is_extra === true || s.is_visible === false;
       const basePrice = isHeadSpa ? null : Number(s.price_htg || 0);
       return `
       <label id="create-svc-label-${i}" style="display: flex; align-items: center; gap: .5rem; padding: .4rem 0; cursor: pointer; border-bottom: 1px solid #f1f5f9;">
         <input type="checkbox" name="create-service" value="${s.id}" data-index="${i}" onchange="onCreateServiceToggle(${i})">
-        <span style="flex: 1;">${escapeHtml(s.name)} <span style="color: #64748b; font-size: .85rem;">${isHeadSpa ? '(Head Spa — choisir type & longueur)' : '(' + basePrice.toLocaleString() + ' HTG)'}</span></span>
+        <span style="flex: 1;">${escapeHtml(s.name)} ${isExtra ? '<span style="background:#fef3c7;color:#92400e;font-size:.68rem;font-weight:700;padding:.1rem .4rem;border-radius:10px;">EXTRA</span> ' : ''}<span style="color: #64748b; font-size: .85rem;">${isHeadSpa ? '(Head Spa — choisir type & longueur)' : '(' + basePrice.toLocaleString() + ' HTG)'}</span></span>
       </label>`;
     }).join('');
 
@@ -2560,6 +2573,81 @@ function populateHeadSpaLengthOptions(index) {
     : `<option value="">Aucun tarif pour ce type</option>`;
   updateCreateReservationTotal();
 }
+
+// ── Sèvis EXTRA (kache sou sit piblik la) ───────────────────────────────────
+window.toggleExtraServiceForm = function() {
+  const f = document.getElementById('extra-service-form');
+  if (f) f.style.display = f.style.display === 'none' ? '' : 'none';
+};
+
+window.addExtraService = async function() {
+  const name = document.getElementById('extra-svc-name').value.trim();
+  const price = parseFloat(document.getElementById('extra-svc-price').value);
+  const duration = document.getElementById('extra-svc-duration').value.trim();
+  const save = document.getElementById('extra-svc-save').checked;
+
+  if (!name) { window.adminCore?.showToast('Non sèvis la obligatwa.', 'error'); return; }
+  if (!price || price <= 0) { window.adminCore?.showToast('Pri HTG la obligatwa.', 'error'); return; }
+
+  const supabase = getSupabaseClient();
+  let dbId = null;
+
+  // Si checkbox la kochwe, anrejistre l nan tab services kòm sèvis kache
+  if (save && supabase) {
+    try {
+      const { data, error } = await supabase.from('services').insert({
+        name,
+        price_htg: price,
+        price_usd: 0,
+        duration: duration || null,
+        category: 'package',
+        is_active: true,
+        is_visible: false,
+        is_extra: true,
+        sort_order: 999,
+      }).select('id').single();
+      if (error) throw error;
+      dbId = data?.id || null;
+      // Ajoute l nan lis sèvis yo pou l reyitilizab nan menm sesyon an
+      if (dbId) {
+        createReservationServices.push({ id: dbId, name, price_htg: price, price_usd: 0, duration, category: 'package', is_visible: false, is_extra: true });
+      }
+    } catch (e) {
+      console.warn('Extra service save failed (is_visible/is_extra columns?):', e.message);
+      window.adminCore?.showToast('Sèvis la ajoute pou rezèvasyon sa a sèlman — kolòn is_visible/is_extra poko egziste (egzekite 39_extra_services.sql)', 'warning');
+    }
+  }
+
+  createReservationExtras.push({ id: dbId, name, price_htg: price, duration, extra: true, checked: true });
+  document.getElementById('extra-svc-name').value = '';
+  document.getElementById('extra-svc-price').value = '';
+  document.getElementById('extra-svc-duration').value = '';
+  renderExtraServices();
+  updateCreateReservationTotal();
+};
+
+function renderExtraServices() {
+  const el = document.getElementById('extra-services-list');
+  if (!el) return;
+  if (!createReservationExtras.length) { el.innerHTML = ''; return; }
+  el.innerHTML = createReservationExtras.map((s, i) => `
+    <label style="display:flex;align-items:center;gap:.5rem;padding:.4rem .75rem;background:#fef9e7;border:1px dashed #d9b53a;border-radius:8px;margin-bottom:.4rem;cursor:pointer;">
+      <input type="checkbox" name="create-extra-service" data-extra-index="${i}" ${s.checked ? 'checked' : ''} onchange="onExtraServiceToggle(${i})">
+      <span style="flex:1;">${escapeHtml(s.name)} <span style="background:#fef3c7;color:#92400e;font-size:.68rem;font-weight:700;padding:.1rem .4rem;border-radius:10px;">EXTRA</span> <span style="color:#64748b;font-size:.85rem;">(${Number(s.price_htg).toLocaleString()} HTG)</span></span>
+      <button type="button" onclick="removeExtraService(${i})" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:1rem;" title="Retire">✕</button>
+    </label>`).join('');
+}
+
+window.onExtraServiceToggle = function(i) {
+  if (createReservationExtras[i]) createReservationExtras[i].checked = !createReservationExtras[i].checked;
+  updateCreateReservationTotal();
+};
+
+window.removeExtraService = function(i) {
+  createReservationExtras.splice(i, 1);
+  renderExtraServices();
+  updateCreateReservationTotal();
+};
 
 async function searchClientByEmail() {
   const emailInput = document.getElementById('create-email');
@@ -2690,6 +2778,14 @@ function updateCreateReservationTotal() {
     }
   });
 
+  // Sèvis extra ki tcheke yo
+  createReservationExtras.forEach(s => {
+    if (!s.checked) return;
+    const base = Number(s.price_htg || 0);
+    subtotal += base;
+    feeAmount += includeFee ? (withFee(base) - base) : 0;
+  });
+
   const total = includeFee ? withFee(subtotal) : subtotal;
   const totalEl = document.getElementById('create-reservation-total');
   const feeEl = document.getElementById('create-moncash-fee-display');
@@ -2719,7 +2815,8 @@ async function submitCreateReservation() {
   }
 
   const selected = Array.from(document.querySelectorAll('input[name="create-service"]:checked'));
-  if (!selected.length) {
+  const hasExtra = createReservationExtras.some(s => s.checked);
+  if (!selected.length && !hasExtra) {
     window.adminCore?.showToast('Veuillez sélectionner au moins un service.', 'error');
     return;
   }
@@ -2771,6 +2868,21 @@ async function submitCreateReservation() {
     };
   }).filter(Boolean);
 
+  // Sèvis extra ki tcheke yo — yo ale nan rezèvasyon an menm jan an
+  createReservationExtras.filter(s => s.checked).forEach(s => {
+    const baseHtg = Number(s.price_htg || 0);
+    selectedServices.push({
+      id: s.id || null,
+      name: s.name,
+      base_name: s.name,
+      price_htg: includeFee ? withFee(baseHtg) : baseHtg,
+      price_usd: 0,
+      category: 'package',
+      extra: true,
+      duration: s.duration || null,
+    });
+  });
+
   if (!selectedServices.length) {
     window.adminCore?.showToast('Erreur lors de la construction des services.', 'error');
     return;
@@ -2786,8 +2898,8 @@ async function submitCreateReservation() {
     user_name: client.full_name || '',
     phone: client.phone || null,
     service: selectedServices.map(s => s.name).join(', '),
-    services: selectedServices.map(s => ({ id: s.id, name: s.name, price_htg: s.price_htg, price_usd: s.price_usd, hair_type: s.hair_type || null, hair_length: s.hair_length || null })),
-    service_id: selectedServices[0].id,
+    services: selectedServices.map(s => ({ id: s.id, name: s.name, price_htg: s.price_htg, price_usd: s.price_usd, hair_type: s.hair_type || null, hair_length: s.hair_length || null, extra: !!s.extra })),
+    service_id: (selectedServices.find(s => s.id) || selectedServices[0]).id || null,
     location: document.getElementById('create-location').value,
     date,
     time,

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Espace Influenceur — DALIGHT</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="../assets/images/logodaligth.png?v=2" type="image/png">
+  <link href="../vendor/fonts/google-fonts.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css?v=5.0.0">
+  <link rel="stylesheet" href="../css/responsive.css?v=5.0.0">
+  <script src="../vendor/supabase/supabase.min.js"></script>
+  <script type="module" src="../js/main.js?v=5.0.0"></script>
+  <style>
+    .inf-wrap { max-width: 900px; margin: 0 auto; padding: 1rem; }
+    .inf-card { background: #fff; border-radius: 14px; padding: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,.08); margin-bottom: 1.25rem; }
+    .inf-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+    .inf-stat { background: linear-gradient(135deg, #4a3728, #6b5138); color: #fff; border-radius: 14px; padding: 1.25rem; }
+    .inf-stat .num { font-size: 1.6rem; font-weight: 800; }
+    .inf-stat .lbl { font-size: .78rem; opacity: .75; margin-top: .2rem; }
+    .inf-stat.gold { background: linear-gradient(135deg, #b8941f, #d9b53a); color: #1a1400; }
+    .inf-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    .inf-table th { text-align: left; padding: .6rem .75rem; border-bottom: 2px solid #eee; color: #6b7280; font-size: .75rem; text-transform: uppercase; letter-spacing: .5px; }
+    .inf-table td { padding: .65rem .75rem; border-bottom: 1px solid #f0f0f0; }
+    .inf-code { font-family: monospace; font-weight: 800; font-size: 1rem; letter-spacing: 1px; color: #4a3728; }
+    .pill { display: inline-block; padding: .2rem .7rem; border-radius: 20px; font-size: .72rem; font-weight: 700; }
+    .pill-pending { background: #fef3c7; color: #92400e; }
+    .pill-approved { background: #dbeafe; color: #1d4ed8; }
+    .pill-paid { background: #d1fae5; color: #065f46; }
+    .pill-rejected { background: #fee2e2; color: #991b1b; }
+    .inf-input { width: 100%; padding: .7rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: .95rem; margin-bottom: .6rem; }
+    .inf-label { font-size: .8rem; font-weight: 600; color: #374151; display: block; margin-bottom: .3rem; }
+  </style>
+</head>
+<body data-page="influencer">
+  <header class="site-header internal">
+    <nav class="top-nav">
+      <a class="brand" href="../index.html">
+        <img class="brand-logo" src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" />
+        <div>
+          <strong>DALIGHT</strong>
+          <small>Espace Influenceur</small>
+        </div>
+      </a>
+      <button class="nav-toggle" aria-label="Ouvrir la navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav-links">
+        <a href="../index.html">Accueil</a>
+        <a href="./services.html">Services</a>
+        <a href="./loyalty.html">Fidélité</a>
+        <a href="./login.html" class="mobile-auth-link" style="color:var(--gold-500);"><i data-lucide="user" style="width:16px;height:16px;display:inline-block;margin-right:4px;vertical-align:-3px;"></i> Connexion</a>
+      </div>
+      <div class="nav-cta">
+        <button class="btn ghost" id="inf-logout" style="display:none;" onclick="influencerLogout()">Déconnexion</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="page-shell fade-in">
+    <div class="inf-wrap">
+      <h1 style="text-align:center;margin:1.5rem 0 .3rem;">Espace Influenceur</h1>
+      <p style="text-align:center;color:#6b7280;margin-bottom:1.5rem;">Swiv itilizasyon kòd ou yo, komisyon ou, epi mande retrè a chak fen mwa.</p>
+
+      <!-- Login prompt -->
+      <div id="inf-login" class="inf-card" style="text-align:center;" hidden>
+        <h3 style="margin-top:0;">Konekte pou wè espas ou</h3>
+        <p style="color:#6b7280;font-size:.9rem;">Itilize imèl + modpas admin DALIGHT te kreye pou ou a.</p>
+        <a class="btn" href="./login.html">Se connecter</a>
+      </div>
+
+      <!-- Dashboard -->
+      <div id="inf-dash" hidden>
+        <div class="inf-stats">
+          <div class="inf-stat">
+            <div class="num" id="stat-uses">0</div>
+            <div class="lbl">Itilizasyon kòd ou</div>
+          </div>
+          <div class="inf-stat">
+            <div class="num" id="stat-total">0 HTG</div>
+            <div class="lbl">Komisyon total</div>
+          </div>
+          <div class="inf-stat">
+            <div class="num" id="stat-paid">0 HTG</div>
+            <div class="lbl">Komisyon peye</div>
+          </div>
+          <div class="inf-stat gold">
+            <div class="num" id="stat-available">0 HTG</div>
+            <div class="lbl">Disponib pou retrè</div>
+          </div>
+        </div>
+
+        <!-- Kòd mwen yo -->
+        <div class="inf-card">
+          <h3 style="margin-top:0;">Kòd promo mwen yo</h3>
+          <div id="inf-codes-list"><p style="color:#6b7280;">Chargement...</p></div>
+        </div>
+
+        <!-- Demann retrè -->
+        <div class="inf-card" id="inf-withdraw-card">
+          <h3 style="margin-top:0;">💵 Mande retrè komisyon</h3>
+          <p style="font-size:.85rem;color:#6b7280;">Fen mwa a, ou ka mande retrè komisyon ki disponib la. Admin ap peye ou dapre metòd ou chwazi a.</p>
+          <div class="input-group">
+            <label class="inf-label" for="wd-month">Mwa a</label>
+            <input type="month" id="wd-month" class="inf-input">
+          </div>
+          <div class="input-group">
+            <label class="inf-label" for="wd-amount">Montan (HTG)</label>
+            <input type="number" id="wd-amount" class="inf-input" min="1" step="1" placeholder="Ex: 5000">
+          </div>
+          <div class="input-group">
+            <label class="inf-label" for="wd-method">Metòd peman</label>
+            <select id="wd-method" class="inf-input">
+              <option value="moncash">MonCash</option>
+              <option value="natcash">NatCash</option>
+              <option value="bank_transfer">Virement bancaire</option>
+              <option value="cash">Cash (nan spaa)</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label class="inf-label" for="wd-account">Nimewo / Kont peman an</label>
+            <input type="text" id="wd-account" class="inf-input" placeholder="Ex: +509 XXXX-XXXX ou kont labank">
+          </div>
+          <div id="wd-message" role="status"></div>
+          <button class="btn" id="wd-submit" onclick="requestPayout()">📤 Voye demann lan</button>
+        </div>
+
+        <!-- Demann mwen yo -->
+        <div class="inf-card">
+          <h3 style="margin-top:0;">Demann retrè mwen yo</h3>
+          <div style="overflow-x:auto;">
+            <table class="inf-table">
+              <thead>
+                <tr><th>Dat</th><th>Mwa</th><th>Montan</th><th>Metòd</th><th>Stati</th></tr>
+              </thead>
+              <tbody id="inf-payouts"><tr><td colspan="5" style="color:#6b7280;">Chargement...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Detay pa mwa -->
+        <div class="inf-card">
+          <h3 style="margin-top:0;">Detay pa mwa</h3>
+          <div style="overflow-x:auto;">
+            <table class="inf-table">
+              <thead>
+                <tr><th>Mwa</th><th>Kòd</th><th>Itilizasyon</th><th>Reveni (sèvis)</th><th>Komisyon</th></tr>
+              </thead>
+              <tbody id="inf-monthly"><tr><td colspan="5" style="color:#6b7280;">Chargement...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>© <span id="year"></span> DALIGHT. Tous droits réservés.</p>
+    <div class="footer-links">
+      <a href="./login.html">Espace client</a>
+      <a href="./services.html">Nos Services</a>
+      <a href="mailto:dalightbeauty15mai@gmail.com">dalightbeauty15mai@gmail.com</a>
+    </div>
+    <div class="footer-credit">
+      <span>Conçu avec soin par <a href="https://cvisualagency.org" target="_blank" rel="noopener" class="cvisual-link">Cvisual</a></span>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { getSupabase } from '../js/main.js?v=5.0.0';
+
+    let supabase = getSupabase();
+    let me = null;
+
+    async function waitSB() {
+      let n = 0;
+      while (!supabase && n < 50) { await new Promise(r => setTimeout(r, 100)); supabase = getSupabase(); n++; }
+      return !!supabase;
+    }
+
+    const fmt = n => Number(n || 0).toLocaleString() + ' HTG';
+    const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const pillClass = { pending: 'pill-pending', approved: 'pill-approved', paid: 'pill-paid', rejected: 'pill-rejected' };
+    const pillTxt = { pending: 'En attente', approved: 'Approuvée', paid: 'Payée', rejected: 'Rejetée' };
+
+    async function init() {
+      if (!await waitSB()) { document.getElementById('inf-login').hidden = false; return; }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { document.getElementById('inf-login').hidden = false; return; }
+      me = session.user;
+      document.getElementById('inf-logout').style.display = '';
+      document.getElementById('inf-dash').hidden = false;
+      await Promise.all([loadSummary(), loadCodes(), loadMonthly(), loadPayouts()]);
+      document.getElementById('wd-month').value = new Date().toISOString().substring(0, 7);
+    }
+
+    window.influencerLogout = async function() {
+      await supabase.auth.signOut();
+      location.href = './login.html';
+    };
+
+    async function loadSummary() {
+      const { data } = await supabase.rpc('get_influencer_summary');
+      if (!data?.success) return;
+      document.getElementById('stat-uses').textContent = data.total_uses;
+      document.getElementById('stat-total').textContent = fmt(data.commission_total);
+      document.getElementById('stat-paid').textContent = fmt(data.commission_paid);
+      document.getElementById('stat-available').textContent = fmt(data.commission_available);
+      document.getElementById('wd-amount').placeholder = 'Maks: ' + fmt(data.commission_available);
+      document.getElementById('wd-amount').max = data.commission_available;
+    }
+
+    async function loadCodes() {
+      const el = document.getElementById('inf-codes-list');
+      const { data, error } = await supabase.from('promo_codes').select('*')
+        .eq('owner_type', 'influencer')
+        .ilike('owner_email', me.email)
+        .order('created_at', { ascending: false });
+      if (error) { el.innerHTML = '<p style="color:#dc2626;">' + esc(error.message) + '</p>'; return; }
+      if (!data?.length) { el.innerHTML = '<p style="color:#6b7280;">Ou poko gen kòd promo — kontakte DALIGHT.</p>'; return; }
+      el.innerHTML = data.map(c => `
+        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;padding:.75rem 0;border-bottom:1px solid #f0f0f0;">
+          <span class="inf-code">${esc(c.code)}</span>
+          <span style="font-size:.85rem;color:#6b7280;">${c.discount_type === 'percentage' ? c.discount_value + '% rabè' : fmt(c.discount_value) + ' rabè'} · komisyon ${c.commission_pct}%</span>
+          <span class="pill ${c.is_active ? 'pill-paid' : 'pill-rejected'}">${c.is_active ? 'Actif' : 'Inactif'}</span>
+          <button class="btn ghost" style="padding:.3rem .8rem;font-size:.8rem;margin-left:auto;" onclick="navigator.clipboard.writeText('${esc(c.code)}').then(()=>alert('Kòd "${esc(c.code)}" kopye!'))">Copier</button>
+        </div>`).join('');
+    }
+
+    async function loadMonthly() {
+      const tb = document.getElementById('inf-monthly');
+      const { data, error } = await supabase.rpc('get_influencer_stats');
+      if (error) { tb.innerHTML = '<tr><td colspan="5" style="color:#dc2626;">' + esc(error.message) + '</td></tr>'; return; }
+      if (!data?.length) { tb.innerHTML = '<tr><td colspan="5" style="color:#6b7280;">Poko gen itilizasyon.</td></tr>'; return; }
+      tb.innerHTML = data.map(r => `<tr>
+        <td><strong>${esc(r.month)}</strong></td>
+        <td><code>${esc(r.code)}</code></td>
+        <td>${r.uses_count}</td>
+        <td>${fmt(r.revenue_htg)}</td>
+        <td style="color:#059669;font-weight:700;">${fmt(r.commission_htg)}</td>
+      </tr>`).join('');
+    }
+
+    async function loadPayouts() {
+      const tb = document.getElementById('inf-payouts');
+      const { data, error } = await supabase.from('payout_requests').select('*')
+        .order('created_at', { ascending: false }).limit(50);
+      if (error) { tb.innerHTML = '<tr><td colspan="5" style="color:#dc2626;">' + esc(error.message) + '</td></tr>'; return; }
+      if (!data?.length) { tb.innerHTML = '<tr><td colspan="5" style="color:#6b7280;">Okenn demann ankò.</td></tr>'; return; }
+      tb.innerHTML = data.map(r => `<tr>
+        <td>${new Date(r.created_at).toLocaleDateString('fr-FR')}</td>
+        <td><strong>${esc(r.month)}</strong></td>
+        <td>${fmt(r.amount_htg)}</td>
+        <td>${esc(r.payment_method || '—')}</td>
+        <td><span class="pill ${pillClass[r.status] || 'pill-pending'}">${pillTxt[r.status] || r.status}</span></td>
+      </tr>`).join('');
+    }
+
+    window.requestPayout = async function() {
+      const month = document.getElementById('wd-month').value;
+      const amount = parseFloat(document.getElementById('wd-amount').value);
+      const method = document.getElementById('wd-method').value;
+      const account = document.getElementById('wd-account').value.trim();
+      const msg = document.getElementById('wd-message');
+      const setMsg = (ok, t) => { msg.className = 'alert ' + (ok ? 'success' : 'error'); msg.textContent = t; };
+
+      if (!month) { setMsg(false, 'Chwazi mwa a.'); return; }
+      if (!amount || amount <= 0) { setMsg(false, 'Antre montan an.'); return; }
+      if (!account) { setMsg(false, 'Antre nimewo/kont peman an.'); return; }
+
+      const btn = document.getElementById('wd-submit');
+      btn.disabled = true;
+      try {
+        const { error } = await supabase.from('payout_requests').insert({
+          owner_email: me.email.toLowerCase(),
+          month, amount_htg: amount, payment_method: method, account_info: account,
+        });
+        if (error) throw error;
+        setMsg(true, '✓ Demann lan voye! Admin ap trete l.');
+        document.getElementById('wd-amount').value = '';
+        document.getElementById('wd-account').value = '';
+        await Promise.all([loadSummary(), loadPayouts()]);
+      } catch (e) {
+        setMsg(false, 'Erè: ' + e.message);
+      } finally { btn.disabled = false; }
+    };
+
+    init();
+  </script>
+</body>
+</html>

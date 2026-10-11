@@ -94,7 +94,7 @@
       </div>
 
       <div style='display:flex; gap:.5rem; margin-bottom:1rem; flex-wrap:wrap;'>
-        <button class='btn btn-primary' onclick='openBulkEmailModal()'>?? Envoyer un email à tous les clients</button>
+        <button class='btn btn-primary' onclick='openBulkEmailModal()'>✉️ Envoyer un email à tous les clients</button>
       </div>
 
       <div class='glass-card'>
@@ -174,11 +174,11 @@
       const templates = {
         welcome: {
           subject: 'Bienvenue chez DALIGHT Spa',
-          body: `Bonjour ${name},\n\nBienvenue dans la famille DALIGHT ! Nous sommes ravis de vous compter parmi nos clients.\n\nDécouvrez nos services signature : Head Spa, massages thérapeutiques, soins capillaires personnalisés et plus encore.\n\n? Réservez en ligne : https://dalightspa.com\n?? Ou appelez-nous : ${phone}\n\nÀ très bientôt,\nL'équipe DALIGHT`
+          body: `Bonjour ${name},\n\nBienvenue dans la famille DALIGHT ! Nous sommes ravis de vous compter parmi nos clients.\n\nDécouvrez nos services signature : Head Spa, massages thérapeutiques, soins capillaires personnalisés et plus encore.\n\n🌐 Réservez en ligne : https://dalightspa.com\n📞 Ou appelez-nous : ${phone}\n\nÀ très bientôt,\nL'équipe DALIGHT`
         },
         promo: {
-          subject: '?? Offre spéciale DALIGHT Spa - Pour vous !',
-          body: `Bonjour ${name},\n\nNous avons une offre spéciale rien que pour vous !\n\n[Décrivez votre offre ici]\n\nRéservez dès maintenant :\n?? ${phone}\n?? Delmas 65, Faustin Premier Durandise #10\n\nÀ très vite,\nL'équipe DALIGHT`
+          subject: '🎁 Offre spéciale DALIGHT Spa - Pour vous !',
+          body: `Bonjour ${name},\n\nNous avons une offre spéciale rien que pour vous !\n\n[Décrivez votre offre ici]\n\nRéservez dès maintenant :\n📞 ${phone}\n📍 Delmas 65, Faustin Premier Durandise #10\n\nÀ très vite,\nL'équipe DALIGHT`
         },
         custom: {
           subject: 'DALIGHT Spa',
@@ -293,15 +293,17 @@
           <td>${formatDate(c.created_at)}</td>
           <td>
             <div style="display:flex;gap:0.3rem;flex-wrap:wrap;">
-              <button class="btn btn-secondary btn-sm" onclick="sendClientEmail('${c.email}','${(c.full_name||'').replace(/'/g,"\\'")}','welcome')" title="Bienvenue">?? Bienvenue</button>
-              <button class="btn btn-secondary btn-sm" onclick="sendClientEmail('${c.email}','${(c.full_name||'').replace(/'/g,"\\'")}','promo')" title="Promo">?? Promo</button>
-              <button class="btn btn-secondary btn-sm" onclick="sendClientEmail('${c.email}','${(c.full_name||'').replace(/'/g,"\\'")}','custom')" title="Écrire">?? Écrire</button>
+              <button class="btn btn-secondary btn-sm" onclick="openEditClientModal('${c.id}')" title="Modifier">✏️ Modifier</button>
+              <button class="btn btn-secondary btn-sm" onclick="sendClientEmail('${c.email}','${(c.full_name||'').replace(/'/g,"\\'")}','welcome')" title="Bienvenue">👋 Bienvenue</button>
+              <button class="btn btn-secondary btn-sm" onclick="sendClientEmail('${c.email}','${(c.full_name||'').replace(/'/g,"\\'")}','promo')" title="Promo">🎁 Promo</button>
+              <button class="btn btn-secondary btn-sm" onclick="sendClientEmail('${c.email}','${(c.full_name||'').replace(/'/g,"\\'")}','custom')" title="Écrire">✉️ Écrire</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteClient('${c.id}','${(c.full_name||c.email||'').replace(/'/g,"\\'")}')" title="Supprimer">🗑️</button>
             </div>
           </td>
         </tr>
       `).join('');
     }
-    const BULK_TEMPLATES = { welcome: { subject: 'Bienvenue chez DALIGHT', body: `Bonjour {name},\n\nBienvenue dans la famille DALIGHT ! Nous sommes ravis de vous compter parmi nos clients.\n\nDécouvrez nos services signature : Head Spa, massages thérapeutiques, soins capillaires personnalisés et plus encore.\n\n? Réservez en ligne : https://dalightbeauty.com\n?? Ou appelez-nous : +509 4747-7221\n\nÀ très bientôt,\nL'équipe DALIGHT` }, reminder: { subject: 'Votre bien-être compte pour DALIGHT', body: `Bonjour {name},\n\nCela fait un moment que nous ne vous avons pas vu(e) chez DALIGHT. Nous tenons à vous rappeler que votre confort et votre bien-être sont notre priorité.\n\nPrenez rendez-vous dès maintenant pour un moment de détente et de soin.\n\n?? +509 4747-7221\n?? https://dalightbeauty.com\n\nAu plaisir de vous accueillir,\nL'équipe DALIGHT` }, promo: { subject: '?? Offre spéciale DALIGHT - Pour vous !', body: `Bonjour {name},\n\nNous avons une offre spéciale rien que pour vous !\n\n[Décrivez votre offre ici]\n\nRéservez dès maintenant :\n?? +509 4747-7221\n?? Delmas 65, Faustin Premier Durandisse #10\n\nÀ très vite,\nL'équipe DALIGHT` }, custom: { subject: 'DALIGHT Spa', body: `Bonjour {name},\n\n` } };
+    const BULK_TEMPLATES = { welcome: { subject: 'Bienvenue chez DALIGHT', body: `Bonjour {name},\n\nBienvenue dans la famille DALIGHT ! Nous sommes ravis de vous compter parmi nos clients.\n\nDécouvrez nos services signature : Head Spa, massages thérapeutiques, soins capillaires personnalisés et plus encore.\n\n🌐 Réservez en ligne : https://dalightbeauty.com\n📞 Ou appelez-nous : +509 4747-7221\n\nÀ très bientôt,\nL'équipe DALIGHT` }, reminder: { subject: 'Votre bien-être compte pour DALIGHT', body: `Bonjour {name},\n\nCela fait un moment que nous ne vous avons pas vu(e) chez DALIGHT. Nous tenons à vous rappeler que votre confort et votre bien-être sont notre priorité.\n\nPrenez rendez-vous dès maintenant pour un moment de détente et de soin.\n\n📞 +509 4747-7221\n🌐 https://dalightbeauty.com\n\nAu plaisir de vous accueillir,\nL'équipe DALIGHT` }, promo: { subject: '🎁 Offre spéciale DALIGHT - Pour vous !', body: `Bonjour {name},\n\nNous avons une offre spéciale rien que pour vous !\n\n[Décrivez votre offre ici]\n\nRéservez dès maintenant :\n📞 +509 4747-7221\n📍 Delmas 65, Faustin Premier Durandisse #10\n\nÀ très vite,\nL'équipe DALIGHT` }, custom: { subject: 'DALIGHT Spa', body: `Bonjour {name},\n\n` } };
     function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
     function buildHtmlEmail(name, bodyText) { const escapedName = escapeHtml(name || 'Cher(e) client(e)'); const bodyHtml = escapeHtml(bodyText).replace(/\n/g, '<br>'); return `<!DOCTYPE html>\n<html>\n<head>\n<meta charset='utf-8'>\n<style>body { font-family: Montserrat, sans-serif; background: #f5f3f0; margin: 0; padding: 20px; } .container { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(74,55,40,0.1); } .header { background: linear-gradient(135deg, #4A3728 0%, #6B4F3B 100%); padding: 30px 40px; text-align: center; } .logo { max-width: 120px; height: auto; } .content { padding: 40px; color: #4A3728; } .greeting { font-size: 22px; font-weight: 600; margin-bottom: 20px; } .message { font-size: 16px; line-height: 1.7; color: #5a4a3a; margin-bottom: 25px; } .cta-button { display: inline-block; background: #D4AF37; color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; } .footer { background: #4A3728; padding: 25px 40px; text-align: center; color: #e8e0d8; font-size: 14px; }</style>\n</head>\n<body>\n<div class='container'>\n<div class='header'><img src='https://raw.githubusercontent.com/deviatiht-ctrl/DALIGHT2.0/main/assets/images/logodaligth.png' alt='DALIGHT' class='logo'></div>\n<div class='content'>\n<p class='greeting'>Bonjour ${escapedName},</p>\n<p class='message'>${bodyHtml}</p>\n</div>\n<div class='footer'>\n<p>DALIGHT Head Spa · Delmas 65, Faustin Premier Durandisse #10, Haïti</p>\n<p>+509 4747-7221 · dalightbeauty15mai@gmail.com</p>\n<p>© ${new Date().getFullYear()} DALIGHT. Tous droits réservés.</p>\n</div>\n</div>\n</body>\n</html>`; }
     function openBulkEmailModal() { const modal = document.getElementById('bulk-email-modal'); modal.style.display = 'flex'; if (!document.getElementById('bulk-email-subject').value) applyBulkTemplate(); else updateBulkPreview(); }
@@ -309,12 +311,93 @@
     function applyBulkTemplate() { const key = document.getElementById('bulk-email-template').value; const t = BULK_TEMPLATES[key] || BULK_TEMPLATES.custom; document.getElementById('bulk-email-subject').value = t.subject; document.getElementById('bulk-email-body').value = t.body; updateBulkPreview(); }
     function updateBulkPreview() { const subject = document.getElementById('bulk-email-subject').value; const body = document.getElementById('bulk-email-body').value; const previewName = 'Marie Exemple'; const personalized = body.replace(/{name}/g, previewName); const html = buildHtmlEmail(previewName, personalized); document.getElementById('bulk-email-preview').srcdoc = html; }
     async function sendBulkEmail() { const subject = document.getElementById('bulk-email-subject').value.trim(); const body = document.getElementById('bulk-email-body').value; if (!subject || !body) { window.adminCore?.showToast?.('Objet et message obligatoires.', 'error'); return; } const clients = allClients.filter(c => c.email); if (!clients.length) { window.adminCore?.showToast?.('Aucun client avec email trouvé.', 'error'); return; } if (!sb) { window.adminCore?.showToast?.('Supabase non connecté.', 'error'); return; } const sendBtn = document.getElementById('bulk-email-send-btn'); sendBtn.disabled = true; sendBtn.textContent = 'Envoi en cours...'; let sent = 0, failed = 0; try { for (const c of clients) { const name = c.full_name || 'Cher(e) client(e)'; const personalized = body.replace(/{name}/g, name); const html = buildHtmlEmail(name, personalized); const { error } = await sb.functions.invoke('send-email', { body: { to: c.email, subject, html, isAdmin: true } }); if (error) { console.error('Email failed for', c.email, error); failed++; } else { sent++; } } window.adminCore?.showToast?.(`${sent} email(s) envoyé(s)${failed ? ', ' + failed + ' échec(s)' : ''}`, failed ? 'error' : 'success'); closeBulkEmailModal(); } catch (err) { console.error(err); window.adminCore?.showToast?.('Erreur envoi : ' + err.message, 'error'); } finally { sendBtn.disabled = false; sendBtn.textContent = 'Envoyer à tous'; } }
+
+    // ─── Modifier / Supprimer un client ───────────────────────────
+    window.openEditClientModal = function(clientId) {
+      const c = allClients.find(x => x.id === clientId);
+      if (!c) return;
+      document.getElementById('edit-client-id').value = c.id;
+      document.getElementById('edit-client-name').value = c.full_name || '';
+      document.getElementById('edit-client-email').value = c.email || '';
+      document.getElementById('edit-client-phone').value = c.phone || clientPhones[c.email] || '';
+      document.getElementById('edit-client-modal').style.display = 'flex';
+    };
+
+    window.closeEditClientModal = function() {
+      document.getElementById('edit-client-modal').style.display = 'none';
+    };
+
+    async function invokeManageClient(payload) {
+      const client = getSupabase();
+      if (!client) throw new Error('Supabase non disponible');
+      const { data: { session } } = await client.auth.getSession();
+      const { data, error } = await client.functions.invoke('admin-manage-client', {
+        body: payload,
+        headers: session?.access_token ? { Authorization: 'Bearer ' + session.access_token } : {},
+      });
+      if (error) throw new Error(error.message || 'Edge function error');
+      if (data && data.success === false) throw new Error(data.error || 'Échec');
+      return data;
+    }
+
+    window.saveClientEdit = async function() {
+      const id = document.getElementById('edit-client-id').value;
+      const full_name = document.getElementById('edit-client-name').value.trim();
+      const email = document.getElementById('edit-client-email').value.trim().toLowerCase();
+      const phone = document.getElementById('edit-client-phone').value.trim();
+      if (!full_name || !email) { window.adminCore?.showToast?.('Nom et email obligatoires.', 'error'); return; }
+      const btn = document.getElementById('edit-client-save-btn');
+      btn.disabled = true; btn.textContent = 'Sauvegarde...';
+      try {
+        await invokeManageClient({ action: 'update', id, full_name, email, phone });
+        window.adminCore?.showToast?.('Client mis à jour ✓');
+        closeEditClientModal();
+        await loadClients();
+      } catch (err) {
+        console.error('update client error:', err);
+        // Fallback: mete ajou tab profiles la dirèkteman (pa chanje email login an)
+        try {
+          const client = getSupabase();
+          const { error } = await client.from('profiles').update({ full_name, email, phone, updated_at: new Date().toISOString() }).eq('id', id);
+          if (error) throw error;
+          window.adminCore?.showToast?.('Profil mis à jour ✓ (email de connexion inchangé — déployez la fonction admin-manage-client pour le changer aussi)', 'warning');
+          closeEditClientModal();
+          await loadClients();
+        } catch (e2) {
+          window.adminCore?.showToast?.('Erreur: ' + (e2.message || err.message), 'error');
+        }
+      } finally {
+        btn.disabled = false; btn.textContent = 'Enregistrer';
+      }
+    };
+
+    window.deleteClient = async function(clientId, label) {
+      if (!confirm(`Supprimer définitivement le client "${label || ''}" ?\n\nCela supprime son compte et son profil. Ses réservations resteront dans l'historique.`)) return;
+      try {
+        await invokeManageClient({ action: 'delete', id: clientId });
+        window.adminCore?.showToast?.('Client supprimé ✓');
+        await loadClients();
+      } catch (err) {
+        console.error('delete client error:', err);
+        // Fallback: efase pwofil la sèlman
+        if (!confirm('La suppression du compte a échoué (' + err.message + ').\n\nVoulez-vous quand même supprimer le profil de la liste ?')) return;
+        try {
+          const client = getSupabase();
+          const { error } = await client.from('profiles').delete().eq('id', clientId);
+          if (error) throw error;
+          window.adminCore?.showToast?.('Profil supprimé ✓');
+          await loadClients();
+        } catch (e2) {
+          window.adminCore?.showToast?.('Erreur: ' + e2.message, 'error');
+        }
+      }
+    };
   </script>
 <div id='bulk-email-modal' style='display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1000; justify-content:center; align-items:flex-start; overflow-y:auto; padding:1rem;' onclick='if(event.target === this) closeBulkEmailModal()'>
   <div style='background:var(--admin-card-bg); border:1px solid var(--admin-border); border-radius:12px; max-width:720px; width:100%; max-height:90vh; overflow-y:auto; padding:1.5rem; margin:auto; display:flex; flex-direction:column; gap:1rem;'>
     <div class='card-header' style='justify-content:space-between; flex-wrap:wrap; gap:.5rem;'>
       <h3 class='card-title'>Envoyer un email à tous les clients</h3>
-      <button class='header-btn' onclick='closeBulkEmailModal()' style='background:transparent; color:var(--admin-text); font-size:1.2rem;'>?</button>
+      <button class='header-btn' onclick='closeBulkEmailModal()' style='background:transparent; color:var(--admin-text); font-size:1.2rem;'>✕</button>
     </div>
     <div class='form-grid' style='grid-template-columns:1fr 1fr;'>
       <div class='form-group'>
@@ -342,6 +425,33 @@
     <div style='display:flex; gap:.5rem; justify-content:flex-end;'>
       <button class='btn btn-secondary' onclick='closeBulkEmailModal()'>Annuler</button>
       <button class='btn btn-primary' id='bulk-email-send-btn' onclick='sendBulkEmail()'>Envoyer à tous</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Modifier un client -->
+<div id="edit-client-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1000; justify-content:center; align-items:flex-start; overflow-y:auto; padding:1rem;" onclick="if(event.target === this) closeEditClientModal()">
+  <div style="background:var(--admin-card-bg); border:1px solid var(--admin-border); border-radius:12px; max-width:480px; width:100%; padding:1.5rem; margin:auto; display:flex; flex-direction:column; gap:1rem;">
+    <div class="card-header" style="justify-content:space-between;">
+      <h3 class="card-title">Modifier le client</h3>
+      <button class="header-btn" onclick="closeEditClientModal()" style="background:transparent; color:var(--admin-text); font-size:1.2rem;">✕</button>
+    </div>
+    <input type="hidden" id="edit-client-id">
+    <div class="form-group">
+      <label>Nom complet *</label>
+      <input type="text" id="edit-client-name" class="form-control" placeholder="Nom du client">
+    </div>
+    <div class="form-group">
+      <label>Email *</label>
+      <input type="email" id="edit-client-email" class="form-control" placeholder="email@exemple.com">
+    </div>
+    <div class="form-group">
+      <label>Téléphone</label>
+      <input type="tel" id="edit-client-phone" class="form-control" placeholder="+509 ...">
+    </div>
+    <div style="display:flex; gap:.5rem; justify-content:flex-end;">
+      <button class="btn btn-secondary" onclick="closeEditClientModal()">Annuler</button>
+      <button class="btn btn-primary" id="edit-client-save-btn" onclick="saveClientEdit()">Enregistrer</button>
     </div>
   </div>
 </div>

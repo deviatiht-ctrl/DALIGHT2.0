@@ -1,7 +1,7 @@
 import { formatDate, formatTime, getSupabase } from './main.js?v=5.0.0';
 import { createPlopPayment, verifyPlopPayment, isAutomaticPlopPayment, isBankPayment } from './plop-payment.js';
 import { loadConsentData, matchTemplate, findSubmission, openConsentModal } from './consent-forms.js?v=202607121600';
-import { loadLoyaltyCards, renderLoyaltySection } from './loyalty-client.js?v=1';
+import { loadLoyaltyCards, renderLoyaltySection, getClientReferralCode } from './loyalty-client.js?v=2';
 
 let supabase = getSupabase();
 
@@ -707,9 +707,10 @@ async function loadReservations() {
     // Load loyalty cards for this user
     const userEmail = session.user.email;
     const cards = await loadLoyaltyCards(supabase, userEmail);
+    const referralCode = await getClientReferralCode(supabase, userEmail, session.user.user_metadata?.full_name);
     const loyaltySection = document.getElementById('loyalty-section');
     if (loyaltySection) {
-      loyaltySection.innerHTML = renderLoyaltySection(cards);
+      loyaltySection.innerHTML = renderLoyaltySection(cards, referralCode);
       if (window.lucide) window.lucide.createIcons();
     }
 

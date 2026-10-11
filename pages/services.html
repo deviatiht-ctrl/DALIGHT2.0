@@ -1054,7 +1054,8 @@
               .order('sort_order');
 
             if (!error && data && data.length > 0) {
-              allServices = data;
+              // Sèvis "extra" admin (is_visible=false) pa janm parèt sou paj piblik la
+              allServices = data.filter(s => s.is_visible !== false);
               initSearchAndFilter();
               filterAndRenderServices();
               return;

@@ -209,7 +209,32 @@
 
       var card = r.data;
       renderCard(card);
+      loadReferralCode(card.client_email);
     }
+
+    // Kòd parrainage kliyan (kòd REF-XXX sou kat fidelite a)
+    async function loadReferralCode(clientEmail) {
+      try {
+        if (!clientEmail) return;
+        var r = await sb.from('promo_codes')
+          .select('code,discount_value,discount_type,points_per_use')
+          .eq('owner_type', 'client')
+          .eq('is_active', true)
+          .ilike('owner_email', clientEmail)
+          .limit(1);
+        var ref = r.data && r.data[0];
+        if (!ref) return;
+        var box = document.getElementById('referral-box');
+        if (!box) return;
+        var rabais = ref.discount_type === 'percentage' ? ref.discount_value + '%' : Math.round(ref.discount_value) + ' HTG';
+        box.innerHTML =
+          '<div style="font-size:.72rem;text-transform:uppercase;letter-spacing:1px;color:#c9a227;font-weight:700;margin-bottom:.3rem;">🎁 Code parrainage</div>' +
+          '<div style="font-family:monospace;font-size:1.15rem;font-weight:800;letter-spacing:1px;color:#f0d060;">' + esc(ref.code) + '</div>' +
+          '<div style="font-size:.75rem;color:rgba(255,255,255,.55);margin-top:.3rem;">Utilisez ce code sur votre réservation : ' + rabais + ' de rabais, et ' + esc(card_owner_name || 'le propriétaire') + ' gagne des points.</div>';
+        box.style.display = 'block';
+      } catch (e) { console.warn('referral:', e); }
+    }
+    var card_owner_name = '';
 
     function showError(title, msg) {
       document.getElementById('card-container').innerHTML =
@@ -218,6 +243,7 @@
     }
 
     function renderCard(card) {
+      card_owner_name = card.client_name || '';
       var stamps = '';
       for (var i = 0; i < card.total_required; i++) {
         if (i < card.stamps_count) {
@@ -267,6 +293,7 @@
             '<div class="qr-label">Scannez en caisse</div>' +
           '</div>' +
           '<div class="card-code">' + esc(card.card_code) + '</div>' +
+          '<div id="referral-box" style="display:none;margin-top:1rem;background:rgba(201,162,39,.08);border:1px dashed rgba(201,162,39,.4);border-radius:12px;padding:.9rem 1rem;text-align:center;"></div>' +
           '<div class="expiry">Valable jusqu\'au ' + esc(expiryDate) + '</div>' +
         '</div>' +
         '<div class="actions">' +

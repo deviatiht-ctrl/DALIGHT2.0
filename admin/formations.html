@@ -385,7 +385,7 @@
         <tr>
           <td>
             <div style="display:flex;align-items:center;gap:0.75rem;">
-              <div class="formation-row-icon">—x}</div>
+              <div class="formation-row-icon">🎓</div>
               <div>
                 <div style="font-weight:600;font-size:0.88rem;">${esc(f.name)}</div>
                 <div style="font-size:0.76rem;color:rgba(255,255,255,0.4);">${esc(f.subtitle||'')}</div>
@@ -428,7 +428,7 @@
       const row = document.createElement('div');
       row.className = 'feature-row';
       row.innerHTML = `<input type="text" class="form-input feature-input" value="${esc(val)}" placeholder="Ex: Massage suédois & drainant">
-        <button type="button" onclick="this.parentElement.remove()">—S"</button>`;
+        <button type="button" onclick="this.parentElement.remove()">✕</button>`;
       return row;
     }
 

@@ -833,7 +833,7 @@
         <tr>
           <td class="text-muted">${s.sort_order}</td>
           <td>
-            <div style="font-weight:600;">${esc(s.name)}</div>
+            <div style="font-weight:600;">${esc(s.name)} ${(s.is_extra || s.is_visible === false) ? '<span style="background:#fef3c7;color:#92400e;font-size:.68rem;font-weight:700;padding:.1rem .45rem;border-radius:10px;">EXTRA · caché du site</span>' : ''}</div>
             ${s.description ? `<div class="text-muted" style="font-size:.8rem;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(s.description)}</div>` : ''}
           </td>
           <td><span class="status-badge confirmed">${CATEGORY_LABELS[s.category] || s.category}</span></td>

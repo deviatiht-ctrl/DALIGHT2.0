@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Codes Promo &amp; Influenceurs - DALIGHT Admin</title>
+
+  <link href="../vendor/fonts/inter-fonts.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css?v=202606211733">
+  <script src="../vendor/supabase/supabase.min.js"></script>
+  <style>
+    .toggle-switch { position:relative; display:inline-block; width:40px; height:22px; }
+    .toggle-switch input { opacity:0; width:0; height:0; }
+    .toggle-slider { position:absolute; inset:0; cursor:pointer; background:#4b5563; border-radius:22px; transition:.2s; }
+    .toggle-slider:before { content:''; position:absolute; height:16px; width:16px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; }
+    .toggle-switch input:checked + .toggle-slider { background:#22c55e; }
+    .toggle-switch input:checked + .toggle-slider:before { transform:translateX(18px); }
+    .form-group label { display:block; margin-bottom:.3rem; font-size:.78rem; font-weight:600; color:var(--admin-text-muted); }
+  </style>
+</head>
+<body>
+  <aside class="admin-sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="sidebar-logo">
+        <img src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" onerror="this.style.display='none'">
+        <div class="sidebar-logo-text">DALIGHT<span>Administration</span></div>
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Principal</div>
+        <a href="dashboard.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Dashboard</a>
+        <a href="reservations.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Réservations<span class="badge" id="pending-count">0</span></a>
+        <a href="client-tracking.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>Suivi clients</a>
+        <a href="loyalty-cards.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>Cartes de Fidélité</a>
+        <a href="promo-codes.html" class="nav-item active"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>Codes Promo</a>
+        <a href="pos.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>Caisse / POS</a>
+        <a href="retraits.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Retraits &amp; Revenus</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Contenu</div>
+        <a href="posts.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>Posts &amp; Vidéos</a>
+        <a href="formations.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>Formations</a>
+        <a href="services.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>Services</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Utilisateurs</div>
+        <a href="clients.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>Clients</a>
+        <a href="emails.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 00-2 2z"/></svg>Templates Email</a>
+        <a href="messages.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>Messages</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Système</div>
+        <a href="settings.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Paramètres</a>
+        <a href="../index.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>Voir le site</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="user-avatar">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="user-name">Admin</div>
+          <div class="sidebar-user-role">Administrateur</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <header class="admin-header">
+      <div class="header-left">
+        <button class="mobile-menu-btn" id="mobile-menu-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <h1 class="page-title">Codes Promo &amp; Influenceurs</h1>
+      </div>
+      <div class="header-right">
+        <button class="header-btn" id="logout-btn" title="Déconnexion"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
+      </div>
+    </header>
+
+    <div class="admin-content">
+      <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+        <div class="glass-card stat-card">
+          <div class="stat-icon blue">🏷️</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-total-codes">0</div>
+            <div class="stat-label">Codes actifs</div>
+          </div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-icon gold">📊</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-uses-month">0</div>
+            <div class="stat-label">Utilisations ce mois</div>
+          </div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-icon green">💵</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-commission-month">0 HTG</div>
+            <div class="stat-label">Commissions ce mois</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabs" style="display:flex;gap:.5rem;margin-bottom:1rem;">
+        <button class="btn btn-primary btn-sm tab-btn active" id="tab-codes" onclick="switchTab('codes')">Codes promo</button>
+        <button class="btn btn-secondary btn-sm tab-btn" id="tab-commissions" onclick="switchTab('commissions')">Commissions influenceurs</button>
+        <button class="btn btn-secondary btn-sm tab-btn" id="tab-uses" onclick="switchTab('uses')">Historique utilisations</button>
+        <button class="btn btn-secondary btn-sm tab-btn" id="tab-payouts" onclick="switchTab('payouts')">Retraits influenceurs <span class="badge" id="payout-pending-badge" style="display:none;background:#f59e0b;color:#000;">0</span></button>
+      </div>
+
+      <!-- TAB: CODES -->
+      <div id="content-codes" class="tab-content active">
+        <div class="glass-card" style="margin-bottom:1rem;">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title" id="promo-form-title">Créer un code promo</h3>
+              <p class="card-subtitle">Code pour admin, influenceur (commission) ou client (parrainage → points)</p>
+            </div>
+          </div>
+          <input type="hidden" id="pc-id">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.75rem;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Code *</label>
+              <div style="display:flex;gap:.4rem;">
+                <input class="form-input" id="pc-code" placeholder="EX: SOLDA10" style="text-transform:uppercase;">
+                <button class="btn btn-secondary btn-sm" type="button" onclick="genCode()">🎲</button>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Type de code</label>
+              <select class="form-input" id="pc-owner-type" onchange="toggleOwnerFields()">
+                <option value="admin">Admin (promo générale)</option>
+                <option value="influencer">Influenceur (commission)</option>
+                <option value="client">Client (parrainage → points)</option>
+              </select>
+            </div>
+            <div class="form-group" id="fg-owner-name" style="margin-bottom:0;display:none;">
+              <label class="form-label">Nom (influenceur/client)</label>
+              <input class="form-input" id="pc-owner-name" placeholder="Ex: @influencer ou nom">
+            </div>
+            <div class="form-group" id="fg-owner-email" style="margin-bottom:0;display:none;">
+              <label class="form-label">Email du propriétaire</label>
+              <input class="form-input" id="pc-owner-email" placeholder="email du client/influenceur">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Type de rabais</label>
+              <select class="form-input" id="pc-discount-type">
+                <option value="percentage">Pourcentage (%)</option>
+                <option value="fixed_htg">Montant fixe (HTG)</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Valeur du rabais *</label>
+              <input class="form-input" type="number" id="pc-discount-value" min="0" step="0.01" placeholder="Ex: 10">
+            </div>
+            <div class="form-group" id="fg-commission" style="margin-bottom:0;display:none;">
+              <label class="form-label">Commission influenceur (%)</label>
+              <input class="form-input" type="number" id="pc-commission" min="0" max="100" step="0.5" placeholder="Ex: 10">
+            </div>
+            <div class="form-group" id="fg-points" style="margin-bottom:0;display:none;">
+              <label class="form-label">Points fidélité / utilisation</label>
+              <input class="form-input" type="number" id="pc-points" min="0" step="1" value="50">
+            </div>
+            <div class="form-group" id="fg-password" style="margin-bottom:0;display:none;">
+              <label class="form-label">Modpas pou kont influencer an *</label>
+              <input class="form-input" type="text" id="pc-password" placeholder="Min. 6 karaktè" autocomplete="off">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Valable sur</label>
+              <select class="form-input" id="pc-applies">
+                <option value="all">Services + Produits</option>
+                <option value="services">Services seulement</option>
+                <option value="products">Produits seulement</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Max utilisations (vide = illimité)</label>
+              <input class="form-input" type="number" id="pc-max-uses" min="1" placeholder="Illimité">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Expire le (vide = jamais)</label>
+              <input class="form-input" type="date" id="pc-valid-until">
+            </div>
+            <div class="form-group" style="margin-bottom:0;display:flex;align-items:flex-end;gap:.5rem;">
+              <label class="d-flex align-center gap-2" style="cursor:pointer;">
+                <input type="checkbox" id="pc-active" checked style="width:18px;height:18px;">
+                <span>Actif</span>
+              </label>
+            </div>
+          </div>
+          <div id="pc-account-note" style="display:none;margin-top:.75rem;padding:.6rem .8rem;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.3);border-radius:8px;font-size:.8rem;color:#93c5fd;">
+            ℹ️ Yon kont influencer ap kreye/mete ajou ak imèl + modpas sa yo — li ka konekte sou <strong>pages/influencer.html</strong> pou wè estatistik + komisyon l epi mande retrè.
+          </div>
+          <div style="display:flex;gap:.5rem;margin-top:1rem;">
+            <button class="btn btn-primary" id="pc-save-btn" onclick="savePromoCode()">Enregistrer</button>
+            <button class="btn btn-secondary" onclick="resetPromoForm()">Réinitialiser</button>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Tous les codes</h3>
+              <p class="card-subtitle" id="codes-count">0 codes</p>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Rabais</th>
+                  <th>Type / Propriétaire</th>
+                  <th>Commission</th>
+                  <th>Utilisations</th>
+                  <th>Validité</th>
+                  <th>Statut</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="codes-table">
+                <tr><td colspan="8" class="text-center text-muted" style="padding:2rem;"><div class="loading-spinner"></div>Chargement...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: COMMISSIONS -->
+      <div id="content-commissions" class="tab-content" style="display:none;">
+        <div class="glass-card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Commissions par mois</h3>
+              <p class="card-subtitle">Komisyon influencer yo sou rezervasyon COMPLETED ki itilize kòd yo</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="loadCommissions()">🔄 Rafraîchir</button>
+          </div>
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Mois</th>
+                  <th>Code</th>
+                  <th>Propriétaire</th>
+                  <th>Utilisations</th>
+                  <th>Revenu (services terminés)</th>
+                  <th>Commission</th>
+                  <th>Déjà payé</th>
+                </tr>
+              </thead>
+              <tbody id="commissions-table">
+                <tr><td colspan="7" class="text-center text-muted" style="padding:2rem;">Chargement...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: USES -->
+      <div id="content-uses" class="tab-content" style="display:none;">
+        <div class="glass-card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Historique des utilisations</h3>
+              <p class="card-subtitle">Chak fwa yon kliyan itilize yon kòd</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="loadUses()">🔄 Rafraîchir</button>
+          </div>
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Code</th>
+                  <th>Client</th>
+                  <th>Rabais</th>
+                  <th>Commission</th>
+                  <th>Payée ?</th>
+                </tr>
+              </thead>
+              <tbody id="uses-table">
+                <tr><td colspan="6" class="text-center text-muted" style="padding:2rem;">Chargement...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- TAB: PAYOUTS -->
+      <div id="content-payouts" class="tab-content" style="display:none;">
+        <div class="glass-card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Demandes de retrait</h3>
+              <p class="card-subtitle">Influencer yo mande peye komisyon yo — "Payée" mak itilizasyon yo kòm peye</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="loadPayouts()">🔄 Rafraîchir</button>
+          </div>
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Date demande</th>
+                  <th>Influenceur</th>
+                  <th>Mois</th>
+                  <th>Montant</th>
+                  <th>Méthode / Kont</th>
+                  <th>Statut</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="payouts-table">
+                <tr><td colspan="7" class="text-center text-muted" style="padding:2rem;">Chargement...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/admin-core.js?v=202607081600"></script>
+  <script>
+    let allCodes = [];
+    let allUses = [];
+    const sb = () => window.supabaseClient || window.adminCore?.supabase;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await new Promise(r => setTimeout(r, 100));
+      const session = await window.adminCore?.checkAdminAuth();
+      if (!session) return;
+      toggleOwnerFields();
+      await loadCodes();
+      loadCommissions();
+      loadUses();
+      loadPayouts();
+    });
+
+    window.switchTab = function(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'btn-primary'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.add('btn-secondary'));
+      document.getElementById('tab-' + tab).classList.add('active', 'btn-primary');
+      document.getElementById('tab-' + tab).classList.remove('btn-secondary');
+      ['codes','commissions','uses','payouts'].forEach(t => {
+        document.getElementById('content-' + t).style.display = (t === tab) ? '' : 'none';
+      });
+    };
+
+    window.toggleOwnerFields = function() {
+      const t = document.getElementById('pc-owner-type').value;
+      const isEditing = !!document.getElementById('pc-id').value;
+      document.getElementById('fg-owner-name').style.display = t === 'admin' ? 'none' : '';
+      document.getElementById('fg-owner-email').style.display = t === 'admin' ? 'none' : '';
+      document.getElementById('fg-commission').style.display = t === 'influencer' ? '' : 'none';
+      document.getElementById('fg-points').style.display = t === 'client' ? '' : 'none';
+      // Chanp modpas: sèlman influencer (si n ap kreye kont oswa mete modpas ajou)
+      document.getElementById('fg-password').style.display = t === 'influencer' ? '' : 'none';
+      document.getElementById('pc-account-note').style.display = t === 'influencer' ? '' : 'none';
+      if (isEditing) {
+        document.getElementById('pc-account-note').innerHTML = 'ℹ️ Si ou antre yon modpas, kont influencer lan ap mete ajou. Vide = pa chanje modpas la.';
+      } else {
+        document.getElementById('pc-account-note').innerHTML = 'ℹ️ Yon kont influencer ap kreye/mete ajou ak imèl + modpas sa yo — li ka konekte sou <strong>pages/influencer.html</strong> pou wè estatistik + komisyon l epi mande retrè.';
+      }
+    };
+
+    window.genCode = function() {
+      const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+      let c = '';
+      for (let i = 0; i < 6; i++) c += chars[Math.floor(Math.random() * chars.length)];
+      document.getElementById('pc-code').value = c;
+    };
+
+    function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function fmtHTG(n) { return Number(n || 0).toLocaleString() + ' HTG'; }
+
+    async function loadCodes() {
+      const tbody = document.getElementById('codes-table');
+      try {
+        const { data, error } = await sb().from('promo_codes').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        allCodes = data || [];
+        document.getElementById('codes-count').textContent = allCodes.length + ' code(s)';
+        document.getElementById('stat-total-codes').textContent = allCodes.filter(c => c.is_active).length;
+        renderCodes();
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="padding:1.5rem;color:#f87171;">Erreur: ${esc(err.message)} — Exécutez <code>misajour/37_promo_codes_system.sql</code> dans Supabase.</td></tr>`;
+      }
+    }
+
+    function renderCodes() {
+      const tbody = document.getElementById('codes-table');
+      if (!allCodes.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted" style="padding:2rem;">Aucun code promo. Créez-en un ci-dessus.</td></tr>';
+        return;
+      }
+      const typeLabel = { admin: 'Admin', influencer: 'Influenceur', client: 'Client' };
+      tbody.innerHTML = allCodes.map(c => {
+        const discount = c.discount_type === 'percentage' ? c.discount_value + '%' : fmtHTG(c.discount_value);
+        const owner = c.owner_type !== 'admin'
+          ? `<div style="font-size:.78rem;color:var(--admin-text-muted);">${esc(c.owner_name || '')}${c.owner_email ? ' · ' + esc(c.owner_email) : ''}</div>` : '';
+        const commission = c.owner_type === 'influencer' && c.commission_pct > 0
+          ? `<span class="status-badge completed">${c.commission_pct}%</span>`
+          : c.owner_type === 'client' && c.points_per_use > 0
+            ? `<span class="status-badge pending">+${c.points_per_use} pts</span>` : '—';
+        const validity = c.valid_until ? new Date(c.valid_until).toLocaleDateString('fr-FR') : '∞';
+        const maxUses = c.max_uses ? `${c.uses_count || 0}/${c.max_uses}` : `${c.uses_count || 0}`;
+        return `<tr>
+          <td><code style="font-weight:700;font-size:.95rem;">${esc(c.code)}</code><div style="font-size:.72rem;color:var(--admin-text-muted);">${esc(c.applies_to || 'all')}</div></td>
+          <td><strong>${discount}</strong></td>
+          <td>${typeLabel[c.owner_type] || 'Admin'}${owner}</td>
+          <td>${commission}</td>
+          <td>${maxUses}</td>
+          <td>${validity}</td>
+          <td><label class="toggle-switch"><input type="checkbox" ${c.is_active ? 'checked' : ''} onchange="togglePromo('${c.id}',this.checked)"><span class="toggle-slider"></span></label></td>
+          <td>
+            <div class="action-btns" style="display:flex;gap:.3rem;">
+              <button class="btn btn-secondary btn-sm" onclick="editPromo('${c.id}')">✏️</button>
+              <button class="btn btn-danger btn-sm" onclick="deletePromo('${c.id}','${esc(c.code)}')">🗑️</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    window.editPromo = function(id) {
+      const c = allCodes.find(x => x.id === id);
+      if (!c) return;
+      document.getElementById('pc-id').value = c.id;
+      document.getElementById('pc-code').value = c.code;
+      document.getElementById('pc-owner-type').value = c.owner_type || 'admin';
+      document.getElementById('pc-owner-name').value = c.owner_name || '';
+      document.getElementById('pc-owner-email').value = c.owner_email || '';
+      document.getElementById('pc-discount-type').value = c.discount_type || 'percentage';
+      document.getElementById('pc-discount-value').value = c.discount_value;
+      document.getElementById('pc-commission').value = c.commission_pct || 0;
+      document.getElementById('pc-points').value = c.points_per_use ?? 50;
+      document.getElementById('pc-applies').value = c.applies_to || 'all';
+      document.getElementById('pc-max-uses').value = c.max_uses || '';
+      document.getElementById('pc-valid-until').value = c.valid_until ? c.valid_until.substring(0, 10) : '';
+      document.getElementById('pc-active').checked = c.is_active;
+      document.getElementById('promo-form-title').textContent = 'Modifier — ' + c.code;
+      toggleOwnerFields();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.resetPromoForm = function() {
+      ['pc-id','pc-code','pc-owner-name','pc-owner-email','pc-discount-value','pc-commission','pc-max-uses','pc-valid-until','pc-password'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+      });
+      document.getElementById('pc-owner-type').value = 'admin';
+      document.getElementById('pc-discount-type').value = 'percentage';
+      document.getElementById('pc-applies').value = 'all';
+      document.getElementById('pc-points').value = 50;
+      document.getElementById('pc-active').checked = true;
+      document.getElementById('promo-form-title').textContent = 'Créer un code promo';
+      toggleOwnerFields();
+    };
+
+    window.savePromoCode = async function() {
+      const id = document.getElementById('pc-id').value || null;
+      const code = document.getElementById('pc-code').value.trim().toUpperCase();
+      const discountValue = parseFloat(document.getElementById('pc-discount-value').value);
+      if (!code) { alert('Code requis'); return; }
+      if (!discountValue || discountValue <= 0) { alert('Valeur du rabais requise'); return; }
+      const ownerType = document.getElementById('pc-owner-type').value;
+      const validUntil = document.getElementById('pc-valid-until').value;
+
+      const payload = {
+        code,
+        owner_type: ownerType,
+        owner_name: ownerType === 'admin' ? null : document.getElementById('pc-owner-name').value.trim() || null,
+        owner_email: ownerType === 'admin' ? null : (document.getElementById('pc-owner-email').value.trim().toLowerCase() || null),
+        discount_type: document.getElementById('pc-discount-type').value,
+        discount_value: discountValue,
+        commission_pct: ownerType === 'influencer' ? (parseFloat(document.getElementById('pc-commission').value) || 0) : 0,
+        points_per_use: ownerType === 'client' ? (parseInt(document.getElementById('pc-points').value, 10) || 0) : 0,
+        applies_to: document.getElementById('pc-applies').value,
+        max_uses: parseInt(document.getElementById('pc-max-uses').value, 10) || null,
+        valid_until: validUntil ? new Date(validUntil + 'T23:59:59').toISOString() : null,
+        is_active: document.getElementById('pc-active').checked,
+        updated_at: new Date().toISOString(),
+      };
+
+      const btn = document.getElementById('pc-save-btn');
+      btn.disabled = true;
+      try {
+        let res;
+        if (id) res = await sb().from('promo_codes').update(payload).eq('id', id).select('id').single();
+        else res = await sb().from('promo_codes').insert(payload).select('id').single();
+        if (res.error) throw res.error;
+        const promoId = res.data?.id || id;
+
+        // Kreye/mete ajou kont influencer an (imèl + modpas) via edge function
+        if (ownerType === 'influencer' && payload.owner_email) {
+          const password = document.getElementById('pc-password').value.trim();
+          try {
+            const { data: { session } } = await sb().auth.getSession();
+            const { data: fnData, error: fnErr } = await sb().functions.invoke('admin-create-influencer', {
+              body: {
+                email: payload.owner_email,
+                password: password || null,
+                full_name: payload.owner_name,
+                promo_code_id: promoId,
+              },
+              headers: session?.access_token ? { Authorization: 'Bearer ' + session.access_token } : {},
+            });
+            if (fnErr) throw fnErr;
+            if (fnData && fnData.success === false) throw new Error(fnData.error || 'Echèk kreyasyon kont');
+            if (fnData?.alreadyExisted && !password) {
+              window.adminCore?.showToast?.('Code sove ✓ — kont influencer lan egziste deja', 'info');
+            } else {
+              window.adminCore?.showToast?.('Code + kont influencer kreye ✓', 'success');
+            }
+          } catch (fnErr) {
+            console.error('create-influencer:', fnErr);
+            window.adminCore?.showToast?.('Code sove ✓ men kont la pa t kreye: ' + (fnErr.message || ''), 'warning');
+          }
+        } else {
+          window.adminCore?.showToast?.(id ? 'Code mis à jour ✓' : 'Code créé ✓');
+        }
+
+        resetPromoForm();
+        await loadCodes();
+      } catch (err) {
+        alert('Erreur: ' + err.message);
+      } finally { btn.disabled = false; }
+    };
+
+    window.togglePromo = async function(id, state) {
+      try {
+        const { error } = await sb().from('promo_codes').update({ is_active: state }).eq('id', id);
+        if (error) throw error;
+        await loadCodes();
+      } catch (err) { alert('Erreur: ' + err.message); }
+    };
+
+    window.deletePromo = async function(id, code) {
+      if (!confirm(`Supprimer le code "${code}" ?`)) return;
+      try {
+        const { error } = await sb().from('promo_codes').delete().eq('id', id);
+        if (error) throw error;
+        window.adminCore?.showToast?.('Code supprimé ✓');
+        await loadCodes();
+      } catch (err) { alert('Erreur: ' + err.message); }
+    };
+
+    // ─── Commissions & uses ───────────────────────────────────
+    async function loadCommissions() {
+      const tbody = document.getElementById('commissions-table');
+      try {
+        const { data, error } = await sb().rpc('promo_commission_report');
+        if (error) throw error;
+        const rows = (data || []).filter(r => r.owner_type === 'influencer' || r.owner_type === 'client');
+        if (!rows.length) {
+          tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:2rem;">Aucune utilisation de code encore.</td></tr>';
+        } else {
+          tbody.innerHTML = rows.map(r => `<tr>
+            <td><strong>${esc(r.month)}</strong></td>
+            <td><code>${esc(r.code)}</code></td>
+            <td>${esc(r.owner_name || '—')}<div style="font-size:.75rem;color:var(--admin-text-muted);">${esc(r.owner_email || '')}</div></td>
+            <td>${r.uses_count}</td>
+            <td>${fmtHTG(r.revenue_htg)}</td>
+            <td><strong style="color:#4ade80;">${fmtHTG(r.commission_htg)}</strong></td>
+            <td>${fmtHTG(r.commission_paid_htg)}</td>
+          </tr>`).join('');
+        }
+        // Stats header
+        const month = new Date().toISOString().substring(0, 7);
+        const monthRows = rows.filter(r => r.month === month);
+        document.getElementById('stat-uses-month').textContent = monthRows.reduce((s, r) => s + Number(r.uses_count || 0), 0);
+        document.getElementById('stat-commission-month').textContent = fmtHTG(monthRows.reduce((s, r) => s + Number(r.commission_htg || 0), 0));
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding:1.5rem;color:#f87171;">${esc(err.message)}</td></tr>`;
+      }
+    }
+
+    async function loadUses() {
+      const tbody = document.getElementById('uses-table');
+      try {
+        const { data, error } = await sb().from('promo_code_uses').select('*').order('created_at', { ascending: false }).limit(200);
+        if (error) throw error;
+        allUses = data || [];
+        if (!allUses.length) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:2rem;">Aucune utilisation.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = allUses.map(u => `<tr>
+          <td>${new Date(u.created_at).toLocaleString('fr-FR')}</td>
+          <td><code>${esc(u.code)}</code></td>
+          <td>${esc(u.client_email || '—')}</td>
+          <td>${fmtHTG(u.discount_amount)}</td>
+          <td>${fmtHTG(u.commission_amount)}</td>
+          <td><label class="toggle-switch"><input type="checkbox" ${u.commission_paid ? 'checked' : ''} onchange="markPaid('${u.id}',this.checked)"><span class="toggle-slider"></span></label></td>
+        </tr>`).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center" style="padding:1.5rem;color:#f87171;">${esc(err.message)}</td></tr>`;
+      }
+    }
+
+    window.markPaid = async function(id, paid) {
+      try {
+        const { error } = await sb().from('promo_code_uses').update({ commission_paid: paid }).eq('id', id);
+        if (error) throw error;
+        window.adminCore?.showToast?.(paid ? 'Commission marquée payée ✓' : 'Marqué non payée');
+        loadCommissions();
+      } catch (err) { alert('Erreur: ' + err.message); }
+    };
+
+    // ─── Demann retrè influencer ─────────────────────────────
+    async function loadPayouts() {
+      const tbody = document.getElementById('payouts-table');
+      try {
+        const { data, error } = await sb().from('payout_requests').select('*').order('created_at', { ascending: false }).limit(100);
+        if (error) throw error;
+        const rows = data || [];
+        const pending = rows.filter(r => r.status === 'pending').length;
+        const badge = document.getElementById('payout-pending-badge');
+        badge.style.display = pending ? '' : 'none';
+        badge.textContent = pending;
+
+        if (!rows.length) {
+          tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:2rem;">Aucune demande de retrait.</td></tr>';
+          return;
+        }
+        const statusBadge = { pending: 'pending', approved: 'confirmed', paid: 'completed', rejected: 'cancelled' };
+        const statusTxt = { pending: 'En attente', approved: 'Approuvée', paid: 'Payée', rejected: 'Rejetée' };
+        tbody.innerHTML = rows.map(r => `<tr>
+          <td>${new Date(r.created_at).toLocaleDateString('fr-FR')}</td>
+          <td>${esc(r.owner_email)}</td>
+          <td><strong>${esc(r.month)}</strong></td>
+          <td><strong>${fmtHTG(r.amount_htg)}</strong></td>
+          <td>${esc(r.payment_method || '—')}<div style="font-size:.75rem;color:var(--admin-text-muted);">${esc(r.account_info || '')}</div></td>
+          <td><span class="status-badge ${statusBadge[r.status] || 'pending'}">${statusTxt[r.status] || r.status}</span></td>
+          <td>
+            <div style="display:flex;gap:.3rem;">
+              ${r.status === 'pending' ? `<button class="btn btn-primary btn-sm" onclick="processPayout('${r.id}','approved')">✓ Approuver</button>
+              <button class="btn btn-danger btn-sm" onclick="processPayout('${r.id}','rejected')">✕</button>` : ''}
+              ${r.status === 'approved' ? `<button class="btn btn-primary btn-sm" onclick="processPayout('${r.id}','paid')">💵 Payée</button>` : ''}
+            </div>
+          </td>
+        </tr>`).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding:1.5rem;color:#f87171;">${esc(err.message)} — Exécutez <code>misajour/38_influencer_portal.sql</code></td></tr>`;
+      }
+    }
+
+    window.processPayout = async function(id, status) {
+      const labels = { approved: 'Approuver', paid: 'Marquer payée (komisyon yo ap mak "payée" tou)', rejected: 'Rejeter' };
+      if (!confirm(labels[status] + ' ?')) return;
+      try {
+        const { data: { session } } = await sb().auth.getSession();
+        const { error } = await sb().from('payout_requests').update({
+          status,
+          processed_at: new Date().toISOString(),
+          processed_by: session?.user?.email || 'admin',
+        }).eq('id', id);
+        if (error) throw error;
+
+        // Si peye → mak tout itilizasyon influencer sa a nan mwa a kòm peye
+        if (status === 'paid') {
+          const { data: pr } = await sb().from('payout_requests').select('owner_email,month').eq('id', id).single();
+          if (pr) {
+            const start = pr.month + '-01';
+            const end = new Date(new Date(start).getFullYear(), new Date(start).getMonth() + 1, 1).toISOString().substring(0, 10);
+            // Jwenn tout kòd influencer sa a
+            const { data: codes } = await sb().from('promo_codes').select('id').ilike('owner_email', pr.owner_email);
+            if (codes?.length) {
+              const codeIds = codes.map(c => c.id);
+              const { data: uses } = await sb().from('promo_code_uses').select('id,created_at')
+                .in('promo_code_id', codeIds)
+                .gte('created_at', start).lt('created_at', end);
+              if (uses?.length) {
+                await sb().from('promo_code_uses').update({ commission_paid: true }).in('id', uses.map(u => u.id));
+              }
+            }
+          }
+        }
+        window.adminCore?.showToast?.('Demande ' + (status === 'paid' ? 'payée' : status === 'approved' ? 'approuvée' : 'rejetée') + ' ✓');
+        loadPayouts();
+        loadCommissions();
+      } catch (err) { alert('Erreur: ' + err.message); }
+    };
+  </script>
+</body>
+</html>

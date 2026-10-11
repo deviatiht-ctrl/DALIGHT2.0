@@ -85,7 +85,7 @@
               <input type="checkbox" />
               <span>Se souvenir de moi</span>
             </label>
-            <a class="link-muted" href="#">Mot de passe oublié ?</a>
+            <a class="link-muted" href="#" id="forgot-password-link">Mot de passe oublié ?</a>
           </div>
           <button class="btn" type="submit">Se connecter</button>
           <p class="form-note">Pas encore de compte ? <a href="./register.html">Créez-en un</a>.</p>
@@ -97,6 +97,25 @@
         </div>
       </section>
     </main>
+
+    <!-- Modal: Mot de passe oublié -->
+    <div id="forgot-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center;padding:1rem;">
+      <div class="card" style="max-width:420px;width:100%;padding:1.75rem;background:#fff;border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.25);">
+        <h3 style="margin-top:0;">Réinitialiser le mot de passe</h3>
+        <p style="font-size:.9rem;color:#6b7280;">Antre imèl ou a — n ap voye yon lyen ba ou pou ou kreye yon nouvo modpas.</p>
+        <form id="forgot-form">
+          <div class="input-group">
+            <label for="forgot-email">Email</label>
+            <input type="email" id="forgot-email" name="email" required placeholder="you@email.com" />
+          </div>
+          <div id="forgot-message" role="status"></div>
+          <div style="display:flex;gap:.5rem;margin-top:1rem;">
+            <button type="button" class="btn ghost" id="forgot-cancel" style="flex:1;">Annuler</button>
+            <button type="submit" class="btn" id="forgot-submit" style="flex:1;">Voye lyen an</button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <footer class="site-footer">
       <p>© <span id="year"></span> DALIGHT. Tous droits réservés.</p>

@@ -1328,6 +1328,14 @@
                 <span>Total des services</span>
                 <strong id="summary-total">-</strong>
               </div>
+              <div class="summary-row" id="summary-discount-row" style="display:none;">
+                <span><i data-lucide="tag" style="width: 16px; vertical-align: middle; margin-right: 0.5rem;"></i>Code promo <span id="summary-promo-code" style="font-family:monospace;"></span></span>
+                <strong id="summary-discount" style="color:#16a34a;">-</strong>
+              </div>
+              <div class="summary-row" id="summary-total-final-row" style="display:none;border-top:1px dashed rgba(74,55,40,.2);padding-top:.5rem;">
+                <span><strong>Total à payer</strong></span>
+                <strong id="summary-total-final" style="color:#D4AF37;font-size:1.1rem;">-</strong>
+              </div>
             </div>
 
             <div class="deposit-notice">
@@ -1398,6 +1406,16 @@
               </p>
             </div>
 
+            <!-- Code promo / parrainage -->
+            <div class="promo-box" style="margin: 1.5rem 0; padding: 1.25rem; background: #faf8f6; border-radius: 12px; border: 1px solid rgba(74,55,40,0.1);">
+              <h4 style="margin: 0 0 .75rem; color: #4A3728;">🏷️ Code promo ou code de parrainage</h4>
+              <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                <input type="text" id="promo-code-input" placeholder="Ex: REF-ABC123" style="flex:1;min-width:180px;padding:.75rem;border:1px solid #ddd;border-radius:8px;font-size:.95rem;text-transform:uppercase;">
+                <button type="button" class="btn-next" id="btn-apply-promo" style="padding:.75rem 1.25rem;">Appliquer</button>
+              </div>
+              <div id="promo-message" style="margin-top:.6rem;font-size:.88rem;display:none;"></div>
+            </div>
+
             <h4 style="margin: 2rem 0 1rem;" id="payment-heading-display">Méthode de paiement</h4>
             <div class="payment-methods" id="resv-payment-methods-container">
               <div style="padding:.75rem;color:var(--marron-600);font-size:.9rem;">Chargement des modes de paiement...</div>
@@ -1451,26 +1469,16 @@
 
     <!-- Footer -->
     <footer class="site-footer">
-      <div class="container footer-grid">
-        <div class="footer-brand">
-          <img src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" width="100" />
-          <p>Luxury Head Spa Haïtien.<br />Renaître par la racine.</p>
-        </div>
-        <div class="footer-contact">
-          <h4>Contact</h4>
-          <p>+509 4747-7221</p>
-          <p>dalightbeauty15mai@gmail.com</p>
-          <p>Delmas 65 Rue durandisse #10</p>
-        </div>
-        <div class="footer-hours">
-          <h4>Horaires</h4>
-          <p>Tous les jours<br />07h00 — 17h00</p>
-        </div>
+      <p>© <span id="year"></span> DALIGHT. Tous droits réservés.</p>
+      <div class="footer-links">
+        <a href="./login.html">Espace client</a>
+        <a href="./services.html">Nos Services</a>
+        <a href="mailto:dalightbeauty15mai@gmail.com">dalightbeauty15mai@gmail.com</a>
       </div>
       <div class="footer-credit">
         <span>Conçu avec soin par <a href="https://cvisualagency.org" target="_blank" rel="noopener" class="cvisual-link">Cvisual</a></span>
       </div>
-</footer>
+    </footer>
 
     <!-- Mobile Nav -->
     <nav class="mobile-nav" aria-label="Navigation mobile"></nav>
@@ -1771,12 +1779,17 @@ function loadCartData() {
         }
 
         // Update payment choice amounts
-        const totalAmount = getEffectiveTotal();
+        const totalAmount = getDiscountedTotal();
         const depositAmount = calcDeposit(cartServices);
         const depositDisplay = document.getElementById('choice-deposit-amount');
         const fullDisplay = document.getElementById('choice-full-amount');
         if (depositDisplay) depositDisplay.textContent = `${depositAmount.toLocaleString()} HTG${getFeeNote()}`;
-        if (fullDisplay) fullDisplay.textContent = `${totalAmount.toLocaleString()} HTG${getFeeNote()}`;
+        if (fullDisplay) {
+          const d = getDiscountAmount();
+          fullDisplay.textContent = d > 0
+            ? `${totalAmount.toLocaleString()} HTG (−${d.toLocaleString()})${getFeeNote()}`
+            : `${totalAmount.toLocaleString()} HTG${getFeeNote()}`;
+        }
         console.log('Payment choice amounts updated:', { depositAmount, totalAmount });
 
         // Step 5: payment
@@ -1868,7 +1881,7 @@ function loadCartData() {
               selectedCard.style.background = 'rgba(212,175,55,0.08)';
             }
             // Update payment heading
-            const totalAmount = getEffectiveTotal();
+            const totalAmount = getDiscountedTotal();
             const depositAmount = calcDeposit(cartServices);
             console.log('Payment choice:', choice, 'Deposit:', depositAmount, 'Total:', totalAmount);
             if (choice === 'deposit') {
@@ -1885,6 +1898,12 @@ function loadCartData() {
               }
             }
           });
+        });
+
+        // Promo code
+        document.getElementById('btn-apply-promo')?.addEventListener('click', applyPromoCode);
+        document.getElementById('promo-code-input')?.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); applyPromoCode(); }
         });
 
         // Initialize first payment choice card as selected
@@ -2141,6 +2160,136 @@ function loadCartData() {
       function getEffectiveTotal() { return cartServices.reduce((sum, s) => sum + getEffectivePriceHTG(s), 0); }
       function getFeeNote() { return isBankTransferPayment() ? ' (virement bancaire - sans frais)' : ' (incl. 3% Moncash)'; }
 
+      // ── Sistèm kòd promo / parrainage ──────────────────────────
+      let appliedPromo = null; // { id, code, discount_type, discount_value, owner_type, owner_email }
+
+      function getDiscountAmount() {
+        if (!appliedPromo) return 0;
+        const total = getEffectiveTotal();
+        let d = 0;
+        if (appliedPromo.discount_type === 'percentage') {
+          d = Math.round(total * Number(appliedPromo.discount_value) / 100);
+        } else if (appliedPromo.discount_type === 'fixed_htg') {
+          d = Math.round(Number(appliedPromo.discount_value));
+        }
+        return Math.min(Math.max(d, 0), total);
+      }
+
+      function getDiscountedTotal() {
+        return Math.max(0, getEffectiveTotal() - getDiscountAmount());
+      }
+
+      function showPromoMessage(ok, text) {
+        const el = document.getElementById('promo-message');
+        if (!el) return;
+        el.style.display = 'block';
+        el.style.color = ok ? '#16a34a' : '#dc2626';
+        el.textContent = text;
+      }
+
+      function refreshPromoDisplays() {
+        const discount = getDiscountAmount();
+        const total = getEffectiveTotal();
+        const finalTotal = getDiscountedTotal();
+
+        // Summary rows (step 4)
+        const dRow = document.getElementById('summary-discount-row');
+        const fRow = document.getElementById('summary-total-final-row');
+        if (appliedPromo && discount > 0) {
+          if (dRow) {
+            dRow.style.display = '';
+            document.getElementById('summary-promo-code').textContent = appliedPromo.code;
+            document.getElementById('summary-discount').textContent = '-' + discount.toLocaleString() + ' HTG';
+          }
+          if (fRow) {
+            fRow.style.display = '';
+            document.getElementById('summary-total-final').textContent = finalTotal.toLocaleString() + ' HTG';
+          }
+        } else {
+          if (dRow) dRow.style.display = 'none';
+          if (fRow) fRow.style.display = 'none';
+        }
+
+        // Payment choice amounts
+        const depositAmount = calcDeposit(cartServices);
+        const depositDisplay = document.getElementById('choice-deposit-amount');
+        const fullDisplay = document.getElementById('choice-full-amount');
+        if (depositDisplay) depositDisplay.textContent = `${depositAmount.toLocaleString()} HTG${getFeeNote()}`;
+        if (fullDisplay) fullDisplay.textContent = discount > 0
+          ? `${finalTotal.toLocaleString()} HTG (−${discount.toLocaleString()})${getFeeNote()}`
+          : `${total.toLocaleString()} HTG${getFeeNote()}`;
+
+        updateSummary();
+      }
+
+      async function applyPromoCode() {
+        const input = document.getElementById('promo-code-input');
+        const code = (input?.value || '').trim().toUpperCase();
+        if (!code) { showPromoMessage(false, 'Antre yon kòd promo.'); return; }
+
+        const supabaseClient = getSupabaseClient();
+        if (!supabaseClient) { showPromoMessage(false, 'Connexion indisponible.'); return; }
+
+        const btn = document.getElementById('btn-apply-promo');
+        if (btn) btn.disabled = true;
+        try {
+          const { data, error } = await supabaseClient
+            .from('promo_codes')
+            .select('*')
+            .ilike('code', code)
+            .eq('is_active', true)
+            .limit(1);
+          if (error) throw error;
+          const promo = data?.[0];
+          if (!promo) { appliedPromo = null; showPromoMessage(false, 'Kòd sa a pa valide.'); refreshPromoDisplays(); return; }
+          if (promo.valid_until && new Date(promo.valid_until) < new Date()) {
+            appliedPromo = null; showPromoMessage(false, 'Kòd sa a ekspire.'); refreshPromoDisplays(); return;
+          }
+          if (promo.valid_from && new Date(promo.valid_from) > new Date()) {
+            appliedPromo = null; showPromoMessage(false, 'Kòd sa a panko valide.'); refreshPromoDisplays(); return;
+          }
+          if (promo.max_uses && promo.uses_count >= promo.max_uses) {
+            appliedPromo = null; showPromoMessage(false, 'Limit itilizasyon kòd sa a rive.'); refreshPromoDisplays(); return;
+          }
+          if (promo.applies_to && !['all', 'services'].includes(promo.applies_to)) {
+            appliedPromo = null; showPromoMessage(false, 'Kòd sa a valab pou pwodui sèlman.'); refreshPromoDisplays(); return;
+          }
+          // Kliyan pa ka itilize pwòp kòd parrainage li
+          const clientEmail = (formData.email || document.getElementById('email')?.value || '').toLowerCase();
+          if (promo.owner_type === 'client' && promo.owner_email && promo.owner_email.toLowerCase() === clientEmail) {
+            appliedPromo = null; showPromoMessage(false, 'Ou pa ka itilize pwòp kòd parrainage ou.'); refreshPromoDisplays(); return;
+          }
+
+          appliedPromo = promo;
+          formData.promoCode = promo.code;
+          const d = getDiscountAmount();
+          showPromoMessage(true, `✓ Kòd "${promo.code}" aplike: −${d.toLocaleString()} HTG${promo.discount_type === 'percentage' ? ' (' + promo.discount_value + '%)' : ''}`);
+          refreshPromoDisplays();
+        } catch (err) {
+          console.error('Promo validation error:', err);
+          showPromoMessage(false, 'Erè pandan validasyon kòd la.');
+        } finally {
+          if (btn) btn.disabled = false;
+        }
+      }
+
+      // Anrejistre itilizasyon kòd la (increment uses_count + tracking)
+      async function recordPromoUse(supabaseClient, reservationId) {
+        if (!appliedPromo || !supabaseClient) return;
+        try {
+          const { error } = await supabaseClient.rpc('record_promo_use', {
+            p_code: appliedPromo.code,
+            p_reservation_id: reservationId,
+            p_order_id: null,
+            p_client_email: formData.email || null,
+            p_discount_amount: getDiscountAmount(),
+          });
+          if (error) console.warn('⚠️ record_promo_use:', error.message);
+        } catch (e) {
+          console.warn('⚠️ record_promo_use failed:', e);
+        }
+      }
+
       function calcDeposit(services) {
         const useBase = isBankTransferPayment();
         let massageTotal = 0, headspaCount = 0;
@@ -2166,6 +2315,8 @@ function loadCartData() {
 
         // Calculate total and deposit from cart
         const total   = getEffectiveTotal();
+        const discount = getDiscountAmount();
+        const finalTotal = getDiscountedTotal();
         const deposit = cartServices.length > 0 ? calcDeposit(cartServices) : 1000;
         const hasMassage = cartServices.some(s => {
           const cat = (s.category||'').toLowerCase();
@@ -2173,7 +2324,7 @@ function loadCartData() {
           return MASSAGE_CATS.some(c => cat.includes(c) || name.includes('massage') || name.includes('wood'));
         });
         const totalText = cartServices.length > 0
-          ? `${deposit.toLocaleString()} HTG (avance sur réservation sur ${total.toLocaleString()} HTG)${getFeeNote()}`
+          ? `${deposit.toLocaleString()} HTG (avance sur réservation sur ${finalTotal.toLocaleString()} HTG${discount > 0 ? ' — rabais ' + discount.toLocaleString() + ' HTG aplike' : ''})${getFeeNote()}`
           : `${deposit.toLocaleString()} HTG (avance sur réservation)${getFeeNote()}`;
         document.getElementById('summary-total').textContent = totalText;
 
@@ -2560,7 +2711,7 @@ function loadCartData() {
           // Common data
           const { data: { user } } = await supabaseClient.auth.getUser();
           const reservationNumber = 'DL' + Date.now().toString().slice(-8);
-          const totalAmount = getEffectiveTotal();
+          const totalAmount = getDiscountedTotal();
           const amountToPay = formData.paymentChoice === 'full' ? totalAmount : calcDeposit(cartServices);
 
           // ── MANUAL PROOF-OF-PAYMENT PATH ─────────────────────────
@@ -2598,6 +2749,7 @@ function loadCartData() {
             paymentStatus: 'pending',
           });
 
+          await recordPromoUse(supabaseClient, savedReservation?.id);
           await sendReservationEmails(supabaseClient, savedReservation, reservationNumber);
           showReservationSuccess(reservationNumber);
 
@@ -2615,7 +2767,8 @@ function loadCartData() {
 
       // Helper: build and insert the reservation record
       async function insertReservationRecord(supabaseClient, { reservationNumber, user, proofUrl, status, paymentStatus, paymentReference, paymentChoice }) {
-        const totalAmount = getEffectiveTotal();
+        const totalAmount = getDiscountedTotal();
+        const discountAmount = getDiscountAmount();
         const { isOther, otherPaymentName } = window.__lastReservationPaymentMeta || {};
         const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
         const rawPaymentMethod = isOther ? `other:${otherPaymentName}` : (paymentMethod?.value || formData.paymentMethod);
@@ -2638,6 +2791,9 @@ function loadCartData() {
           payment_status: paymentStatus,
           payment_choice: paymentChoice || formData.paymentChoice || 'deposit',
           payment_reference: paymentReference || null,
+          promo_code: appliedPromo ? appliedPromo.code : null,
+          discount_pct: appliedPromo && appliedPromo.discount_type === 'percentage' ? Number(appliedPromo.discount_value) : 0,
+          discount_amount: discountAmount,
           location: 'Spa',
           status,
         };
@@ -2774,6 +2930,7 @@ function loadCartData() {
               plop_client_id: result.id_client || null,
             })
             .eq('id', savedReservation.id);
+          await recordPromoUse(supabaseClient, savedReservation?.id);
         }
 
         return savedReservation;

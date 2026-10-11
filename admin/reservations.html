@@ -436,7 +436,7 @@
             <option value="cure">Cure uniquement</option>
           </select>
           <p style="font-size:0.75rem;color:var(--admin-text-muted);margin-top:0.25rem;">
-            x Choisissez "Tous" pour bloquer la salle complète, ou un service spécifique si d'autres salles restent disponibles.
+            ℹ️ Choisissez "Tous" pour bloquer la salle complète, ou un service spécifique si d'autres salles restent disponibles.
           </p>
         </div>
 
@@ -447,7 +447,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeBlockDateModal()">Annuler</button>
-        <button class="btn btn-danger" onclick="confirmBlockDate()">xa Bloquer</button>
+        <button class="btn btn-danger" onclick="confirmBlockDate()">🚫 Bloquer</button>
       </div>
     </div>
   </div>
@@ -478,7 +478,7 @@
             <option value="all">Tous les services (bloquer la salle entière)</option>
           </select>
           <p style="font-size:0.75rem;color:var(--admin-text-muted);margin-top:0.25rem;">
-            x Un blocage par type laisse les autres services disponibles sur ce créneau.
+            ℹ️ Un blocage par type laisse les autres services disponibles sur ce créneau.
           </p>
         </div>
         <div class="form-group">
@@ -556,6 +556,33 @@
               <p class="text-muted" style="margin: 0;">Chargement des services...</p>
             </div>
             <div id="create-services-config" style="margin-top: .75rem;"></div>
+
+            <!-- Sèvis EXTRA (kache sou sit la) -->
+            <div style="margin-top: .75rem;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="toggleExtraServiceForm()">➕ Service extra (non affiché sur le site)</button>
+            </div>
+            <div id="extra-service-form" style="display:none;margin-top:.5rem;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;padding:.75rem;">
+              <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:.5rem;">
+                <div class="form-group" style="margin-bottom:0;">
+                  <label style="font-size:.78rem;">Nom du service *</label>
+                  <input type="text" id="extra-svc-name" class="form-input" placeholder="Ex: Extensions, Soin personnalisé...">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label style="font-size:.78rem;">Prix (HTG) *</label>
+                  <input type="number" id="extra-svc-price" class="form-input" min="0" step="50" placeholder="1500">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label style="font-size:.78rem;">Durée</label>
+                  <input type="text" id="extra-svc-duration" class="form-input" placeholder="45 min">
+                </div>
+              </div>
+              <label style="display:flex;gap:.4rem;align-items:center;margin-top:.5rem;font-size:.82rem;cursor:pointer;">
+                <input type="checkbox" id="extra-svc-save" checked>
+                Enregistrer pour réutilisation (restera invisible sur le site public)
+              </label>
+              <button type="button" class="btn btn-primary btn-sm" style="margin-top:.5rem;" onclick="addExtraService()">Ajouter à la réservation</button>
+            </div>
+            <div id="extra-services-list" style="margin-top:.5rem;"></div>
           </div>
 
           <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">

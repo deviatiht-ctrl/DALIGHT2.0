@@ -394,6 +394,19 @@
               <button class="lc-btn lc-btn-ghost" onclick="shareLoyaltyCard()">Partager</button>
             </div>
           </div>
+
+          <!-- Kòd parrainage -->
+          <div id="lc-referral-box" hidden style="margin-top:1rem;padding:1rem 1.25rem;border-radius:12px;background:linear-gradient(135deg,rgba(212,175,55,.15),rgba(74,55,40,.08));border:1px dashed #c9a227;">
+            <div style="font-size:.85rem;font-weight:700;color:#8a6d1a;margin-bottom:.3rem;">🎁 Votre code de parrainage</div>
+            <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
+              <code id="lc-referral-code" style="font-size:1.15rem;font-weight:800;letter-spacing:1px;color:#4A3728;">—</code>
+              <button type="button" class="lc-btn lc-btn-ghost" style="padding:.3rem .8rem;font-size:.8rem;" onclick="copyReferralCode()">Copier</button>
+              <button type="button" class="lc-btn lc-btn-ghost" style="padding:.3rem .8rem;font-size:.8rem;" onclick="shareReferralCode()">Partager</button>
+            </div>
+            <div style="font-size:.78rem;color:#6b5d4d;margin-top:.4rem;">
+              Partagez ce code : vos filleuls obtiennent un rabais et <strong>vous gagnez des points</strong> à chaque service complété — votre carte VIP arrive plus vite !
+            </div>
+          </div>
         </div>
       </div>
 
@@ -447,6 +460,9 @@
         <a href="./login.html">Espace client</a>
         <a href="./services.html">Nos Services</a>
         <a href="mailto:dalightbeauty15mai@gmail.com">dalightbeauty15mai@gmail.com</a>
+      </div>
+      <div class="footer-credit">
+        <span>Conçu avec soin par <a href="https://cvisualagency.org" target="_blank" rel="noopener" class="cvisual-link">Cvisual</a></span>
       </div>
     </footer>
 
@@ -650,8 +666,44 @@
         // QR code
         generateQR(firstCard.card_code);
 
+        // Kòd parrainage
+        loadReferralCode();
+
         if (window.lucide) window.lucide.createIcons();
       }
+
+      let referralCode = null;
+      async function loadReferralCode() {
+        try {
+          if (!supabase || !currentUser?.email) return;
+          const name = allCards[0]?.client_name || currentUser.user_metadata?.full_name || null;
+          const { data, error } = await supabase.rpc('get_or_create_referral_code', {
+            p_email: currentUser.email,
+            p_name: name,
+          });
+          if (error) { console.warn('referral code:', error.message); return; }
+          if (data) {
+            referralCode = data;
+            document.getElementById('lc-referral-code').textContent = data;
+            document.getElementById('lc-referral-box').hidden = false;
+          }
+        } catch (e) { console.warn('referral:', e); }
+      }
+
+      window.copyReferralCode = function() {
+        if (!referralCode) return;
+        navigator.clipboard.writeText(referralCode).then(() => alert('Kòd la kopye!')).catch(() => prompt('Kopye kòd la:', referralCode));
+      };
+
+      window.shareReferralCode = async function() {
+        if (!referralCode) return;
+        const text = `Itilize kòd parrainage mwen "${referralCode}" sou dalight — ou jwenn yon rabais sou premye sèvis ou!`;
+        if (navigator.share) {
+          try { await navigator.share({ title: 'DALIGHT Parrainage', text }); } catch (e) {}
+        } else {
+          try { await navigator.clipboard.writeText(text); alert('Teks la kopye!'); } catch (e) { prompt('Kopye:', text); }
+        }
+      };
 
       function generateQR(code) {
         const qrEl = document.getElementById('lc-qr-code');

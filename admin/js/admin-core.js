@@ -130,8 +130,21 @@ function injectFormsNav() {
   }
 }
 
+function injectPromoNav() {
+  const loyaltyLink = document.querySelector('a[href="loyalty-cards.html"].nav-item');
+  if (loyaltyLink && !document.querySelector('a[href="promo-codes.html"].nav-item')) {
+    const promoLink = document.createElement('a');
+    promoLink.href = 'promo-codes.html';
+    promoLink.className = 'nav-item';
+    if (window.location.pathname.includes('/promo-codes.html')) promoLink.classList.add('active');
+    promoLink.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>Codes Promo';
+    loyaltyLink.parentNode.insertBefore(promoLink, loyaltyLink.nextSibling);
+  }
+}
+
 function initSidebar() {
   injectFormsNav();
+  injectPromoNav();
   const mobileMenuBtn = document.getElementById('mobile-menu-btn');
   const sidebar = document.getElementById('sidebar');
 
