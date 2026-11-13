@@ -116,7 +116,6 @@
           <div class="spa-seal-badge">
             <div class="spa-seal-inner">
               <img src="./assets/images/logodaligth.png?v=2" alt="DALIGHT Logo" />
-              <span class="spa-seal-caption">DALIGHT</span>
             </div>
           </div>
         </a>
@@ -465,7 +464,6 @@
       <div class="spa-footer-container">
         <div class="spa-footer-brand">
           <img class="spa-footer-logo" src="./assets/images/logodaligth.png?v=2" alt="DALIGHT" />
-          <h3>DALIGHT</h3>
           <p>Le premier espace Head Spa &amp; Bien-Être à Port-au-Prince. L'art de prendre soin de soi avec élégance.</p>
         </div>
 
@@ -497,8 +495,33 @@
       </div>
     </div>
 
-    <!-- Mobile Bottom Navigation (Telegram-Style bar handled by main.js) -->
-    <nav class="mobile-nav" aria-label="Navigation mobile"></nav>
+    <!-- Mobile Bottom Navigation (Fixed at bottom on phones) -->
+    <nav class="mobile-nav" aria-label="Navigation mobile">
+      <a href="./index.html" class="active" data-page="home">
+        <i data-lucide="home"></i>
+        <span>Accueil</span>
+      </a>
+      <a href="./pages/services.html" data-page="services">
+        <i data-lucide="sparkles"></i>
+        <span>Réserver</span>
+      </a>
+      <a href="./pages/shop.html" data-page="shop">
+        <i data-lucide="shopping-bag"></i>
+        <span>Boutique</span>
+      </a>
+      <a href="./pages/orders.html" data-page="orders">
+        <i data-lucide="calendar-check"></i>
+        <span>Réservations</span>
+      </a>
+      <a href="./pages/loyalty.html" data-page="loyalty">
+        <i data-lucide="crown"></i>
+        <span>Fidélité</span>
+      </a>
+      <a href="./pages/login.html" data-page="login">
+        <i data-lucide="user"></i>
+        <span>Compte</span>
+      </a>
+    </nav>
 
     <!-- Chat Widget -->
     <div class="chat-widget" id="chat-widget">

@@ -428,7 +428,7 @@ function setupNavToggle() {
 function syncMobileNavVisibility() {
   const mobileNav = document.querySelector('.mobile-nav');
   if (!mobileNav) return;
-  const shouldDisplay = window.matchMedia('(max-width: 720px)').matches;
+  const shouldDisplay = window.matchMedia('(max-width: 900px)').matches;
   mobileNav.style.display = shouldDisplay ? 'flex' : 'none';
 }
 

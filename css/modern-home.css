@@ -245,21 +245,17 @@ body[data-page="home"] .spa-nav-link.active {
 }
 
 .spa-seal-inner img {
-  width: 44px;
-  height: 44px;
+  width: 58px;
+  height: 58px;
+  max-width: 58px;
+  max-height: 58px;
   object-fit: contain;
   border-radius: 0;
+  display: block;
 }
 
 .spa-seal-caption {
-  font-family: var(--spa-font-serif);
-  font-size: 0.58rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #2C2622;
-  margin-top: -3px;
-  font-weight: 600;
-  white-space: nowrap;
+  display: none !important;
 }
 
 /* Right: Actions */
@@ -1245,69 +1241,98 @@ body[data-page="home"] .nav-cta .auth-btn:hover {
     font-size: 0.95rem;
     max-width: 580px;
   }
-}
 
-@media (max-width: 768px) {
   /* Prevent footer content from being covered by fixed bottom navigation */
   body[data-page="home"] {
-    padding-bottom: 5.5rem;
+    padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
   }
   
-  /* Telegram-style mobile bottom navigation bar in dark luxury glassmorphism */
-  body[data-page="home"] .mobile-nav {
+  /* Mobile Bottom Navigation: Permanently FIXED at the bottom of the screen */
+  body[data-page="home"] .mobile-nav,
+  .mobile-nav {
     display: flex !important;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 64px;
-    background: rgba(26, 32, 17, 0.95) !important;
-    backdrop-filter: blur(18px) !important;
-    -webkit-backdrop-filter: blur(18px) !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    transform: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    height: auto !important;
+    min-height: 58px !important;
+    padding: 0.45rem 0.25rem calc(0.45rem + env(safe-area-inset-bottom, 0px)) !important;
+    background: rgba(22, 28, 15, 0.98) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: none !important;
     border-top: 1px solid rgba(194, 164, 144, 0.25) !important;
-    box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.4) !important;
-    z-index: 1000;
-    align-items: center;
-    justify-content: space-around;
-    padding: 0 0.5rem;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.55) !important;
+    z-index: 99999 !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
   
-  body[data-page="home"] .mobile-nav a {
-    color: var(--spa-cream-light) !important;
-    opacity: 0.75;
-    text-decoration: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.68rem;
-    font-family: var(--spa-font-sans);
-    letter-spacing: 0.04em;
-    transition: all 0.2s ease;
+  body[data-page="home"] .mobile-nav a,
+  .mobile-nav a {
+    flex: 1 !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.2rem !important;
+    padding: 0.35rem 0.15rem !important;
+    border-radius: 10px !important;
+    text-decoration: none !important;
+    color: rgba(250, 248, 245, 0.72) !important;
+    background: transparent !important;
+    transition: all 0.2s ease !important;
   }
   
   body[data-page="home"] .mobile-nav a.active,
-  body[data-page="home"] .mobile-nav a:hover {
+  body[data-page="home"] .mobile-nav a:hover,
+  .mobile-nav a.active,
+  .mobile-nav a:hover {
     color: var(--spa-taupe-rose) !important;
-    opacity: 1;
-    transform: translateY(-2px);
+    background: rgba(194, 164, 144, 0.12) !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
   
   body[data-page="home"] .mobile-nav a.active::after {
-    content: '';
-    display: block;
-    width: 18px;
-    height: 2px;
-    border-radius: 9999px;
-    background: var(--spa-taupe-rose) !important;
-    margin-top: 2px;
+    display: none !important;
   }
   
-  /* Elevate Chat Bubble above bottom navigation dock */
-  body[data-page="home"] .chat-widget {
-    bottom: 5.25rem !important;
+  body[data-page="home"] .mobile-nav a i,
+  body[data-page="home"] .mobile-nav a svg,
+  .mobile-nav a i,
+  .mobile-nav a svg {
+    width: 20px !important;
+    height: 20px !important;
+    stroke: currentColor !important;
+  }
+  
+  body[data-page="home"] .mobile-nav a span,
+  .mobile-nav a span {
+    font-size: 0.65rem !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.02em !important;
+    color: inherit !important;
+    line-height: 1 !important;
+  }
+  
+  /* Elevate Chat Bubble cleanly above fixed bottom navigation */
+  body[data-page="home"] .chat-widget,
+  .chat-widget {
+    bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important;
     right: 1.25rem !important;
-    z-index: 1050;
+    z-index: 99998 !important;
   }
   
   body[data-page="home"] .chat-bubble {
@@ -1390,13 +1415,14 @@ body[data-page="home"] .nav-cta .auth-btn:hover {
   }
   
   .spa-seal-inner img {
-    width: 30px;
-    height: 30px;
+    width: 44px;
+    height: 44px;
+    max-width: 44px;
+    max-height: 44px;
   }
   
   .spa-seal-caption {
-    font-size: 0.46rem;
-    letter-spacing: 0.1em;
+    display: none !important;
   }
   
   .spa-nav-right {
@@ -1746,8 +1772,10 @@ body[data-page="home"] .nav-cta .auth-btn:hover {
   }
   
   .spa-seal-inner img {
-    width: 25px;
-    height: 25px;
+    width: 38px;
+    height: 38px;
+    max-width: 38px;
+    max-height: 38px;
   }
   
   .spa-nav-right {
