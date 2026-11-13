@@ -1374,7 +1374,7 @@ ${r.payment_choice === 'deposit' ? 'N\'oubliez pas de régler le montant restant
       body:
 `Bonjour ${name},
 
-Nous avons le plaisir de vous confirmer votre réservation chez DALIGHT Spa :
+Nous avons le plaisir de vous confirmer votre réservation chez DALIGHT :
 
 • Service  : ${service}
 • Date     : ${date}
@@ -1414,7 +1414,7 @@ L'équipe DALIGHT`
       body:
 `Bonjour ${name},
 
-Petit rappel amical : vous avez rendez-vous chez DALIGHT Spa demain !
+Petit rappel amical : vous avez rendez-vous chez DALIGHT demain !
 
 • Service : ${service}
 • Date    : ${date}
@@ -1436,7 +1436,7 @@ L'équipe DALIGHT`
       body:
 `Bonjour ${name},
 
-Merci d'avoir choisi DALIGHT Spa pour votre ${service} ! Nous espérons que vous avez apprécié ce moment de détente et de bien-être.
+Merci d'avoir choisi DALIGHT pour votre ${service} ! Nous espérons que vous avez apprécié ce moment de détente et de bien-être.
 
 💰 Paiement
 ${paymentChoiceText}
@@ -1452,7 +1452,7 @@ L'équipe DALIGHT
 📞 ${phone}`
     },
     custom: {
-      subject: `DALIGHT Spa - ${service}`,
+      subject: `DALIGHT - ${service}`,
       body:
 `Bonjour ${name},
 

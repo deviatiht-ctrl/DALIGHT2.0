@@ -99,12 +99,12 @@ async function createVideoCard(post) {
     <div class="video-card__media">
       <video src="${post.video_url}" playsinline controls preload="metadata"></video>
       <div class="video-card__badge">
-        <span>DALIGHT Head Spa</span>
+        <span>DALIGHT</span>
         <small>${new Date(post.created_at).toLocaleDateString()}</small>
       </div>
     </div>
     <div class="video-card__meta">
-      <p>${post.caption || 'Capsule exclusive DALIGHT Head Spa'}</p>
+      <p>${post.caption || 'Capsule exclusive DALIGHT'}</p>
       <div class="video-card__actions">
         <button class="like-btn" data-post-id="${post.id}">❤️ ${post.likes || 0}</button>
         <button class="share-btn" data-video-url="${encodeURIComponent(post.video_url)}" data-caption="${encodeURIComponent(post.caption || '')}">↗ Partager</button>
@@ -306,7 +306,7 @@ function updateSpotlightVideo(videos) {
 
   videoEl.src = latestVideo.video_url;
   videoEl.load();
-  captionEl.textContent = latestVideo.caption || 'Capsule exclusive DALIGHT Head Spa';
+  captionEl.textContent = latestVideo.caption || 'Capsule exclusive DALIGHT';
   dateEl.textContent = `Publié le ${formatDate(latestVideo.created_at)}`;
   emptyState.hidden = true;
 }
@@ -319,7 +319,7 @@ function truncateText(text = '', maxLength = 200) {
 function shareVideo(videoUrl, caption = '') {
   if (!videoUrl) return;
   const shareData = {
-    title: 'Capsule DALIGHT Head Spa',
+    title: 'Capsule DALIGHT',
     text: caption || 'Découvrez ce service DALIGHT',
     url: videoUrl,
   };

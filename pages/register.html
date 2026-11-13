@@ -1,151 +1,361 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Créer un compte — DALIGHT Head Spa Haïti</title>
-    <meta name="description" content="Créez votre compte DALIGHT pour réserver en ligne vos soins Head Spa, Massage et Wood Therapy à Port-au-Prince." />
+    <title>Créer un compte — Adhésion Prestige DALIGHT</title>
+    <meta name="description" content="Créez votre compte DALIGHT pour réserver vos soins de détente Head Spa, massages crâniens et soins botaniques à Port-au-Prince." />
     <meta name="robots" content="noindex, follow" />
     <link rel="icon" href="../assets/images/logodaligth.png?v=2" type="image/png" />
+    <meta name="theme-color" content="#3E4A28">
     
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="../vendor/fonts/google-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../vendor/fontawesome/css/all.min.css" />
     
-    <link
-      href="../vendor/fonts/google-fonts.css"
-      rel="stylesheet"
-    />
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="../css/style.css?v=5.0.0" />
     <link rel="stylesheet" href="../css/responsive.css?v=5.0.0" />
+    <link rel="stylesheet" href="../css/modern-theme.css?v=1.0.0" />
+    
     <script src="../vendor/lucide/lucide.min.js"></script>
     <script src="../vendor/supabase/supabase.min.js"></script>
     <script src="../js/toast.js?v=5.0.0"></script>
     <script type="module" src="../js/main.js?v=5.0.0"></script>
-    <script type="module" src="../js/auth.js" defer></script>
+    <script type="module" src="../js/auth.js?v=5.0.0" defer></script>
   </head>
   <body data-page="register">
-    <header class="site-header internal">
-      <nav class="top-nav">
-        <a class="brand" href="../index.html">
-          <img class="brand-logo" src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" />
-          <div>
-            <strong>DALIGHT</strong>
-            <small>L'Art du Bien-Être</small>
+    <!-- Subtle Background Monogram Pattern & Glow -->
+    <div class="spa-bg-pattern" aria-hidden="true"></div>
+    <div class="spa-bg-glow" aria-hidden="true"></div>
+
+    <!-- ==========================================================================
+         MODERN LUXURY NAVBAR (EXACT DALIGHT MODEL)
+         ========================================================================== -->
+    <header class="spa-nav-wrapper" id="spa-navbar">
+      <nav class="spa-nav-container">
+        <!-- Left: Editorial Links -->
+        <div class="spa-nav-left nav-links">
+          <a href="../index.html" class="spa-nav-link">Accueil</a>
+          <a href="./about.html" class="spa-nav-link">À Propos</a>
+          <a href="./services.html" class="spa-nav-link">Services</a>
+          <a href="./formation.html" class="spa-nav-link">Formations</a>
+          <a href="./shop.html" class="spa-nav-link">Boutique</a>
+          <a href="../index.html#contact" class="spa-nav-link">Contact</a>
+          <a href="../admin/dashboard.html" class="admin-link">Admin</a>
+        </div>
+
+        <!-- Center: Circular Brand Seal -->
+        <a class="spa-brand-center" href="../index.html" aria-label="DALIGHT Accueil">
+          <div class="spa-seal-badge">
+            <div class="spa-seal-inner">
+              <img src="../assets/images/logodaligth.png?v=2" alt="DALIGHT Logo" />
+              <span class="spa-seal-caption">DALIGHT</span>
+            </div>
           </div>
         </a>
-        <button class="nav-toggle" aria-label="Ouvrir la navigation">
-        <span></span>
-        <span></span><span></span>
-      </button>
-        <div class="nav-links">
-          <a href="../index.html">Accueil</a>
-          <a href="./about.html">À propos</a>
-          <a href="./services.html">Nos Services</a>
-          <a href="./loyalty.html">Fidélité</a>
-        </div>
-        <div class="nav-cta">
-          <a class="btn ghost" href="./login.html">Se connecter</a>
+
+        <!-- Right: Actions & Reservation Pill Button -->
+        <div class="spa-nav-right nav-cta">
+          <a href="./services.html" class="spa-icon-btn" title="Rechercher un soin" aria-label="Recherche">
+            <i data-lucide="search"></i>
+          </a>
+          <a href="./cart.html" class="spa-icon-btn cart-btn" title="Panier" aria-label="Panier">
+            <i data-lucide="shopping-bag"></i>
+            <span class="cart-badge">0</span>
+          </a>
+          <a href="./services.html" class="spa-pill-btn">
+            Prendre Rendez-vous
+          </a>
+          <a href="./login.html" class="spa-icon-btn mobile-auth-link" title="Espace Membre" aria-label="Compte">
+            <i data-lucide="user"></i>
+          </a>
+          <button class="spa-hamburger-btn" id="spa-hamburger" aria-label="Menu Mobile">
+            <i data-lucide="menu"></i>
+          </button>
         </div>
       </nav>
+
+      <!-- Mobile Dropdown Menu -->
+      <div class="spa-mobile-menu" id="spa-mobile-menu">
+        <a href="../index.html">Accueil</a>
+        <a href="./services.html">Prendre Rendez-vous</a>
+        <a href="./services.html">Nos Services &amp; Tarifs</a>
+        <a href="./formation.html">DALIGHT School</a>
+        <a href="./shop.html">Boutique</a>
+        <a href="./cart.html">Panier</a>
+        <a href="./orders.html">Mes Réservations</a>
+        <a href="./loyalty.html">Programme Fidélité</a>
+        <a href="../index.html#contact">Delmas 65</a>
+        <a href="./login.html">Espace Client</a>
+      </div>
     </header>
 
-    <main class="auth-shell fade-in register-shell">
-      <section class="auth-panel onboarding-panel">
-        <div class="auth-panel__badge">Adhésion</div>
-        <h1>Composez votre profil bien-être</h1>
-        <p>
-          Dites-nous comment vous aimez vous détendre et nous personnaliserons les services, rappels et options de
-          paiement adaptés à votre rythme de vie.
+    <!-- ==========================================================================
+         SCULPTURAL LUXURY AUTH PRESENTATION (ARCHED SANCTUARY & CAPSULE)
+         ========================================================================== -->
+    <main class="spa-auth-section fade-in">
+      <div class="spa-auth-header">
+        <div class="spa-auth-kicker">
+          <i data-lucide="crown"></i>
+          <span>Adhésion Prestige DALIGHT</span>
+        </div>
+        <h1 class="spa-auth-title">
+          Rejoignez le <em>Cercle des Initiés</em>
+        </h1>
+        <p class="spa-auth-subtitle">
+          Composez votre profil sur-mesure pour vivre des soins de relaxation capillaires et corporels d'exception au cœur de Port-au-Prince.
         </p>
-        <ul class="onboarding-list">
-          <li>Services sélectionnés selon vos besoins capillaires</li>
-          <li>Accès prioritaire à notre écrin de Delmas 65</li>
-          <li>Accompagnement dédié par l'Assistant DALIGHT</li>
-        </ul>
-        <div class="stat-grid">
-          <article>
-            <strong>48h</strong>
-            <span>délai moyen de confirmation</span>
-          </article>
-          <article>
-            <strong>92%</strong>
-            <span>des membres sur des plans récurrents</span>
-          </article>
-        </div>
-        <div class="onboarding-highlight">
-          <p>« Rejoindre DALIGHT a transformé mes soins en services sacrés. L’équipe connaît mes besoins par cœur. »</p>
-          <span>— Marvens · Entrepreneur</span>
-        </div>
-      </section>
-      <section class="card form-card auth-form">
-        <h2>Démarrez votre aventure DALIGHT</h2>
-        <p class="page-subtitle">Rejoignez notre communauté et plongez dans un univers de sérénité.</p>
-        <form id="register-form">
-          <div class="input-group">
-            <label for="register-name">Nom complet</label>
-            <input type="text" id="register-name" name="full_name" placeholder="Sarah Jean" required />
-          </div>
-          <div class="input-grid">
-            <div class="input-group">
-              <label for="register-email">Email</label>
-              <input type="email" id="register-email" name="email" placeholder="vous@email.com" required />
+      </div>
+
+      <div class="spa-auth-showcase">
+        <!-- 1. Left Side: Architectural Arched Sanctuary Window -->
+        <aside class="spa-auth-arch-window" aria-label="Ambiance DALIGHT">
+          <div class="spa-auth-arch-bg" style="background-image: url('../assets/images/hero_spa.jpg');"></div>
+          <div class="spa-auth-arch-overlay"></div>
+
+          <div class="spa-auth-arch-content">
+            <!-- Top Seal Badge -->
+            <div class="spa-auth-seal-pill">
+              <img src="../assets/images/logodaligth.png?v=2" alt="DALIGHT Logo" />
+              <span>Delmas 65</span>
             </div>
-            <div class="input-group">
-              <label for="register-phone">Téléphone / WhatsApp</label>
-              <input type="tel" id="register-phone" name="phone" placeholder="+509 4747-7221" />
+
+            <!-- Center Perks List -->
+            <ul class="spa-auth-perks-list">
+              <li class="spa-auth-perk-item">
+                <i data-lucide="droplet"></i>
+                <span>Soins &amp; huiles botaniques 100% naturels</span>
+              </li>
+              <li class="spa-auth-perk-item">
+                <i data-lucide="award"></i>
+                <span>Programme fidélité avec remises exclusives</span>
+              </li>
+              <li class="spa-auth-perk-item">
+                <i data-lucide="clock"></i>
+                <span>Réservation prioritaire 7 jours sur 7</span>
+              </li>
+            </ul>
+
+            <!-- Stat Counters -->
+            <div class="stat-grid" style="margin: 1.5rem 0 1rem;">
+              <article style="background:rgba(255,255,255,0.06); backdrop-filter:blur(10px); border:1px solid rgba(194,164,144,0.25); border-radius:18px; padding:0.9rem; text-align:center;">
+                <strong style="font-family:var(--spa-font-serif); font-size:1.8rem; color:var(--spa-white);">100%</strong>
+                <span style="font-size:0.75rem; color:var(--spa-text-muted); display:block;">Mains expertes</span>
+              </article>
+              <article style="background:rgba(255,255,255,0.06); backdrop-filter:blur(10px); border:1px solid rgba(194,164,144,0.25); border-radius:18px; padding:0.9rem; text-align:center;">
+                <strong style="font-family:var(--spa-font-serif); font-size:1.8rem; color:var(--spa-white);">4.9★</strong>
+                <span style="font-size:0.75rem; color:var(--spa-text-muted); display:block;">Clientes comblées</span>
+              </article>
+            </div>
+
+            <!-- Floating Testimonial Frosted Card -->
+            <div class="spa-auth-testimonial-card">
+              <div class="spa-auth-stars">★★★★★</div>
+              <p class="spa-auth-quote">
+                « Rejoindre DALIGHT a transformé mes soins en soins de détente sacrés. L'équipe anticipe mes besoins avec une bienveillance rare. »
+              </p>
+              <span class="spa-auth-author">— Marvens &amp; Nathalie · Membres DALIGHT</span>
             </div>
           </div>
-          <div class="input-group">
-            <label for="register-password">Mot de passe</label>
-            <input type="password" id="register-password" name="password" minlength="6" placeholder="Créer un mot de passe" required />
+        </aside>
+
+        <!-- 2. Right Side: Sculptural Form Capsule ("Forme Diferan") -->
+        <section class="spa-auth-form-capsule register-curve">
+          <!-- Segmented Capsule Tab Switcher -->
+          <div class="spa-auth-tabs">
+            <a href="./login.html" class="spa-auth-tab">
+              <i data-lucide="log-in"></i>
+              <span>Connexion</span>
+            </a>
+            <a href="./register.html" class="spa-auth-tab active">
+              <i data-lucide="user-plus"></i>
+              <span>Créer un Compte</span>
+            </a>
           </div>
-          <div class="input-grid">
-            <div class="input-group">
-              <label for="register-loyalty-tier">Carte de fidélité</label>
-              <select id="register-loyalty-tier" name="loyalty_tier">
-                <option value="bronze">Bronze · Débuter mon parcours</option>
+
+          <!-- Form Header -->
+          <div class="spa-form-heading">
+            <h2>Démarrez votre aventure</h2>
+            <p>Renseignez vos coordonnées pour activer votre accès exclusif.</p>
+          </div>
+
+          <!-- The Real Supabase Register Form -->
+          <form id="register-form">
+            <div class="spa-input-group">
+              <label for="register-name">Nom complet</label>
+              <div class="spa-input-capsule">
+                <div class="spa-input-icon">
+                  <i data-lucide="user"></i>
+                </div>
+                <input 
+                  type="text" 
+                  id="register-name" 
+                  name="full_name" 
+                  placeholder="Sarah Jean" 
+                  required 
+                  autocomplete="name"
+                />
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.9rem;">
+              <div class="spa-input-group">
+                <label for="register-email">Email</label>
+                <div class="spa-input-capsule">
+                  <div class="spa-input-icon">
+                    <i data-lucide="mail"></i>
+                  </div>
+                  <input 
+                    type="email" 
+                    id="register-email" 
+                    name="email" 
+                    placeholder="sarah@email.com" 
+                    required 
+                    autocomplete="email"
+                  />
+                </div>
+              </div>
+
+              <div class="spa-input-group">
+                <label for="register-phone">Téléphone / WhatsApp</label>
+                <div class="spa-input-capsule">
+                  <div class="spa-input-icon">
+                    <i data-lucide="phone"></i>
+                  </div>
+                  <input 
+                    type="tel" 
+                    id="register-phone" 
+                    name="phone" 
+                    placeholder="+509 4747-7221" 
+                    autocomplete="tel"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="spa-input-group">
+              <label for="register-password">Mot de passe</label>
+              <div class="spa-input-capsule">
+                <div class="spa-input-icon">
+                  <i data-lucide="lock"></i>
+                </div>
+                <input 
+                  type="password" 
+                  id="register-password" 
+                  name="password" 
+                  minlength="6" 
+                  placeholder="Minimum 6 caractères" 
+                  required 
+                  autocomplete="new-password"
+                />
+                <button type="button" class="spa-password-toggle" aria-label="Afficher le mot de passe">
+                  <i data-lucide="eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Interactive Tier Chips -->
+            <div class="spa-input-group">
+              <label>Statut de Fidélité Souhaité</label>
+              <div class="spa-tier-chips">
+                <div class="spa-tier-chip active" data-tier="bronze">
+                  <span class="spa-tier-chip-name">🥉 Bronze</span>
+                  <span class="spa-tier-chip-desc">Découverte</span>
+                </div>
+                <div class="spa-tier-chip" data-tier="argent">
+                  <span class="spa-tier-chip-name">🥈 Argent</span>
+                  <span class="spa-tier-chip-desc">Cliente Fidèle</span>
+                </div>
+                <div class="spa-tier-chip" data-tier="premium">
+                  <span class="spa-tier-chip-name">🥇 Premium</span>
+                  <span class="spa-tier-chip-desc">Accès Élite</span>
+                </div>
+              </div>
+              <select id="register-loyalty-tier" name="loyalty_tier" style="display:none;">
+                <option value="bronze" selected>Bronze · Débuter mon parcours</option>
                 <option value="argent">Argent · Cliente fidèle</option>
                 <option value="premium">Premium · Accès Élite</option>
               </select>
-              <small style="color:var(--muted,#8a8a8a);display:block;margin-top:.3rem;">Votre carte progresse automatiquement selon vos séances.</small>
             </div>
-            <div class="input-group">
-              <label for="register-location">Lieu principal</label>
-              <select id="register-location" name="location">
-                <option value="delmas">Delmas 65</option>
-              </select>
+
+            <!-- Sanctuary Location -->
+            <div class="spa-input-group">
+              <label for="register-location">Espace Principal</label>
+              <div class="spa-input-capsule">
+                <div class="spa-input-icon">
+                  <i data-lucide="map-pin"></i>
+                </div>
+                <select id="register-location" name="location">
+                  <option value="delmas">Delmas 65, Rue Durandisse #10 (Port-au-Prince)</option>
+                </select>
+              </div>
             </div>
-          </div>
-          <label class="remember">
-            <input type="checkbox" required />
-            <span>J’accepte les rappels de séances &amp; conseils bien-être.</span>
-          </label>
-          <button class="btn" type="submit">Créer un compte</button>
-          <p class="form-note">Vous avez déjà un compte ? <a href="./login.html">Connectez-vous</a>.</p>
-          <div id="register-message" role="status"></div>
-        </form>
-        <div class="auth-security">
-          <span class="status-dot pulse"></span>
-          Profil  sécurisé · Résiliation à tout moment
-        </div>
-      </section>
+
+            <div style="margin: 1rem 0.25rem;">
+              <label style="display:inline-flex; align-items:flex-start; gap:0.6rem; cursor:pointer; color:var(--spa-cream-light); font-size:0.84rem; line-height:1.4;">
+                <input type="checkbox" required style="accent-color:var(--spa-taupe-rose); margin-top:2px; width:16px; height:16px;" />
+                <span>J’accepte les rappels de séances de détente &amp; les conseils bien-être DALIGHT.</span>
+              </label>
+            </div>
+
+            <button type="submit" class="spa-auth-submit-btn">
+              <span>Créer Mon Profil Privilège</span>
+              <i data-lucide="sparkles"></i>
+            </button>
+
+            <div id="register-message" role="status" style="margin-top: 1rem;"></div>
+
+            <p class="spa-auth-footer-note">
+              Vous possédez déjà un compte ? <a href="./login.html">Connectez-vous</a>.
+            </p>
+
+            <div class="spa-auth-security-badge">
+              <span class="status-dot"></span>
+              <span>Données protégées · Confidentialité garantie</span>
+            </div>
+          </form>
+        </section>
+      </div>
     </main>
 
-    <footer class="site-footer">
-      <p>© <span id="year"></span> DALIGHT. Tous droits réservés.</p>
-      <div class="footer-links">
-        <a href="./login.html">Espace client</a>
-        <a href="./services.html">Nos Services</a>
-        <a href="mailto:dalightbeauty15mai@gmail.com">dalightbeauty15mai@gmail.com</a>
-      </div>
-      <div class="footer-credit">
-        <span>Conçu avec soin par <a href="https://cvisualagency.org" target="_blank" rel="noopener" class="cvisual-link">Cvisual</a></span>
+    <!-- ==========================================================================
+         MINIMALIST LUXURY FOOTER (DALIGHT MODEL)
+         ========================================================================== -->
+    <footer class="spa-footer">
+      <div class="spa-footer-container">
+        <div class="spa-footer-brand">
+          <img class="spa-footer-logo" src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" />
+          <h3>DALIGHT</h3>
+          <p>Le premier espace Head Spa &amp; Bien-Être à Port-au-Prince. L'art de prendre soin de soi avec élégance.</p>
+        </div>
+
+        <div class="spa-footer-links">
+          <a href="../index.html">Accueil</a>
+          <a href="./services.html">Réservation</a>
+          <a href="./formation.html">DALIGHT School</a>
+          <a href="./shop.html">Boutique</a>
+          <a href="./loyalty.html">Programme Fidélité</a>
+          <a href="./orders.html">Mes Rendez-vous</a>
+          <a href="./login.html">Espace Membre</a>
+        </div>
+
+        <div class="spa-footer-bottom">
+          <span>&copy; <span id="year"></span> DALIGHT. Tous droits réservés.</span>
+          <span>Delmas 65, Rue Durandisse #10 · Téléphone : +509 4747-7221</span>
+          <span>Conçu avec soin par <a href="https://cvisualagency.org" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">Cvisual</a></span>
+        </div>
       </div>
     </footer>
 
     <nav class="mobile-nav" aria-label="Navigation mobile"></nav>
-  </body>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) lucide.createIcons();
+    });
+  </script>
+</body>
 </html>
-
-
-
-
-

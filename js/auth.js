@@ -302,3 +302,48 @@ async function handleForgotPassword(event) {
 if (forgotForm) {
   forgotForm.addEventListener('submit', handleForgotPassword);
 }
+
+
+// ============================================
+// LUXURY AUTH ENHANCEMENTS (TOGGLE & CHIPS)
+// ============================================
+export function setupAuthEnhancements() {
+  document.querySelectorAll('.spa-password-toggle').forEach(btn => {
+    if (btn._hasAuthToggle) return;
+    btn._hasAuthToggle = true;
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const capsule = btn.closest('.spa-input-capsule') || btn.parentElement;
+      const input = capsule?.querySelector('input');
+      if (!input) return;
+      const isPass = input.type === 'password';
+      input.type = isPass ? 'text' : 'password';
+      const icon = btn.querySelector('[data-lucide]') || btn.querySelector('i');
+      if (icon) {
+        btn.innerHTML = isPass ? '<i data-lucide="eye-off"></i>' : '<i data-lucide="eye"></i>';
+        if (window.lucide) lucide.createIcons();
+      }
+    });
+  });
+
+  const tierChips = document.querySelectorAll('.spa-tier-chip');
+  const tierSelect = document.getElementById('register-loyalty-tier');
+  if (tierChips.length > 0 && tierSelect) {
+    tierChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        tierChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const val = chip.getAttribute('data-tier');
+        if (val) tierSelect.value = val;
+      });
+    });
+  }
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupAuthEnhancements);
+  } else {
+    setupAuthEnhancements();
+  }
+}

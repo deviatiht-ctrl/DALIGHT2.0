@@ -1,0 +1,1322 @@
+/* ==========================================================================
+   DALIGHT — MODERN LUXURY SPA DESIGN SYSTEM
+   Dark Olive (#3E4A28) + Warm Taupe Beige Rose (#C2A490) + Crisp White (#FFFFFF)
+   Delicate Monogram Background Pattern with DALIGHT Logo
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --spa-dark-olive: #3E4A28;
+  --spa-dark-olive-deep: #2C351C;
+  --spa-dark-olive-glass: rgba(62, 74, 40, 0.92);
+  --spa-taupe-rose: #C2A490;
+  --spa-taupe-rose-light: #D9C3B3;
+  --spa-taupe-rose-dark: #A88670;
+  --spa-white: #FFFFFF;
+  --spa-cream-light: #F7F5F0;
+  --spa-text-light: #FAF8F5;
+  --spa-text-muted: #D5CEBF;
+  --spa-text-subtle: #A8A193;
+  --spa-border: rgba(194, 164, 144, 0.22);
+  --spa-border-light: rgba(255, 255, 255, 0.15);
+  --spa-card-glass: rgba(255, 255, 255, 0.05);
+  --spa-card-glass-hover: rgba(255, 255, 255, 0.08);
+  --spa-shadow-soft: 0 16px 40px rgba(18, 22, 11, 0.35);
+  --spa-shadow-hover: 0 24px 50px rgba(18, 22, 11, 0.5);
+  --spa-font-serif: "Cormorant Garamond", "Playfair Display", Georgia, serif;
+  --spa-font-sans: "Outfit", "Montserrat", system-ui, -apple-system, sans-serif;
+  --spa-transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Base Body Styling */
+body[data-page="home"] {
+  background-color: var(--spa-dark-olive) !important;
+  color: var(--spa-text-light) !important;
+  font-family: var(--spa-font-sans) !important;
+  line-height: 1.65;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Subtle Watermark Logo Monogram Pattern */
+.spa-bg-pattern {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  background-image: url('../assets/images/logodaligth.png');
+  background-repeat: repeat;
+  background-size: 115px 115px;
+  background-position: 0 0;
+  filter: brightness(0) invert(1);
+  opacity: 0.038;
+}
+
+/* Subtle atmospheric lighting gradient */
+.spa-bg-glow {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  background: 
+    radial-gradient(circle at 15% 25%, rgba(194, 164, 144, 0.07) 0%, transparent 45%),
+    radial-gradient(circle at 85% 75%, rgba(194, 164, 144, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 50% 90%, rgba(32, 39, 20, 0.8) 0%, transparent 60%);
+}
+
+body[data-page="home"] h1,
+body[data-page="home"] h2,
+body[data-page="home"] h3,
+body[data-page="home"] h4 {
+  font-family: var(--spa-font-serif) !important;
+  font-weight: 400;
+  color: var(--spa-white);
+  letter-spacing: 0.02em;
+}
+
+/* Hide legacy elements */
+body[data-page="home"] .hero-video-mobile,
+body[data-page="home"] .site-header {
+  display: none !important;
+}
+
+body[data-page="home"] main,
+body[data-page="home"] header,
+body[data-page="home"] footer {
+  position: relative;
+  z-index: 1;
+}
+
+body[data-page="home"] main {
+  padding: 0 !important;
+  max-width: 100% !important;
+}
+
+/* Top Announcement Banner Harmonization */
+body[data-page="home"] .dl-alert-banner {
+  background: var(--spa-dark-olive-deep) !important;
+  color: var(--spa-cream-light) !important;
+  border-bottom: 1px solid var(--spa-border) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25) !important;
+}
+
+body[data-page="home"] .dl-alert-banner .dl-banner-btn {
+  background: var(--spa-taupe-rose) !important;
+  color: var(--spa-dark-olive-deep) !important;
+  font-weight: 600 !important;
+  border-radius: 9999px !important;
+}
+
+body[data-page="home"] .dl-alert-banner .dl-banner-btn.outline {
+  background: transparent !important;
+  color: var(--spa-white) !important;
+  border: 1px solid var(--spa-border) !important;
+}
+
+/* ==========================================================================
+   1. MODERN LUXURY NAVBAR
+   ========================================================================== */
+
+.spa-nav-wrapper {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background: var(--spa-dark-olive-glass);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--spa-border);
+  transition: var(--spa-transition);
+}
+
+.spa-nav-wrapper.scrolled {
+  background: rgba(44, 53, 28, 0.98);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
+}
+
+.spa-nav-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0.85rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+/* Left: Nav Links */
+.spa-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 1.8rem;
+  flex: 1;
+}
+
+body[data-page="home"] .spa-nav-left a,
+body[data-page="home"] .spa-nav-link {
+  font-size: 0.88rem !important;
+  font-weight: 500 !important;
+  color: var(--spa-cream-light) !important;
+  letter-spacing: 0.05em !important;
+  text-decoration: none !important;
+  position: relative !important;
+  padding: 0.35rem 0.2rem !important;
+  background: transparent !important;
+  transition: var(--spa-transition) !important;
+  border-radius: 0 !important;
+}
+
+body[data-page="home"] .spa-nav-left a::after,
+body[data-page="home"] .spa-nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background-color: var(--spa-taupe-rose);
+  transition: var(--spa-transition);
+  transform: translateX(-50%);
+}
+
+body[data-page="home"] .spa-nav-left a:hover,
+body[data-page="home"] .spa-nav-link:hover {
+  color: var(--spa-taupe-rose) !important;
+  background: transparent !important;
+}
+
+body[data-page="home"] .spa-nav-left a:hover::after,
+body[data-page="home"] .spa-nav-left a.active::after,
+body[data-page="home"] .spa-nav-link.active::after {
+  width: 100%;
+}
+
+body[data-page="home"] .spa-nav-left a.active,
+body[data-page="home"] .spa-nav-link.active {
+  color: var(--spa-white) !important;
+  font-weight: 600 !important;
+  background: transparent !important;
+}
+
+/* Center: Luxury Badge Seal Logo */
+.spa-brand-center {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.spa-seal-badge {
+  position: relative;
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--spa-taupe-rose);
+  background: #FFFFFF;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  transition: var(--spa-transition);
+  padding: 5px;
+}
+
+.spa-seal-badge:hover {
+  transform: rotate(5deg) scale(1.05);
+  box-shadow: 0 6px 25px rgba(194, 164, 144, 0.35);
+}
+
+.spa-seal-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.spa-seal-inner img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 0;
+}
+
+.spa-seal-caption {
+  font-family: var(--spa-font-serif);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #2C2622;
+  margin-top: -3px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Right: Actions */
+.spa-nav-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1.25rem;
+  flex: 1;
+}
+
+.spa-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--spa-cream-light);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--spa-border);
+  cursor: pointer;
+  transition: var(--spa-transition);
+  text-decoration: none;
+}
+
+.spa-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--spa-taupe-rose);
+  color: var(--spa-white);
+  transform: translateY(-2px);
+}
+
+.spa-icon-btn i {
+  width: 18px;
+  height: 18px;
+}
+
+/* Primary Pill Button in Warm Taupe Rose */
+.spa-pill-btn {
+  background: var(--spa-taupe-rose);
+  color: var(--spa-dark-olive-deep) !important;
+  font-size: 0.84rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: none;
+  padding: 0.75rem 1.75rem;
+  border-radius: 9999px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: var(--spa-transition);
+  border: 1px solid var(--spa-taupe-rose-light);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
+}
+
+.spa-pill-btn:hover {
+  background: var(--spa-white);
+  color: var(--spa-dark-olive-deep) !important;
+  border-color: var(--spa-white);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(194, 164, 144, 0.35);
+}
+
+/* Dynamic auth button from main.js */
+body[data-page="home"] .nav-cta .auth-btn {
+  background: transparent !important;
+  border: 1px solid var(--spa-border) !important;
+  color: var(--spa-cream-light) !important;
+  border-radius: 9999px !important;
+  padding: 0.65rem 1.25rem !important;
+  font-size: 0.82rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.04em !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+  transition: var(--spa-transition) !important;
+}
+
+body[data-page="home"] .nav-cta .auth-btn:hover {
+  border-color: var(--spa-taupe-rose) !important;
+  color: var(--spa-white) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  transform: translateY(-2px) !important;
+}
+
+.spa-hamburger-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  color: var(--spa-cream-light);
+}
+
+.spa-hamburger-btn i {
+  width: 24px;
+  height: 24px;
+}
+
+/* Mobile dropdown menu */
+.spa-mobile-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: var(--spa-dark-olive-deep);
+  border-bottom: 1px solid var(--spa-border);
+  box-shadow: 0 16px 35px rgba(0, 0, 0, 0.4);
+  padding: 1.5rem 2rem;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.spa-mobile-menu.open {
+  display: flex;
+}
+
+.spa-mobile-menu a {
+  font-size: 1.05rem;
+  color: var(--spa-cream-light);
+  text-decoration: none;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(194, 164, 144, 0.1);
+}
+
+.spa-mobile-menu a:hover {
+  color: var(--spa-taupe-rose);
+}
+
+/* ==========================================================================
+   2. THE ICONIC CURVED HERO FRAME
+   ========================================================================== */
+
+.spa-hero-section {
+  padding: 1rem 1.5rem 3rem;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.spa-hero-frame {
+  position: relative;
+  min-height: 580px;
+  height: 72vh;
+  max-height: 750px;
+  border-radius: 36px 36px 0 0;
+  overflow: hidden;
+  background-color: var(--spa-dark-olive-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: none;
+}
+
+/* Background image with subtle zoom */
+.spa-hero-bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('../assets/images/hero_spa.jpg');
+  background-size: cover;
+  background-position: center 38%;
+  animation: heroKenBurns 25s ease-in-out infinite alternate;
+  transform-origin: center center;
+}
+
+@keyframes heroKenBurns {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.08); }
+}
+
+/* Natural vignette overlay */
+.spa-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(30, 36, 19, 0.3) 0%, rgba(30, 36, 19, 0.65) 80%, rgba(20, 24, 13, 0.85) 100%);
+  pointer-events: none;
+}
+
+/* Delicate floating doodle vectors inside hero */
+.spa-hero-doodles {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.spa-hero-content {
+  position: relative;
+  z-index: 3;
+  max-width: 900px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.spa-hero-kicker {
+  font-family: var(--spa-font-sans);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--spa-taupe-rose);
+  margin-bottom: -0.5rem;
+}
+
+/* The Grand Slender Serif Headline from reference */
+.spa-hero-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1.5rem, 5vw, 4rem);
+  flex-wrap: wrap;
+  font-family: var(--spa-font-serif) !important;
+  font-size: clamp(2.4rem, 6.2vw, 5.2rem) !important;
+  font-weight: 300 !important;
+  letter-spacing: 0.2em !important;
+  text-transform: uppercase !important;
+  color: var(--spa-white) !important;
+  line-height: 1.1;
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.6);
+  margin: 0;
+}
+
+.spa-hero-title .word {
+  display: inline-block;
+  transition: transform 0.4s ease;
+}
+
+.spa-hero-subtitle {
+  font-size: clamp(0.92rem, 1.5vw, 1.15rem);
+  color: var(--spa-text-muted);
+  max-width: 620px;
+  line-height: 1.65;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.spa-hero-btn {
+  background: var(--spa-taupe-rose);
+  color: var(--spa-dark-olive-deep) !important;
+  border: 1px solid var(--spa-taupe-rose-light);
+  border-radius: 9999px;
+  padding: 0.9rem 2.5rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  transition: var(--spa-transition);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+  margin-top: 0.5rem;
+}
+
+.spa-hero-btn:hover {
+  background: var(--spa-white);
+  color: var(--spa-dark-olive-deep) !important;
+  border-color: var(--spa-white);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 14px 40px rgba(194, 164, 144, 0.4);
+}
+
+/* Organic Wave Bottom Cutout - Fills with Dark Olive #3E4A28 */
+.spa-hero-wave-bottom {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: clamp(55px, 8vw, 110px);
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   3. SECTION 2: "COMPLETE WELLNESS" & THE 4 ARCHED CAPSULE FRAMES
+   ========================================================================== */
+
+.spa-services-section {
+  padding: 5rem 2rem 6rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.spa-section-header {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto 4rem;
+}
+
+.spa-sub-kicker {
+  font-family: var(--spa-font-serif);
+  font-size: 1.05rem;
+  font-style: italic;
+  color: var(--spa-taupe-rose);
+  letter-spacing: 0.06em;
+  margin-bottom: 0.5rem;
+}
+
+.spa-section-title {
+  font-family: var(--spa-font-serif) !important;
+  font-size: clamp(2.2rem, 4vw, 3.4rem) !important;
+  font-weight: 300 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  color: var(--spa-white) !important;
+  margin: 0 0 1.25rem;
+}
+
+.spa-section-desc {
+  font-size: 0.95rem;
+  color: var(--spa-text-muted);
+  line-height: 1.7;
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+/* The 4 Arched Service Cards Grid */
+.spa-arched-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2.2rem;
+}
+
+.spa-arched-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  transition: var(--spa-transition);
+}
+
+.spa-arched-card:hover {
+  transform: translateY(-8px);
+}
+
+/* Distinctive Arched / Capsule Image Frame */
+.spa-arch-frame {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 140px 140px 28px 28px;
+  overflow: hidden;
+  position: relative;
+  background-color: var(--spa-dark-olive-deep);
+  box-shadow: var(--spa-shadow-soft);
+  margin-bottom: 1.6rem;
+  transition: var(--spa-transition);
+  border: 1px solid var(--spa-border);
+}
+
+.spa-arched-card:hover .spa-arch-frame {
+  box-shadow: var(--spa-shadow-hover);
+  border-color: var(--spa-taupe-rose);
+}
+
+.spa-arch-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.spa-arched-card:hover .spa-arch-frame img {
+  transform: scale(1.08);
+}
+
+/* Card Content & Metadata */
+.spa-card-title {
+  font-family: var(--spa-font-serif) !important;
+  font-size: 1.2rem !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: var(--spa-white) !important;
+  margin-bottom: 0.65rem;
+  transition: color 0.3s ease;
+}
+
+.spa-arched-card:hover .spa-card-title {
+  color: var(--spa-taupe-rose);
+}
+
+.spa-card-desc {
+  font-size: 0.86rem;
+  color: var(--spa-text-muted);
+  line-height: 1.6;
+  margin-bottom: 1.1rem;
+  padding: 0 0.5rem;
+  min-height: 2.7rem;
+}
+
+.spa-card-meta {
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--spa-cream-light);
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--spa-border);
+  width: 85%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.spa-meta-divider {
+  color: var(--spa-taupe-rose);
+  font-weight: 400;
+}
+
+/* ==========================================================================
+   4. SECTION 3: ASYMMETRIC COLLAGE & "BUILDING PHYSICALLY & MENTAL HEALTH"
+   ========================================================================== */
+
+.spa-wellness-section {
+  padding: 4rem 2rem 7rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.spa-wellness-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 5rem;
+  align-items: center;
+}
+
+/* Asymmetric Collage Visual on Left */
+.spa-collage-container {
+  position: relative;
+  min-height: 520px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Organic Doodle SVG lines in background */
+.spa-collage-doodles {
+  position: absolute;
+  inset: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.spa-collage-layout {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 1.25rem;
+}
+
+/* Collage Item 1: Vertical Arched Frame with Play Button */
+.spa-collage-item-1 {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  border-radius: 140px 140px 30px 30px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: var(--spa-shadow-soft);
+  height: 480px;
+  border: 1px solid var(--spa-border);
+}
+
+.spa-collage-item-1 img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+  transition: transform 0.8s ease;
+}
+
+.spa-collage-item-1:hover img {
+  transform: scale(1.05);
+}
+
+/* Floating Glassmorphism Play Button */
+.spa-play-btn {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px dashed var(--spa-taupe-rose);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--spa-dark-olive-deep);
+  cursor: pointer;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+  transition: var(--spa-transition);
+}
+
+.spa-play-btn i {
+  width: 20px;
+  height: 20px;
+  margin-left: 2px;
+}
+
+.spa-play-btn:hover {
+  transform: scale(1.12);
+  background: var(--spa-white);
+  border-color: var(--spa-dark-olive-deep);
+}
+
+/* Collage Item 2: Rounded Rectangle Essential Oils */
+.spa-collage-item-2 {
+  grid-column: 2;
+  grid-row: 1;
+  border-radius: 28px;
+  overflow: hidden;
+  height: 220px;
+  box-shadow: var(--spa-shadow-soft);
+  border: 1px solid var(--spa-border);
+}
+
+.spa-collage-item-2 img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+  transition: transform 0.8s ease;
+}
+
+.spa-collage-item-2:hover img {
+  transform: scale(1.06);
+}
+
+/* Collage Item 3: Organic Pebble Frame */
+.spa-collage-item-3 {
+  grid-column: 2;
+  grid-row: 2;
+  border-radius: 65% 35% 60% 40% / 40% 55% 45% 60%;
+  overflow: hidden;
+  height: 240px;
+  box-shadow: var(--spa-shadow-soft);
+  border: 1px solid var(--spa-border);
+}
+
+.spa-collage-item-3 img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+  transition: transform 0.8s ease;
+}
+
+.spa-collage-item-3:hover img {
+  transform: scale(1.06);
+}
+
+/* Right Side: Editorial Content */
+.spa-wellness-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.spa-wellness-kicker {
+  font-family: var(--spa-font-serif);
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--spa-taupe-rose);
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.spa-wellness-title {
+  font-family: var(--spa-font-serif) !important;
+  font-size: clamp(2rem, 3.8vw, 3.2rem) !important;
+  font-weight: 300 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: var(--spa-white) !important;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.spa-wellness-desc {
+  font-size: 0.96rem;
+  color: var(--spa-text-muted);
+  line-height: 1.75;
+  margin: 0;
+}
+
+/* 2x2 Feature Grid with Minimalist Circular Icons */
+.spa-features-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem 2rem;
+  margin-top: 0.5rem;
+}
+
+.spa-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.spa-feature-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px dashed var(--spa-taupe-rose);
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--spa-taupe-rose);
+  flex-shrink: 0;
+  transition: var(--spa-transition);
+}
+
+.spa-feature-item:hover .spa-feature-icon {
+  border-color: var(--spa-white);
+  color: var(--spa-white);
+  transform: rotate(15deg);
+  background: rgba(194, 164, 144, 0.2);
+}
+
+.spa-feature-icon i {
+  width: 20px;
+  height: 20px;
+}
+
+.spa-feature-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--spa-white);
+  line-height: 1.35;
+}
+
+/* Bottom CTA & Direct Call Line */
+.spa-wellness-cta-row {
+  display: flex;
+  align-items: center;
+  gap: 2.2rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.spa-call-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  text-decoration: none;
+  color: var(--spa-white);
+  transition: var(--spa-transition);
+}
+
+.spa-call-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--spa-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--spa-taupe-rose);
+  transition: var(--spa-transition);
+}
+
+.spa-call-icon i {
+  width: 18px;
+  height: 18px;
+}
+
+.spa-call-link:hover .spa-call-icon {
+  background: var(--spa-taupe-rose);
+  color: var(--spa-dark-olive-deep);
+  transform: scale(1.08);
+}
+
+.spa-call-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.spa-call-text small {
+  font-size: 0.72rem;
+  color: var(--spa-taupe-rose);
+  letter-spacing: 0.04em;
+}
+
+.spa-call-text strong {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--spa-white);
+}
+
+/* ==========================================================================
+   5. SECTION 4: SANCTUARY DELMAS 65 & CURATED SOCIAL EXPERIENCE
+   ========================================================================== */
+
+.spa-sanctuary-section {
+  padding: 5rem 2rem 6rem;
+  background-color: var(--spa-dark-olive-deep);
+  position: relative;
+  border-top: 1px solid var(--spa-border);
+  border-bottom: 1px solid var(--spa-border);
+}
+
+.spa-sanctuary-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.spa-sanctuary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.spa-sanctuary-card {
+  background: var(--spa-card-glass);
+  border-radius: 28px;
+  padding: 3rem;
+  box-shadow: var(--spa-shadow-soft);
+  border: 1px solid var(--spa-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.spa-sanctuary-info-list {
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.spa-sanctuary-info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.spa-sanctuary-info-item i {
+  width: 22px;
+  height: 22px;
+  color: var(--spa-taupe-rose);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.spa-sanctuary-info-text strong {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--spa-white);
+  margin-bottom: 2px;
+}
+
+.spa-sanctuary-info-text span {
+  font-size: 0.86rem;
+  color: var(--spa-text-muted);
+}
+
+/* Curated Social Feed Grid */
+.spa-social-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.spa-social-card-item {
+  background: var(--spa-card-glass);
+  border-radius: 22px;
+  padding: 1.8rem;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid var(--spa-border);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
+  transition: var(--spa-transition);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.spa-social-card-item:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--spa-shadow-hover);
+  border-color: var(--spa-taupe-rose);
+  background: var(--spa-card-glass-hover);
+}
+
+.spa-social-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.spa-social-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--spa-taupe-rose);
+  font-size: 1.15rem;
+}
+
+.spa-social-handle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--spa-white);
+}
+
+.spa-social-tagline {
+  font-size: 0.82rem;
+  color: var(--spa-text-muted);
+  line-height: 1.5;
+}
+
+.spa-social-link-text {
+  font-size: 0.76rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--spa-taupe-rose);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: auto;
+}
+
+/* ==========================================================================
+   6. MINIMALIST LUXURY FOOTER
+   ========================================================================== */
+
+.spa-footer {
+  background-color: var(--spa-dark-olive-deep);
+  border-top: 1px solid var(--spa-border);
+  padding: 4.5rem 2rem 2.5rem;
+}
+
+.spa-footer-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2.5rem;
+}
+
+.spa-footer-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.spa-footer-logo {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+}
+
+.spa-footer-brand h3 {
+  font-family: var(--spa-font-serif);
+  font-size: 1.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin: 0;
+  color: var(--spa-white);
+}
+
+.spa-footer-brand p {
+  font-size: 0.88rem;
+  color: var(--spa-text-muted);
+  max-width: 480px;
+  margin: 0;
+}
+
+.spa-footer-links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.spa-footer-links a {
+  font-size: 0.86rem;
+  color: var(--spa-cream-light);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  transition: color 0.2s ease;
+}
+
+.spa-footer-links a:hover {
+  color: var(--spa-taupe-rose);
+}
+
+.spa-footer-bottom {
+  width: 100%;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(194, 164, 144, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--spa-text-subtle);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* ==========================================================================
+   7. RESPONSIVE DESIGN (TABLET & MOBILE)
+   ========================================================================== */
+
+@media (max-width: 1100px) {
+  .spa-arched-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2.5rem;
+  }
+  
+  .spa-wellness-grid {
+    grid-template-columns: 1fr;
+    gap: 4rem;
+  }
+  
+  .spa-sanctuary-grid {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .spa-nav-left {
+    display: none;
+  }
+  
+  .spa-hamburger-btn {
+    display: block;
+  }
+  
+  .spa-hero-frame {
+    height: 60vh;
+    min-height: 480px;
+    border-radius: 24px 24px 0 0;
+  }
+  
+  .spa-hero-title {
+    gap: 1rem;
+  }
+  
+  .spa-collage-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .spa-collage-item-1 {
+    grid-column: 1;
+    grid-row: 1;
+    height: 380px;
+  }
+  
+  .spa-collage-item-2,
+  .spa-collage-item-3 {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .spa-nav-container {
+    padding: 0.75rem 1.25rem;
+  }
+  
+  .spa-seal-badge {
+    width: 66px;
+    height: 66px;
+  }
+  
+  .spa-seal-inner img {
+    width: 34px;
+    height: 34px;
+  }
+  
+  .spa-seal-caption {
+    font-size: 0.5rem;
+  }
+  
+  .spa-pill-btn {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.78rem;
+  }
+  
+  .spa-hero-section {
+    padding: 0.5rem 0.75rem 2rem;
+  }
+  
+  .spa-hero-frame {
+    min-height: 420px;
+    height: 52vh;
+    border-radius: 20px 20px 0 0;
+  }
+  
+  .spa-hero-title {
+    font-size: 2.1rem !important;
+    letter-spacing: 0.12em !important;
+  }
+  
+  .spa-arched-grid {
+    grid-template-columns: 1fr;
+    max-width: 380px;
+    margin: 0 auto;
+  }
+  
+  .spa-arch-frame {
+    border-radius: 120px 120px 22px 22px;
+  }
+  
+  .spa-features-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .spa-social-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .spa-sanctuary-card {
+    padding: 2rem 1.5rem;
+  }
+  
+  .spa-footer-bottom {
+    flex-direction: column;
+    text-align: center;
+    justify-content: center;
+  }
+}

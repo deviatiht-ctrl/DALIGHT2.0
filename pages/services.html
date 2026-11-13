@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 
 <head>
@@ -31,18 +31,25 @@
   <link rel="icon" href="../assets/images/logodaligth.png?v=2" type="image/png" />
   
   
-  <link
-    href="../vendor/fonts/google-fonts.css"
-    rel="stylesheet" />
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="../vendor/fonts/google-fonts.css" rel="stylesheet" />
   <link rel="stylesheet" href="../css/style.css?v=5.1.0" />
   <link rel="stylesheet" href="../css/responsive.css?v=5.1.0" />
+  <link rel="stylesheet" href="../css/modern-services.css?v=1.0.0" />
+  <link rel="stylesheet" href="../css/modern-theme.css?v=1.0.0" />
+  <meta name="theme-color" content="#3E4A28">
   <script src="../vendor/lucide/lucide.min.js"></script>
   <script src="../vendor/supabase/supabase.min.js"></script>
   <script type="module" src="../js/main.js?v=5.3.0"></script>
-  <script type="module" src="../js/chat-widget.js?v=5.3.0" defer></script>
+  <script type="module" src="../js/chat-widget.js?v=6.0.0" defer></script>
 </head>
 
 <body data-page="services">
+  <!-- Subtle Background Monogram Pattern & Glow -->
+  <div class="spa-bg-pattern" aria-hidden="true"></div>
+  <div class="spa-bg-glow" aria-hidden="true"></div>
   <!-- Fallback nav toggle for hamburger menu -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -66,40 +73,67 @@
       });
     });
   </script>
-  <header class="site-header internal">
-    <nav class="top-nav">
-      <a class="brand" href="../index.html">
-        <img class="brand-logo" src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" />
-        <div>
-          <strong>DALIGHT</strong>
-          <small>L'Art du Bien-Être</small>
+  <!-- ==========================================================================
+         MODERN LUXURY NAVBAR (EXACT DALIGHT MODEL)
+         ========================================================================== -->
+    <header class="spa-nav-wrapper" id="spa-navbar">
+      <nav class="spa-nav-container">
+        <!-- Left: Editorial Links -->
+        <div class="spa-nav-left nav-links">
+          <a href="../index.html" class="spa-nav-link">Accueil</a>
+          <a href="./about.html" class="spa-nav-link">À Propos</a>
+          <a href="./services.html" class="spa-nav-link active">Services</a>
+          <a href="./formation.html" class="spa-nav-link">Formations</a>
+          <a href="./shop.html" class="spa-nav-link">Boutique</a>
+          <a href="../index.html#contact" class="spa-nav-link">Contact</a>
+          <a href="../admin/dashboard.html" class="admin-link">Admin</a>
         </div>
-      </a>
-      <button class="nav-toggle" aria-label="Ouvrir la navigation">
-        <span></span>
-        <span></span><span></span>
-      </button>
-      <div class="nav-links">
+
+        <!-- Center: Circular Brand Seal -->
+        <a class="spa-brand-center" href="../index.html" aria-label="DALIGHT Accueil">
+          <div class="spa-seal-badge">
+            <div class="spa-seal-inner">
+              <img src="../assets/images/logodaligth.png?v=2" alt="DALIGHT Logo" />
+              <span class="spa-seal-caption">DALIGHT</span>
+            </div>
+          </div>
+        </a>
+
+        <!-- Right: Actions & Reservation Pill Button -->
+        <div class="spa-nav-right nav-cta">
+          <a href="./services.html" class="spa-icon-btn" title="Rechercher un soin" aria-label="Recherche">
+            <i data-lucide="search"></i>
+          </a>
+          <a href="./cart.html" class="spa-icon-btn cart-btn" title="Panier" aria-label="Panier">
+            <i data-lucide="shopping-bag"></i>
+            <span class="cart-badge">0</span>
+          </a>
+          <a href="./services.html" class="spa-pill-btn">
+            Prendre Rendez-vous
+          </a>
+          <a href="./login.html" class="spa-icon-btn mobile-auth-link" title="Espace Membre" aria-label="Compte">
+            <i data-lucide="user"></i>
+          </a>
+          <button class="spa-hamburger-btn" id="spa-hamburger" aria-label="Menu Mobile">
+            <i data-lucide="menu"></i>
+          </button>
+        </div>
+      </nav>
+
+      <!-- Mobile Dropdown Menu -->
+      <div class="spa-mobile-menu" id="spa-mobile-menu">
         <a href="../index.html">Accueil</a>
-        <a href="./about.html">À propos</a>
-        <a href="./services.html" class="active">Services</a>
+        <a href="./services.html">Prendre Rendez-vous</a>
+        <a href="./services.html">Nos Services &amp; Tarifs</a>
+        <a href="./formation.html">DALIGHT School</a>
         <a href="./shop.html">Boutique</a>
-        <a href="./services.html">Réservation</a>
-        <a href="./orders.html">Mes réservations</a>
-        <a href="./loyalty.html">Fidélité</a>
-        <a href="./follow.html">Suivre</a>
-        <a href="./login.html" class="mobile-auth-link" style="color:var(--gold-500);"><i data-lucide="user" style="width:16px;height:16px;display:inline-block;margin-right:4px;vertical-align:-3px;"></i> Connexion</a>
-        <a href="../admin/dashboard.html" class="admin-link">Admin</a>
+        <a href="./cart.html">Panier</a>
+        <a href="./orders.html">Mes Réservations</a>
+        <a href="./loyalty.html">Programme Fidélité</a>
+        <a href="../index.html#contact">Delmas 65</a>
+        <a href="./login.html">Espace Client</a>
       </div>
-      <div class="nav-cta">
-        <button class="cart-toggle" id="cart-toggle" aria-label="Panier">
-          <i data-lucide="shopping-cart"></i>
-          <span class="cart-badge" id="cart-badge">0</span>
-        </button>
-        <a class="btn" href="./services.html">Réserver</a>
-      </div>
-    </nav>
-  </header>
+    </header>
 
   <main class="page-shell fade-in">
     <section>
@@ -109,32 +143,88 @@
         Chaque service DALIGHT inclut un diagnostic capillaire, une immersion sensorielle aux huiles précieuses
         et un massage crânien profond pour une relaxation absolue.
       </p>
-      <!-- Search & Filter -->
-      <div class="services-controls">
-        <div class="search-box">
-          <i data-lucide="search"></i>
-          <input type="text" id="service-search" placeholder="Rechercher un service..." />
+      <!-- ═══ SCULPTURAL ARCHITECTURAL SEARCH & FILTER CONSOLE ═══ -->
+      <section class="spa-controls-console services-controls">
+        <div class="spa-console-glow" aria-hidden="true"></div>
+
+        <div class="spa-console-header">
+          <div class="spa-kicker-pill">
+            <i data-lucide="compass"></i>
+            <span>Espace Soins &amp; Détente</span>
+          </div>
+          <h2 class="spa-console-title">Trouvez Votre <em>Moment de Détente</em></h2>
+          <p class="spa-console-subtitle">Recherchez par mot-clé ou filtrez selon vos besoins pour vivre l'expérience ultime de soin du cuir chevelu.</p>
         </div>
-        <div class="filter-buttons">
-          <button class="filter-btn active" data-filter="all">Tous</button>
-          <button class="filter-btn" data-filter="headspa">Head Spa</button>
-          <button class="filter-btn" data-filter="massage-relaxant">Massage</button>
-          <button class="filter-btn" data-filter="wood-therapy">Wood Therapy</button>
-          <button class="filter-btn" data-filter="packages-silver">Silver</button>
-          <button class="filter-btn" data-filter="packages-luxury">Luxury</button>
-          <button class="filter-btn" data-filter="couple">Couple</button>
-          <button class="filter-btn" data-filter="besties">Besties</button>
+
+        <!-- The Sculptural Search Capsule -->
+        <div class="spa-search-capsule-wrap">
+          <div class="spa-search-capsule search-box">
+            <div class="spa-search-icon-circle">
+              <i data-lucide="search"></i>
+            </div>
+            <input 
+              type="text" 
+              id="service-search" 
+              placeholder="Rechercher un soin de détente, Head Spa, massage, cure..." 
+              autocomplete="off"
+            />
+            <div class="spa-search-badge-pill">
+              <i data-lucide="sparkles"></i>
+              <span>Catalogue</span>
+            </div>
+          </div>
         </div>
-      </div>
+
+        <!-- Divider with Gold Taupe Seal -->
+        <div class="spa-console-divider">
+          <span>✦ SÉLECTION PAR UNIVERS DE SOINS ✦</span>
+        </div>
+
+        <!-- Sculptural Filter Pills -->
+        <div class="spa-filter-pills-wrap filter-buttons">
+          <button class="filter-btn active" data-filter="all">
+            <i data-lucide="sparkles"></i>
+            <span>Tous</span>
+          </button>
+          <button class="filter-btn" data-filter="headspa">
+            <i data-lucide="droplet"></i>
+            <span>Head Spa</span>
+          </button>
+          <button class="filter-btn" data-filter="massage-relaxant">
+            <i data-lucide="heart"></i>
+            <span>Massage</span>
+          </button>
+          <button class="filter-btn" data-filter="wood-therapy">
+            <i data-lucide="trees"></i>
+            <span>Wood Therapy</span>
+          </button>
+          <button class="filter-btn" data-filter="packages-silver">
+            <i data-lucide="shield"></i>
+            <span>Silver</span>
+          </button>
+          <button class="filter-btn" data-filter="packages-luxury">
+            <i data-lucide="crown"></i>
+            <span>Luxury</span>
+          </button>
+          <button class="filter-btn" data-filter="couple">
+            <i data-lucide="users"></i>
+            <span>Couple</span>
+          </button>
+          <button class="filter-btn" data-filter="besties">
+            <i data-lucide="smile"></i>
+            <span>Besties</span>
+          </button>
+        </div>
+      </section>
 
       <!-- ═══ SPECIALS & PROMOS (above services) ═══ -->
-      <div id="specials-wrapper" style="margin-bottom:2.5rem;">
-        <div style="margin-bottom:1rem;">
-          <div class="svc-category-badge" style="display:inline-flex;align-items:center;gap:.4rem;margin-bottom:.5rem;"><i data-lucide="sparkles"></i> Spécials</div>
-          <h2 style="margin:0 0 .25rem;font-size:1.5rem;">Offres Spéciales</h2>
-          <p style="color:rgba(74,55,40,.6);margin:0;font-size:.9rem;">Promotions limitées avec réductions exclusives</p>
+      <div id="specials-wrapper">
+        <div style="margin-bottom:1.85rem;">
+          <div class="spa-kicker-pill"><i data-lucide="sparkles"></i> Offres Éphémères &amp; Privilèges</div>
+          <h2 style="margin:0.4rem 0 .4rem;font-size:clamp(1.9rem, 3.2vw, 2.5rem);font-family:var(--spa-font-serif);font-weight:300;color:var(--spa-white);letter-spacing:0.03em;">OFFRES SPÉCIALES &amp; CURES</h2>
+          <p style="color:var(--spa-text-muted);margin:0;font-size:.95rem;line-height:1.5;">Profitez de réductions exclusives et de soins de détente combinés du moment au Delmas 65.</p>
         </div>
-        <div id="specials-frontend-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem;"></div>
+        <div id="specials-frontend-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;"></div>
       </div>
 
       <div class="service-grid" id="services-grid">
@@ -145,119 +235,130 @@
     </section>
 
     <!-- ═══════════════════════════════════════════
-           ABONNEMENTS MENSUELS
+           ABONNEMENTS MENSUELS (JEU DE FORMES ARCHITECTURAL DALIGHT)
       ═══════════════════════════════════════════ -->
-    <section class="section tinted section-spacing-lg">
-      <div class="section-heading">
-        <div class="svc-category-badge"><i data-lucide="calendar-range"></i> Abonnements</div>
-        <h2>Service d'Abonnement Head Spa</h2>
-        <p>4 séances par mois · 1 fois par semaine · Paiement mensuel à l'avance</p>
+    <section class="spa-subscription-section" id="abonnements">
+      <div class="spa-subscription-header">
+        <div class="spa-kicker-pill"><i data-lucide="crown"></i> Cures &amp; Soins Mensuels de Détente</div>
+        <h2>SERVICE D'ABONNEMENT HEAD SPA</h2>
+        <p>4 soins de relaxation par mois (1 soin par semaine) pour maintenir l'équilibre parfait de votre cuir chevelu et une déconnexion absolue.</p>
       </div>
 
-      <div class="packages-grid">
+      <div class="spa-subscription-grid">
 
-        <!-- Silver -->
-        <div class="package-card silver">
-          <div class="package-card__header">
-            <span class="package-badge">Basic Silver</span>
-            <h3>Silver Package</h3>
-            <span class="package-price">15 830</span>
-            <span class="package-subtitle">Gourdes · 4 séances / mois</span>
+        <!-- Silver Package -->
+        <article class="spa-package-card silver package-card" data-package="Silver Package">
+          <div class="spa-package-header">
+            <span class="spa-package-crest silver"><i data-lucide="sparkles"></i> BASIC SILVER · 4 SÉANCES / MOIS</span>
+            <h3 class="spa-package-name">Silver Package</h3>
+            <div class="spa-package-price-wrap">
+              <div class="spa-package-price-row">
+                <span class="spa-package-num package-price">15 830</span>
+                <span class="spa-package-curr">Gourdes</span>
+              </div>
+              <span class="spa-package-usd">~$125 USD / mois</span>
+            </div>
           </div>
-          <div class="package-card__body">
-            <ul>
-              <li>Diagnostic cuir chevelu</li>
-              <li>Lavage adapté selon cuir chevelu</li>
-              <li>Massage crânien à la nuque</li>
-              <li>Masque capillaires</li>
-              <li>Traitement adapté</li>
-              <li>Coiffure protectrice simple</li>
+          <div class="spa-package-body">
+            <ul class="spa-package-features">
+              <li><i data-lucide="check"></i> <span>Diagnostic cuir chevelu personnalisé</span></li>
+              <li><i data-lucide="check"></i> <span>Lavage adapté selon la nature du cuir chevelu</span></li>
+              <li><i data-lucide="check"></i> <span>Massage crânien à la nuque &amp; déconnexion</span></li>
+              <li><i data-lucide="check"></i> <span>Masque capillaire nourrissant et régénérant</span></li>
+              <li><i data-lucide="check"></i> <span>Traitement adapté &amp; hydrothérapie japonaise</span></li>
+              <li><i data-lucide="check"></i> <span>Coiffure protectrice simple en fin de soin</span></li>
             </ul>
-            <div class="pkg-length-table">
-              <p class="pkg-length-title">Tarif selon longueur de cheveux</p>
-              <div class="pkg-length-row included">
+            <div class="spa-pkg-lengths">
+              <p class="spa-pkg-lengths-title"><i data-lucide="scissors"></i> Tarif selon longueur de cheveux</p>
+              <div class="spa-pkg-lengths-row">
                 <span>Extra Court &amp; Court</span>
                 <strong>Inclus</strong>
               </div>
-              <div class="pkg-length-row extra">
+              <div class="spa-pkg-lengths-row">
                 <span>Médium · Large · Extra Large</span>
                 <strong>+ 5 000 Gdes</strong>
               </div>
             </div>
           </div>
-          <div class="package-card__footer">
-            <button class="btn secondary add-to-cart-package" style="width:100%;text-align:center;"
+          <div class="spa-package-footer">
+            <button class="spa-package-cta-btn silver add-to-cart-package"
               data-package="Silver Package" data-price="15000" data-price-usd="125">
-              <i data-lucide="plus"></i> Ajouter au panier
+              <i data-lucide="plus"></i> <span>Ajouter au Panier</span>
             </button>
           </div>
-        </div>
+        </article>
 
-        <!-- Gold -->
-        <div class="package-card gold">
-          <div class="package-card__header">
-            <span class="package-badge">✦ Golden Luxury</span>
-            <h3>Golden Luxury Package</h3>
-            <span class="package-price">21 240</span>
-            <span class="package-subtitle">Gourdes · 4 séances / mois</span>
+        <!-- Golden Luxury Package -->
+        <article class="spa-package-card gold package-card" data-package="Golden Luxury Package">
+          <div class="spa-package-header">
+            <span class="spa-package-crest gold"><i data-lucide="crown"></i> ✦ GOLDEN LUXURY · EXPÉRIENCE ULTIME ✦</span>
+            <h3 class="spa-package-name">Golden Luxury Package</h3>
+            <div class="spa-package-price-wrap">
+              <div class="spa-package-price-row">
+                <span class="spa-package-num package-price">21 240</span>
+                <span class="spa-package-curr">Gourdes</span>
+              </div>
+              <span class="spa-package-usd">~$167 USD / mois</span>
+            </div>
           </div>
-          <div class="package-card__body">
-            <ul>
-              <li>Diagnostic cuir chevelu</li>
-              <li>Lavage traitant profond selon cuir chevelu</li>
-              <li>Massage crânien à la nuque</li>
-              <li>Masque capillaires</li>
-              <li>Traitement adapté</li>
-              <li>Fusion de plantes naturels</li>
-              <li>Coiffure pour une semaine</li>
+          <div class="spa-package-body">
+            <ul class="spa-package-features">
+              <li><i data-lucide="sparkles"></i> <span>Diagnostic cuir chevelu approfondi &amp; caméra HD</span></li>
+              <li><i data-lucide="sparkles"></i> <span>Lavage traitant profond selon la nature du cuir chevelu</span></li>
+              <li><i data-lucide="sparkles"></i> <span>Massage crânien prolongé jusqu'aux trapèzes</span></li>
+              <li><i data-lucide="sparkles"></i> <span>Masque capillaire haute nutrition aux actifs purs</span></li>
+              <li><i data-lucide="sparkles"></i> <span>Traitement intensif &amp; vapeur aromatique tiède</span></li>
+              <li><i data-lucide="sparkles"></i> <span>Fusion de plantes naturelles fortifiantes</span></li>
+              <li><i data-lucide="sparkles"></i> <span>Coiffure protectrice pour une semaine complète</span></li>
             </ul>
-            <div class="pkg-length-table">
-              <p class="pkg-length-title">Tarif selon longueur de cheveux</p>
-              <div class="pkg-length-row included">
+            <div class="spa-pkg-lengths">
+              <p class="spa-pkg-lengths-title"><i data-lucide="scissors"></i> Tarif selon longueur de cheveux</p>
+              <div class="spa-pkg-lengths-row">
                 <span>Extra Court &amp; Court</span>
                 <strong>Inclus</strong>
               </div>
-              <div class="pkg-length-row extra gold">
+              <div class="spa-pkg-lengths-row">
                 <span>Médium · Large · Extra Large</span>
                 <strong>+ 7 000 Gdes</strong>
               </div>
             </div>
           </div>
-          <div class="package-card__footer">
-            <button class="btn add-to-cart-package" style="width:100%;text-align:center;"
+          <div class="spa-package-footer">
+            <button class="spa-package-cta-btn gold add-to-cart-package"
               data-package="Golden Luxury Package" data-price="20000" data-price-usd="167">
-              <i data-lucide="plus"></i> Ajouter au panier
+              <i data-lucide="sparkles"></i> <span>Choisir l'Expérience Golden</span>
             </button>
           </div>
-        </div>
+        </article>
 
       </div>
 
-      <!-- Règlement -->
-      <div style="margin-top:2.5rem;">
-        <h3
-          style="font-size:1rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--marron-700);margin-bottom:1rem;">
-          Règlement abonnement</h3>
-        <div class="reglement-grid">
-          <div class="reglement-item">
-            <div class="reglement-icon"><i data-lucide="calendar-check" style="width:16px;height:16px;"></i></div>
-            <p>Abonnement valable <strong>30 jours</strong></p>
+      <!-- Règlement DALIGHT (Floating Capsule Badges) -->
+      <div class="spa-reglement-wrapper">
+        <div class="spa-reglement-title">
+          <i data-lucide="shield-check"></i>
+          <span>Règlement DALIGHT · Abonnements</span>
+        </div>
+        <div class="spa-reglement-capsules">
+          <div class="spa-reglement-capsule">
+            <i data-lucide="calendar-check"></i>
+            <span>Valable <strong>30 jours</strong></span>
           </div>
-          <div class="reglement-item">
-            <div class="reglement-icon"><i data-lucide="credit-card" style="width:16px;height:16px;"></i></div>
-            <p>Paiement à <strong>l'avance obligatoire</strong></p>
+          <div class="spa-reglement-capsule">
+            <i data-lucide="credit-card"></i>
+            <span>Paiement à l'<strong>avance requis</strong></span>
           </div>
-          <div class="reglement-item">
-            <div class="reglement-icon"><i data-lucide="x-circle" style="width:16px;height:16px;"></i></div>
-            <p>Sessions non utilisées = <strong>perdues</strong></p>
+          <div class="spa-reglement-capsule">
+            <i data-lucide="x-circle"></i>
+            <span>Sessions non utilisées = <strong>perdues</strong></span>
           </div>
-          <div class="reglement-item">
-            <div class="reglement-icon"><i data-lucide="clock" style="width:16px;height:16px;"></i></div>
-            <p>Retard = <strong>temps réduit</strong></p>
+          <div class="spa-reglement-capsule">
+            <i data-lucide="clock"></i>
+            <span>Retard = <strong>temps de soin réduit</strong></span>
           </div>
-          <div class="reglement-item">
-            <div class="reglement-icon"><i data-lucide="bell-off" style="width:16px;height:16px;"></i></div>
-            <p>Annulation <strong>24h avant</strong> requise</p>
+          <div class="spa-reglement-capsule">
+            <i data-lucide="bell-off"></i>
+            <span>Annulation <strong>24h avant requise</strong></span>
           </div>
         </div>
       </div>
@@ -268,16 +369,32 @@
 
   </main>
 
-  <footer class="site-footer">
-    <p>© <span id="year"></span> DALIGHT. Tous droits réservés.</p>
-    <div class="footer-links">
-      <a href="./login.html">Espace client</a>
-      <a href="./services.html">Nos Services</a>
-      <a href="mailto:dalightbeauty15mai@gmail.com">dalightbeauty15mai@gmail.com</a>
-    </div>
-    <div class="footer-credit">
-      <span>Conçu avec soin par <a href="https://cvisualagency.org" target="_blank" rel="noopener"
-          class="cvisual-link">Cvisual</a></span>
+  <!-- ==========================================================================
+       MINIMALIST LUXURY FOOTER (DALIGHT MODEL)
+       ========================================================================== -->
+  <footer class="spa-footer">
+    <div class="spa-footer-container">
+      <div class="spa-footer-brand">
+        <img class="spa-footer-logo" src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" />
+        <h3>DALIGHT</h3>
+        <p>Le premier espace Head Spa &amp; Bien-Être à Port-au-Prince. L'art de prendre soin de soi avec élégance.</p>
+      </div>
+
+      <div class="spa-footer-links">
+        <a href="../index.html">Accueil</a>
+        <a href="./services.html">Réservation</a>
+        <a href="./formation.html">DALIGHT School</a>
+        <a href="./shop.html">Boutique</a>
+        <a href="./loyalty.html">Programme Fidélité</a>
+        <a href="./orders.html">Mes Rendez-vous</a>
+        <a href="./login.html">Espace Membre</a>
+      </div>
+
+      <div class="spa-footer-bottom">
+        <span>&copy; <span id="year"></span> DALIGHT. Tous droits réservés.</span>
+        <span>Delmas 65, Rue Durandisse #10 · Téléphone : +509 4747-7221</span>
+        <span>Conçu avec soin par <a href="https://cvisualagency.org" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">Cvisual</a></span>
+      </div>
     </div>
   </footer>
 
@@ -287,6 +404,63 @@
     <div id="hair-lightbox" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:11000;align-items:center;justify-content:center;cursor:zoom-out;padding:2rem;">
       <img id="hair-lightbox-img" src="" style="max-width:88vw;max-height:88vh;object-fit:contain;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.5);cursor:default;" onclick="event.stopPropagation();">
       <button onclick="document.getElementById('hair-lightbox').style.display='none'" style="position:absolute;top:1.5rem;right:1.5rem;background:rgba(255,255,255,.2);border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:white;font-size:1.5rem;transition:background .2s;">&times;</button>
+    </div>
+
+    <!-- ===== INTERACTIVE TOUCH-SWIPE SERVICE DETAIL MODAL ===== -->
+    <div id="spa-detail-modal-overlay" class="spa-detail-modal-overlay">
+      <div class="spa-detail-modal" id="spa-detail-modal" role="dialog" aria-modal="true">
+        <button class="spa-modal-close-btn" id="spa-modal-close" aria-label="Fermer les détails">
+          <i data-lucide="x"></i>
+        </button>
+
+        <!-- Touch-Swipe Photo Carousel -->
+        <div class="spa-carousel-container" id="spa-carousel-container">
+          <div class="spa-carousel-track" id="spa-carousel-track">
+            <!-- Slides injected dynamically -->
+          </div>
+          <button class="spa-carousel-nav spa-carousel-prev" id="spa-carousel-prev" aria-label="Photo précédente">
+            <i data-lucide="chevron-left"></i>
+          </button>
+          <button class="spa-carousel-nav spa-carousel-next" id="spa-carousel-next" aria-label="Photo suivante">
+            <i data-lucide="chevron-right"></i>
+          </button>
+          <div class="spa-carousel-dots" id="spa-carousel-dots">
+            <!-- Dots injected dynamically -->
+          </div>
+        </div>
+
+        <!-- Modal Body / Content -->
+        <div class="spa-modal-body">
+          <div class="spa-modal-top-meta">
+            <span class="spa-modal-category" id="spa-modal-category">Head Spa</span>
+            <span class="spa-modal-duration" id="spa-modal-duration"><i data-lucide="clock" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:4px;"></i> 60 min</span>
+          </div>
+          
+          <h2 class="spa-modal-title" id="spa-modal-title">Head Spa Signature</h2>
+          
+          <p class="spa-modal-desc" id="spa-modal-desc"></p>
+
+          <div class="spa-modal-benefits">
+            <h4>Ce que comprend votre soin de détente :</h4>
+            <ul id="spa-modal-benefits-list">
+              <li><i data-lucide="sparkles"></i> Diagnostic capillaire sur mesure &amp; immersion sensorielle</li>
+              <li><i data-lucide="check"></i> Massage crânien profond &amp; hydrothérapie japonaise</li>
+              <li><i data-lucide="heart"></i> Huiles précieuses tièdes &amp; serviettes aromatiques chaudes</li>
+              <li><i data-lucide="shield-check"></i> Relaxation cervicale &amp; tisane bien-être offerte</li>
+            </ul>
+          </div>
+
+          <div class="spa-modal-footer">
+            <div class="spa-modal-price-display">
+              <div class="spa-modal-price-htg" id="spa-modal-price-htg">0 HTG</div>
+              <small style="color:var(--spa-taupe-rose);font-size:.85rem;margin-top:2px;" id="spa-modal-price-usd">$0 USD</small>
+            </div>
+            <button class="spa-modal-reserve-btn" id="spa-modal-reserve-btn">
+              <i data-lucide="calendar-check"></i> <span>Réserver ce soin</span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ===== MODAL: SELEKSYON TIP CHEVEUX HEAD SPA ===== -->
@@ -414,9 +588,9 @@
     </div>
 
     <script type="module" src="../js/main.js?v=5.3.0"></script>
-    <script src="../js/specials.js?v=202606241230"></script>
+    <script src="../js/specials.js?v=5.4.0"></script>
     <script type="module">
-      import { initChatWidget } from '../js/chat-widget.js?v=5.3.0';
+      import { initChatWidget } from '../js/chat-widget.js?v=6.0.0';
       import { getSupabase } from '../js/main.js?v=5.3.0';
 
       const FALLBACK_SERVICES = [
@@ -927,15 +1101,263 @@
         renderGrid(filtered);
       }
 
+      // ============================================
+      // SERVICE PHOTO GALLERIES & ZEN RELAXATION ENGINE
+      // ============================================
+      const SERVICE_PHOTO_MAP = {
+        headspa: [
+          '../assets/images/service_headspa.jpg',
+          '../assets/images/service_facial.jpg',
+          '../assets/images/essential_oils_bowl.jpg',
+          '../assets/images/relax and rejuvenate_ using argan oil for massages.jpg'
+        ],
+        massage: [
+          '../assets/images/service_massage.jpg',
+          '../assets/images/massage.jpg',
+          '../assets/images/essential_oils_bowl.jpg',
+          '../assets/images/massage en plein air.jpg'
+        ],
+        wood: [
+          '../assets/images/service_woodtherapy.jpg',
+          '../assets/images/relax and rejuvenate_ using argan oil for massages.jpg',
+          '../assets/images/service_massage.jpg'
+        ],
+        facial: [
+          '../assets/images/service_facial.jpg',
+          '../assets/images/service_headspa.jpg',
+          '../assets/images/essential_oils_bowl.jpg'
+        ],
+        couple: [
+          '../assets/images/hero_spa.jpg',
+          '../assets/images/service_massage.jpg',
+          '../assets/images/service_headspa.jpg',
+          '../assets/images/essential_oils_bowl.jpg'
+        ],
+        packages: [
+          '../assets/images/essential_oils_bowl.jpg',
+          '../assets/images/service_headspa.jpg',
+          '../assets/images/service_woodtherapy.jpg',
+          '../assets/images/service_massage.jpg'
+        ],
+        default: [
+          '../assets/images/service_headspa.jpg',
+          '../assets/images/service_massage.jpg',
+          '../assets/images/essential_oils_bowl.jpg'
+        ]
+      };
+
+      function getServicePhotos(service) {
+        if (service.image_url && typeof service.image_url === 'string') {
+          return [service.image_url, ...SERVICE_PHOTO_MAP.default];
+        }
+        const name = (service.name || '').toLowerCase();
+        const cat = getCategoryFromService(service);
+        if (name.includes('wood') || cat === 'wood-therapy') return SERVICE_PHOTO_MAP.wood;
+        if (name.includes('couple') || name.includes('duo') || cat === 'couple') return SERVICE_PHOTO_MAP.couple;
+        if (name.includes('visage') || name.includes('facial') || name.includes('crânienne')) return SERVICE_PHOTO_MAP.facial;
+        if (name.includes('massage') || cat === 'massage-relaxant') return SERVICE_PHOTO_MAP.massage;
+        if (name.includes('package') || name.includes('cure') || name.includes('silver') || name.includes('luxury') || cat.includes('package')) return SERVICE_PHOTO_MAP.packages;
+        if (cat === 'headspa' || name.includes('head spa') || name.includes('spa')) return SERVICE_PHOTO_MAP.headspa;
+        return SERVICE_PHOTO_MAP.default;
+      }
+
+      function getServiceBenefits(service) {
+        const name = (service.name || '').toLowerCase();
+        if (name.includes('wood')) {
+          return [
+            { icon: 'sparkles', text: 'Drainage lymphatique profond aux instruments en bois précieux' },
+            { icon: 'heart', text: 'Sculptage corporel & réduction de la rétention d\'eau' },
+            { icon: 'shield-check', text: 'Application d\'huiles botaniques tonifiantes & raffermissantes' },
+            { icon: 'check', text: 'Boisson détox et diagnostic corporel personnalisé' }
+          ];
+        }
+        if (name.includes('couple') || name.includes('duo')) {
+          return [
+            { icon: 'heart', text: 'Cabine VIP double privatisée aux bougies et senteurs relaxantes' },
+            { icon: 'sparkles', text: 'Massage synchrone à 4 mains par deux thérapeutes expertes' },
+            { icon: 'coffee', text: 'Thé d\'accueil, douceurs artisanales & flûte de bien-être' },
+            { icon: 'shield-check', text: 'Séance personnalisée selon les zones de tension de chacun' }
+          ];
+        }
+        if (name.includes('visage') || name.includes('facial')) {
+          return [
+            { icon: 'sparkles', text: 'Nettoyage doux & massage craniosacral stimulant' },
+            { icon: 'moon', text: 'Acupression ciblée pour dissiper les maux de tête & migraines' },
+            { icon: 'heart', text: 'Masque éclat du teint aux extraits naturels bienfaisants' },
+            { icon: 'check', text: 'Détente cervicale & application de sérum protecteur' }
+          ];
+        }
+        if (name.includes('massage')) {
+          return [
+            { icon: 'sparkles', text: 'Massage complet aux huiles végétales tièdes et pures' },
+            { icon: 'heart', text: 'Dénouement des nœuds musculaires et tensions dorsales' },
+            { icon: 'moon', text: 'Ambiance sonore zen et serviettes aromatiques chaudes' },
+            { icon: 'shield-check', text: 'Revitalisation globale de la circulation et de l\'énergie' }
+          ];
+        }
+        // Default Head Spa
+        return [
+          { icon: 'sparkles', text: 'Diagnostic capillaire approfondi du cuir chevelu' },
+          { icon: 'check', text: 'Hydrothérapie japonaise apaisante & massage crânien immersif' },
+          { icon: 'heart', text: 'Bain de vapeur aux herbes médicinales & masque revitalisant' },
+          { icon: 'shield-check', text: 'Massage épaules, nuque et dégustation de thé bio détox' }
+        ];
+      }
+
+      // ============================================
+      // TOUCH-SWIPE CAROUSEL MODAL ENGINE
+      // ============================================
+      let currentCarouselIndex = 0;
+      let currentModalPhotos = [];
+      let currentModalService = null;
+      let touchStartX = 0;
+      let touchEndX = 0;
+
+      function openServiceDetailModal(service) {
+        currentModalService = service;
+        currentModalPhotos = getServicePhotos(service);
+        currentCarouselIndex = 0;
+
+        const isHeadSpa = getCategoryFromService(service) === 'headspa';
+
+        // Title and description
+        document.getElementById('spa-modal-title').textContent = service.name;
+        document.getElementById('spa-modal-desc').textContent = service.description || 'Soin exclusif DALIGHT prodigué avec douceur et bienveillance pour une harmonisation profonde de votre corps.';
+        document.getElementById('spa-modal-category').textContent = service.category ? service.category.toUpperCase() : 'HEAD SPA & BIEN-ÊTRE';
+        document.getElementById('spa-modal-duration').innerHTML = `<i data-lucide="clock" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:4px;"></i> ${service.duration || '60 min'}`;
+
+        // Price display
+        const priceHtgFormatted = withFee(service.price_htg).toLocaleString();
+        document.getElementById('spa-modal-price-htg').innerHTML = `${isHeadSpa ? '<span style="font-size:0.6em;color:var(--spa-taupe-rose);display:block;">À partir de</span>' : ''}${priceHtgFormatted} HTG <small style="display:inline;font-size:0.55em;color:var(--spa-taupe-rose);">(3% Moncash incl.)</small>`;
+        document.getElementById('spa-modal-price-usd').textContent = `$${withFeeUSD(service.price_usd)} USD`;
+
+        // Benefits Checklist
+        const benefits = getServiceBenefits(service);
+        const benefitsContainer = document.getElementById('spa-modal-benefits-list');
+        if (benefitsContainer) {
+          benefitsContainer.innerHTML = benefits.map(b => `
+            <li><i data-lucide="${b.icon}"></i> <span>${esc(b.text)}</span></li>
+          `).join('');
+        }
+
+        // Render Carousel Slides
+        const track = document.getElementById('spa-carousel-track');
+        const dotsContainer = document.getElementById('spa-carousel-dots');
+
+        track.innerHTML = currentModalPhotos.map((p, idx) => `
+          <div class="spa-carousel-slide">
+            <img src="${p}" alt="${esc(service.name)} photo ${idx + 1}" loading="eager" />
+          </div>
+        `).join('');
+
+        dotsContainer.innerHTML = currentModalPhotos.map((_, idx) => `
+          <span class="spa-carousel-dot ${idx === 0 ? 'active' : ''}" data-index="${idx}"></span>
+        `).join('');
+
+        // Wire dot clicks
+        dotsContainer.querySelectorAll('.spa-carousel-dot').forEach(dot => {
+          dot.addEventListener('click', (e) => {
+            e.stopPropagation();
+            goToSlide(Number(dot.dataset.index));
+          });
+        });
+
+        updateCarouselUI();
+
+        // Show Modal
+        const overlay = document.getElementById('spa-detail-modal-overlay');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function goToSlide(index) {
+        if (index < 0) index = currentModalPhotos.length - 1;
+        if (index >= currentModalPhotos.length) index = 0;
+        currentCarouselIndex = index;
+        updateCarouselUI();
+      }
+
+      function updateCarouselUI() {
+        const track = document.getElementById('spa-carousel-track');
+        if (track) {
+          track.style.transform = `translateX(-${currentCarouselIndex * 100}%)`;
+        }
+        const dots = document.querySelectorAll('.spa-carousel-dot');
+        dots.forEach((dot, idx) => {
+          dot.classList.toggle('active', idx === currentCarouselIndex);
+        });
+      }
+
+      function closeServiceDetailModal() {
+        const overlay = document.getElementById('spa-detail-modal-overlay');
+        if (overlay) overlay.classList.remove('active');
+        document.body.style.overflow = '';
+        currentModalService = null;
+      }
+
+      // Initialize Carousel Controls & Touch Events
+      const carouselContainer = document.getElementById('spa-carousel-container');
+      if (carouselContainer) {
+        carouselContainer.addEventListener('touchstart', (e) => {
+          touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        carouselContainer.addEventListener('touchend', (e) => {
+          touchEndX = e.changedTouches[0].screenX;
+          const swipeThreshold = 40;
+          if (touchEndX < touchStartX - swipeThreshold) {
+            goToSlide(currentCarouselIndex + 1); // Swipe Left -> Next
+          } else if (touchEndX > touchStartX + swipeThreshold) {
+            goToSlide(currentCarouselIndex - 1); // Swipe Right -> Prev
+          }
+        }, { passive: true });
+      }
+
+      document.getElementById('spa-carousel-prev')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        goToSlide(currentCarouselIndex - 1);
+      });
+
+      document.getElementById('spa-carousel-next')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        goToSlide(currentCarouselIndex + 1);
+      });
+
+      document.getElementById('spa-modal-close')?.addEventListener('click', closeServiceDetailModal);
+      document.getElementById('spa-detail-modal-overlay')?.addEventListener('click', (e) => {
+        if (e.target.id === 'spa-detail-modal-overlay') closeServiceDetailModal();
+      });
+
+      // Modal Booking Button
+      document.getElementById('spa-modal-reserve-btn')?.addEventListener('click', async () => {
+        if (!currentModalService) return;
+        const service = currentModalService;
+        const isHeadSpa = getCategoryFromService(service) === 'headspa';
+
+        closeServiceDetailModal();
+
+        if (isHeadSpa && headSpaPricing.length > 0) {
+          openHairModal(service);
+          return;
+        }
+
+        await addToCart(service);
+      });
+
+      // ============================================
+      // RENDER SERVICES GRID WITH ZEN RELAXATION FRAMES
+      // ============================================
       function renderGrid(services) {
         const grid = document.getElementById('services-grid');
         if (!grid) return;
 
         if (services.length === 0) {
           grid.innerHTML = `
-            <div style="grid-column:1/-1;text-align:center;padding:3rem;color:rgba(74,55,40,.6);">
-              <i data-lucide="search-x" style="width:48px;height:48px;margin-bottom:1rem;opacity:0.5;"></i>
-              <p>Aucun service ne correspond à votre recherche</p>
+            <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--spa-taupe-rose);">
+              <i data-lucide="search-x" style="width:48px;height:48px;margin-bottom:1rem;opacity:0.6;"></i>
+              <p style="font-size:1.1rem;color:var(--spa-cream-light);">Aucun soin ne correspond à votre recherche</p>
             </div>
           `;
           if (window.lucide) lucide.createIcons();
@@ -945,48 +1367,101 @@
         grid.innerHTML = services.map(s => {
           const cat = getCategoryFromService(s);
           const isHeadSpa = cat === 'headspa';
+          const photos = getServicePhotos(s);
+          const primaryPhoto = photos[0];
+
           return `
-          <article class="service-tile" data-category="${cat}">
-            <header>
-              <h3>${esc(s.name)}</h3>
-              <span class="price">${isHeadSpa ? 'À partir de ' : ''}${withFee(s.price_htg).toLocaleString()} HTG <small style="font-size:.65em;opacity:.7;">(incl. 3% Moncash)</small>${isHeadSpa ? ' <small style="font-size:.7em;opacity:.7;">(selon longueur)</small>' : ' · $' + withFeeUSD(s.price_usd)}</span>
-            </header>
-            <p>${esc(s.description || '')} ${s.duration ? '(' + esc(s.duration) + ')' : ''}</p>
-            <button class="add-to-cart" data-service-id="${s.id || ''}" data-is-headspa="${isHeadSpa}" data-service-name="${esc(s.name)}" data-service-desc="${esc(s.description || '')}" data-service-duration="${esc(s.duration || '')}" data-service-price-htg="${s.price_htg}" data-service-price-usd="${s.price_usd}" data-service-category="${esc(s.category || '')}">
-              <i data-lucide="plus"></i> Ajouter au panier
-            </button>
+          <article class="spa-service-card" data-service-id="${s.id || ''}" data-category="${cat}">
+            <!-- Zen Relaxation Silhouette Frame -->
+            <div class="spa-relaxation-frame">
+              <img src="${primaryPhoto}" alt="${esc(s.name)}" loading="lazy" />
+              <span class="spa-frame-duration">
+                <i data-lucide="clock" style="width:13px;height:13px;"></i> ${esc(s.duration || '60 min')}
+              </span>
+              <span class="spa-frame-swipe-hint">
+                <i data-lucide="images" style="width:14px;height:14px;"></i> ${photos.length} photos · Voir
+              </span>
+            </div>
+
+            <!-- Service Details -->
+            <div class="spa-service-content">
+              <h3 class="spa-service-name">${esc(s.name)}</h3>
+              <p class="spa-service-desc">${esc(s.description || 'Soin signature DALIGHT conçu pour revitaliser les sens et détendre profondément.')}</p>
+
+              <!-- Price Bar -->
+              <div class="spa-service-price-bar">
+                <div class="spa-price-htg">
+                  ${isHeadSpa ? '<small style="display:block;font-size:0.65em;color:var(--spa-taupe-rose);">À partir de</small>' : ''}
+                  ${withFee(s.price_htg).toLocaleString()} HTG
+                  <small>(Moncash incl.)</small>
+                </div>
+                <div class="spa-price-usd">$${withFeeUSD(s.price_usd)}</div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="spa-card-actions">
+                <button class="spa-btn-add add-to-cart-btn" data-service-id="${s.id || ''}">
+                  <i data-lucide="calendar-check"></i> <span>Réserver</span>
+                </button>
+                <button class="spa-btn-details view-details-btn" data-service-id="${s.id || ''}" title="Voir les photos & détails">
+                  <i data-lucide="eye"></i>
+                </button>
+              </div>
+            </div>
           </article>
         `}).join('');
 
-        // Wire add to cart buttons
-        grid.querySelectorAll('.add-to-cart').forEach(btn => {
-          btn.addEventListener('click', async () => {
-            const isHeadSpa = btn.dataset.isHeadspa === 'true';
-            const service = {
-              name: btn.dataset.serviceName,
-              description: btn.dataset.serviceDesc,
-              duration: btn.dataset.serviceDuration,
-              base_price_htg: Number(btn.dataset.servicePriceHtg),
-              price_htg: withFee(btn.dataset.servicePriceHtg),
-              price_usd: withFeeUSD(btn.dataset.servicePriceUsd),
-              category: btn.dataset.serviceCategory || ''
+        // Wire service card click to open detail modal with swipe gallery
+        grid.querySelectorAll('.spa-service-card').forEach((card, idx) => {
+          const s = services[idx];
+          if (!s) return;
+
+          // Clicking relaxation frame or view details button opens modal
+          card.querySelector('.spa-relaxation-frame')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openServiceDetailModal(s);
+          });
+
+          card.querySelector('.view-details-btn')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openServiceDetailModal(s);
+          });
+
+          // Reserve button
+          const addBtn = card.querySelector('.add-to-cart-btn');
+          addBtn?.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const isHeadSpa = getCategoryFromService(s) === 'headspa';
+            const serviceObj = {
+              name: s.name,
+              description: s.description || '',
+              duration: s.duration || '',
+              base_price_htg: Number(s.price_htg),
+              price_htg: withFee(s.price_htg),
+              price_usd: withFeeUSD(s.price_usd),
+              category: s.category || ''
             };
+
             if (isHeadSpa && headSpaPricing.length > 0) {
-              openHairModal(service);
+              openHairModal(serviceObj);
               return;
             }
-            await addToCart(service);
-            // Visual feedback
-            btn.classList.add('added');
-            btn.innerHTML = '<i data-lucide="check"></i> <span>Ajouté !</span>';
+
+            await addToCart(serviceObj);
+
+            // Feedback
+            addBtn.classList.add('added');
+            addBtn.innerHTML = '<i data-lucide="check"></i> <span>Ajouté !</span>';
             if (window.lucide) lucide.createIcons();
             setTimeout(() => {
-              btn.classList.remove('added');
-              btn.innerHTML = '<i data-lucide="plus"></i> <span>Ajouter au panier</span>';
+              addBtn.classList.remove('added');
+              addBtn.innerHTML = '<i data-lucide="calendar-check"></i> <span>Réserver</span>';
               if (window.lucide) lucide.createIcons();
             }, 1500);
           });
         });
+
+        if (window.lucide) lucide.createIcons();
       }
 
       function initSearchAndFilter() {

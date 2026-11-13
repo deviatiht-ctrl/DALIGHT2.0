@@ -386,30 +386,43 @@ function setYear() {
 function setupNavToggle() {
   const nav = document.querySelector('.top-nav');
   const toggle = document.querySelector('.nav-toggle');
-  if (!nav || !toggle) {
-    console.error('❌ Nav toggle not found - nav:', nav, 'toggle:', toggle);
-    return;
-  }
-  console.log('✅ Nav toggle found, adding listeners');
-  
-  function handleToggle(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    nav.classList.toggle('open');
-    toggle.classList.toggle('active');
-    toggle.setAttribute('aria-expanded', nav.classList.contains('open'));
-  }
-
-  toggle.addEventListener('click', handleToggle);
-
-  // Fermer le menu si on clique en dehors
-  document.addEventListener('click', function(e) {
-    if (nav.classList.contains('open') && !nav.contains(e.target)) {
-      nav.classList.remove('open');
-      toggle.classList.remove('active');
-      toggle.setAttribute('aria-expanded', 'false');
+  if (nav && toggle) {
+    function handleToggle(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      nav.classList.toggle('open');
+      toggle.classList.toggle('active');
+      toggle.setAttribute('aria-expanded', nav.classList.contains('open'));
     }
-  });
+
+    toggle.addEventListener('click', handleToggle);
+
+    // Fermer le menu si on clique en dehors
+    document.addEventListener('click', function(e) {
+      if (nav.classList.contains('open') && !nav.contains(e.target)) {
+        nav.classList.remove('open');
+        toggle.classList.remove('active');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  // SPA Hamburger Support
+  const spaHamburger = document.getElementById('spa-hamburger') || document.querySelector('.spa-hamburger-btn');
+  const spaMenu = document.getElementById('spa-mobile-menu') || document.querySelector('.spa-mobile-menu');
+  if (spaHamburger && spaMenu) {
+    spaHamburger.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      spaMenu.classList.toggle('open');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (spaMenu.classList.contains('open') && !spaMenu.contains(e.target) && !spaHamburger.contains(e.target)) {
+        spaMenu.classList.remove('open');
+      }
+    });
+  }
 }
 
 function syncMobileNavVisibility() {
@@ -769,3 +782,17 @@ export function isAdminSession(session) {
 
 watchLogout();
 
+
+// Navbar scroll effect for modern luxury navbar
+if (typeof window !== 'undefined') {
+  window.addEventListener('scroll', () => {
+    const navbar = document.getElementById('spa-navbar') || document.querySelector('.spa-nav-wrapper');
+    if (navbar) {
+      if (window.scrollY > 30) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+    }
+  }, { passive: true });
+}
