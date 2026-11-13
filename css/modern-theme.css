@@ -307,21 +307,17 @@ a {
 }
 
 .spa-seal-inner img {
-  width: 40px;
-  height: 40px;
+  width: 54px;
+  height: 54px;
+  max-width: 54px;
+  max-height: 54px;
   object-fit: contain;
   border-radius: 0;
+  display: block;
 }
 
 .spa-seal-caption {
-  font-family: var(--spa-font-serif);
-  font-size: 0.54rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #2C2622;
-  margin-top: -2px;
-  font-weight: 600;
-  white-space: nowrap;
+  display: none !important;
 }
 
 /* Nav Actions CTA */
@@ -1888,21 +1884,17 @@ select option {
 }
 
 .spa-seal-inner img {
-  width: 44px !important;
-  height: 44px !important;
+  width: 58px !important;
+  height: 58px !important;
+  max-width: 58px !important;
+  max-height: 58px !important;
   object-fit: contain !important;
   border-radius: 0 !important;
+  display: block !important;
 }
 
 .spa-seal-caption {
-  font-family: var(--spa-font-serif) !important;
-  font-size: 0.58rem !important;
-  letter-spacing: 0.12em !important;
-  text-transform: uppercase !important;
-  color: #2C2622 !important;
-  margin-top: -3px !important;
-  font-weight: 600 !important;
-  white-space: nowrap !important;
+  display: none !important;
 }
 
 .spa-nav-right {
@@ -1975,15 +1967,18 @@ select option {
     padding: 0.75rem 1.25rem !important;
   }
   .spa-seal-badge {
-    width: 66px !important;
-    height: 66px !important;
+    width: 60px !important;
+    height: 60px !important;
+    padding: 4px !important;
   }
   .spa-seal-inner img {
-    width: 34px !important;
-    height: 34px !important;
+    width: 44px !important;
+    height: 44px !important;
+    max-width: 44px !important;
+    max-height: 44px !important;
   }
   .spa-seal-caption {
-    font-size: 0.5rem !important;
+    display: none !important;
   }
 }
 
