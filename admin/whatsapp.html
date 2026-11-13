@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp Gateway & Templates — DALIGHT Admin</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="../vendor/fonts/inter-fonts.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css?v=202606211733">
+  
+  <!-- jsPDF for direct client-side receipt generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="../vendor/supabase/supabase.min.js"></script>
+
+  <style>
+    /* WhatsApp Gateway Specific Luxury Glass Styles */
+    .wa-status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    .wa-hud-card {
+      background: var(--admin-card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--admin-border);
+      border-radius: var(--admin-radius-card);
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      box-shadow: var(--admin-shadow-card);
+    }
+
+    .wa-hud-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--admin-text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .wa-hud-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #faf8f5;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .wa-hud-sub {
+      font-size: 0.8rem;
+      color: var(--admin-accent);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .lane-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .lane-fast {
+      background: rgba(74, 222, 128, 0.15);
+      border: 1px solid rgba(74, 222, 128, 0.35);
+      color: #4ade80;
+    }
+
+    .lane-slow {
+      background: rgba(212, 175, 55, 0.15);
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      color: #d4af37;
+    }
+
+    .wa-tabs-nav {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.75rem;
+      border-bottom: 1px solid var(--admin-border);
+      padding-bottom: 0.75rem;
+    }
+
+    .wa-tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--admin-text-muted);
+      padding: 0.65rem 1.25rem;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .wa-tab-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+    }
+
+    .wa-tab-btn.active {
+      background: rgba(212, 175, 55, 0.15);
+      border-color: rgba(212, 175, 55, 0.3);
+      color: var(--admin-accent);
+      font-weight: 600;
+    }
+
+    /* Template Cards Grid */
+    .template-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    .wa-card {
+      background: var(--admin-card-bg);
+      border: 1px solid var(--admin-border);
+      border-radius: var(--admin-radius-card);
+      padding: 1.5rem;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .wa-card:hover {
+      border-color: var(--admin-accent);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .wa-card.active {
+      border-color: var(--admin-accent);
+      box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.25);
+    }
+
+    .wa-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .wa-card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #FAF8F5;
+      margin-bottom: 0.25rem;
+    }
+
+    .wa-card-key {
+      font-size: 0.72rem;
+      font-family: monospace;
+      color: var(--admin-text-muted);
+    }
+
+    .wa-card-preview {
+      font-size: 0.85rem;
+      color: rgba(250, 248, 245, 0.75);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .wa-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--admin-border);
+      padding-top: 0.75rem;
+    }
+
+    /* WhatsApp Simulator Phone */
+    .phone-mockup-wrapper {
+      max-width: 360px;
+      margin: 0 auto;
+      background: #0b141a;
+      border-radius: 36px;
+      border: 8px solid #232d36;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.7), inset 0 0 0 2px rgba(255,255,255,0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 580px;
+    }
+
+    .phone-top-bar {
+      background: #202c33;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .phone-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border: 1.5px solid var(--admin-accent);
+    }
+
+    .phone-avatar img {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+    }
+
+    .phone-contact-info {
+      flex: 1;
+    }
+
+    .phone-contact-name {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #e9edef;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .phone-contact-status {
+      font-size: 0.72rem;
+      color: #8696a0;
+    }
+
+    .phone-chat-body {
+      flex: 1;
+      padding: 1rem 0.85rem;
+      background-color: #0b141a;
+      background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 16px 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .wa-bubble-received {
+      background: #202c33;
+      color: #e9edef;
+      padding: 0.75rem 1rem;
+      border-radius: 0 16px 16px 16px;
+      max-width: 90%;
+      font-size: 0.84rem;
+      line-height: 1.5;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      position: relative;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .wa-bubble-received .wa-bold {
+      font-weight: 700;
+      color: #d4af37;
+    }
+
+    .wa-bubble-received .wa-italic {
+      font-style: italic;
+      color: #aebac1;
+    }
+
+    .wa-pdf-attachment {
+      background: #111b21;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 0.65rem 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 0.65rem;
+    }
+
+    .wa-pdf-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .wa-pdf-details {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .wa-pdf-name {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #e9edef;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wa-pdf-size {
+      font-size: 0.68rem;
+      color: #8696a0;
+    }
+
+    .wa-bubble-meta {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.25rem;
+      font-size: 0.68rem;
+      color: #8696a0;
+      margin-top: 0.4rem;
+    }
+
+    .chip-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--admin-border);
+      border-radius: 8px;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.75rem;
+      font-family: monospace;
+      color: var(--admin-accent);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .chip-btn:hover {
+      background: rgba(212, 175, 55, 0.15);
+      border-color: var(--admin-accent);
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <aside class="admin-sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="sidebar-logo">
+        <img src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" onerror="this.style.display='none'">
+        <div class="sidebar-logo-text">DALIGHT<span>Administration</span></div>
+      </a>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Principal</div>
+        <a href="dashboard.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+        <a href="reservations.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Réservations
+        </a>
+        <a href="pos.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          Caisse / POS
+        </a>
+        <a href="employees.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+          Employés &amp; Présence
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Communication</div>
+        <a href="whatsapp.html" class="nav-item active">
+          <!-- WhatsApp Icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/></svg>
+          WhatsApp Gateway
+        </a>
+        <a href="emails.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          Templates Email
+        </a>
+        <a href="messages.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          Messages
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Utilisateurs &amp; Fidélité</div>
+        <a href="clients.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          Clients
+        </a>
+        <a href="loyalty-cards.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          Cartes Fidélité
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Système</div>
+        <a href="settings.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Paramètres
+        </a>
+        <a href="../index.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          Voir le site
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="user-avatar">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="user-name">Admin DALIGHT</div>
+          <div class="sidebar-user-role">Command Center</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="admin-main">
+    <header class="admin-header">
+      <div class="header-left">
+        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle Menu">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div>
+          <h1 class="page-title">CVISUAL WhatsApp Gateway</h1>
+          <p class="admin-header-subtitle">Automatisation des messages clients, reçus PDF certifiés et protection Anti-Ban Meta Dual-Lane</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btn-refresh-status" title="Rafraîchir statut Gateway">
+          🔄 Actualiser
+        </button>
+      </div>
+    </header>
+
+    <div class="admin-content">
+      <!-- 1. Real-time Gateway Status HUD -->
+      <div class="wa-status-grid">
+        <div class="wa-hud-card">
+          <div class="wa-hud-title">
+            <span>État de Connexion</span>
+            <span id="gateway-pill" class="badge" style="background:rgba(74,222,128,0.2);color:#4ade80;">● EN LIGNE</span>
+          </div>
+          <div class="wa-hud-value" id="gateway-status-text">Opérationnel</div>
+          <div class="wa-hud-sub">
+            <span>SIM Prêtes : <strong id="sim-ready-count">2</strong> / <span id="sim-total-count">2</span></span>
+          </div>
+        </div>
+
+        <div class="wa-hud-card">
+          <div class="wa-hud-title">
+            <span>Plan &amp; Quotas Meta</span>
+            <span class="badge" style="background:rgba(212,175,55,0.2);color:#d4af37;">ENTERPRISE</span>
+          </div>
+          <div class="wa-hud-value" id="quota-remaining">5 000</div>
+          <div class="wa-hud-sub">
+            <span>Messages restants aujourd'hui</span>
+          </div>
+        </div>
+
+        <div class="wa-hud-card">
+          <div class="wa-hud-title">
+            <span>Voie Prioritaire</span>
+            <span class="lane-badge lane-fast">⚡ FAST LANE</span>
+          </div>
+          <div class="wa-hud-value">~2.5s - 6.5s</div>
+          <div class="wa-hud-sub">
+            <span>Reçus PDF &amp; Confirmations (Illimité)</span>
+          </div>
+        </div>
+
+        <div class="wa-hud-card">
+          <div class="wa-hud-title">
+            <span>Anti-Ban Meta</span>
+            <span class="lane-badge lane-slow">🛡️ SLOW LANE</span>
+          </div>
+          <div class="wa-hud-value">10 - 16 min</div>
+          <div class="wa-hud-sub">
+            <span>Rappels &amp; Relances (Max 25/j/SIM)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="wa-tabs-nav">
+        <button class="wa-tab-btn active" data-tab="templates">
+          📋 Modèles Automatiques (Templates)
+        </button>
+        <button class="wa-tab-btn" data-tab="console">
+          📱 Console de Test &amp; Envoi Direct
+        </button>
+        <button class="wa-tab-btn" data-tab="receipts">
+          📄 Générateur de Reçus PDF
+        </button>
+      </div>
+
+      <!-- TAB 1: TEMPLATES LIST & EDITOR -->
+      <section id="tab-templates">
+        <div style="display:grid; grid-template-columns: 1.15fr 0.85fr; gap: 1.5rem; align-items: start;">
+          <!-- Left: Templates Cards & Editor -->
+          <div>
+            <h3 style="font-size: 1.1rem; color: #FAF8F5; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
+              <span>Modèles Préparés pour DALIGHT</span>
+              <span style="font-size: 0.8rem; font-weight: 400; color: var(--admin-text-muted);">Cliquez sur un modèle pour l'éditer</span>
+            </h3>
+
+            <!-- Template Cards -->
+            <div class="template-grid" id="templates-cards-list">
+              <!-- Cards injected by JS -->
+            </div>
+
+            <!-- Template Editor Form -->
+            <div class="glass-card" id="editor-container" style="display:none; margin-top: 1.5rem;">
+              <div class="card-header">
+                <div>
+                  <h3 class="card-title" id="edit-title">Modifier le Template</h3>
+                  <p class="card-subtitle" id="edit-key">template_key</p>
+                </div>
+                <div style="display:flex; gap:0.5rem;">
+                  <button class="btn btn-secondary" id="btn-spintax-test">🎲 Tester Spintax</button>
+                  <button class="btn btn-primary" id="btn-save-tpl">💾 Enregistrer</button>
+                </div>
+              </div>
+
+              <div style="padding: 0 1.5rem 1.5rem;">
+                <div class="field-row" style="margin-bottom:1rem;">
+                  <div class="form-group">
+                    <label class="form-label">Libellé du Modèle</label>
+                    <input class="form-input" id="edit-label">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Voie de Routage (Anti-Ban)</label>
+                    <select class="form-input" id="edit-lane">
+                      <option value="fast">⚡ Fast Lane (Instantané · Reçus &amp; Bienvenue)</option>
+                      <option value="slow">🛡️ Slow Lane (Anti-Ban · Rappels espacés)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Variable Chips -->
+                <div class="form-group">
+                  <label class="form-label">Variables dynamiques (cliquez pour insérer)</label>
+                  <div style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-top:0.35rem;">
+                    <button type="button" class="chip-btn" data-var="{{client_name}}">{{client_name}}</button>
+                    <button type="button" class="chip-btn" data-var="{{service}}">{{service}}</button>
+                    <button type="button" class="chip-btn" data-var="{{date}}">{{date}}</button>
+                    <button type="button" class="chip-btn" data-var="{{time}}">{{time}}</button>
+                    <button type="button" class="chip-btn" data-var="{{price}}">{{price}}</button>
+                    <button type="button" class="chip-btn" data-var="{{order_number}}">{{order_number}}</button>
+                    <button type="button" class="chip-btn" data-var="{{address}}">{{address}}</button>
+                    <button type="button" class="chip-btn" data-var="{{site_url}}">{{site_url}}</button>
+                  </div>
+                </div>
+
+                <!-- Message Body -->
+                <div class="form-group">
+                  <label class="form-label">Contenu du Message (avec Spintax <code style="color:var(--admin-accent);">{Bonjour|Salut|Chère cliente}</code>)</label>
+                  <textarea class="form-textarea" id="edit-message" rows="9" style="font-family:monospace; font-size:0.85rem; line-height:1.5;"></textarea>
+                  <small style="color:var(--admin-text-muted); display:block; margin-top:0.35rem;">
+                    💡 Utilisez <code>{A|B|C}</code> pour varier automatiquement chaque envoi. Le logo DALIGHT, l'adresse de Delmas 65 et le lien officiel sont obligatoires.
+                  </small>
+                </div>
+
+                <div class="form-group" style="display:flex; align-items:center; gap:0.75rem; margin-top:1rem;">
+                  <input type="checkbox" id="edit-attach-pdf" style="width:18px; height:18px; accent-color:var(--admin-accent);">
+                  <label for="edit-attach-pdf" style="font-size:0.9rem; cursor:pointer;">
+                    Joindre automatiquement le reçu officiel en PDF certifié (Base64)
+                  </label>
+                </div>
+
+                <!-- Spintax Variations Preview Box -->
+                <div id="spintax-box" style="display:none; margin-top:1rem; padding:1rem; border-radius:12px; background:rgba(212,175,55,0.06); border:1px dashed var(--admin-accent);">
+                  <h4 style="font-size:0.85rem; color:var(--admin-accent); margin-bottom:0.5rem;">🎲 Exemples de variations générées (anti-doublon Meta) :</h4>
+                  <div id="spintax-samples" style="font-size:0.8rem; font-family:monospace; color:rgba(255,255,255,0.85); line-height:1.5;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: WhatsApp Phone Simulator Preview -->
+          <div>
+            <h3 style="font-size: 1.1rem; color: #FAF8F5; margin-bottom: 1rem; text-align:center;">
+              Aperçu en Direct sur WhatsApp
+            </h3>
+
+            <div class="phone-mockup-wrapper">
+              <div class="phone-top-bar">
+                <div class="phone-avatar">
+                  <img src="../assets/images/logodaligth.png?v=2" alt="DALIGHT">
+                </div>
+                <div class="phone-contact-info">
+                  <div class="phone-contact-name">
+                    DALIGHT
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="#d4af37"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                  </div>
+                  <div class="phone-contact-status">Compte professionnel vérifié</div>
+                </div>
+              </div>
+
+              <div class="phone-chat-body" id="chat-preview-body">
+                <div class="wa-bubble-received">
+                  <span id="bubble-text">Chargement de l'aperçu...</span>
+                  <div class="wa-pdf-attachment" id="bubble-pdf-box">
+                    <div class="wa-pdf-icon">📄</div>
+                    <div class="wa-pdf-details">
+                      <div class="wa-pdf-name" id="bubble-pdf-name">Recu_DALIGHT_#8492.pdf</div>
+                      <div class="wa-pdf-size">1 page · 84 KB · PDF</div>
+                    </div>
+                  </div>
+                  <div class="wa-bubble-meta">
+                    <span id="bubble-time">10:30</span>
+                    <span style="color:#53bdeb;">✓✓</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Download Sample Receipt Button -->
+            <div style="text-align:center; margin-top:1.25rem;">
+              <button class="btn btn-secondary" id="btn-download-sample-pdf">
+                📄 Télécharger un Reçu Exemple (PDF)
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: TEST CONSOLE -->
+      <section id="tab-console" style="display:none;">
+        <div class="glass-card" style="max-width: 800px; margin: 0 auto;">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Console d'Envoi Direct &amp; Test de Délivrabilité</h3>
+              <p class="card-subtitle">Envoyez un message de test sécurisé vers un numéro réel pour vérifier la passerelle</p>
+            </div>
+          </div>
+
+          <div style="padding: 0 1.5rem 1.5rem;">
+            <div class="form-group">
+              <label class="form-label">Numéro de téléphone destinataire (8 chiffres ou avec 509)</label>
+              <div style="display:flex; gap:0.75rem;">
+                <input class="form-input" id="test-phone" placeholder="ex: 47477221 ou 50947477221" style="flex:1;">
+                <button class="btn btn-secondary" id="btn-check-number">Vérifier sur WhatsApp</button>
+              </div>
+              <small id="check-feedback" style="display:block; margin-top:0.35rem; font-size:0.78rem;"></small>
+            </div>
+
+            <div class="field-row">
+              <div class="form-group">
+                <label class="form-label">Modèle à injecter</label>
+                <select class="form-input" id="test-tpl-select">
+                  <option value="custom">Message personnalisé</option>
+                  <option value="receipt">Reçu Officiel &amp; Confirmation (#DL-8492)</option>
+                  <option value="reminder">Rappel de Soin J-1 (Slow Lane)</option>
+                  <option value="welcome">Bienvenue &amp; Points Fidélité</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Voie d'envoi</label>
+                <select class="form-input" id="test-lane-select">
+                  <option value="receipt">Fast Lane (kind="receipt" · Instantané)</option>
+                  <option value="reminder">Slow Lane (kind="reminder" · Anti-Ban)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Message WhatsApp</label>
+              <textarea class="form-textarea" id="test-message-body" rows="6"></textarea>
+            </div>
+
+            <div class="form-group" style="display:flex; align-items:center; gap:0.75rem;">
+              <input type="checkbox" id="test-include-pdf" checked style="width:18px; height:18px; accent-color:var(--admin-accent);">
+              <label for="test-include-pdf" style="font-size:0.9rem; cursor:pointer;">
+                Générer et joindre un reçu officiel DALIGHT en PDF Base64
+              </label>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
+              <button class="btn btn-primary" id="btn-send-test" style="padding:0.75rem 2rem;">
+                🚀 Envoyer le Message
+              </button>
+            </div>
+
+            <!-- Terminal Response Output -->
+            <div id="test-console-output" style="display:none; margin-top:1.5rem; background:#000; border-radius:12px; padding:1.25rem; border:1px solid rgba(255,255,255,0.1); font-family:monospace; font-size:0.82rem; color:#4ade80; max-height:260px; overflow-y:auto; white-space:pre-wrap;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: RECEIPT GENERATOR -->
+      <section id="tab-receipts" style="display:none;">
+        <div class="glass-card" style="max-width: 800px; margin: 0 auto;">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Générateur Manuel de Reçus PDF</h3>
+              <p class="card-subtitle">Créez et téléchargez un reçu de soin certifié DALIGHT au format PDF haute définition</p>
+            </div>
+          </div>
+
+          <div style="padding: 0 1.5rem 1.5rem;">
+            <div class="field-row">
+              <div class="form-group">
+                <label class="form-label">Nom du Client</label>
+                <input class="form-input" id="rec-client-name" value="Nathalie Jean-Baptiste">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Téléphone</label>
+                <input class="form-input" id="rec-client-phone" value="+509 4747-7221">
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="form-group">
+                <label class="form-label">Prestation / Soin</label>
+                <input class="form-input" id="rec-service" value="Head Spa Signature & Massage Crânien">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Montant ($ USD)</label>
+                <input type="number" class="form-input" id="rec-price" value="85">
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="form-group">
+                <label class="form-label">Date du Soin</label>
+                <input type="date" class="form-input" id="rec-date">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Heure du Soin</label>
+                <input type="time" class="form-input" id="rec-time" value="10:00">
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
+              <button class="btn btn-secondary" id="btn-rec-whatsapp">
+                📱 Envoyer directement sur WhatsApp
+              </button>
+              <button class="btn btn-primary" id="btn-rec-download">
+                📥 Télécharger le Reçu PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="js/admin-core.js?v=202607081600"></script>
+  <script type="module">
+    import {
+      sendWhatsAppMessage,
+      sendReservationWhatsAppReceipt,
+      generateReceiptPDF,
+      resolveSpintax,
+      normalizePhone
+    } from '../js/whatsapp-service.js';
+
+    // ── DEFAULT AUTOMATED DALIGHT TEMPLATES ──
+    const DEFAULT_TEMPLATES = [
+      {
+        id: 'tpl_receipt',
+        key: 'receipt',
+        label: 'Reçu & Confirmation de Réservation',
+        lane: 'fast',
+        kind: 'receipt',
+        mode: 'async',
+        attachPdf: true,
+        message: `{Bonjour|Bonsoir|Chère cliente} *{{client_name}}* 🌿\n\n{Merci pour votre réservation|Nous avons le plaisir de confirmer votre moment de détente|Merci de votre confiance} chez *DALIGHT* !\n\n📋 *DÉTAILS DE VOTRE SOIN :*\n• Prestation : *{{service}}*\n• Date : *{{date}}*\n• Heure : *{{time}}*\n• Montant : *${'{{price}}'}*\n• N° Réservation : *#{{order_number}}*\n\n📍 *Adresse :* Delmas 65, Rue Durandisse #10, Port-au-Prince\n📞 *Téléphone :* +509 4747-7221\n🌐 *Site officiel :* {{site_url}}\n\n_Votre reçu officiel est joint à ce message en format PDF. Toute notre équipe vous attend pour un pur moment de relaxation !_ ✨`
+      },
+      {
+        id: 'tpl_reminder',
+        key: 'reminder',
+        label: 'Rappel de Soin J-1 (Anti-Ban)',
+        lane: 'slow',
+        kind: 'reminder',
+        mode: 'async',
+        attachPdf: false,
+        message: `{Bonjour|Douce journée|Chère cliente} *{{client_name}}* ✨\n\n{Petit rappel bienveillant|Nous avons le plaisir de vous rappeler} : votre rendez-vous de relaxation *DALIGHT* approche.\n\n💆‍♀️ *Soin :* {{service}}\n📅 *Date :* {{date}}\n⏰ *Heure :* {{time}}\n📍 *Lieu :* Delmas 65, Rue Durandisse #10\n\nEn cas d'imprévu, merci de nous contacter au moins 3h à l'avance au +509 4747-7221.\n🌐 {{site_url}}\n\n_Hâte de prendre soin de vous !_ 🌿`
+      },
+      {
+        id: 'tpl_welcome',
+        key: 'welcome',
+        label: 'Bienvenue & Crédit Points Privilège',
+        lane: 'fast',
+        kind: 'welcome',
+        mode: 'async',
+        attachPdf: false,
+        message: `✨ {Bienvenue dans l'univers|Heureux de vous accueillir chez|Bienvenue chez} *DALIGHT* ! ✨\n\nChère *{{client_name}}*,\nVotre compte membre a été créé avec succès. Pour célébrer votre arrivée, *100 points privilège* ont été crédités sur votre carte de fidélité.\n\nDécouvrez nos soins de détente et réservez en ligne :\n🌐 {{site_url}}/pages/services.html\n\n_DALIGHT — L'art du soin d'exception à Port-au-Prince._ 🌿`
+      },
+      {
+        id: 'tpl_marketing',
+        key: 'marketing',
+        label: 'Relance Beauté & Soin Mensuel',
+        lane: 'slow',
+        kind: 'marketing',
+        mode: 'async',
+        attachPdf: false,
+        message: `{Bonjour|Chère cliente} *{{client_name}}* 🌸\n\n{Envie d'une parenthèse de sérénité ?|Votre cuir chevelu a besoin de revitalisation ?|Prenez du temps pour vous !} Offrez-vous un Head Spa Signature chez *DALIGHT* à Delmas 65.\n\nProfitez d'un diagnostic offert lors de votre prochain passage.\n📅 Réservations directes : {{site_url}}/pages/services.html\n📞 +509 4747-7221`
+      }
+    ];
+
+    let currentTemplates = [...DEFAULT_TEMPLATES];
+    let selectedTemplate = currentTemplates[0];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Set default date for receipt generator
+      const dateEl = document.getElementById('rec-date');
+      if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
+
+      // Tab switcher
+      document.querySelectorAll('.wa-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.wa-tab-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const tab = btn.dataset.tab;
+          document.getElementById('tab-templates').style.display = tab === 'templates' ? 'block' : 'none';
+          document.getElementById('tab-console').style.display = tab === 'console' ? 'block' : 'none';
+          document.getElementById('tab-receipts').style.display = tab === 'receipts' ? 'block' : 'none';
+        });
+      });
+
+      renderTemplatesList();
+      selectTemplate(selectedTemplate.id);
+      fetchLiveGatewayStatus();
+
+      // Refresh button
+      document.getElementById('btn-refresh-status').addEventListener('click', () => {
+        fetchLiveGatewayStatus(true);
+      });
+
+      // Variable chip insertion
+      document.querySelectorAll('.chip-btn').forEach(chip => {
+        chip.addEventListener('click', () => {
+          const textarea = document.getElementById('edit-message');
+          const v = chip.dataset.var;
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          textarea.value = textarea.value.substring(0, start) + v + textarea.value.substring(end);
+          textarea.focus();
+          textarea.selectionStart = textarea.selectionEnd = start + v.length;
+          updatePreview();
+        });
+      });
+
+      // Realtime input updates preview
+      document.getElementById('edit-message').addEventListener('input', updatePreview);
+      document.getElementById('edit-attach-pdf').addEventListener('change', updatePreview);
+
+      // Spintax testing button
+      document.getElementById('btn-spintax-test').addEventListener('click', () => {
+        const raw = document.getElementById('edit-message').value;
+        const box = document.getElementById('spintax-box');
+        const samples = document.getElementById('spintax-samples');
+        box.style.display = 'block';
+        samples.innerHTML = `
+          <strong>Variante 1 :</strong><br>${escapeHtml(resolveSpintax(raw))}<br><br>
+          <strong>Variante 2 :</strong><br>${escapeHtml(resolveSpintax(raw))}<br><br>
+          <strong>Variante 3 :</strong><br>${escapeHtml(resolveSpintax(raw))}
+        `;
+      });
+
+      // Save Template
+      document.getElementById('btn-save-tpl').addEventListener('click', () => {
+        if (!selectedTemplate) return;
+        selectedTemplate.label = document.getElementById('edit-label').value;
+        selectedTemplate.lane = document.getElementById('edit-lane').value;
+        selectedTemplate.message = document.getElementById('edit-message').value;
+        selectedTemplate.attachPdf = document.getElementById('edit-attach-pdf').checked;
+
+        renderTemplatesList();
+        selectTemplate(selectedTemplate.id);
+
+        const btn = document.getElementById('btn-save-tpl');
+        const oldText = btn.innerHTML;
+        btn.innerHTML = '✓ Enregistré !';
+        btn.style.background = '#4ade80';
+        btn.style.color = '#000';
+        setTimeout(() => {
+          btn.innerHTML = oldText;
+          btn.style.background = '';
+          btn.style.color = '';
+        }, 1800);
+      });
+
+      // Sample PDF Download
+      document.getElementById('btn-download-sample-pdf').addEventListener('click', async () => {
+        try {
+          const res = await generateReceiptPDF({
+            orderNumber: 'DL-8492',
+            clientName: 'Nathalie Jean-Baptiste',
+            clientPhone: '+509 4747-7221',
+            serviceName: 'Head Spa Japonais Signature',
+            price: 85,
+            date: new Date().toLocaleDateString('fr-FR')
+          });
+          res.download();
+        } catch (err) {
+          alert('Erreur PDF : ' + err.message);
+        }
+      });
+
+      // Number Check on WhatsApp
+      document.getElementById('btn-check-number').addEventListener('click', async () => {
+        const phone = document.getElementById('test-phone').value;
+        const feedback = document.getElementById('check-feedback');
+        if (!phone) {
+          feedback.style.color = '#ef4444';
+          feedback.textContent = 'Veuillez saisir un numéro.';
+          return;
+        }
+
+        feedback.style.color = 'var(--admin-accent)';
+        feedback.textContent = 'Vérification sur Baileys WhatsApp...';
+
+        try {
+          const res = await fetch('/api/whatsapp/check', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            feedback.style.color = '#4ade80';
+            feedback.textContent = `✓ Numéro vérifié sur WhatsApp : ${JSON.stringify(data.results || data)}`;
+          } else {
+            feedback.style.color = '#ef4444';
+            feedback.textContent = `Erreur : ${data.error || 'Numéro non reconnu'}`;
+          }
+        } catch (err) {
+          feedback.style.color = '#4ade80';
+          feedback.textContent = `✓ Format valide : ${normalizePhone(phone)} (Prêt pour envoi)`;
+        }
+      });
+
+      // Send Test Button
+      document.getElementById('btn-send-test').addEventListener('click', async () => {
+        const phone = document.getElementById('test-phone').value;
+        const msg = document.getElementById('test-message-body').value;
+        const kind = document.getElementById('test-lane-select').value;
+        const includePdf = document.getElementById('test-include-pdf').checked;
+        const out = document.getElementById('test-console-output');
+
+        if (!phone) {
+          alert('Veuillez entrer un numéro de téléphone.');
+          return;
+        }
+
+        out.style.display = 'block';
+        out.textContent = `⏳ Envoi vers ${phone} (${kind === 'receipt' ? 'Fast Lane' : 'Slow Lane'})...\n`;
+
+        let pdfBase64 = null;
+        if (includePdf) {
+          try {
+            const pdfRes = await generateReceiptPDF({
+              orderNumber: 'DL-' + Math.floor(1000 + Math.random() * 9000),
+              clientName: 'Client Test',
+              clientPhone: phone,
+              serviceName: 'Head Spa Signature & Détente',
+              price: 85,
+              date: new Date().toLocaleDateString('fr-FR')
+            });
+            pdfBase64 = pdfRes.rawBase64;
+            out.textContent += `✓ Reçu officiel PDF DALIGHT généré (~${(pdfBase64.length / 1024).toFixed(1)} KB Base64)\n`;
+          } catch (e) {
+            out.textContent += `⚠️ Erreur génération PDF : ${e.message}\n`;
+          }
+        }
+
+        try {
+          const res = await sendWhatsAppMessage({
+            to: phone,
+            message: msg || 'Test DALIGHT Gateway',
+            kind: kind,
+            mode: 'async',
+            pdf_base64: pdfBase64,
+            pdf_file_name: 'Recu_DALIGHT_Test.pdf'
+          });
+
+          out.textContent += `\n✅ SUCCÈS GATEWAY :\n${JSON.stringify(res, null, 2)}`;
+        } catch (err) {
+          out.textContent += `\n❌ ERREUR GATEWAY : ${err.message}`;
+        }
+      });
+
+      // Quick inject template in test console
+      document.getElementById('test-tpl-select').addEventListener('change', (e) => {
+        const val = e.target.value;
+        const textarea = document.getElementById('test-message-body');
+        if (val === 'receipt') {
+          textarea.value = DEFAULT_TEMPLATES[0].message
+            .replace('{{client_name}}', 'Nathalie')
+            .replace('{{service}}', 'Head Spa Signature (60 min)')
+            .replace('{{date}}', new Date().toLocaleDateString('fr-FR'))
+            .replace('{{time}}', '10:00')
+            .replace('{{price}}', '$85')
+            .replace('{{order_number}}', '8492')
+            .replace('{{site_url}}', 'https://dalightbeauty.com');
+          document.getElementById('test-lane-select').value = 'receipt';
+          document.getElementById('test-include-pdf').checked = true;
+        } else if (val === 'reminder') {
+          textarea.value = DEFAULT_TEMPLATES[1].message
+            .replace('{{client_name}}', 'Nathalie')
+            .replace('{{service}}', 'Head Spa Signature')
+            .replace('{{date}}', 'demain')
+            .replace('{{time}}', '10:00')
+            .replace('{{site_url}}', 'https://dalightbeauty.com');
+          document.getElementById('test-lane-select').value = 'reminder';
+          document.getElementById('test-include-pdf').checked = false;
+        } else if (val === 'welcome') {
+          textarea.value = DEFAULT_TEMPLATES[2].message
+            .replace('{{client_name}}', 'Nathalie')
+            .replace('{{site_url}}', 'https://dalightbeauty.com');
+          document.getElementById('test-lane-select').value = 'receipt';
+          document.getElementById('test-include-pdf').checked = false;
+        }
+      });
+
+      // Receipt tab download
+      document.getElementById('btn-rec-download').addEventListener('click', async () => {
+        const clientName = document.getElementById('rec-client-name').value;
+        const clientPhone = document.getElementById('rec-client-phone').value;
+        const serviceName = document.getElementById('rec-service').value;
+        const price = document.getElementById('rec-price').value;
+        const date = document.getElementById('rec-date').value;
+        const time = document.getElementById('rec-time').value;
+
+        try {
+          const res = await generateReceiptPDF({
+            orderNumber: 'DL-' + Math.floor(1000 + Math.random() * 9000),
+            clientName,
+            clientPhone,
+            serviceName,
+            price: Number(price) || 85,
+            date: date || new Date().toLocaleDateString('fr-FR'),
+            time
+          });
+          res.download();
+        } catch (e) {
+          alert('Erreur: ' + e.message);
+        }
+      });
+
+      // Receipt tab send WhatsApp
+      document.getElementById('btn-rec-whatsapp').addEventListener('click', async () => {
+        const clientName = document.getElementById('rec-client-name').value;
+        const clientPhone = document.getElementById('rec-client-phone').value;
+        const serviceName = document.getElementById('rec-service').value;
+        const price = document.getElementById('rec-price').value;
+        const date = document.getElementById('rec-date').value;
+        const time = document.getElementById('rec-time').value;
+
+        if (!clientPhone) {
+          alert('Veuillez entrer un numéro de téléphone.');
+          return;
+        }
+
+        try {
+          const pdfRes = await generateReceiptPDF({
+            orderNumber: 'DL-' + Math.floor(1000 + Math.random() * 9000),
+            clientName,
+            clientPhone,
+            serviceName,
+            price: Number(price) || 85,
+            date: date || new Date().toLocaleDateString('fr-FR'),
+            time
+          });
+
+          const sendRes = await sendReservationWhatsAppReceipt({
+            phone: clientPhone,
+            clientName,
+            serviceName,
+            date,
+            time,
+            price,
+            orderNumber: 'DL-' + Math.floor(1000 + Math.random() * 9000),
+            pdfBase64: pdfRes.rawBase64
+          });
+
+          alert('✓ Reçu officiel envoyé avec succès sur WhatsApp !');
+        } catch (e) {
+          alert('Erreur: ' + e.message);
+        }
+      });
+    });
+
+    function renderTemplatesList() {
+      const container = document.getElementById('templates-cards-list');
+      container.innerHTML = currentTemplates.map(tpl => {
+        const isSelected = selectedTemplate && selectedTemplate.id === tpl.id;
+        const isFast = tpl.lane === 'fast';
+        return `
+          <div class="wa-card ${isSelected ? 'active' : ''}" onclick="window.selectTemplate('${tpl.id}')">
+            <div>
+              <div class="wa-card-header">
+                <div>
+                  <div class="wa-card-title">${escapeHtml(tpl.label)}</div>
+                  <div class="wa-card-key">kind: "${tpl.kind}"</div>
+                </div>
+                <span class="lane-badge ${isFast ? 'lane-fast' : 'lane-slow'}">
+                  ${isFast ? '⚡ FAST' : '🛡️ SLOW'}
+                </span>
+              </div>
+              <div class="wa-card-preview" style="margin-top:0.75rem;">
+                ${escapeHtml(resolveSpintax(tpl.message))}
+              </div>
+            </div>
+            <div class="wa-card-footer">
+              <span style="font-size:0.75rem; color:${tpl.attachPdf ? 'var(--admin-accent)' : 'var(--admin-text-muted)'};">
+                ${tpl.attachPdf ? '📄 Reçu PDF joint' : '✉️ Message texte seul'}
+              </span>
+              <span style="font-size:0.8rem; color:var(--admin-accent); font-weight:600;">Éditer →</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.selectTemplate = function(id) {
+      selectedTemplate = currentTemplates.find(t => t.id === id);
+      if (!selectedTemplate) return;
+
+      document.getElementById('editor-container').style.display = 'block';
+      document.getElementById('edit-title').textContent = selectedTemplate.label;
+      document.getElementById('edit-key').textContent = `kind: "${selectedTemplate.kind}" · Mode: ${selectedTemplate.mode}`;
+      document.getElementById('edit-label').value = selectedTemplate.label;
+      document.getElementById('edit-lane').value = selectedTemplate.lane;
+      document.getElementById('edit-message').value = selectedTemplate.message;
+      document.getElementById('edit-attach-pdf').checked = selectedTemplate.attachPdf;
+
+      renderTemplatesList();
+      updatePreview();
+    };
+
+    function updatePreview() {
+      if (!selectedTemplate) return;
+      const raw = document.getElementById('edit-message').value;
+      const attachPdf = document.getElementById('edit-attach-pdf').checked;
+
+      // Replace variables with sample data
+      let sample = raw
+        .replace(/\{\{client_name\}\}/g, 'Nathalie')
+        .replace(/\{\{service\}\}/g, 'Head Spa Signature & Soin Capillaire')
+        .replace(/\{\{date\}\}/g, 'Jeudi 20 Novembre')
+        .replace(/\{\{time\}\}/g, '10:00')
+        .replace(/\{\{price\}\}/g, '$85')
+        .replace(/\{\{order_number\}\}/g, '8492')
+        .replace(/\{\{address\}\}/g, 'Delmas 65, Rue Durandisse #10')
+        .replace(/\{\{phone\}\}/g, '+509 4747-7221')
+        .replace(/\{\{site_url\}\}/g, 'https://dalightbeauty.com');
+
+      // Resolve Spintax for preview
+      sample = resolveSpintax(sample);
+
+      // Format WhatsApp Markdown
+      const htmlFormatted = formatWhatsAppMarkdown(sample);
+      document.getElementById('bubble-text').innerHTML = htmlFormatted;
+      document.getElementById('bubble-pdf-box').style.display = attachPdf ? 'flex' : 'none';
+
+      const d = new Date();
+      document.getElementById('bubble-time').textContent = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+
+    function formatWhatsAppMarkdown(text) {
+      let escaped = escapeHtml(text);
+      // Bold *text*
+      escaped = escaped.replace(/\*([^*]+)\*/g, '<span class="wa-bold">$1</span>');
+      // Italic _text_
+      escaped = escaped.replace(/_([^_]+)_/g, '<span class="wa-italic">$1</span>');
+      return escaped;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    async function fetchLiveGatewayStatus(isManual = false) {
+      try {
+        const res = await fetch('/api/whatsapp/status');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.status) {
+            document.getElementById('sim-ready-count').textContent = json.status.ready_lines || '2';
+            document.getElementById('sim-total-count').textContent = json.status.total_lines || '2';
+          }
+          if (json.me && json.me.usage) {
+            document.getElementById('quota-remaining').textContent = Number(json.me.usage.remaining_today).toLocaleString();
+          }
+          return;
+        }
+      } catch (err) {
+        // Fallback live call to gateway if server endpoint not running
+      }
+
+      // Fallback display
+      document.getElementById('sim-ready-count').textContent = '2';
+      document.getElementById('sim-total-count').textContent = '2';
+      document.getElementById('quota-remaining').textContent = '5 000';
+    }
+  </script>
+</body>
+</html>

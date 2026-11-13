@@ -1,3 +1,7 @@
 app/android/build/
 app/build/
 .dart_tool/
+.env
+.env.local
+.env.*
+!.env.example
