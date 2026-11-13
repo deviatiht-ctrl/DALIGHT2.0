@@ -91,25 +91,25 @@ function injectStyles() {
   const styleEl = document.createElement('style');
   styleEl.id = 'dalight-banner-styles';
   styleEl.textContent = `
-    /* Premium Alert Banner Styling */
+    /* Premium Alert Banner Styling — Compact & High Contrast */
     .dl-alert-banner {
-      background: linear-gradient(90deg, #D4AF37 0%, #f6e3a2 50%, #b89326 100%);
-      color: #2A1A0A !important;
-      border-bottom: 2px solid rgba(184, 147, 38, 0.4);
-      padding: 0.75rem 3rem 0.75rem 1.5rem;
+      background: linear-gradient(90deg, #182010 0%, #222b17 50%, #182010 100%) !important;
+      color: #FAF8F5 !important;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.35) !important;
+      padding: 0.45rem 2.5rem 0.45rem 1rem;
       position: relative;
       z-index: 9999;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 0.88rem;
-      font-weight: 500;
+      font-family: var(--spa-font-sans, 'Outfit', sans-serif);
+      font-size: 0.8rem;
+      font-weight: 400;
       text-align: center;
-      box-shadow: 0 4px 15px rgba(45, 30, 20, 0.08);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
       opacity: 0;
       transform: translateY(-100%);
-      transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+      transition: all 0.45s cubic-bezier(0.19, 1, 0.22, 1);
       width: 100%;
       box-sizing: border-box;
     }
@@ -123,69 +123,77 @@ function injectStyles() {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.75rem;
+      gap: 0.65rem;
       flex-wrap: wrap;
       width: 100%;
-      max-width: 1200px;
+      max-width: 1100px;
     }
 
     .dl-alert-text {
       margin: 0;
-      color: #2A1A0A !important;
-      line-height: 1.4;
+      color: #FAF8F5 !important;
+      font-size: 0.8rem !important;
+      line-height: 1.35;
     }
 
     .dl-alert-text strong {
-      font-weight: 700;
+      color: #D4AF37 !important;
+      font-weight: 600;
     }
 
     .dl-alert-buttons {
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.35rem;
     }
 
-    /* Premium Tactile Buttons for Mobile/Desktop Touch Targets */
+    /* Compact Pill Buttons */
     .dl-alert-btn {
-      background: #2A1A0A;
+      background: rgba(212, 175, 55, 0.15);
       color: #D4AF37 !important;
-      padding: 0.35rem 0.9rem;
-      border-radius: 30px;
-      font-size: 0.78rem;
-      font-weight: 700;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      font-size: 0.74rem;
+      font-weight: 600;
       white-space: nowrap;
       display: inline-flex;
       align-items: center;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.16);
-      transition: all 0.25s ease;
+      transition: all 0.2s ease;
       text-decoration: none !important;
-      border: 1px solid #2A1A0A;
+      border: 1px solid rgba(212, 175, 55, 0.35);
       cursor: pointer;
     }
 
     .dl-alert-btn:hover {
-      background: #4A3728;
-      border-color: #4A3728;
-      color: #ffffff !important;
+      background: #D4AF37;
+      border-color: #D4AF37;
+      color: #12180c !important;
       transform: translateY(-1px);
-      box-shadow: 0 5px 12px rgba(42, 26, 10, 0.25);
     }
 
-    .dl-alert-btn:active {
-      transform: translateY(0);
+    .dl-alert-btn.primary {
+      background: #D4AF37;
+      color: #12180c !important;
+      border-color: #D4AF37;
     }
 
-    /* Elegant Close Button */
+    .dl-alert-btn.primary:hover {
+      background: #FAF8F5;
+      color: #12180c !important;
+      border-color: #FAF8F5;
+    }
+
+    /* Subtle Close Button */
     .dl-alert-close {
       position: absolute;
-      right: 1rem;
+      right: 0.75rem;
       top: 50%;
       transform: translateY(-50%);
       background: none;
       border: none;
-      color: #2A1A0A;
+      color: rgba(250, 248, 245, 0.75);
       cursor: pointer;
-      padding: 6px;
+      padding: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -194,34 +202,34 @@ function injectStyles() {
     }
 
     .dl-alert-close:hover {
-      background: rgba(42, 26, 10, 0.12);
-      transform: rotate(90deg);
+      color: #FAF8F5;
+      background: rgba(255, 255, 255, 0.1);
     }
 
-    .dl-alert-close i {
-      width: 16px;
-      height: 16px;
+    .dl-alert-close i,
+    .dl-alert-close svg {
+      width: 15px;
+      height: 15px;
     }
 
-    /* Highly Adaptable Mobile Styling */
+    /* Compact Mobile Styling */
     @media (max-width: 768px) {
       .dl-alert-banner {
-        font-size: 0.82rem;
-        padding: 0.8rem 2.75rem 0.8rem 1rem;
+        font-size: 0.74rem;
+        padding: 0.4rem 2rem 0.4rem 0.75rem;
       }
       
       .dl-alert-content {
-        flex-direction: column;
-        gap: 0.5rem;
+        gap: 0.35rem;
       }
-      
-      .dl-alert-buttons {
-        margin-top: 0.1rem;
+
+      .dl-alert-text {
+        font-size: 0.74rem !important;
       }
       
       .dl-alert-btn {
-        padding: 0.4rem 1rem; /* Even larger touch target on mobile */
-        font-size: 0.8rem;
+        padding: 0.2rem 0.55rem;
+        font-size: 0.7rem;
       }
     }
   `;
@@ -239,11 +247,10 @@ function injectBanner() {
     <div class="dl-alert-banner" id="dalight-alert-banner" role="alert">
       <div class="dl-alert-content">
         <p class="dl-alert-text">
-          Nouveau chez <strong>DALIGHT</strong> ? Pour planifier vos services bien-\u00eatre et simplifier vos achats :
+          Nouveau chez <strong>DALIGHT</strong> ? Planifiez vos soins de détente :
         </p>
         <div class="dl-alert-buttons">
-          <a href="${registerUrl}" class="dl-alert-btn">Créer un compte</a>
-          <span style="font-size: 0.78rem; opacity: 0.7; font-weight: 600; color: #2A1A0A;">ou</span>
+          <a href="${registerUrl}" class="dl-alert-btn primary">Créer un compte</a>
           <a href="${loginUrl}" class="dl-alert-btn">Se connecter</a>
         </div>
       </div>
@@ -264,16 +271,29 @@ function injectBanner() {
   const banner = document.getElementById('dalight-alert-banner');
   const closeBtn = document.getElementById('dl-alert-close-btn');
 
+  const dismissBanner = () => {
+    sessionStorage.setItem('dalight:popup_dismissed', 'true');
+    banner.classList.remove('active');
+    setTimeout(() => {
+      banner.remove();
+    }, 450);
+  };
+
   // Smooth slide down animation
   requestAnimationFrame(() => {
     banner.classList.add('active');
   });
 
-  closeBtn.addEventListener('click', () => {
-    sessionStorage.setItem('dalight:popup_dismissed', 'true');
-    banner.classList.remove('active');
-    setTimeout(() => {
-      banner.remove();
-    }, 500);
-  });
+  // User click close
+  closeBtn.addEventListener('click', dismissBanner);
+
+  // Auto-dismiss after 7.5 seconds so it doesn't stay permanently
+  const autoTimer = setTimeout(() => {
+    if (document.body.contains(banner)) {
+      dismissBanner();
+    }
+  }, 7500);
+
+  // Clear autoTimer if user interacts
+  closeBtn.addEventListener('click', () => clearTimeout(autoTimer));
 }

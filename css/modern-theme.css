@@ -2449,19 +2449,32 @@ select option {
 /* Responsive adjustments */
 @media (max-width: 992px) {
   .spa-auth-showcase {
-    grid-template-columns: 1fr;
-    gap: 2rem;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2rem !important;
   }
 
+  /* Formulaire au-dessus sur mobile (Kote pou ekri enfo an dwe anle) */
+  .spa-auth-form-capsule {
+    order: 1 !important;
+    padding: 2.2rem 1.6rem;
+    border-radius: 32px !important;
+  }
+
+  /* Fenêtre visuelle et citation d'ambiance en-dessous (Ti panse an anba) */
   .spa-auth-arch-window {
-    min-height: 380px;
-    border-radius: 180px 180px 28px 28px;
+    order: 2 !important;
+    min-height: 340px;
+    border-radius: 120px 120px 28px 28px;
     padding: 2rem 1.5rem;
   }
 
-  .spa-auth-form-capsule {
-    padding: 2.2rem 1.6rem;
-    border-radius: 32px !important;
+  /* Cache le bouton large de connexion/deconnexion et pill pour eviter d'eclater la navbar */
+  .spa-nav-right .auth-btn,
+  .nav-cta .auth-btn,
+  .spa-nav-right .spa-pill-btn,
+  .nav-cta .spa-pill-btn {
+    display: none !important;
   }
 }
 

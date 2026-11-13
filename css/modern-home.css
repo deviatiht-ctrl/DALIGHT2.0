@@ -99,23 +99,29 @@ body[data-page="home"] main {
 
 /* Top Announcement Banner Harmonization */
 body[data-page="home"] .dl-alert-banner {
-  background: var(--spa-dark-olive-deep) !important;
+  background: linear-gradient(90deg, #182010 0%, #222b17 50%, #182010 100%) !important;
   color: var(--spa-cream-light) !important;
-  border-bottom: 1px solid var(--spa-border) !important;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25) !important;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.35) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
 }
 
-body[data-page="home"] .dl-alert-banner .dl-banner-btn {
+body[data-page="home"] .dl-alert-text {
+  color: var(--spa-cream-light) !important;
+}
+
+body[data-page="home"] .dl-alert-text strong {
+  color: var(--spa-taupe-rose) !important;
+}
+
+body[data-page="home"] .dl-alert-btn {
+  background: rgba(194, 164, 144, 0.15) !important;
+  color: var(--spa-taupe-rose) !important;
+  border-color: rgba(194, 164, 144, 0.35) !important;
+}
+
+body[data-page="home"] .dl-alert-btn.primary {
   background: var(--spa-taupe-rose) !important;
   color: var(--spa-dark-olive-deep) !important;
-  font-weight: 600 !important;
-  border-radius: 9999px !important;
-}
-
-body[data-page="home"] .dl-alert-banner .dl-banner-btn.outline {
-  background: transparent !important;
-  color: var(--spa-white) !important;
-  border: 1px solid var(--spa-border) !important;
 }
 
 /* ==========================================================================
@@ -1215,6 +1221,13 @@ body[data-page="home"] .nav-cta .auth-btn:hover {
 }
 
 @media (max-width: 900px) {
+  /* Cache bouton connexion/deconnexion texte large sur mobile pour proteger l'esthetique */
+  .spa-nav-right .auth-btn,
+  .nav-cta .auth-btn,
+  .spa-nav-right .spa-pill-btn,
+  .nav-cta .spa-pill-btn {
+    display: none !important;
+  }
   .spa-nav-left {
     display: none !important;
   }

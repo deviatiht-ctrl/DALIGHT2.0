@@ -661,7 +661,7 @@ async function detectSessionRole() {
 }
 
 function updateNavbarAuth(isLoggedIn) {
-  // 1. Mettre à jour dans nav-cta (desktop principalement)
+  // 1. Mettre à jour dans nav-cta (desktop uniquement via CSS display)
   const navCta = document.querySelector('.nav-cta');
   if (navCta) {
     const existingAuthBtn = navCta.querySelector('.auth-btn');
@@ -690,9 +690,17 @@ function updateNavbarAuth(isLoggedIn) {
         window.location.href = loginPath;
       });
     }
+
+    // Update circular user icon in top bar so it links to orders if logged in
+    const accountIconBtn = navCta.querySelector('.spa-icon-btn.mobile-auth-link') || navCta.querySelector('a.spa-icon-btn[aria-label="Compte"]');
+    if (accountIconBtn) {
+      const ordersPath = isInsidePagesDir ? './orders.html' : './pages/orders.html';
+      accountIconBtn.href = isLoggedIn ? ordersPath : loginPath;
+      accountIconBtn.title = isLoggedIn ? 'Mon Compte / Rendez-vous' : 'Espace Membre';
+    }
   }
 
-  // 2. Mettre à jour dans nav-links (dropdown mobile + desktop)
+  // 2. Mettre à jour dans nav-links (dropdown mobile classique)
   const navLinks = document.querySelector('.nav-links');
   if (navLinks) {
     const existingMobileAuth = navLinks.querySelector('.mobile-auth-link');
@@ -719,6 +727,28 @@ function updateNavbarAuth(isLoggedIn) {
         await supabaseClient.auth.signOut();
         window.location.href = loginPath;
       });
+    }
+  }
+
+  // 3. Mettre à jour dans le tiwa meni mobil (.spa-mobile-menu)
+  const mobileMenu = document.getElementById('spa-mobile-menu') || document.querySelector('.spa-mobile-menu');
+  if (mobileMenu) {
+    let drawerAuth = mobileMenu.querySelector('a[href*="login.html"]') || mobileMenu.querySelector('#mobile-drawer-auth');
+    if (drawerAuth) {
+      drawerAuth.id = 'mobile-drawer-auth';
+      if (isLoggedIn) {
+        drawerAuth.textContent = 'Déconnexion';
+        drawerAuth.href = '#';
+        drawerAuth.onclick = async (e) => {
+          e.preventDefault();
+          if (window.supabaseClient) await window.supabaseClient.auth.signOut();
+          window.location.href = loginPath;
+        };
+      } else {
+        drawerAuth.textContent = 'Espace Client';
+        drawerAuth.href = loginPath;
+        drawerAuth.onclick = null;
+      }
     }
   }
 
