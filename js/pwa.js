@@ -219,6 +219,7 @@ class PWAInstallPrompt {
                 navigator.serviceWorker.register('/sw.js')
                     .then((registration) => {
                         console.log('SW registered: ', registration);
+                        registration.update();
                         
                         // Check for updates to the service worker
                         registration.addEventListener('updatefound', () => {
