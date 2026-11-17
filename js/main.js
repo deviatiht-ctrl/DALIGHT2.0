@@ -680,102 +680,359 @@ async function detectSessionRole() {
 }
 
 function updateNavbarAuth(isLoggedIn) {
-  // 1. Mettre à jour dans nav-cta (desktop uniquement via CSS display)
-  const navCta = document.querySelector('.nav-cta');
+  // 1. Clean up any wide auth button from nav-cta to keep navbar perfectly balanced & uncrowded
+  const navCta = document.querySelector('.nav-cta') || document.querySelector('.spa-nav-right');
   if (navCta) {
     const existingAuthBtn = navCta.querySelector('.auth-btn');
     if (existingAuthBtn) existingAuthBtn.remove();
-    
-    let authHtml = '';
-    if (isLoggedIn) {
-      authHtml = `
-        <button class="btn ghost auth-btn" id="navbar-logout-btn" type="button">
-          <i data-lucide="log-out" style="width:16px;height:16px;"></i> Déconnecter
-        </button>
-      `;
-    } else {
-      authHtml = `
-        <a class="btn ghost auth-btn" href="${loginPath}">
-          <i data-lucide="user" style="width:16px;height:16px;"></i> Connexion
-        </a>
-      `;
-    }
-    navCta.insertAdjacentHTML('beforeend', authHtml);
-    
-    const logoutBtn = document.getElementById('navbar-logout-btn');
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', async () => {
-        await supabaseClient.auth.signOut();
-        window.location.href = loginPath;
-      });
-    }
 
-    // Update circular user icon in top bar so it links to orders if logged in
-    const accountIconBtn = navCta.querySelector('.spa-icon-btn.mobile-auth-link') || navCta.querySelector('a.spa-icon-btn[aria-label="Compte"]');
+    // Circular user icon in navbar triggers Profile Drawer if logged in, or goes to login
+    const accountIconBtn = navCta.querySelector('.spa-icon-btn.mobile-auth-link') || 
+                           navCta.querySelector('a.spa-icon-btn[aria-label="Compte"]') ||
+                           navCta.querySelector('a.spa-icon-btn[title*="Espace"]') ||
+                           navCta.querySelector('a.spa-icon-btn[title*="Compte"]');
+                           
     if (accountIconBtn) {
-      const ordersPath = isInsidePagesDir ? './orders.html' : './pages/orders.html';
-      accountIconBtn.href = isLoggedIn ? ordersPath : loginPath;
-      accountIconBtn.title = isLoggedIn ? 'Mon Compte / Rendez-vous' : 'Espace Membre';
+      if (isLoggedIn) {
+        accountIconBtn.classList.add('logged-in');
+        accountIconBtn.title = 'Mon Profil & Rendez-vous';
+        accountIconBtn.onclick = (e) => {
+          e.preventDefault();
+          openUserProfileDrawer();
+        };
+      } else {
+        accountIconBtn.classList.remove('logged-in');
+        accountIconBtn.href = loginPath;
+        accountIconBtn.title = 'Connexion / Inscription';
+        accountIconBtn.onclick = null;
+      }
     }
   }
 
-  // 2. Mettre à jour dans nav-links (dropdown mobile classique)
-  const navLinks = document.querySelector('.nav-links');
-  if (navLinks) {
-    const existingMobileAuth = navLinks.querySelector('.mobile-auth-link');
-    if (existingMobileAuth) existingMobileAuth.remove();
-
-    let mobileAuthHtml = '';
-    if (isLoggedIn) {
-      mobileAuthHtml = `<a href="#" class="mobile-auth-link" id="mobile-logout-btn" style="color:var(--gold-500);"><i data-lucide="log-out" style="width:16px;height:16px;display:inline-block;margin-right:4px;vertical-align:-3px;"></i> Déconnexion</a>`;
-    } else {
-      mobileAuthHtml = `<a href="${loginPath}" class="mobile-auth-link" style="color:var(--gold-500);"><i data-lucide="user" style="width:16px;height:16px;display:inline-block;margin-right:4px;vertical-align:-3px;"></i> Connexion</a>`;
-    }
-
-    const adminLink = navLinks.querySelector('.admin-link');
-    if (adminLink) {
-      adminLink.insertAdjacentHTML('beforebegin', mobileAuthHtml);
-    } else {
-      navLinks.insertAdjacentHTML('beforeend', mobileAuthHtml);
-    }
-
-    const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
-    if (mobileLogoutBtn) {
-      mobileLogoutBtn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        await supabaseClient.auth.signOut();
-        window.location.href = loginPath;
-      });
-    }
-  }
-
-  // 3. Mettre à jour dans le tiwa meni mobil (.spa-mobile-menu)
+  // 2. Mobile Menu links
   const mobileMenu = document.getElementById('spa-mobile-menu') || document.querySelector('.spa-mobile-menu');
   if (mobileMenu) {
     let drawerAuth = mobileMenu.querySelector('a[href*="login.html"]') || mobileMenu.querySelector('#mobile-drawer-auth');
     if (drawerAuth) {
       drawerAuth.id = 'mobile-drawer-auth';
       if (isLoggedIn) {
-        drawerAuth.textContent = 'Déconnexion';
+        drawerAuth.innerHTML = '<i data-lucide="user" style="width:16px;height:16px;display:inline-block;margin-right:6px;vertical-align:-2px;"></i> Mon Profil &amp; Déconnexion';
         drawerAuth.href = '#';
-        drawerAuth.onclick = async (e) => {
+        drawerAuth.onclick = (e) => {
           e.preventDefault();
-          if (window.supabaseClient) await window.supabaseClient.auth.signOut();
-          window.location.href = loginPath;
+          const menu = document.getElementById('spa-mobile-menu');
+          if (menu) menu.classList.remove('active');
+          openUserProfileDrawer();
         };
       } else {
-        drawerAuth.textContent = 'Espace Client';
+        drawerAuth.innerHTML = '<i data-lucide="user" style="width:16px;height:16px;display:inline-block;margin-right:6px;vertical-align:-2px;"></i> Connexion / Compte';
         drawerAuth.href = loginPath;
         drawerAuth.onclick = null;
       }
     }
   }
 
-  // Re-init icons
   if (window.lucide) {
     lucide.createIcons();
   }
 }
+
+// Global Luxury Profile Drawer (View, Edit Profile, Delete Account, Logout)
+export async function openUserProfileDrawer() {
+  let overlay = document.getElementById('dalight-profile-overlay');
+  const ordersPath = isInsidePagesDir ? './orders.html' : './pages/orders.html';
+  const servicesPath = isInsidePagesDir ? './services.html' : './pages/services.html';
+
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'dalight-profile-overlay';
+    overlay.className = 'dalight-profile-overlay';
+    overlay.innerHTML = `
+      <div class="dalight-profile-drawer" id="dalight-profile-drawer">
+        <div class="profile-drawer-header">
+          <div class="profile-avatar-wrap">
+            <div class="profile-avatar-circle" id="drawer-user-initials">D</div>
+            <div>
+              <h3 id="drawer-user-name" class="profile-drawer-title">Mon Profil</h3>
+              <span id="drawer-user-email" class="profile-drawer-email">Chargement...</span>
+            </div>
+          </div>
+          <button type="button" class="profile-close-btn" id="drawer-close-btn" aria-label="Fermer">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+
+        <div class="profile-quick-nav">
+          <a href="${ordersPath}" class="profile-quick-link">
+            <i data-lucide="calendar"></i> Mes Rendez-vous
+          </a>
+          <a href="${servicesPath}" class="profile-quick-link">
+            <i data-lucide="sparkles"></i> Réserver un Soin
+          </a>
+        </div>
+
+        <div class="profile-drawer-section">
+          <div class="profile-section-title">
+            <i data-lucide="user-check"></i> Modifier Mes Informations
+          </div>
+
+          <form id="drawer-edit-form" onsubmit="event.preventDefault();">
+            <div class="profile-form-group">
+              <label for="drawer-input-name">Nom complet *</label>
+              <input type="text" id="drawer-input-name" class="profile-input" required placeholder="Ex: Marie Voltaire">
+            </div>
+
+            <div class="profile-form-group">
+              <label for="drawer-input-phone">Numéro WhatsApp / Téléphone *</label>
+              <input type="tel" id="drawer-input-phone" class="profile-input" required placeholder="Ex: +509 3844-1234">
+            </div>
+
+            <div class="profile-form-group">
+              <label for="drawer-input-email">Adresse Email</label>
+              <input type="email" id="drawer-input-email" class="profile-input" readonly disabled style="opacity:0.75;cursor:not-allowed;">
+              <small style="color:var(--spa-text-subtle);font-size:0.75rem;margin-top:0.25rem;display:block;">Email sécurisé de votre compte</small>
+            </div>
+
+            <div id="drawer-feedback-msg" style="display:none;font-size:0.84rem;margin:0.75rem 0;padding:0.6rem 0.85rem;border-radius:8px;"></div>
+
+            <button type="button" class="btn-profile-primary" id="drawer-btn-save">
+              <i data-lucide="check"></i> Enregistrer les modifications
+            </button>
+          </form>
+        </div>
+
+        <div class="profile-drawer-section profile-bottom-section">
+          <button type="button" class="btn-profile-logout" id="drawer-btn-logout">
+            <i data-lucide="log-out"></i> Se Déconnecter
+          </button>
+
+          <div class="profile-danger-box">
+            <div class="danger-title">
+              <i data-lucide="alert-triangle"></i> Gestion du Compte
+            </div>
+            <p class="danger-desc">
+              Supprimer définitivement votre compte client DALIGHT et effacer vos données enregistrées.
+            </p>
+            <button type="button" class="btn-profile-danger" id="drawer-btn-delete">
+              <i data-lucide="trash-2"></i> Supprimer mon compte
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.style.display = 'none';
+    });
+    document.getElementById('drawer-close-btn').addEventListener('click', () => {
+      overlay.style.display = 'none';
+    });
+
+    document.getElementById('drawer-btn-save').addEventListener('click', handleSaveProfile);
+    document.getElementById('drawer-btn-logout').addEventListener('click', handleLogout);
+    document.getElementById('drawer-btn-delete').addEventListener('click', handleDeleteAccount);
+  }
+
+  // Populate data
+  await loadDrawerData();
+
+  overlay.style.display = 'flex';
+  if (window.lucide) lucide.createIcons();
+}
+
+if (typeof window !== 'undefined') {
+  window.openDalightProfile = openUserProfileDrawer;
+}
+
+async function loadDrawerData() {
+  let userEmail = '';
+  let userName = '';
+  let userPhone = '';
+
+  // 1. Check local storage
+  try {
+    const raw = localStorage.getItem('dalight:user_profile') || localStorage.getItem('dalight_user_profile');
+    if (raw) {
+      const p = JSON.parse(raw);
+      userName = p.fullName || `${p.firstName || ''} ${p.lastName || ''}`.trim();
+      userPhone = p.phone || '';
+      userEmail = p.email || '';
+    }
+  } catch(e){}
+
+  // 2. Check Supabase session
+  if (supabaseClient) {
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session && session.user) {
+        userEmail = session.user.email || userEmail;
+        const metaName = session.user.user_metadata?.full_name || session.user.user_metadata?.name;
+        if (metaName && !userName) userName = metaName;
+        if (session.user.user_metadata?.phone && !userPhone) userPhone = session.user.user_metadata.phone;
+
+        // Live from profiles table
+        const { data: dbProfile } = await supabaseClient
+          .from('profiles')
+          .select('full_name, phone, email')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (dbProfile) {
+          if (dbProfile.full_name) userName = dbProfile.full_name;
+          if (dbProfile.phone) userPhone = dbProfile.phone;
+          if (dbProfile.email) userEmail = dbProfile.email;
+        }
+      }
+    } catch(e){}
+  }
+
+  const nameEl = document.getElementById('drawer-user-name');
+  const emailEl = document.getElementById('drawer-user-email');
+  const initialsEl = document.getElementById('drawer-user-initials');
+  const inputName = document.getElementById('drawer-input-name');
+  const inputPhone = document.getElementById('drawer-input-phone');
+  const inputEmail = document.getElementById('drawer-input-email');
+
+  if (nameEl) nameEl.textContent = userName || 'Client DALIGHT';
+  if (emailEl) emailEl.textContent = userEmail || 'Compte Membre';
+  if (initialsEl) initialsEl.textContent = (userName ? userName.charAt(0) : (userEmail ? userEmail.charAt(0) : 'D')).toUpperCase();
+  if (inputName) inputName.value = userName || '';
+  if (inputPhone) inputPhone.value = userPhone || '';
+  if (inputEmail) inputEmail.value = userEmail || '';
+}
+
+async function handleSaveProfile() {
+  const inputName = document.getElementById('drawer-input-name');
+  const inputPhone = document.getElementById('drawer-input-phone');
+  const feedback = document.getElementById('drawer-feedback-msg');
+  const btn = document.getElementById('drawer-btn-save');
+
+  const newName = inputName?.value.trim();
+  const newPhone = inputPhone?.value.trim();
+
+  if (!newName || !newPhone) {
+    if (feedback) {
+      feedback.style.display = 'block';
+      feedback.style.background = 'rgba(239, 68, 68, 0.2)';
+      feedback.style.color = '#ef4444';
+      feedback.textContent = 'Veuillez remplir votre nom et numéro de téléphone.';
+    }
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Enregistrement...';
+  if (window.lucide) lucide.createIcons();
+
+  try {
+    let userEmail = '';
+    let userId = null;
+
+    if (supabaseClient) {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session && session.user) {
+        userId = session.user.id;
+        userEmail = session.user.email || '';
+
+        // Update profiles table
+        await supabaseClient
+          .from('profiles')
+          .update({
+            full_name: newName,
+            phone: newPhone,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', userId);
+
+        // Update auth metadata
+        await supabaseClient.auth.updateUser({
+          data: { full_name: newName, phone: newPhone }
+        });
+      }
+    }
+
+    // Update localStorage
+    const parts = newName.split(/\s+/);
+    const profile = {
+      fullName: newName,
+      firstName: parts[0] || '',
+      lastName: parts.slice(1).join(' ') || '',
+      email: userEmail,
+      phone: newPhone
+    };
+    localStorage.setItem('dalight:user_profile', JSON.stringify(profile));
+
+    // Update UI elements
+    const nameEl = document.getElementById('drawer-user-name');
+    const initialsEl = document.getElementById('drawer-user-initials');
+    if (nameEl) nameEl.textContent = newName;
+    if (initialsEl) initialsEl.textContent = newName.charAt(0).toUpperCase();
+
+    // If on orders.html, update on-page profile elements
+    const pageName = document.getElementById('page-profile-name');
+    const pageMeta = document.getElementById('page-profile-meta');
+    const pageAvatar = document.getElementById('page-profile-avatar');
+    if (pageName) pageName.textContent = newName;
+    if (pageMeta) pageMeta.textContent = `${userEmail} · ${newPhone}`;
+    if (pageAvatar) pageAvatar.textContent = newName.charAt(0).toUpperCase();
+
+    if (feedback) {
+      feedback.style.display = 'block';
+      feedback.style.background = 'rgba(34, 197, 94, 0.2)';
+      feedback.style.color = '#4ade80';
+      feedback.textContent = 'Vos modifications ont été enregistrées avec succès !';
+    }
+  } catch (err) {
+    console.error('Error saving profile:', err);
+    if (feedback) {
+      feedback.style.display = 'block';
+      feedback.style.background = 'rgba(239, 68, 68, 0.2)';
+      feedback.style.color = '#ef4444';
+      feedback.textContent = 'Erreur lors de la mise à jour : ' + err.message;
+    }
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i data-lucide="check"></i> Enregistrer les modifications';
+    if (window.lucide) lucide.createIcons();
+  }
+}
+
+async function handleLogout() {
+  if (supabaseClient) {
+    try { await supabaseClient.auth.signOut(); } catch(e){}
+  }
+  localStorage.removeItem('dalight:user_profile');
+  localStorage.removeItem('dalight_user_profile');
+  window.location.href = isInsidePagesDir ? './login.html' : './pages/login.html';
+}
+
+async function handleDeleteAccount() {
+  const confirmed = window.confirm("Êtes-vous absolument sûr(e) de vouloir supprimer définitivement votre compte DALIGHT ? Cette action est irréversible et effacera vos données personnelles.");
+  if (!confirmed) return;
+
+  try {
+    if (supabaseClient) {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session && session.user) {
+        // Delete profile row
+        await supabaseClient.from('profiles').delete().eq('id', session.user.id);
+        // Anonymize user reservations
+        await supabaseClient.from('reservations').update({ user_id: null, notes: '[Compte client supprimé]' }).eq('user_id', session.user.id);
+        // Sign out
+        await supabaseClient.auth.signOut();
+      }
+    }
+    localStorage.removeItem('dalight:user_profile');
+    localStorage.removeItem('dalight_user_profile');
+    alert('Votre compte a été supprimé avec succès.');
+    window.location.href = isInsidePagesDir ? '../index.html' : './index.html';
+  } catch(err) {
+    console.error('Error deleting account:', err);
+    alert('Erreur: ' + err.message);
+  }
+}
+
 
 export function getSupabase() {
   // 🔧 FALLBACK TO GLOBAL for reservation.js compatibility

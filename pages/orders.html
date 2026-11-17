@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
@@ -6,356 +6,501 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <title>Mes Réservations · DALIGHT</title>
+    <title>Mon Espace &amp; Réservations · DALIGHT</title>
     <link rel="icon" href="../assets/images/logodaligth.png?v=2" type="image/png" />
     
-    
-        <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="../vendor/fonts/google-fonts.css" rel="stylesheet" />
     <link rel="stylesheet" href="../css/style.css?v=5.2.0" />
     <link rel="stylesheet" href="../css/responsive.css?v=5.2.0" />
-    <link rel="stylesheet" href="../css/modern-theme.css?v=2.5.0">
+    <link rel="stylesheet" href="../css/modern-theme.css?v=2.6.0">
     <script src="../vendor/lucide/lucide.min.js"></script>
     <script src="../vendor/supabase/supabase.min.js"></script>
     <script src="../js/toast.js?v=5.0.0"></script>
-    <script type="module" src="../js/main.js?v=5.2.0"></script>
+    <script type="module" src="../js/main.js?v=5.3.0"></script>
     <script type="module" src="../js/chat-widget.js?v=6.0.0" defer></script>
-    <script type="module" src="../js/orders.js?v=202607311400" defer></script>
+    <script type="module" src="../js/orders.js?v=202607311500" defer></script>
+    
     <style>
-      /* Loyalty cards section */
-      .lc-section { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
-      .lc-section-title { font-family:'Playfair Display',serif; font-size:1.3rem; margin-bottom:1rem; display:flex; align-items:center; gap:.5rem; }
-      .lc-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1rem; }
-      .lc-card { background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%); border-radius:16px; padding:1.5rem; color:#eef1f7; position:relative; overflow:hidden; }
-      .lc-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:linear-gradient(90deg,#c9a227,#f0d060,#c9a227); }
-      .lc-card-header { display:flex; justify-content:space-between; align-items:flex-start; }
-      .lc-logo { font-family:'Playfair Display',serif; font-size:1.3rem; font-weight:700; }
-      .lc-logo span { color:#c9a227; }
-      .lc-subtitle { font-size:.65rem; text-transform:uppercase; letter-spacing:1.5px; color:rgba(255,255,255,.4); }
-      .lc-badge { padding:.25rem .6rem; border-radius:12px; font-size:.68rem; font-weight:600; }
-      .lc-badge-active { background:rgba(34,197,94,.15); color:#4ade80; }
-      .lc-badge-redeemed { background:rgba(59,130,246,.15); color:#60a5fa; }
-      .lc-badge-expired { background:rgba(239,68,68,.15); color:#f87171; }
-      .lc-divider { height:1px; background:rgba(255,255,255,.1); margin:1rem 0; }
-      .lc-service { font-size:.85rem; color:rgba(255,255,255,.6); margin-bottom:.8rem; }
-      .lc-stamps { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
-      .lc-stamp { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.68rem; font-weight:700; }
-      .lc-stamp-on { background:linear-gradient(135deg,#c9a227,#f0d060); color:#1a1400; }
-      .lc-stamp-off { background:rgba(255,255,255,.06); border:1.5px dashed rgba(255,255,255,.15); color:rgba(255,255,255,.3); }
-      .lc-stamp-reward { background:linear-gradient(135deg,#22c55e,#4ade80); color:#fff; }
-      .lc-stamp-count { font-size:.72rem; color:rgba(255,255,255,.5); margin-left:.3rem; }
-      .lc-progress { display:flex; justify-content:space-between; margin-top:.8rem; font-size:.78rem; }
-      .lc-count { font-weight:700; color:#c9a227; }
-      .lc-remaining { color:rgba(255,255,255,.4); }
-      .lc-reward-banner { background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.3); border-radius:10px; padding:.6rem; margin-top:.8rem; font-size:.78rem; color:#4ade80; text-align:center; }
-      .lc-code { font-family:monospace; font-size:.72rem; color:rgba(255,255,255,.3); text-align:center; margin-top:.6rem; }
-      .lc-view-link { display:block; text-align:center; margin-top:.6rem; font-size:.8rem; color:#c9a227; text-decoration:none; font-weight:600; }
-      .lc-view-link:hover { text-decoration:underline; }
-      .lc-badge-bronze { background:rgba(205,127,50,.2); color:#e8a060; }
-      .lc-badge-argent { background:rgba(192,192,192,.2); color:#e8e8e8; }
-      .lc-badge-premium { background:rgba(201,162,39,.2); color:#f0d060; }
-      .tier-bronze-card { background:linear-gradient(135deg,#3d2817 0%,#5c3a1e 50%,#8b5a2b 100%) !important; }
-      .tier-bronze-card::before { background:linear-gradient(90deg,#cd7f32,#e8a060,#cd7f32) !important; }
-      .tier-argent-card { background:linear-gradient(135deg,#2a2a3e 0%,#3e3e5c 50%,#6b6b8a 100%) !important; }
-      .tier-argent-card::before { background:linear-gradient(90deg,#c0c0c0,#e8e8e8,#c0c0c0) !important; }
-      .tier-premium-card { background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%) !important; }
-      .tier-premium-card::before { background:linear-gradient(90deg,#c9a227,#f0d060,#c9a227) !important; }
-    </style>
-    <script type="module">
-      import { initChatWidget } from '../js/chat-widget.js?v=6.0.0';
-      import { autoPollPlopPayments } from '../js/plop-payment.js?v=5.0.0';
-
-      document.addEventListener('DOMContentLoaded', () => {
-        if (window.lucide) lucide.createIcons();
-        initChatWidget();
-
-        // Auto-verify pending Plop Plop payments when client returns from payment redirect
-        (async () => {
-          let attempts = 0;
-          while (!window.dalightSupabase && attempts < 50) {
-            await new Promise(r => setTimeout(r, 200));
-            attempts++;
-          }
-          const sb = window.dalightSupabase;
-          if (sb) {
-            await autoPollPlopPayments(sb);
-            // Reload orders list if page already rendered any pending items
-            if (window.__reloadOrders) window.__reloadOrders();
-          }
-        })();
-      });
-    </script>
-    <style>
-      /* ── Orders page specific styles ── */
-      .orders-header {
-        text-align: center;
-        padding: 2.5rem 1rem 1.5rem;
+      :root {
+        --orders-bg-card: rgba(18, 27, 18, 0.78);
+        --orders-border-card: rgba(212, 175, 55, 0.22);
+        --orders-gold: #D4AF37;
+        --orders-cream: #FAF8F5;
+        --orders-muted: #D5CEBF;
       }
-      .orders-header h1 {
-        font-family: 'Playfair Display', serif;
-        font-size: clamp(1.6rem, 4vw, 2.2rem);
-        margin-bottom: .5rem;
+
+      body {
+        background-color: #121B12 !important;
+        color: var(--orders-cream) !important;
+        font-family: 'Outfit', sans-serif !important;
       }
-      .orders-header p {
-        color: #7a7068;
-        max-width: 520px;
+
+      .orders-main-wrapper {
+        max-width: 960px;
         margin: 0 auto;
+        padding: 2.5rem 1.25rem 5rem;
       }
 
-      /* Stats strip */
-      .orders-stats {
+      /* ── Luxury Profile Card ── */
+      .user-profile-summary-card {
+        background: linear-gradient(135deg, rgba(28, 40, 24, 0.85) 0%, rgba(18, 27, 18, 0.95) 100%);
+        border: 1.5px solid var(--orders-border-card);
+        border-radius: 24px;
+        padding: 2rem;
+        margin-bottom: 2.5rem;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
         display: flex;
-        justify-content: center;
-        gap: 2rem;
-        flex-wrap: wrap;
-        margin: 1.5rem auto 2rem;
-        max-width: 500px;
-      }
-      .orders-stats li {
-        text-align: center;
-        list-style: none;
-      }
-      .orders-stats strong {
-        display: block;
-        font-size: 1.35rem;
-        color: #4A3728;
-      }
-      .orders-stats span {
-        font-size: .8rem;
-        color: #9a8f86;
+        flex-direction: column;
+        gap: 1.5rem;
+        position: relative;
+        overflow: hidden;
       }
 
-      /* Empty state */
-      .orders-empty-state {
-        text-align: center;
-        padding: 3rem 1.5rem;
-        max-width: 420px;
-        margin: 0 auto;
+      .user-profile-summary-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, var(--orders-gold), transparent);
       }
-      .orders-empty-state .empty-icon {
-        width: 64px;
-        height: 64px;
-        margin: 0 auto 1.2rem;
-        background: rgba(212,175,55,.12);
+
+      .profile-header-flex {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+      }
+
+      .profile-avatar-large {
+        width: 72px;
+        height: 72px;
         border-radius: 50%;
+        background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(18, 27, 18, 0.8) 100%);
+        border: 2px solid var(--orders-gold);
+        color: var(--orders-gold);
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 2.2rem;
+        font-weight: 700;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #D4AF37;
-      }
-      .orders-empty-state h3 {
-        margin-bottom: .5rem;
-      }
-      .orders-empty-state p {
-        color: #7a7068;
-        margin-bottom: 1.5rem;
+        box-shadow: 0 6px 20px rgba(212, 175, 55, 0.25);
+        flex-shrink: 0;
       }
 
-      /* Reservation cards list */
+      .profile-main-name {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.85rem;
+        font-weight: 700;
+        color: var(--orders-cream);
+        margin: 0;
+        line-height: 1.2;
+      }
+
+      .profile-tier-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        background: rgba(212, 175, 55, 0.15);
+        border: 1px solid rgba(212, 175, 55, 0.35);
+        color: var(--orders-gold);
+        font-size: 0.78rem;
+        font-weight: 600;
+      }
+
+      .profile-main-meta {
+        font-size: 0.9rem;
+        color: var(--orders-muted);
+        margin: 0.35rem 0 0 0;
+      }
+
+      .profile-card-actions {
+        display: flex;
+        gap: 0.85rem;
+        flex-wrap: wrap;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        padding-top: 1.25rem;
+      }
+
+      .btn-prof-action {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: var(--orders-cream);
+        border-radius: 12px;
+        padding: 0.65rem 1.15rem;
+        font-size: 0.86rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        transition: all 0.25s ease;
+      }
+
+      .btn-prof-action:hover {
+        background: rgba(212, 175, 55, 0.15);
+        border-color: var(--orders-gold);
+        color: var(--orders-gold);
+        transform: translateY(-1px);
+      }
+
+      .btn-prof-action.danger {
+        color: #fca5a5;
+        border-color: rgba(239, 68, 68, 0.3);
+        background: rgba(239, 68, 68, 0.08);
+        margin-left: auto;
+      }
+
+      .btn-prof-action.danger:hover {
+        background: #ef4444;
+        color: #fff;
+        border-color: #ef4444;
+      }
+
+      /* ── Metrics Strip ── */
+      .orders-metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+      }
+
+      .metric-card {
+        background: var(--orders-bg-card);
+        border: 1px solid var(--orders-border-card);
+        border-radius: 18px;
+        padding: 1.25rem 1.5rem;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      }
+
+      .metric-val {
+        display: block;
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: var(--orders-gold);
+        line-height: 1.1;
+      }
+
+      .metric-lbl {
+        font-size: 0.8rem;
+        color: var(--orders-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-top: 0.35rem;
+        display: block;
+      }
+
+      /* ── Filter Buttons ── */
+      .orders-filters {
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 2rem;
+      }
+
+      .orders-filters button {
+        padding: 0.6rem 1.2rem;
+        border-radius: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--orders-muted);
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .orders-filters button:hover {
+        background: rgba(212, 175, 55, 0.12);
+        border-color: var(--orders-gold);
+        color: var(--orders-gold);
+      }
+
+      .orders-filters button.active {
+        background: linear-gradient(135deg, var(--orders-gold) 0%, #B89327 100%);
+        color: #111a0f;
+        border-color: var(--orders-gold);
+        font-weight: 700;
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.25);
+      }
+
+      /* ── Reservation Glass Cards ── */
       .orders-list {
-        max-width: 720px;
-        margin: 0 auto;
-        padding: 0 1rem 3rem;
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 1.5rem;
       }
+
       .reservation-card {
-        background: #fff;
-        border-radius: 14px;
-        box-shadow: 0 2px 12px rgba(74,55,40,.07);
-        padding: 1.25rem 1.5rem;
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: .75rem;
-        align-items: start;
-        transition: box-shadow .2s;
+        background: var(--orders-bg-card);
+        border: 1.5px solid var(--orders-border-card);
+        border-radius: 20px;
+        padding: 1.75rem;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        transition: transform 0.25s ease, border-color 0.25s ease;
       }
+
       .reservation-card:hover {
-        box-shadow: 0 4px 20px rgba(74,55,40,.13);
+        transform: translateY(-2px);
+        border-color: var(--orders-gold);
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
       }
+
+      .rc-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 0.85rem;
+        flex-wrap: wrap;
+      }
+
       .rc-service {
-        font-weight: 600;
-        font-size: 1.05rem;
-        color: #4A3728;
-        margin-bottom: .25rem;
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.45rem;
+        font-weight: 700;
+        color: var(--orders-cream);
+        margin: 0;
+        line-height: 1.2;
       }
+
       .rc-meta {
         display: flex;
         flex-wrap: wrap;
-        gap: .5rem .75rem;
-        font-size: .85rem;
-        color: #7a7068;
+        gap: 0.75rem 1.25rem;
+        font-size: 0.88rem;
+        color: var(--orders-muted);
+        margin-bottom: 1rem;
       }
+
       .rc-meta span {
         display: inline-flex;
         align-items: center;
-        gap: .3rem;
+        gap: 0.4rem;
       }
-      .rc-notes {
-        grid-column: 1 / -1;
-        font-size: .85rem;
-        color: #9a8f86;
-        background: #faf8f6;
-        padding: .6rem .8rem;
-        border-radius: 8px;
-        margin-top: .25rem;
+
+      .rc-meta span i,
+      .rc-meta span svg {
+        color: var(--orders-gold);
       }
-      .rc-status {
+
+      .rc-status-pill {
         display: inline-flex;
         align-items: center;
-        gap: .35rem;
-        padding: .35rem .85rem;
+        gap: 0.4rem;
+        padding: 0.35rem 0.85rem;
         border-radius: 20px;
-        font-size: .78rem;
-        font-weight: 600;
-        white-space: nowrap;
-      }
-      .rc-status.pending {
-        background: #fff7e0;
-        color: #b8860b;
-      }
-      .rc-status.confirmed {
-        background: #e6f9ee;
-        color: #15803d;
-      }
-      .rc-status.completed {
-        background: #e8f0fe;
-        color: #1d4ed8;
-      }
-      .rc-status.cancelled {
-        background: #fee;
-        color: #b91c1c;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
       }
 
-      /* Filter tabs */
-      .orders-filters {
-        display: flex;
-        gap: .5rem;
-        flex-wrap: wrap;
-        justify-content: center;
-        margin: 0 auto 1.5rem;
-        max-width: 720px;
-        padding: 0 1rem;
-      }
-      .orders-filters button {
-        padding: .5rem 1.1rem;
-        border-radius: 999px;
-        border: 1px solid rgba(74,55,40,.18);
-        background: #fff;
-        color: #7a7068;
-        font-weight: 600;
-        font-size: .82rem;
-        cursor: pointer;
-        transition: all .2s;
-      }
-      .orders-filters button:hover {
-        background: rgba(212,175,55,.1);
-        border-color: rgba(212,175,55,.4);
-      }
-      .orders-filters button.active {
-        background: #4A3728;
-        color: #fff;
-        border-color: #4A3728;
+      .rc-status-pill.confirmed {
+        background: rgba(34, 197, 94, 0.18);
+        border: 1px solid rgba(34, 197, 94, 0.45);
+        color: #4ade80;
       }
 
-      /* Assistant banner */
-      .orders-assistant-note {
-        max-width: 720px;
-        margin: 0 auto 1.5rem;
-        padding: .85rem 1.2rem;
+      .rc-status-pill.pending {
+        background: rgba(234, 179, 8, 0.18);
+        border: 1px solid rgba(234, 179, 8, 0.45);
+        color: #facc15;
+      }
+
+      .rc-status-pill.completed {
+        background: rgba(59, 130, 246, 0.18);
+        border: 1px solid rgba(59, 130, 246, 0.45);
+        color: #60a5fa;
+      }
+
+      .rc-status-pill.cancelled {
+        background: rgba(239, 68, 68, 0.18);
+        border: 1px solid rgba(239, 68, 68, 0.45);
+        color: #f87171;
+      }
+
+      .rc-notes-box {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px dashed rgba(212, 175, 55, 0.3);
         border-radius: 12px;
-        background: rgba(212,175,55,.08);
-        border: 1px solid rgba(212,175,55,.2);
-        text-align: center;
-        font-size: .88rem;
-        color: #6B4F3B;
+        padding: 0.85rem 1rem;
+        font-size: 0.86rem;
+        color: var(--orders-cream);
+        margin-bottom: 1.25rem;
+        line-height: 1.5;
+        white-space: pre-line;
       }
-      .orders-assistant-note strong { color: #4A3728; }
 
-      /* Payment detail block */
       .rc-pay-detail {
-        grid-column: 1 / -1;
-        margin-top: .5rem;
-        border: 1px solid rgba(74,55,40,.1);
-        border-radius: 10px;
+        background: rgba(14, 20, 12, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
         overflow: hidden;
-        font-size: .82rem;
+        margin-bottom: 1.25rem;
+        font-size: 0.84rem;
       }
+
       .rc-pay-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: .42rem .85rem;
-        border-bottom: 1px solid rgba(74,55,40,.06);
-        color: #6b5c52;
-        gap: .5rem;
+        padding: 0.55rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: var(--orders-muted);
       }
-      .rc-pay-row:last-child { border-bottom: none; }
-      .rc-pay-row strong { color: #2d1f14; }
-      .rc-pay-full { background: #f0fdf4; color: #15803d; }
-      .rc-pay-full strong { color: #15803d; }
-      .rc-pay-balance { background: #fff7ed; color: #b45309; }
-      .rc-pay-balance strong { color: #b45309; }
-      .rc-pay-pending { background: #fffbeb; color: #92400e; }
-      .rc-pay-method { background: #faf8f6; }
-      .rc-pay-ref { background: #f8f8f8; color: #9a8f86; }
-      .rc-payment-status {
-        display: inline-block;
-        padding: .2rem .6rem;
-        border-radius: 20px;
-        font-size: .75rem;
-        font-weight: 600;
-      }
-      .rc-payment-status.pending { background:#fff7e0; color:#b8860b; }
-      .rc-payment-status.partial  { background:#fff3e0; color:#e65100; }
-      .rc-payment-status.paid     { background:#e6f9ee; color:#15803d; }
-      .rc-actions { grid-column: 1 / -1; display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .5rem; }
-      .rc-btn {
-        display: inline-flex; align-items: center; gap: .35rem; padding: .5rem .9rem;
-        border-radius: 10px; font-size: .82rem; font-weight: 600; border: 1.5px solid transparent;
-        cursor: pointer; transition: background .15s;
-      }
-      .rc-btn-modify { background: #eef2ff; color: #4338ca; border-color: #c7d2fe; }
-      .rc-btn-modify:hover { background: #e0e7ff; }
-      .rc-btn-balance { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
-      .rc-btn-balance:hover { background: #ffedd5; }
-      .rc-btn-consent { background: #f5f3f0; color: #4A3728; border-color: #d9cebf; }
-      .rc-btn-consent:hover { background: #e9e4dd; }
 
-      @media (max-width: 600px) {
-        .reservation-card {
+      .rc-pay-row:last-child {
+        border-bottom: none;
+      }
+
+      .rc-pay-row strong {
+        color: var(--orders-gold);
+        font-size: 0.92rem;
+      }
+
+      .rc-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        padding-top: 1.15rem;
+      }
+
+      .rc-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.65rem 1.15rem;
+        border-radius: 10px;
+        font-size: 0.84rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+      }
+
+      .rc-btn-wa {
+        background: rgba(37, 211, 102, 0.15);
+        border-color: rgba(37, 211, 102, 0.4);
+        color: #4ade80;
+      }
+
+      .rc-btn-wa:hover {
+        background: #25D366;
+        color: #fff;
+      }
+
+      .rc-btn-modify {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.18);
+        color: var(--orders-cream);
+      }
+
+      .rc-btn-modify:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: var(--orders-gold);
+      }
+
+      .rc-btn-balance {
+        background: linear-gradient(135deg, var(--orders-gold) 0%, #B89327 100%);
+        color: #111a0f;
+        font-weight: 700;
+      }
+
+      .rc-btn-balance:hover {
+        background: linear-gradient(135deg, #e5c365 0%, var(--orders-gold) 100%);
+      }
+
+      .rc-section-label {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: var(--orders-gold);
+        margin: 2rem 0 1rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        padding-bottom: 0.45rem;
+      }
+
+      /* ── Loyalty Cards Luxury Theme ── */
+      .lc-section {
+        margin: 2.5rem 0;
+      }
+
+      .lc-card {
+        background: linear-gradient(135deg, #172415 0%, #10190e 100%) !important;
+        border: 1.5px solid var(--orders-gold) !important;
+        border-radius: 20px !important;
+        padding: 1.75rem !important;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5) !important;
+      }
+
+      .lc-stamp-on {
+        background: linear-gradient(135deg, var(--orders-gold), #e5c365) !important;
+        color: #111a0f !important;
+      }
+
+      /* ── Empty State ── */
+      .orders-empty-state {
+        text-align: center;
+        padding: 4rem 1.5rem;
+        background: var(--orders-bg-card);
+        border: 1px dashed var(--orders-border-card);
+        border-radius: 24px;
+        margin: 2rem 0;
+      }
+
+      .empty-icon {
+        width: 70px;
+        height: 70px;
+        background: rgba(212, 175, 55, 0.12);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--orders-gold);
+        margin: 0 auto 1.25rem;
+      }
+
+      @media (max-width: 768px) {
+        .orders-metrics-grid {
           grid-template-columns: 1fr;
-          padding: 1rem 1.1rem;
         }
-        .rc-status {
-          justify-self: start;
+        .btn-prof-action.danger {
+          margin-left: 0;
+          width: 100%;
         }
-        .orders-stats {
-          gap: 1.2rem;
-        }
-        .orders-filters {
-          gap: .4rem;
-        }
-        .orders-filters button {
-          padding: .4rem .85rem;
-          font-size: .78rem;
+        .btn-prof-action {
+          width: 100%;
+          justify-content: center;
         }
       }
     </style>
   </head>
   <body data-page="orders">
-    <!-- Subtle Background Monogram Pattern & Glow -->
     <div class="spa-bg-pattern" aria-hidden="true"></div>
     <div class="spa-bg-glow" aria-hidden="true"></div>
-    <!-- ==========================================================================
-         MODERN LUXURY NAVBAR (EXACT DALIGHT MODEL)
-         ========================================================================== -->
+
+    <!-- Modern Luxury Navbar -->
     <header class="spa-nav-wrapper" id="spa-navbar">
       <nav class="spa-nav-container">
-        <!-- Left: Editorial Links -->
         <div class="spa-nav-left nav-links">
           <a href="../index.html" class="spa-nav-link">Accueil</a>
           <a href="./about.html" class="spa-nav-link">À Propos</a>
@@ -366,7 +511,6 @@
           <a href="../admin/dashboard.html" class="admin-link">Admin</a>
         </div>
 
-        <!-- Center: Circular Brand Seal -->
         <a class="spa-brand-center" href="../index.html" aria-label="DALIGHT Accueil">
           <div class="spa-seal-badge">
             <div class="spa-seal-inner">
@@ -375,7 +519,6 @@
           </div>
         </a>
 
-        <!-- Right: Actions & Reservation Pill Button -->
         <div class="spa-nav-right nav-cta">
           <a href="./services.html" class="spa-icon-btn" title="Rechercher un soin" aria-label="Recherche">
             <i data-lucide="search"></i>
@@ -387,7 +530,7 @@
           <a href="./services.html" class="spa-pill-btn">
             Prendre Rendez-vous
           </a>
-          <a href="./login.html" class="spa-icon-btn mobile-auth-link" title="Espace Membre" aria-label="Compte">
+          <a href="#" class="spa-icon-btn mobile-auth-link logged-in" title="Mon Compte / Profil" aria-label="Compte" onclick="window.openDalightProfile ? (event.preventDefault(), window.openDalightProfile()) : null">
             <i data-lucide="user"></i>
           </a>
           <button class="spa-hamburger-btn" id="spa-hamburger" aria-label="Menu Mobile">
@@ -404,33 +547,63 @@
         <a href="./formation.html">DALIGHT School</a>
         <a href="./shop.html">Boutique</a>
         <a href="./cart.html">Panier</a>
-        <a href="./orders.html" style="color:var(--spa-taupe-rose);font-weight:600;">Mes Réservations</a>
+        <a href="./orders.html" style="color:var(--orders-gold);font-weight:700;">Mes Rendez-vous</a>
         <a href="./loyalty.html">Programme Fidélité</a>
         <a href="../index.html#contact">Delmas 65</a>
-        <a href="./login.html">Espace Client</a>
+        <a href="#" id="mobile-drawer-auth" onclick="window.openDalightProfile ? (event.preventDefault(), window.openDalightProfile()) : null">Mon Profil &amp; Déconnexion</a>
       </div>
     </header>
 
-    <main class="page-shell fade-in">
-      <!-- Header -->
-      <div class="orders-header reveal-on-scroll">
-        <p class="kicker">Mes Réservations</p>
-        <h1>Vos réservations &amp; commandes</h1>
-        <p>Suivez l'état de vos réservations. Vous recevez un email à chaque mise à jour.</p>
-        <ul class="orders-stats">
-          <li>
-            <strong id="orders-count">0</strong>
-            <span>Réservations</span>
-          </li>
-          <li>
-            <strong id="orders-next">—</strong>
-            <span>Prochain RDV</span>
-          </li>
-        </ul>
+    <main class="orders-main-wrapper fade-in">
+      <!-- ══════ ON-PAGE PROFILE CARD ══════ -->
+      <div class="user-profile-summary-card" id="user-profile-box">
+        <div class="profile-header-flex">
+          <div class="profile-avatar-large" id="page-profile-avatar">D</div>
+          <div style="flex: 1;">
+            <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
+              <h1 id="page-profile-name" class="profile-main-name">Mon Espace Membre</h1>
+              <span class="profile-tier-badge" id="page-profile-tier">
+                <i data-lucide="sparkles" style="width:12px;height:12px;"></i> Membre Privilège
+              </span>
+            </div>
+            <p id="page-profile-meta" class="profile-main-meta">Chargement de votre compte...</p>
+          </div>
+        </div>
+
+        <div class="profile-card-actions">
+          <button type="button" class="btn-prof-action" onclick="window.openDalightProfile ? window.openDalightProfile() : null">
+            <i data-lucide="user-check"></i> Modifier mes informations
+          </button>
+          <a href="./services.html" class="btn-prof-action">
+            <i data-lucide="calendar-plus"></i> Nouveau Rendez-vous
+          </a>
+          <button type="button" class="btn-prof-action" id="page-direct-logout">
+            <i data-lucide="log-out"></i> Déconnexion
+          </button>
+          <button type="button" class="btn-prof-action danger" id="page-direct-delete">
+            <i data-lucide="trash-2"></i> Supprimer mon compte
+          </button>
+        </div>
       </div>
 
-      <!-- Filter tabs -->
-      <div class="orders-filters" id="orders-filters" hidden>
+      <!-- ══════ METRICS KPI STRIP ══════ -->
+      <div class="orders-metrics-grid">
+        <div class="metric-card">
+          <span class="metric-val" id="orders-count">0</span>
+          <span class="metric-lbl">Total Rendez-vous</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-val" id="orders-next" style="font-size:1.6rem;">—</span>
+          <span class="metric-lbl">Prochain Soin</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-val" style="color:#4ade80;" id="orders-status-pill">Actif</span>
+          <span class="metric-lbl">Compte Vérifié</span>
+        </div>
+      </div>
+
+      <!-- ══════ FILTER TABS ══════ -->
+      <div class="orders-filters" id="orders-filters">
         <button class="active" data-filter="ALL">Tous</button>
         <button data-filter="PENDING">En attente</button>
         <button data-filter="CONFIRMED">Confirmé</button>
@@ -438,33 +611,30 @@
         <button data-filter="CANCELLED">Annulé</button>
       </div>
 
-      <!-- Assistant note -->
-      <div class="orders-assistant-note" id="orders-assistant-note" hidden>
-        <strong>Besoin d'aide ?</strong> Écrivez à l'<strong>Assistant DALIGHT</strong> via la bulle en bas à droite — nous répondons rapidement.
-      </div>
-
-      <!-- Empty state -->
+      <!-- ══════ EMPTY STATE ══════ -->
       <section id="orders-empty" class="orders-empty-state" hidden>
         <div class="empty-icon">
-          <i data-lucide="calendar-x" style="width:28px;height:28px;"></i>
+          <i data-lucide="calendar-x" style="width:32px;height:32px;"></i>
         </div>
-        <h3>Aucune réservation</h3>
-        <p>Réservez votre premier service DALIGHT et retrouvez-le ici.</p>
-        <a class="btn" href="./services.html">Réserver maintenant</a>
+        <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:var(--orders-gold);margin:0 0 0.5rem 0;">Aucune réservation pour le moment</h3>
+        <p style="color:var(--orders-muted);font-size:0.95rem;max-width:440px;margin:0 auto 1.5rem;">
+          Profitez de notre carte de Head Spa japonais et soins exclusifs à Delmas 65.
+        </p>
+        <a class="btn-prof-action" href="./services.html" style="background:var(--orders-gold);color:#111a0f;font-weight:700;">
+          <i data-lucide="sparkles"></i> Découvrir nos soins
+        </a>
       </section>
 
       <!-- Loyalty cards section -->
       <div id="loyalty-section"></div>
 
-      <!-- Reservations list -->
-      <div id="orders-list" class="orders-list" hidden>
-        <!-- Cards injected by orders.js -->
+      <!-- ══════ RESERVATIONS LIST ══════ -->
+      <div id="orders-list" class="orders-list">
+        <!-- Rendered by js/orders.js -->
       </div>
     </main>
 
-    <!-- ==========================================================================
-         MINIMALIST LUXURY FOOTER (DALIGHT MODEL)
-         ========================================================================== -->
+    <!-- Minimalist Luxury Footer -->
     <footer class="spa-footer">
       <div class="spa-footer-container">
         <div class="spa-footer-brand">
@@ -490,8 +660,6 @@
       </div>
     </footer>
 
-    <nav class="mobile-nav" aria-label="Navigation mobile"></nav>
-
     <!-- Chat Widget -->
     <div class="chat-widget" id="chat-widget">
       <button class="chat-bubble" id="chat-bubble">
@@ -516,8 +684,3 @@
     </div>
   </body>
 </html>
-
-
-
-
-

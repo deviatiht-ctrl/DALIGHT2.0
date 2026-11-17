@@ -78,20 +78,32 @@ function getTimeSlotOptions() {
 function renderCard(r) {
   const st = STATUS_FR[r.status] || STATUS_FR.PENDING;
   const pst = PAYMENT_STATUS_FR[r.payment_status] || PAYMENT_STATUS_FR.pending;
-  const locationLabel = r.location === 'Spa' ? 'Au Spa — Delmas 65' : r.location;
-  const totalAmount = r.total_amount || calcTotalFromServices(r.services);
-  const depositAmount = r.deposit_amount || 0;
-  const balanceAmount = totalAmount - depositAmount - (r.balance_paid_amount || 0);
+  const locationLabel = r.location === 'Spa' ? 'Au Spa — Delmas 65' : (r.location || 'Au Spa — Delmas 65');
+  const totalAmount = Number(r.total_amount_htg || r.total_amount || calcTotalFromServices(r.services) || 0);
+  const depositAmount = Number(r.deposit_amount || 0);
+  const balanceAmount = Math.max(0, totalAmount - depositAmount - (Number(r.balance_paid_amount) || 0));
   const todayISO = getTodayISO();
-  const isToday = r.date === todayISO;
-  const isFuture = r.date > todayISO;
+  const isFuture = r.date >= todayISO;
   const canModify = isFuture && (r.status === 'PENDING' || r.status === 'CONFIRMED');
-  const needsBalance = r.payment_status === 'deposit_paid' && balanceAmount > 0;
+  const needsBalance = (r.payment_status === 'deposit_paid' || r.payment_status === 'partial') && balanceAmount > 0;
   const hasModification = r.modification_reason;
+
+  // Status Icon
+  let statusIcon = 'clock';
+  if (r.status === 'CONFIRMED') statusIcon = 'check-circle';
+  else if (r.status === 'COMPLETED') statusIcon = 'sparkles';
+  else if (r.status === 'CANCELLED') statusIcon = 'x-circle';
+
+  const statusBadge = `<span class="rc-status-pill ${st.css}"><i data-lucide="${statusIcon}" style="width:13px;height:13px;"></i> ${st.label}</span>`;
+
+  // Direct WhatsApp button
+  const resvNum = r.reservation_number || (r.id ? r.id.slice(0, 8) : 'DALIGHT');
+  const waText = encodeURIComponent(`Bonjour DALIGHT ! Je vous contacte au sujet de ma réservation #${resvNum} (${r.service}) prévue le ${formatDate(r.date)} à ${formatTime(r.time)}.`);
+  const waBtn = `<a href="https://wa.me/50947477221?text=${waText}" target="_blank" rel="noopener" class="rc-btn rc-btn-wa"><i data-lucide="message-circle" style="width:14px;height:14px;"></i> Contacter sur WhatsApp</a>`;
 
   const modifyBtn = canModify
     ? `<button class="rc-btn rc-btn-modify" data-action="open-modify" data-id="${r.id}">
-         <i data-lucide="calendar-edit" style="width:14px;height:14px;"></i> Modifier
+         <i data-lucide="calendar" style="width:14px;height:14px;"></i> Modifier la date
        </button>`
     : '';
 
@@ -104,138 +116,115 @@ function renderCard(r) {
   const tpl = matchTemplate(r, consentData.templates, consentData.serviceMap);
   const sub = tpl ? findSubmission(r, consentData.submissions) : null;
   const consentBtn = tpl
-    ? `<button class="rc-btn rc-btn-consent" data-action="open-consent" data-id="${r.id}">
-         <i data-lucide="file-signature" style="width:14px;height:14px;"></i> ${sub ? 'Voir le formulaire de consentement' : 'Remplir le formulaire de consentement'}
+    ? `<button class="rc-btn rc-btn-modify" data-action="open-consent" data-id="${r.id}">
+         <i data-lucide="file-signature" style="width:14px;height:14px;"></i> ${sub ? 'Formulaire de consentement' : 'Remplir le consentement'}
        </button>`
     : '';
 
-  const paymentStatusBadge = `<span class="rc-payment-status ${pst.css}">${pst.label}</span>`;
+  // Video indicator
+  const hasVideo = r.wants_video || r.video_requested;
+  const videoTag = hasVideo
+    ? `<span style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.25rem 0.65rem;border-radius:20px;background:rgba(212,175,55,0.15);color:var(--orders-gold);border:1px solid rgba(212,175,55,0.3);font-size:0.75rem;font-weight:600;"><i data-lucide="video" style="width:12px;height:12px;"></i> Option Vidéo Souvenir incluse</span>`
+    : '';
+
+  // Notes box
+  const notesBox = r.notes
+    ? `<div class="rc-notes-box"><i data-lucide="file-text" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;color:var(--orders-gold);"></i> ${escapeHtml(r.notes)}</div>`
+    : '';
 
   const modificationNote = hasModification
-    ? `<div class="rc-modification-note">
-         <i data-lucide="info" style="width:14px;height:14px;"></i>
-         Modification: ${escapeHtml(r.modification_reason)}
+    ? `<div style="background:rgba(234,179,8,0.12);border:1px solid rgba(234,179,8,0.3);padding:0.75rem;border-radius:10px;margin-bottom:1rem;font-size:0.84rem;color:#facc15;display:flex;align-items:center;gap:0.4rem;">
+         <i data-lucide="info" style="width:16px;height:16px;flex-shrink:0;"></i>
+         <span>Demande de modification : ${escapeHtml(r.modification_reason)}</span>
        </div>`
     : '';
 
   return `
     <article class="reservation-card" data-id="${r.id}">
-      <div class="rc-main">
+      <div class="rc-header-row">
         <div>
-          <div class="rc-service">${escapeHtml(r.service)}</div>
-          <div class="rc-meta">
-            <span><i data-lucide="calendar" style="width:14px;height:14px;"></i> ${formatDate(r.date)}</span>
-            <span><i data-lucide="clock" style="width:14px;height:14px;"></i> ${formatTime(r.time)}</span>
-            <span><i data-lucide="map-pin" style="width:14px;height:14px;"></i> ${escapeHtml(locationLabel)}</span>
-          </div>
-          <div class="rc-meta" style="margin-top:0.25rem;">
-            ${paymentStatusBadge}
-            <span>Total: <strong>${totalAmount.toLocaleString()} HTG</strong></span>
-          </div>
-          ${(() => {
-            const formatPaymentMethod = (pm) => {
-              if (!pm) return null;
-              if (pm.startsWith('other:')) return pm.slice(6);
-              return pm.charAt(0).toUpperCase() + pm.slice(1);
-            };
-            const pmLabel = formatPaymentMethod(r.payment_method);
-            const ref = r.payment_reference || r.plop_transaction_id || null;
-            const balRef = r.balance_payment_reference || r.balance_plop_transaction_id || null;
-
-            let rows = '';
-
-            if (r.payment_status === 'fully_paid') {
-              rows += `<div class="rc-pay-row rc-pay-full">
-                <span>✓ Paiement complet versé</span>
-                <strong>${totalAmount.toLocaleString()} HTG</strong>
-              </div>`;
-            } else if (r.payment_status === 'deposit_paid' || r.payment_status === 'balance_pending') {
-              rows += `<div class="rc-pay-row">
-                <span>Acompte versé</span>
-                <strong>${depositAmount.toLocaleString()} HTG</strong>
-              </div>`;
-              if (balanceAmount > 0) {
-                rows += `<div class="rc-pay-row rc-pay-balance">
-                  <span>Solde restant</span>
-                  <strong>${balanceAmount.toLocaleString()} HTG</strong>
-                </div>`;
-              }
-              if (r.balance_paid_amount > 0) {
-                rows += `<div class="rc-pay-row rc-pay-full">
-                  <span>Solde payé</span>
-                  <strong>${Number(r.balance_paid_amount).toLocaleString()} HTG</strong>
-                </div>`;
-              }
-            } else {
-              rows += `<div class="rc-pay-row rc-pay-pending">
-                <span>En attente de confirmation</span>
-                <strong>—</strong>
-              </div>`;
-            }
-
-            if (pmLabel) rows += `<div class="rc-pay-row rc-pay-method">
-              <span>Méthode</span><span>${pmLabel}</span>
-            </div>`;
-            if (ref) rows += `<div class="rc-pay-row rc-pay-ref">
-              <span>Référence</span><span style="font-size:.72rem;font-family:monospace;">${escapeHtml(ref)}</span>
-            </div>`;
-            if (balRef && balRef !== ref) rows += `<div class="rc-pay-row rc-pay-ref">
-              <span>Réf. solde</span><span style="font-size:.72rem;font-family:monospace;">${escapeHtml(balRef)}</span>
-            </div>`;
-
-            if (r.plop_client_id) rows += `<div class="rc-pay-row" style="background:#f0f9ff;">
-              <span>ID Plop Plop client</span>
-              <span style="font-size:.72rem;font-family:monospace;font-weight:600;color:#0369a1;">${escapeHtml(r.plop_client_id)}</span>
-            </div>`;
-
-            return rows ? `<div class="rc-pay-detail">${rows}</div>` : '';
-          })()}
+          <span style="font-size:0.75rem;font-family:monospace;color:var(--orders-gold);letter-spacing:0.05em;display:block;margin-bottom:0.25rem;">RÉSERVATION #${resvNum}</span>
+          <h3 class="rc-service">${escapeHtml(r.service)}</h3>
         </div>
-        <span class="rc-status ${st.css}">${st.label}</span>
+        ${statusBadge}
       </div>
-      <div class="rc-notes">${escapeHtml(r.notes || '')}</div>
+
+      <div class="rc-meta">
+        <span><i data-lucide="calendar"></i> ${formatDate(r.date)}</span>
+        <span><i data-lucide="clock"></i> ${formatTime(r.time)}</span>
+        <span><i data-lucide="map-pin"></i> ${escapeHtml(locationLabel)}</span>
+        ${videoTag}
+      </div>
+
+      <div class="rc-pay-detail">
+        <div class="rc-pay-row">
+          <span>Montant de la prestation</span>
+          <strong>${totalAmount.toLocaleString()} HTG</strong>
+        </div>
+        ${depositAmount > 0 ? `
+          <div class="rc-pay-row">
+            <span>Acompte versé</span>
+            <strong style="color:#4ade80;">-${depositAmount.toLocaleString()} HTG</strong>
+          </div>
+        ` : ''}
+        ${needsBalance ? `
+          <div class="rc-pay-row" style="background:rgba(234,179,8,0.1);">
+            <span style="color:#facc15;">Solde à régler</span>
+            <strong style="color:#facc15;">${balanceAmount.toLocaleString()} HTG</strong>
+          </div>
+        ` : ''}
+      </div>
+
+      ${notesBox}
       ${modificationNote}
+
       <div class="rc-actions">
+        ${waBtn}
         ${modifyBtn}
         ${balanceBtn}
         ${consentBtn}
       </div>
-      <div class="rc-panel rc-modify-panel" hidden data-panel="modify">
-        <h4>Modifier la réservation</h4>
-        <div class="rc-form-row">
-          <label>Nouvelle date</label>
-          <input type="date" class="rc-input rc-input-date" value="${r.date}">
+
+      <!-- Modify Panel Inline -->
+      <div class="rc-panel rc-modify-panel" hidden data-panel="modify" style="margin-top:1.25rem;padding:1.25rem;background:rgba(14,20,12,0.85);border:1px solid rgba(212,175,55,0.3);border-radius:14px;">
+        <h4 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:var(--orders-gold);margin:0 0 1rem 0;">Modifier la date ou l'heure</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">
+          <div>
+            <label style="display:block;font-size:0.8rem;color:var(--orders-muted);margin-bottom:0.25rem;">Nouvelle date</label>
+            <input type="date" class="rc-input rc-input-date" value="${r.date}" style="width:100%;box-sizing:border-box;">
+          </div>
+          <div>
+            <label style="display:block;font-size:0.8rem;color:var(--orders-muted);margin-bottom:0.25rem;">Nouvelle heure</label>
+            <select class="rc-input rc-input-time" style="width:100%;box-sizing:border-box;">
+              ${getTimeSlotOptions().map(t => `<option value="${t}" ${t === r.time ? 'selected' : ''}>${t}</option>`).join('')}
+            </select>
+          </div>
         </div>
-        <div class="rc-form-row">
-          <label>Nouvelle heure</label>
-          <select class="rc-input rc-input-time">
-            ${getTimeSlotOptions().map(t => `<option value="${t}" ${t === r.time ? 'selected' : ''}>${t}</option>`).join('')}
-          </select>
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;font-size:0.8rem;color:var(--orders-muted);margin-bottom:0.25rem;">Raison du report</label>
+          <input type="text" class="rc-input rc-input-reason" placeholder="Ex: Empêchement professionnel..." style="width:100%;box-sizing:border-box;">
         </div>
-        <div class="rc-form-row">
-          <label>Raison du changement</label>
-          <textarea class="rc-input rc-input-reason" rows="2" placeholder="Expliquez pourquoi vous voulez changer..."></textarea>
-        </div>
-        <div class="rc-panel-actions">
-          <button class="rc-btn rc-btn-cancel" data-action="cancel-modify">Annuler</button>
-          <button class="rc-btn rc-btn-save" data-action="save-modify" data-id="${r.id}">Confirmer le changement</button>
+        <div style="display:flex;gap:0.6rem;justify-content:flex-end;">
+          <button class="rc-btn rc-btn-modify" data-action="cancel-modify">Annuler</button>
+          <button class="rc-btn rc-btn-balance" data-action="save-modify" data-id="${r.id}">Confirmer la modification</button>
         </div>
       </div>
-      <div class="rc-panel rc-balance-panel" hidden data-panel="balance">
-        <h4>Payer le solde (${balanceAmount.toLocaleString()} HTG)</h4>
+
+      <!-- Balance Panel Inline -->
+      <div class="rc-panel rc-balance-panel" hidden data-panel="balance" style="margin-top:1.25rem;padding:1.25rem;background:rgba(14,20,12,0.85);border:1px solid rgba(212,175,55,0.3);border-radius:14px;">
+        <h4 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:var(--orders-gold);margin:0 0 1rem 0;">Régler le solde (${balanceAmount.toLocaleString()} HTG)</h4>
         <div class="rc-payment-methods" data-balance-id="${r.id}">
-          <div class="rc-loading">Chargement des méthodes de paiement...</div>
+          <div class="rc-loading" style="font-size:0.85rem;color:var(--orders-muted);">Chargement des méthodes...</div>
         </div>
-        <div class="rc-upload-zone" id="balance-upload-zone-${r.id}" style="display:none;">
-          <input type="file" id="balance-file-${r.id}" accept="image/*" style="display:none;">
-          <i data-lucide="upload-cloud" style="width:32px;height:32px;color:#D4AF37;"></i>
-          <p>Uploader la preuve du solde</p>
-          <small>PNG, JPG — Max 5 MB</small>
-          <div class="rc-file-name" id="balance-filename-${r.id}"></div>
+        <div class="rc-upload-zone" id="balance-upload-zone-${r.id}" style="display:none;margin-top:1rem;padding:1rem;border:1px dashed var(--orders-border-card);border-radius:10px;text-align:center;cursor:pointer;">
+          <input type="file" id="balance-file-${r.id}" accept="image/*,.pdf" style="display:none;">
+          <i data-lucide="upload" style="width:24px;height:24px;color:var(--orders-gold);"></i>
+          <p style="margin:0.25rem 0 0;font-size:0.82rem;color:var(--orders-cream);">Uploader le reçu de transfert</p>
+          <div class="rc-file-name" id="balance-filename-${r.id}" style="font-size:0.78rem;color:#4ade80;margin-top:0.25rem;"></div>
         </div>
-        <div class="rc-panel-actions">
-          <button class="rc-btn rc-btn-cancel" data-action="cancel-balance">Annuler</button>
-          <button class="rc-btn rc-btn-save" data-action="save-balance" data-id="${r.id}">Payer le solde</button>
+        <div style="display:flex;gap:0.6rem;justify-content:flex-end;margin-top:1rem;">
+          <button class="rc-btn rc-btn-modify" data-action="cancel-balance">Annuler</button>
+          <button class="rc-btn rc-btn-balance" data-action="save-balance" data-id="${r.id}">Soumettre le solde</button>
         </div>
       </div>
     </article>
@@ -579,7 +568,7 @@ function showPaymentSuccessPopup(reservationNumber, date, time) {
       <div style="width:80px;height:80px;background:linear-gradient(135deg,#d1fae5 0%,#a7f3d0 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;box-shadow:0 8px 20px rgba(16,185,129,0.3);">
         <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
       </div>
-      <h3 style="margin:0 0 1rem;color:#1f2937;font-size:1.5rem;font-weight:700;">✅ Paiement confirmé !</h3>
+      <h3 style="margin:0 0 1rem;color:#1f2937;font-size:1.5rem;font-weight:700;">Paiement confirmé !</h3>
       <p style="margin:0 0 1.5rem;color:#4b5563;font-size:1rem;line-height:1.7;">
         Votre réservation <strong style="color:#D4AF37;">#${escapeHtml(reservationNumber || '')}</strong> a été confirmée avec succès.<br><br>
         <strong>Date:</strong> ${formatDate(date)}<br>
@@ -689,14 +678,25 @@ async function loadReservations() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       console.log('⚠️ No session found');
+      toggleSections(false);
+      const nameEl = document.getElementById('page-profile-name');
+      const metaEl = document.getElementById('page-profile-meta');
+      if (nameEl) nameEl.textContent = 'Non connecté';
+      if (metaEl) metaEl.innerHTML = '<a href="./login.html" style="color:var(--orders-gold);text-decoration:underline;">Cliquez ici pour vous connecter</a>';
       return;
     }
 
-    const { data, error } = await supabase
-      .from('reservations')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .order('created_at', { ascending: false });
+    // Populate on-page profile info
+    await populateOnPageProfile(session);
+
+    let query = supabase.from('reservations').select('*');
+    if (session.user.id && session.user.email) {
+      query = query.or(`user_id.eq.${session.user.id},user_email.eq.${session.user.email}`);
+    } else {
+      query = query.eq('user_id', session.user.id);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) throw error;
 
@@ -730,6 +730,73 @@ async function loadReservations() {
     if (emptyState) {
       emptyState.querySelector('p').textContent = error.message || 'Impossible de charger les réservations.';
     }
+  }
+}
+
+async function populateOnPageProfile(session) {
+  let userName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || '';
+  let userPhone = session.user.user_metadata?.phone || '';
+  const userEmail = session.user.email || '';
+
+  try {
+    const raw = localStorage.getItem('dalight:user_profile');
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (!userName && p.fullName) userName = p.fullName;
+      if (!userPhone && p.phone) userPhone = p.phone;
+    }
+  } catch(e){}
+
+  try {
+    const { data: dbProfile } = await supabase
+      .from('profiles')
+      .select('full_name, phone, role')
+      .eq('id', session.user.id)
+      .maybeSingle();
+
+    if (dbProfile) {
+      if (dbProfile.full_name) userName = dbProfile.full_name;
+      if (dbProfile.phone) userPhone = dbProfile.phone;
+    }
+  } catch(e){}
+
+  const nameEl = document.getElementById('page-profile-name');
+  const metaEl = document.getElementById('page-profile-meta');
+  const avatarEl = document.getElementById('page-profile-avatar');
+
+  if (nameEl) nameEl.textContent = userName || 'Client DALIGHT';
+  if (metaEl) metaEl.textContent = `${userEmail} ${userPhone ? '· ' + userPhone : ''}`;
+  if (avatarEl) avatarEl.textContent = (userName ? userName.charAt(0) : (userEmail ? userEmail.charAt(0) : 'D')).toUpperCase();
+
+  // Wire direct logout
+  const logoutBtn = document.getElementById('page-direct-logout');
+  if (logoutBtn) {
+    logoutBtn.onclick = async () => {
+      await supabase.auth.signOut();
+      localStorage.removeItem('dalight:user_profile');
+      localStorage.removeItem('dalight_user_profile');
+      window.location.href = './login.html';
+    };
+  }
+
+  // Wire direct delete
+  const deleteBtn = document.getElementById('page-direct-delete');
+  if (deleteBtn) {
+    deleteBtn.onclick = async () => {
+      const confirmed = window.confirm("Êtes-vous absolument certain(e) de vouloir supprimer définitivement votre compte DALIGHT ? Vos données personnelles seront effacées.");
+      if (!confirmed) return;
+      try {
+        await supabase.from('profiles').delete().eq('id', session.user.id);
+        await supabase.from('reservations').update({ user_id: null, notes: '[Compte client supprimé]' }).eq('user_id', session.user.id);
+        await supabase.auth.signOut();
+        localStorage.removeItem('dalight:user_profile');
+        localStorage.removeItem('dalight_user_profile');
+        alert('Votre compte a été supprimé avec succès.');
+        window.location.href = '../index.html';
+      } catch(err) {
+        alert('Erreur: ' + err.message);
+      }
+    };
   }
 }
 

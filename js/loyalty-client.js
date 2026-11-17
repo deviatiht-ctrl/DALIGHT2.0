@@ -64,7 +64,9 @@ function renderReferralBox(referralCode) {
   if (!referralCode) return '';
   return `
     <div class="lc-referral-box" style="margin:0 0 1rem;padding:1rem 1.25rem;border-radius:12px;background:linear-gradient(135deg,rgba(212,175,55,.15),rgba(74,55,40,.08));border:1px dashed #c9a227;">
-      <div style="font-size:.85rem;font-weight:700;color:#c9a227;margin-bottom:.3rem;">🎁 Votre code de parrainage</div>
+      <div style="font-size:.85rem;font-weight:700;color:#c9a227;margin-bottom:.3rem;display:flex;align-items:center;gap:0.4rem;">
+      <i data-lucide="gift" style="width:16px;height:16px;"></i> Votre code de parrainage
+    </div>
       <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
         <code style="font-size:1.1rem;font-weight:800;letter-spacing:1px;">${escapeHtmlLoyalty(referralCode)}</code>
         <button type="button" onclick="navigator.clipboard.writeText('${escapeHtmlLoyalty(referralCode)}').then(()=>{this.textContent='✓ Copié!';setTimeout(()=>this.textContent='Copier',1500);})" style="padding:.3rem .8rem;border-radius:8px;border:1px solid #c9a227;background:transparent;color:#c9a227;cursor:pointer;font-size:.8rem;font-weight:600;">Copier</button>
