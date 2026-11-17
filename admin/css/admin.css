@@ -1458,3 +1458,106 @@ table tbody tr:last-child td {
     display: none;
   }
 }
+
+
+/* ==========================================================================
+   MODAL OVERLAY (Compatibilité réservations & dialogs administratifs)
+   ========================================================================== */
+.modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(8, 12, 8, 0.85) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  display: none;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 99999 !important;
+  padding: 1.5rem !important;
+  box-sizing: border-box !important;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.modal-overlay.active,
+.modal-overlay[style*="display: flex"],
+.modal-overlay[style*="display:flex"] {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.modal-overlay .modal {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  width: 100% !important;
+  max-width: 620px !important;
+  max-height: 90vh !important;
+  background: rgba(18, 27, 18, 0.98) !important;
+  border: 1px solid rgba(194, 164, 144, 0.35) !important;
+  border-radius: 28px !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.85), 0 0 35px rgba(212, 175, 55, 0.25) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  padding: 2rem !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  transform: none !important;
+  color: #fff !important;
+  overflow: hidden !important;
+}
+
+.modal-overlay .modal-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding-bottom: 1.25rem !important;
+  border-bottom: 1px solid rgba(194, 164, 144, 0.2) !important;
+  margin-bottom: 1.25rem !important;
+}
+
+.modal-overlay .modal-title {
+  font-family: var(--admin-font-serif, "Cormorant Garamond", serif) !important;
+  font-size: 1.6rem !important;
+  font-weight: 700 !important;
+  color: #fff !important;
+  margin: 0 !important;
+}
+
+.modal-overlay .modal-close {
+  background: transparent !important;
+  border: none !important;
+  color: #FAF8F5 !important;
+  opacity: 0.75 !important;
+  cursor: pointer !important;
+  padding: 6px !important;
+  border-radius: 50% !important;
+  transition: all 0.2s ease !important;
+}
+
+.modal-overlay .modal-close:hover {
+  opacity: 1 !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  transform: rotate(90deg) !important;
+}
+
+.modal-overlay .modal-body {
+  overflow-y: auto !important;
+  flex: 1 1 auto !important;
+  padding-right: 0.5rem !important;
+  margin-bottom: 1.25rem !important;
+}
+
+.modal-overlay .modal-footer {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 0.75rem !important;
+  padding-top: 1rem !important;
+  border-top: 1px solid rgba(194, 164, 144, 0.2) !important;
+}

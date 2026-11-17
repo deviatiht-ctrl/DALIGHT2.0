@@ -105,6 +105,29 @@ async function handleLogin(event) {
         console.log('✅ Session verified, checking redirect...');
         const urlParams = new URLSearchParams(window.location.search);
         const redirect = urlParams.get('redirect');
+        // Check if user is an influencer
+        try {
+          const { data: infCheck } = await supabase
+            .from('dalight_influencers')
+            .select('id')
+            .ilike('email', session.user.email)
+            .maybeSingle();
+
+          const { data: promoCheck } = await supabase
+            .from('dalight_promo_codes')
+            .select('id')
+            .ilike('owner_email', session.user.email)
+            .maybeSingle();
+
+          if (infCheck || promoCheck || profileData?.role === 'influencer') {
+            console.log('🌟 Influencer session detected! Redirecting to influencer dashboard...');
+            window.location.href = './influencer.html';
+            return;
+          }
+        } catch(e) {
+          console.warn('Influencer check fallback:', e);
+        }
+
         if (redirect) {
           window.location.href = `./${redirect}`;
         } else {

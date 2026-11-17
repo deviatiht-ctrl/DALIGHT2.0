@@ -384,6 +384,13 @@
           Réservations
         </a>
         <a href="pos.html" class="nav-item">
+            <i data-lucide="calculator"></i>
+            <span>Point de Vente (POS)</span>
+          </a>
+          <a href="contenu-video.html" class="nav-item">
+            <i data-lucide="video"></i>
+            <span>Contenu Vidéo</span>
+          </a>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
           Caisse / POS
         </a>
@@ -1212,6 +1219,29 @@
     }
 
     async function fetchLiveGatewayStatus(isManual = false) {
+      const GATEWAY_URL = 'https://cvisual-whatsapp-gateway.onrender.com';
+      const API_KEY = 'cv_live_admin_6094ed1bf65bf0945706d3d7';
+
+      // 1. Try direct CVISUAL gateway /api/v1/me and /api/v1/status
+      try {
+        const meRes = await fetch(GATEWAY_URL + '/api/v1/me', {
+          headers: { 'Authorization': 'Bearer ' + API_KEY }
+        });
+        if (meRes.ok) {
+          const json = await meRes.json();
+          if (json.usage) {
+            document.getElementById('quota-remaining').textContent = Number(json.usage.remaining_today).toLocaleString();
+          }
+          if (json.cluster) {
+            document.getElementById('sim-ready-count').textContent = json.cluster.active_lines_ready || '2';
+            document.getElementById('sim-total-count').textContent = json.cluster.total_configured_lines || '2';
+          }
+          return;
+        }
+      } catch(e) {
+        console.warn('Direct gateway check fallback:', e);
+      }
+
       try {
         const res = await fetch('/api/whatsapp/status');
         if (res.ok) {

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion Contenu Vidéo — DALIGHT Admin</title>
+  <link rel="icon" href="../assets/images/logodaligth.png?v=2" type="image/png">
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="../vendor/lucide/lucide.min.js"></script>
+  <script src="../vendor/supabase/supabase.min.js"></script>
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/admin.css?v=20261117">
+  
+  <style>
+    .badge-consent-public {
+      background: rgba(34, 197, 94, 0.15);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.35);
+      padding: 0.3rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .badge-consent-private {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      padding: 0.3rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .status-select {
+      background: rgba(18, 27, 18, 0.9);
+      color: #FAF8F5;
+      border: 1px solid rgba(194, 164, 144, 0.25);
+      border-radius: 8px;
+      padding: 0.35rem 0.65rem;
+      font-size: 0.8rem;
+      outline: none;
+      cursor: pointer;
+    }
+    .status-select:focus {
+      border-color: #D4AF37;
+    }
+  </style>
+</head>
+<body data-page="contenu-video">
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+      <div class="sidebar-header">
+        <a href="../index.html" class="sidebar-brand">
+          <img src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" class="sidebar-logo">
+          <div class="sidebar-brand-text">
+            <span class="brand-name">DALIGHT</span>
+            <span class="brand-tag">Administration</span>
+          </div>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <span class="nav-section-title">Principal</span>
+          <a href="dashboard.html" class="nav-item">
+            <i data-lucide="layout-dashboard"></i>
+            <span>Tableau de bord</span>
+          </a>
+          <a href="reservations.html" class="nav-item">
+            <i data-lucide="calendar"></i>
+            <span>Réservations</span>
+          </a>
+          <a href="pos.html" class="nav-item">
+            <i data-lucide="calculator"></i>
+            <span>Point de Vente (POS)</span>
+          </a>
+          <a href="contenu-video.html" class="nav-item active">
+            <i data-lucide="video"></i>
+            <span>Contenu Vidéo</span>
+          </a>
+          <a href="whatsapp.html" class="nav-item">
+            <i data-lucide="message-square"></i>
+            <span>WhatsApp Gateway</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <span class="nav-section-title">Clients & Équipe</span>
+          <a href="clients.html" class="nav-item">
+            <i data-lucide="users"></i>
+            <span>Fichier Clients</span>
+          </a>
+          <a href="employees.html" class="nav-item">
+            <i data-lucide="user-check"></i>
+            <span>Employés & Présence</span>
+          </a>
+          <a href="loyalty-cards.html" class="nav-item">
+            <i data-lucide="crown"></i>
+            <span>Fidélité & Cartes</span>
+          </a>
+          <a href="influencers.html" class="nav-item">
+            <i data-lucide="award"></i>
+            <span>Influenceurs</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <span class="nav-section-title">Catalogue</span>
+          <a href="services.html" class="nav-item">
+            <i data-lucide="sparkles"></i>
+            <span>Services & Tarifs</span>
+          </a>
+          <a href="shop.html" class="nav-item">
+            <i data-lucide="shopping-bag"></i>
+            <span>Boutique Produits</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar" id="admin-user-avatar">AD</div>
+          <div class="user-info">
+            <span class="user-name" id="admin-user-name">Administrateur</span>
+            <span class="user-role" id="admin-user-role">Super Admin</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <header class="admin-header">
+        <div class="header-left">
+          <h1 class="page-title">Gestion du Contenu Vidéo</h1>
+          <p class="admin-header-subtitle">Suivi des captations de séances, gestion des consentements de diffusion et tarification</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-secondary" onclick="loadVideoData()">
+            <i data-lucide="refresh-cw"></i> Actualiser
+          </button>
+        </div>
+      </header>
+
+      <div class="admin-content">
+        <!-- KPI Stats HUD -->
+        <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 2rem;">
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background: rgba(212, 175, 55, 0.15); color: #D4AF37;">
+              <i data-lucide="video"></i>
+            </div>
+            <div class="kpi-details">
+              <span class="kpi-label">Vidéos Demandées</span>
+              <strong class="kpi-value" id="stat-total-videos">0</strong>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background: rgba(34, 197, 94, 0.15); color: #4ade80;">
+              <i data-lucide="share-2"></i>
+            </div>
+            <div class="kpi-details">
+              <span class="kpi-label">Autorisées Réseaux</span>
+              <strong class="kpi-value" id="stat-public-videos" style="color: #4ade80;">0</strong>
+              <small style="color: #94a3b8; font-size: 0.72rem;">Prêtes pour Instagram / TikTok</small>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">
+              <i data-lucide="lock"></i>
+            </div>
+            <div class="kpi-details">
+              <span class="kpi-label">Usage Privé Uniquement</span>
+              <strong class="kpi-value" id="stat-private-videos" style="color: #fbbf24;">0</strong>
+              <small style="color: #94a3b8; font-size: 0.72rem;">Diffusion publique interdite</small>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background: rgba(194, 164, 144, 0.15); color: #C2A490;">
+              <i data-lucide="banknote"></i>
+            </div>
+            <div class="kpi-details">
+              <span class="kpi-label">Revenus Vidéos</span>
+              <strong class="kpi-value" id="stat-revenue-videos">0 HTG</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Configuration du Prix du Service Vidéo -->
+        <div class="admin-card" style="margin-bottom: 2rem;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h3 class="card-title">⚙️ Tarification & Paramètres de l'Option Vidéo</h3>
+              <p class="card-subtitle" style="margin: 0; color: #D5CEBF; font-size: 0.85rem;">Définissez le tarif facturé au client lorsqu'il choisit l'option vidéo lors de la réservation</p>
+            </div>
+            <span class="badge" id="video-service-status-badge" style="background: rgba(34, 197, 94, 0.2); color: #4ade80;">Actif sur le site</span>
+          </div>
+          <div class="card-body">
+            <form id="video-price-form" onsubmit="updateVideoPricing(event)" style="display: flex; gap: 1.5rem; align-items: flex-end; flex-wrap: wrap;">
+              <div class="form-group" style="margin-bottom: 0; min-width: 220px;">
+                <label style="font-weight: 600; color: #FAF8F5; font-size: 0.85rem; margin-bottom: 0.4rem; display: block;">Prix de l'Option Vidéo (HTG) :</label>
+                <input type="number" id="setting-video-price" class="form-input" min="0" step="50" value="500" required style="font-size: 1.1rem; font-weight: 700; color: #D4AF37;">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0; min-width: 260px;">
+                <label style="font-weight: 600; color: #FAF8F5; font-size: 0.85rem; margin-bottom: 0.4rem; display: block;">Statut de l'option :</label>
+                <select id="setting-video-active" class="form-input">
+                  <option value="true" selected>Activé (proposé aux clients)</option>
+                  <option value="false">Désactivé temporairement</option>
+                </select>
+              </div>
+
+              <button type="submit" class="btn btn-primary" id="save-price-btn" style="height: 44px; display: inline-flex; align-items: center; gap: 0.5rem;">
+                <i data-lucide="check"></i> Enregistrer le tarif
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Table des Réservations avec Option Vidéo -->
+        <div class="admin-card">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h3 class="card-title">Liste des Réservations avec Contenu Vidéo</h3>
+              <p class="card-subtitle" style="margin: 0; color: #D5CEBF; font-size: 0.85rem;">Visualisez les clients ayant souscrit, leurs choix de consentement et l'avancement</p>
+            </div>
+            
+            <!-- Filters -->
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+              <select id="filter-consent" class="form-input" style="padding: 0.45rem 0.8rem; font-size: 0.85rem;" onchange="applyFilters()">
+                <option value="all">Tous les consentements</option>
+                <option value="public">Réseaux Sociaux autorisés</option>
+                <option value="private">Usage Privé Uniquement</option>
+              </select>
+
+              <select id="filter-status" class="form-input" style="padding: 0.45rem 0.8rem; font-size: 0.85rem;" onchange="applyFilters()">
+                <option value="all">Tous les statuts production</option>
+                <option value="pending">À filmer / En attente</option>
+                <option value="filmed">Filmée</option>
+                <option value="editing">En montage</option>
+                <option value="delivered">Livrée au client</option>
+                <option value="published">Publiée sur réseaux</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card-body" style="padding: 0;">
+            <div class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Date & Heure</th>
+                    <th>Client</th>
+                    <th>Téléphone</th>
+                    <th>Soin / Service</th>
+                    <th>Consentement Réseaux</th>
+                    <th>Montant Vidéo</th>
+                    <th>Avancement Production</th>
+                    <th style="text-align: right;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="video-reservations-tbody">
+                  <tr>
+                    <td colspan="8" style="text-align: center; padding: 2.5rem; color: #94a3b8;">
+                      Chargement des réservations vidéo...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/admin-core.js?v=20261117"></script>
+  <script>
+    let allVideoReservations = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (window.lucide) lucide.createIcons();
+      await loadVideoSettings();
+      await loadVideoData();
+    });
+
+    async function getClient() {
+      if (window.adminCore?.supabase) return window.adminCore.supabase;
+      if (window.dalightAdminSupabase) return window.dalightAdminSupabase;
+      return window.supabaseClient;
+    }
+
+    async function loadVideoSettings() {
+      try {
+        const sb = await getClient();
+        if (!sb) return;
+
+        const { data, error } = await sb
+          .from('dalight_settings')
+          .select('value')
+          .eq('id', 'video_service')
+          .maybeSingle();
+
+        if (data && data.value) {
+          document.getElementById('setting-video-price').value = data.value.price_htg || 500;
+          document.getElementById('setting-video-active').value = String(data.value.is_active !== false);
+        }
+      } catch (e) {
+        console.warn('Could not load video settings:', e);
+      }
+    }
+
+    async function updateVideoPricing(e) {
+      e.preventDefault();
+      const btn = document.getElementById('save-price-btn');
+      btn.disabled = true;
+      btn.innerHTML = 'Enregistrement...';
+
+      try {
+        const sb = await getClient();
+        const price = Number(document.getElementById('setting-video-price').value) || 500;
+        const isActive = document.getElementById('setting-video-active').value === 'true';
+
+        const { error } = await sb
+          .from('dalight_settings')
+          .upsert({
+            id: 'video_service',
+            value: {
+              price_htg: price,
+              is_active: isActive,
+              title: "Vidéo Souvenir Professionnelle",
+              description: "Captation vidéo haute définition et montage de votre séance de détente"
+            },
+            updated_at: new Date().toISOString()
+          });
+
+        if (error) throw error;
+        
+        if (window.adminCore?.showToast) {
+          window.adminCore.showToast(`Tarif vidéo mis à jour avec succès (${price} HTG) !`, 'success');
+        } else {
+          alert(`Tarif vidéo mis à jour : ${price} HTG`);
+        }
+      } catch (err) {
+        console.error('Error saving video settings:', err);
+        alert('Erreur lors de la mise à jour : ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="check"></i> Enregistrer le tarif';
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+
+    async function loadVideoData() {
+      const tbody = document.getElementById('video-reservations-tbody');
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2.5rem; color: #94a3b8;">Chargement...</td></tr>';
+
+      try {
+        const sb = await getClient();
+        if (!sb) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #ef4444; padding: 2rem;">Supabase non connecté.</td></tr>';
+          return;
+        }
+
+        const { data, error } = await sb
+          .from('dalight_reservations')
+          .select('*')
+          .eq('video_requested', true)
+          .order('date', { ascending: false });
+
+        if (error) throw error;
+
+        allVideoReservations = data || [];
+        updateHUD(allVideoReservations);
+        renderTable(allVideoReservations);
+      } catch (err) {
+        console.error('Error loading video reservations:', err);
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #ef4444; padding: 2rem;">Erreur : ${err.message}</td></tr>`;
+      }
+    }
+
+    function updateHUD(list) {
+      const total = list.length;
+      let publicCount = 0;
+      let privateCount = 0;
+      let revenue = 0;
+
+      list.forEach(r => {
+        if (r.video_consent === 'public') publicCount++;
+        else privateCount++;
+        revenue += Number(r.video_price || 500);
+      });
+
+      document.getElementById('stat-total-videos').textContent = total;
+      document.getElementById('stat-public-videos').textContent = publicCount;
+      document.getElementById('stat-private-videos').textContent = privateCount;
+      document.getElementById('stat-revenue-videos').textContent = revenue.toLocaleString() + ' HTG';
+    }
+
+    function renderTable(list) {
+      const tbody = document.getElementById('video-reservations-tbody');
+      if (!list.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 3rem; color: #94a3b8;">
+              <i data-lucide="video-off" style="width: 36px; height: 36px; stroke-width: 1.5; margin-bottom: 0.5rem; display: block; margin: 0 auto 0.5rem;"></i>
+              Aucune réservation avec option vidéo pour l'instant.
+            </td>
+          </tr>
+        `;
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      tbody.innerHTML = list.map(r => {
+        const isPublic = r.video_consent === 'public';
+        const consentBadge = isPublic
+          ? `<span class="badge-consent-public"><i data-lucide="check-circle" style="width:14px;height:14px;"></i> Autorisé Réseaux</span>`
+          : `<span class="badge-consent-private"><i data-lucide="lock" style="width:14px;height:14px;"></i> Usage Privé</span>`;
+
+        const price = (Number(r.video_price) || 500).toLocaleString() + ' HTG';
+        const status = r.video_status || 'pending';
+
+        return `
+          <tr>
+            <td>
+              <strong>${r.date || '—'}</strong><br>
+              <small style="color: #94a3b8;">${r.time || '—'}</small>
+            </td>
+            <td>
+              <div style="font-weight: 600; color: #FAF8F5;">${escapeHtml(r.client_name || 'Client')}</div>
+              <small style="color: #94a3b8;">${escapeHtml(r.client_email || '')}</small>
+            </td>
+            <td>
+              <span style="font-family: monospace;">${escapeHtml(r.client_phone || '—')}</span>
+            </td>
+            <td>
+              <strong>${escapeHtml(r.service_name || 'Head Spa')}</strong>
+            </td>
+            <td>
+              ${consentBadge}
+            </td>
+            <td>
+              <strong style="color: #D4AF37;">${price}</strong>
+            </td>
+            <td>
+              <select class="status-select" onchange="updateVideoStatus('${r.id}', this.value)">
+                <option value="pending" ${status === 'pending' ? 'selected' : ''}>⏳ À filmer</option>
+                <option value="filmed" ${status === 'filmed' ? 'selected' : ''}>🎥 Filmée</option>
+                <option value="editing" ${status === 'editing' ? 'selected' : ''}>✂️ En montage</option>
+                <option value="delivered" ${status === 'delivered' ? 'selected' : ''}>📦 Livrée au client</option>
+                <option value="published" ${status === 'published' ? 'selected' : ''}>🚀 Publiée sur réseaux</option>
+              </select>
+            </td>
+            <td style="text-align: right;">
+              <a href="https://wa.me/${String(r.client_phone).replace(/\\D/g, '')}?text=${encodeURIComponent('Bonjour ' + r.client_name + ', concernant votre vidéo souvenir DALIGHT :')}" target="_blank" class="btn btn-secondary btn-sm" style="padding: 0.35rem 0.65rem;" title="WhatsApp direct">
+                <i data-lucide="message-circle" style="width:14px;height:14px;"></i>
+              </a>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function updateVideoStatus(resId, newStatus) {
+      try {
+        const sb = await getClient();
+        const { error } = await sb
+          .from('dalight_reservations')
+          .update({ video_status: newStatus, updated_at: new Date().toISOString() })
+          .eq('id', resId);
+
+        if (error) throw error;
+        if (window.adminCore?.showToast) {
+          window.adminCore.showToast('Statut vidéo mis à jour !', 'success');
+        }
+      } catch (err) {
+        console.error('Error updating status:', err);
+        alert('Erreur: ' + err.message);
+      }
+    }
+
+    function applyFilters() {
+      const consentFilter = document.getElementById('filter-consent').value;
+      const statusFilter = document.getElementById('filter-status').value;
+
+      let filtered = [...allVideoReservations];
+      if (consentFilter !== 'all') {
+        filtered = filtered.filter(r => r.video_consent === consentFilter);
+      }
+      if (statusFilter !== 'all') {
+        filtered = filtered.filter(r => (r.video_status || 'pending') === statusFilter);
+      }
+
+      renderTable(filtered);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>

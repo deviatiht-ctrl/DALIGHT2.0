@@ -1351,6 +1351,37 @@
               </div>
             </div>
 
+            
+            <!-- Option Vidéo Souvenir Professionnelle & Consentement -->
+            <div class="video-addon-box" style="background: rgba(212, 175, 55, 0.08); border: 1.5px solid rgba(212, 175, 55, 0.35); border-radius: 16px; padding: 1.25rem; margin-bottom: 1.25rem;">
+              <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer;">
+                <input type="checkbox" id="client-video-toggle" style="width: 20px; height: 20px; accent-color: #D4AF37; margin-top: 2px;">
+                <div>
+                  <strong style="color: #FAF8F5; font-size: 1rem; display: block;">
+                    🎬 Option Vidéo Souvenir Professionnelle (+<span id="client-video-price-display">500</span> HTG)
+                  </strong>
+                  <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #D5CEBF; line-height: 1.4;">
+                    Offrez-vous une vidéo esthétique haute définition de votre séance de détente Head Spa &amp; massage.
+                  </p>
+                </div>
+              </label>
+              <div id="client-video-consent-wrapper" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed rgba(212, 175, 55, 0.25);">
+                <p style="font-size: 0.85rem; font-weight: 600; color: #FAF8F5; margin-bottom: 0.5rem;">
+                  Votre choix de consentement pour la vidéo :
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                  <label style="display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem; color: #FAF8F5; cursor: pointer;">
+                    <input type="radio" name="client_video_consent" value="public" checked style="accent-color: #D4AF37;">
+                    <span>✅ <strong>J'autorise DALIGHT à publier ma vidéo</strong> sur les réseaux sociaux (Instagram, TikTok)</span>
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem; color: #FAF8F5; cursor: pointer;">
+                    <input type="radio" name="client_video_consent" value="private" style="accent-color: #D4AF37;">
+                    <span>🔒 <strong>Usage privé uniquement</strong> — Conserver pour moi, ne pas publier sur les réseaux</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+  
             <div class="summary-card">
               <div class="summary-row">
                 <span><i data-lucide="calendar" style="width: 16px; vertical-align: middle; margin-right: 0.5rem;"></i>Date</span>
@@ -1368,6 +1399,12 @@
                 <span>Total des services</span>
                 <strong id="summary-total">-</strong>
               </div>
+              
+              <div class="summary-row" id="summary-video-row" style="display:none;">
+                <span><i data-lucide="video" style="width: 16px; vertical-align: middle; margin-right: 0.5rem;"></i>Option Vidéo Souvenir (<span id="summary-video-consent-label">Réseaux</span>)</span>
+                <strong id="summary-video-amount" style="color:#D4AF37;">+500 HTG</strong>
+              </div>
+  
               <div class="summary-row" id="summary-discount-row" style="display:none;">
                 <span><i data-lucide="tag" style="width: 16px; vertical-align: middle; margin-right: 0.5rem;"></i>Code promo <span id="summary-promo-code" style="font-family:monospace;"></span></span>
                 <strong id="summary-discount" style="color:#16a34a;">-</strong>
@@ -2516,15 +2553,22 @@ function loadCartData() {
       // ─────────────────────────────────────────────────────────────
       let _realtimeChannel = null;
 
-      function getSupabaseClient() {
+            function getSupabaseClient() {
+        function wrap(c) {
+          if (!c || c._dalightWrapped) return c;
+          const orig = c.from.bind(c);
+          c.from = (t) => orig(t.startsWith('dalight_') ? t : ('dalight_' + t));
+          c._dalightWrapped = true;
+          return c;
+        }
         let client = window.dalightSupabase || window.supabaseClient || window.supabase;
         if (!client && window.supabase?.createClient) {
           client = window.supabase.createClient(
-            'https://rbwoiejztrkghfkpxquo.supabase.co',
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U'
+            'https://oykuhhogcdbmoybskexd.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95a3VoaG9nY2RibW95YnNrZXhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MTk1OTksImV4cCI6MjA5NjQ5NTU5OX0.xbIdgA6-DCILYkDQcl_VzWgz7HmIlHYhmRp0u_a87F4'
           );
         }
-        return client;
+        return wrap(client);
       }
 
       async function loadTimeSlots() {

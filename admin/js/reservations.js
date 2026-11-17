@@ -1695,25 +1695,20 @@ function initMonthNavigation() {
 
 // Helper to get Supabase from multiple sources
 function getSupabaseClient() {
-  // Check all possible sources
-  if (window.adminCore?.supabase) {
-    console.log('✅ Found supabase in window.adminCore');
-    return window.adminCore.supabase;
+  function wrap(c) {
+    if (!c || c._dalightWrapped) return c;
+    const orig = c.from.bind(c);
+    c.from = (t) => orig(t.startsWith('dalight_') ? t : ('dalight_' + t));
+    c._dalightWrapped = true;
+    return c;
   }
-  if (window.dalightAdminSupabase) {
-    console.log('✅ Found supabase in window.dalightAdminSupabase');
-    return window.dalightAdminSupabase;
-  }
-  if (window.supabaseClient) {
-    console.log('✅ Found supabase in window.supabaseClient');
-    return window.supabaseClient;
-  }
-  // Try global supabase object directly
+  if (window.adminCore?.supabase) return wrap(window.adminCore.supabase);
+  if (window.dalightAdminSupabase) return wrap(window.dalightAdminSupabase);
+  if (window.supabaseClient) return wrap(window.supabaseClient);
   if (typeof supabase !== 'undefined' && supabase.createClient) {
-    console.log('⚠️ Creating new supabase client');
-    const SUPABASE_URL = 'https://rbwoiejztrkghfkpxquo.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U';
-    return supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const SUPABASE_URL = 'https://oykuhhogcdbmoybskexd.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95a3VoaG9nY2RibW95YnNrZXhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MTk1OTksImV4cCI6MjA5NjQ5NTU5OX0.xbIdgA6-DCILYkDQcl_VzWgz7HmIlHYhmRp0u_a87F4';
+    return wrap(supabase.createClient(SUPABASE_URL, SUPABASE_KEY));
   }
   return null;
 }
@@ -2421,34 +2416,58 @@ function withoutFee(p) { return Math.round(Number(p)); }
 
 function openCreateReservationModal() {
   const modal = document.getElementById('create-reservation-modal');
-  if (!modal) return;
-  modal.classList.add('active');
+  if (!modal) {
+    console.error('Modal #create-reservation-modal not found');
+    return;
+  }
+  
   modal.style.display = 'flex';
+  modal.classList.add('active');
 
-  // Reset form
-  document.getElementById('create-reservation-form').reset();
-  document.getElementById('create-client-info').textContent = '';
-  document.getElementById('create-client-error').style.display = 'none';
-  document.getElementById('create-reservation-total').textContent = '';
-  document.getElementById('create-moncash-fee-display').textContent = '';
-  document.getElementById('create-services-config').innerHTML = '';
+  const form = document.getElementById('create-reservation-form');
+  if (form) form.reset();
+
+  const clientInfo = document.getElementById('create-client-info');
+  if (clientInfo) clientInfo.textContent = '';
+  
+  const clientError = document.getElementById('create-client-error');
+  if (clientError) clientError.style.display = 'none';
+
+  const totalEl = document.getElementById('create-reservation-total');
+  if (totalEl) totalEl.textContent = '0 HTG';
+
+  const feeDisplay = document.getElementById('create-moncash-fee-display');
+  if (feeDisplay) feeDisplay.textContent = '';
+
+  const cfg = document.getElementById('create-services-config');
+  if (cfg) cfg.innerHTML = '';
+
+  const videoConsentBox = document.getElementById('create-video-consent-box');
+  if (videoConsentBox) videoConsentBox.style.display = 'none';
+
   createReservationClient = null;
-  // Reset sèvis extra
   createReservationExtras = [];
+
   const extraList = document.getElementById('extra-services-list');
   if (extraList) extraList.innerHTML = '';
+
   const extraForm = document.getElementById('extra-service-form');
   if (extraForm) extraForm.style.display = 'none';
+
   ['extra-svc-name', 'extra-svc-price', 'extra-svc-duration'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
+
   loadCreateReservationServices();
 
-  // Default date = tomorrow
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  document.getElementById('create-date').value = tomorrow.toISOString().split('T')[0];
+  const dateInput = document.getElementById('create-date');
+  if (dateInput) dateInput.value = tomorrow.toISOString().split('T')[0];
+
+  const timeInput = document.getElementById('create-time');
+  if (timeInput && !timeInput.value) timeInput.value = '10:00';
 }
 
 function closeCreateReservationModal() {

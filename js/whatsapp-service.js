@@ -4,6 +4,7 @@
  */
 
 export const CVISUAL_GATEWAY_URL = 'https://cvisual-whatsapp-gateway.onrender.com';
+export const DEFAULT_CVISUAL_KEY = 'cv_live_admin_6094ed1bf65bf0945706d3d7';
 
 // Lane classifications
 export const FAST_LANE_KINDS = ['receipt', 'welcome', 'otp', 'test', 'manual_direct'];
@@ -97,7 +98,7 @@ export async function sendWhatsAppMessage(options) {
   }
 
   // 3. Fallback: Direct call if admin token exists in localStorage (admin session)
-  const adminApiKey = localStorage.getItem('cvisual_wa_api_key');
+  const adminApiKey = localStorage.getItem('cvisual_wa_api_key') || DEFAULT_CVISUAL_KEY;
   if (adminApiKey) {
     const res = await fetch(`${CVISUAL_GATEWAY_URL}/api/v1/messages/send`, {
       method: 'POST',

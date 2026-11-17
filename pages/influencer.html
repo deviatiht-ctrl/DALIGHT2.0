@@ -263,7 +263,7 @@
     };
 
     async function loadSummary() {
-      const { data } = await supabase.rpc('get_influencer_summary');
+      const { data } = await supabase.rpc('dalight_get_influencer_summary', { p_email: me.email });
       if (!data?.success) return;
       document.getElementById('stat-uses').textContent = data.total_uses;
       document.getElementById('stat-total').textContent = fmt(data.commission_total);
@@ -275,7 +275,7 @@
 
     async function loadCodes() {
       const el = document.getElementById('inf-codes-list');
-      const { data, error } = await supabase.from('promo_codes').select('*')
+      const { data, error } = await supabase.from('dalight_promo_codes').select('*')
         .eq('owner_type', 'influencer')
         .ilike('owner_email', me.email)
         .order('created_at', { ascending: false });
@@ -306,7 +306,7 @@
 
     async function loadPayouts() {
       const tb = document.getElementById('inf-payouts');
-      const { data, error } = await supabase.from('payout_requests').select('*')
+      const { data, error } = await supabase.from('dalight_influencer_payouts').select('*')
         .order('created_at', { ascending: false }).limit(50);
       if (error) { tb.innerHTML = '<tr><td colspan="5" style="color:#dc2626;">' + esc(error.message) + '</td></tr>'; return; }
       if (!data?.length) { tb.innerHTML = '<tr><td colspan="5" style="color:#6b7280;">Okenn demann ankò.</td></tr>'; return; }
@@ -334,7 +334,7 @@
       const btn = document.getElementById('wd-submit');
       btn.disabled = true;
       try {
-        const { error } = await supabase.from('payout_requests').insert({
+        const { error } = await supabase.from('dalight_influencer_payouts').insert({
           owner_email: me.email.toLowerCase(),
           month, amount_htg: amount, payment_method: method, account_info: account,
         });

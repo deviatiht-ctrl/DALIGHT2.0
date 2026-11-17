@@ -1,3 +1,15 @@
+
+// Automatic 'dalight_' table prefix wrapper for 100% tenant isolation
+function wrapWithDalightPrefix(client) {
+  if (!client || client._dalightWrapped) return client;
+  const origFrom = client.from.bind(client);
+  client.from = function(tableName) {
+    const finalName = tableName.startsWith('dalight_') ? tableName : ('dalight_' + tableName);
+    return origFrom(finalName);
+  };
+  client._dalightWrapped = true;
+  return client;
+}
 import { initRegistrationPopup } from './registration-popup.js';
 
 // ── Payment processing fees (Moncash 3% only) ──────────────────
@@ -11,8 +23,8 @@ window.withFeeUSD = (price) => Math.round(Number(price) * (1 + window.DALIGHT_FE
 // ───────────────────────────────────────────────────────────────────
 
 const DEFAULT_CONFIG = {
-  supabaseUrl: 'https://rbwoiejztrkghfkpxquo.supabase.co',
-  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U',
+  supabaseUrl: 'https://oykuhhogcdbmoybskexd.supabase.co',
+  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95a3VoaG9nY2RibW95YnNrZXhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MTk1OTksImV4cCI6MjA5NjQ5NTU5OX0.xbIdgA6-DCILYkDQcl_VzWgz7HmIlHYhmRp0u_a87F4',
   stripePublicKey: 'pk_test_yourPublishableKey',
   stripeCheckoutUrl: '/api/create-checkout-session',
   smtpSecureToken: '',
@@ -248,6 +260,7 @@ let supabaseClient = null;
 if (window.supabase && window.supabase.createClient) {
   try {
     supabaseClient = window.supabase.createClient(runtimeConfig.supabaseUrl, runtimeConfig.supabaseAnonKey);
+    wrapWithDalightPrefix(supabaseClient);
     window.dalightSupabase = supabaseClient;
     window.dalightReady = true;
     window.dalightServices = servicesCatalog;
@@ -277,6 +290,7 @@ async function initSupabase() {
   
   try {
     supabaseClient = window.supabase.createClient(runtimeConfig.supabaseUrl, runtimeConfig.supabaseAnonKey);
+    wrapWithDalightPrefix(supabaseClient);
     
     // 🔧 GLOBAL READY SIGNALS - FIX RESERVATION TIMING ISSUE
     window.dalightSupabase = supabaseClient;
@@ -648,7 +662,13 @@ async function detectSessionRole() {
       await applySessionRole(session);
       updateNavbarAuth(true);
       
-      if (isAdminEmail(session.user?.email || '')) {
+            if (isAdminEmail(session.user?.email || '')) {
+        console.log('👑 Admin role detected - showing admin links');
+      }
+      
+      // Check influencer role & display golden badge
+      checkAndShowInfluencerLink(session.user?.email || '');
+      if (false) {
         console.log('👑 Admin role detected - showing admin links');
       }
     } else {
@@ -825,4 +845,53 @@ if (typeof window !== 'undefined') {
       }
     }
   }, { passive: true });
+}
+
+
+async function checkAndShowInfluencerLink(userEmail) {
+  if (!userEmail || !supabaseClient) return;
+  try {
+    const { data: inf } = await supabaseClient
+      .from('dalight_influencers')
+      .select('id, assigned_code')
+      .ilike('email', userEmail)
+      .maybeSingle();
+
+    const { data: promo } = await supabaseClient
+      .from('dalight_promo_codes')
+      .select('id, code')
+      .ilike('owner_email', userEmail)
+      .maybeSingle();
+
+    if (inf || promo) {
+      console.log('⭐ Showing Influencer portal link in navbar');
+      const infUrl = isInsidePagesDir ? './influencer.html' : './pages/influencer.html';
+      
+      // Add to desktop navbar right
+      const navCta = document.querySelector('.nav-cta');
+      if (navCta && !navCta.querySelector('.influencer-portal-btn')) {
+        const infBtn = document.createElement('a');
+        infBtn.href = infUrl;
+        infBtn.className = 'spa-pill-btn influencer-portal-btn';
+        infBtn.style.cssText = 'background: linear-gradient(135deg, #D4AF37, #AA771C) !important; color: #12180C !important; font-weight: 700 !important; border: none !important; margin-right: 0.5rem;';
+        infBtn.innerHTML = '<i data-lucide="award" style="width:15px;height:15px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Espace Influenceur';
+        navCta.prepend(infBtn);
+      }
+
+      // Add to mobile menu drawer
+      const mobMenu = document.getElementById('spa-mobile-menu') || document.querySelector('.spa-mobile-menu');
+      if (mobMenu && !mobMenu.querySelector('.mob-inf-link')) {
+        const mobLink = document.createElement('a');
+        mobLink.href = infUrl;
+        mobLink.className = 'mob-inf-link';
+        mobLink.style.cssText = 'color: #D4AF37 !important; font-weight: 700 !important;';
+        mobLink.innerHTML = '⭐ Espace Influenceur';
+        mobMenu.prepend(mobLink);
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }
+  } catch(e) {
+    console.warn('checkAndShowInfluencerLink:', e);
+  }
 }
