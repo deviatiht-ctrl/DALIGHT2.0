@@ -568,9 +568,12 @@
               <!-- QR Code Frame -->
               <div style="display:inline-block; position:relative; background:#ffffff; padding:16px; border-radius:20px; box-shadow:0 15px 40px rgba(0,0,0,0.6); margin-bottom:1.25rem;">
                 <img id="dalight-qr-image" src="" alt="Code QR WhatsApp DALIGHT" style="width:280px; height:280px; display:none; object-fit:contain;" />
-                <div id="dalight-qr-loading" style="width:280px; height:280px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.75rem; color:#121b12;">
-                  <i data-lucide="loader-2" class="spin" style="width:40px; height:40px; color:var(--admin-accent);"></i>
-                  <span style="font-size:0.85rem; font-weight:600; color:#444;">Génération du code QR en direct...</span>
+                <div id="dalight-qr-loading" style="width:280px; height:280px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.75rem; color:#121b12; padding:1.25rem; text-align:center;">
+                  <i data-lucide="loader-2" class="spin" id="qr-loading-spinner" style="width:38px; height:38px; color:var(--admin-accent);"></i>
+                  <span id="qr-loading-text" style="font-size:0.88rem; font-weight:600; color:#333; line-height:1.4;">Génération du code QR WhatsApp en direct...</span>
+                  <button type="button" class="btn btn-primary btn-sm" id="btn-quick-init-qr" style="margin-top:0.5rem; font-size:0.82rem; padding:0.45rem 1rem; display:inline-flex; align-items:center; gap:0.4rem;">
+                    <i data-lucide="zap" style="width:14px;height:14px;"></i> Générer le Code QR Maintenant
+                  </button>
                 </div>
               </div>
 
@@ -979,6 +982,7 @@
 
       // Wire up QR controls
       document.getElementById('btn-force-refresh-qr')?.addEventListener('click', resetDalightWhatsAppSession);
+      document.getElementById('btn-quick-init-qr')?.addEventListener('click', resetDalightWhatsAppSession);
       document.getElementById('btn-disconnect-wa')?.addEventListener('click', resetDalightWhatsAppSession);
 
       // Start automatic QR polling
@@ -1252,12 +1256,26 @@
 
     
     // ══════════════════════════════════════════════════════════════════════════
-    // DALIGHT WHATSAPP QR SCAN & SESSION CONTROLLER
+    // DALIGHT WHATSAPP QR SCAN & SESSION CONTROLLER (AUTO-HEALING & INSTANT)
     // ══════════════════════════════════════════════════════════════════════════
 
-    async function fetchDalightAccountQr(forceRefresh = false) {
+    let isAutoResetting = false;
+    let hasAttemptedInitialStart = false;
+    let qrFetchFailCount = 0;
+
+    async function fetchDalightAccountQr(isUserAction = false) {
       const GATEWAY_URL = 'https://cvisual-whatsapp-gateway.onrender.com';
       const API_KEY = localStorage.getItem('cvisual_wa_api_key') || 'cv_live_admin_6094ed1bf65bf0945706d3d7';
+
+      const badge = document.getElementById('wa-connection-badge');
+      const qrBox = document.getElementById('wa-qr-box');
+      const connectedBox = document.getElementById('wa-connected-box');
+      const qrImg = document.getElementById('dalight-qr-image');
+      const qrLoading = document.getElementById('dalight-qr-loading');
+      const qrLoadingText = document.getElementById('qr-loading-text');
+      const phoneDisplay = document.getElementById('wa-connected-phone-display');
+      const hudPill = document.getElementById('gateway-pill');
+      const hudStatus = document.getElementById('gateway-status-text');
 
       try {
         const res = await fetch(`${GATEWAY_URL}/api/v1/accounts/1/qr`, {
@@ -1265,18 +1283,10 @@
         });
         if (!res.ok) throw new Error('Gateway non joignable');
         const data = await res.json();
-
-        const badge = document.getElementById('wa-connection-badge');
-        const qrBox = document.getElementById('wa-qr-box');
-        const connectedBox = document.getElementById('wa-connected-box');
-        const qrImg = document.getElementById('dalight-qr-image');
-        const qrLoading = document.getElementById('dalight-qr-loading');
-        const phoneDisplay = document.getElementById('wa-connected-phone-display');
-        const hudPill = document.getElementById('gateway-pill');
-        const hudStatus = document.getElementById('gateway-status-text');
+        qrFetchFailCount = 0;
 
         if (data.is_ready || data.service_status === 'READY') {
-          // Line is connected!
+          // Connected!
           if (badge) badge.innerHTML = `<span class="badge" style="background:rgba(74,222,128,0.2);color:#4ade80;font-weight:700;padding:0.4rem 0.9rem;border-radius:999px;">● CONNECTÉ EN LIGNE</span>`;
           if (qrBox) qrBox.style.display = 'none';
           if (connectedBox) connectedBox.style.display = 'block';
@@ -1288,7 +1298,7 @@
           }
           if (hudStatus) hudStatus.textContent = `Ligne DALIGHT (+${data.phone_number || '509 4747-7221'})`;
         } else if (data.qr_code_data_url) {
-          // Scan required with live QR
+          // Live QR available
           if (badge) badge.innerHTML = `<span class="badge" style="background:rgba(212,175,55,0.2);color:var(--admin-accent);font-weight:700;padding:0.4rem 0.9rem;border-radius:999px;">SCAN REQUIS</span>`;
           if (connectedBox) connectedBox.style.display = 'none';
           if (qrBox) qrBox.style.display = 'block';
@@ -1304,43 +1314,73 @@
           }
           if (hudStatus) hudStatus.textContent = 'En attente de scan QR';
         } else {
-          // Initializing / waiting for QR
-          if (badge) badge.innerHTML = `<span class="badge" style="background:rgba(59,130,246,0.2);color:#60a5fa;font-weight:700;padding:0.4rem 0.9rem;border-radius:999px;">INITIALISATION...</span>`;
+          // Disconnected or no QR URL: Auto-start session if not already running
+          if (badge) badge.innerHTML = `<span class="badge" style="background:rgba(59,130,246,0.2);color:#60a5fa;font-weight:700;padding:0.4rem 0.9rem;border-radius:999px;">DÉMARRAGE...</span>`;
           if (connectedBox) connectedBox.style.display = 'none';
           if (qrBox) qrBox.style.display = 'block';
           if (qrImg) qrImg.style.display = 'none';
           if (qrLoading) qrLoading.style.display = 'flex';
+
+          if (!hasAttemptedInitialStart && !isAutoResetting) {
+            hasAttemptedInitialStart = true;
+            console.log('Kickstarting Baileys session automatically...');
+            if (qrLoadingText) qrLoadingText.textContent = 'Démarrage de la connexion WhatsApp... Génération du QR (2-3s)...';
+            triggerResetAndFetch();
+          } else if (isAutoResetting) {
+            if (qrLoadingText) qrLoadingText.textContent = 'Génération du code QR en cours sur la passerelle...';
+          } else {
+            if (qrLoadingText) qrLoadingText.textContent = 'Code QR en attente. Cliquez ci-dessous pour l\'afficher :';
+          }
         }
 
         if (window.lucide) lucide.createIcons();
       } catch (err) {
         console.warn('Erreur QR fetch:', err);
+        qrFetchFailCount++;
+        if (qrLoadingText) qrLoadingText.textContent = 'Connexion à la passerelle en cours...';
       }
     }
 
-    async function resetDalightWhatsAppSession() {
-      if (!confirm('Voulez-vous réinitialiser la session WhatsApp de DALIGHT pour générer un nouveau code QR ?')) return;
+    async function triggerResetAndFetch() {
+      if (isAutoResetting) return;
+      isAutoResetting = true;
 
       const GATEWAY_URL = 'https://cvisual-whatsapp-gateway.onrender.com';
       const API_KEY = localStorage.getItem('cvisual_wa_api_key') || 'cv_live_admin_6094ed1bf65bf0945706d3d7';
 
       const qrImg = document.getElementById('dalight-qr-image');
       const qrLoading = document.getElementById('dalight-qr-loading');
+      const qrLoadingText = document.getElementById('qr-loading-text');
+
       if (qrImg) qrImg.style.display = 'none';
       if (qrLoading) qrLoading.style.display = 'flex';
+      if (qrLoadingText) qrLoadingText.textContent = 'Démarrage du socket WhatsApp... Génération du code QR...';
 
       try {
+        console.log('Calling /api/v1/accounts/1/reset...');
         const res = await fetch(`${GATEWAY_URL}/api/v1/accounts/1/reset`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${API_KEY}` }
         });
         const json = await res.json();
-        alert('Session réinitialisée. Nouveau code QR en cours de génération...');
-        setTimeout(() => fetchDalightAccountQr(true), 1500);
-      } catch (err) {
-        alert('Erreur: ' + err.message);
+        console.log('Reset response:', json);
+
+        // Rapid poll 1.2s, 2.4s, 3.8s, 5.2s
+        setTimeout(() => fetchDalightAccountQr(true), 1200);
+        setTimeout(() => fetchDalightAccountQr(true), 2400);
+        setTimeout(() => fetchDalightAccountQr(true), 4000);
+      } catch (e) {
+        console.error('Reset error:', e);
+        if (qrLoadingText) qrLoadingText.textContent = 'Erreur: ' + e.message + '. Réessayez.';
+      } finally {
+        setTimeout(() => { isAutoResetting = false; }, 4000);
       }
     }
+
+    async function resetDalightWhatsAppSession() {
+      triggerResetAndFetch();
+    }
+
 
     function renderTemplatesList() {
       const container = document.getElementById('templates-cards-list');
