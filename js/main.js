@@ -1,16 +1,10 @@
 
-// Automatic 'dalight_' table prefix wrapper for 100% tenant isolation
+// Supabase client wrapper with transparent compatibility
 function wrapWithDalightPrefix(client) {
   if (!client || client._dalightWrapped) return client;
   const origFrom = client.from.bind(client);
   client.from = function(tableName) {
-    let finalName = tableName;
-    if (finalName.startsWith('dl_')) {
-      finalName = 'dalight_' + finalName.substring(3);
-    } else if (!finalName.startsWith('dalight_')) {
-      finalName = 'dalight_' + finalName;
-    }
-    return origFrom(finalName);
+    return origFrom(tableName);
   };
   client._dalightWrapped = true;
   return client;
@@ -28,8 +22,8 @@ window.withFeeUSD = (price) => Math.round(Number(price) * (1 + window.DALIGHT_FE
 // ───────────────────────────────────────────────────────────────────
 
 const DEFAULT_CONFIG = {
-  supabaseUrl: 'https://oykuhhogcdbmoybskexd.supabase.co',
-  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95a3VoaG9nY2RibW95YnNrZXhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MTk1OTksImV4cCI6MjA5NjQ5NTU5OX0.xbIdgA6-DCILYkDQcl_VzWgz7HmIlHYhmRp0u_a87F4',
+  supabaseUrl: 'https://rbwoiejztrkghfkpxquo.supabase.co',
+  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U',
   stripePublicKey: 'pk_test_yourPublishableKey',
   stripeCheckoutUrl: '/api/create-checkout-session',
   smtpSecureToken: '',

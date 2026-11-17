@@ -49,11 +49,11 @@ async function initSupabase() {
   }
 
   // Force reinitialize if wrong URL
-  const correctUrl = 'https://oykuhhogcdbmoybskexd.supabase.co';
+  const correctUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co';
   if (sb.supabaseUrl !== correctUrl) {
     console.warn('POS: Wrong Supabase URL detected, reinitializing:', sb.supabaseUrl);
     const { createClient } = supabase;
-    sb = createClient(correctUrl, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95a3VoaG9nY2RibW95YnNrZXhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MTk1OTksImV4cCI6MjA5NjQ5NTU5OX0.xbIdgA6-DCILYkDQcl_VzWgz7HmIlHYhmRp0u_a87F4');
+    sb = createClient(correctUrl, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U');
     window.dalightAdminSupabase = sb;
   }
 

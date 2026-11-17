@@ -3,25 +3,19 @@
 // Shared functionality for all admin pages
 // ============================================
 
-const SUPABASE_URL = 'https://oykuhhogcdbmoybskexd.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95a3VoaG9nY2RibW95YnNrZXhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MTk1OTksImV4cCI6MjA5NjQ5NTU5OX0.xbIdgA6-DCILYkDQcl_VzWgz7HmIlHYhmRp0u_a87F4';
+const SUPABASE_URL = 'https://rbwoiejztrkghfkpxquo.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U';
 const ADMIN_EMAILS = ['laurorejeanclarens0@gmail.com'];
 
 // Initialize Supabase
 const { createClient } = supabase;
 
-// Automatic 'dalight_' table prefix wrapper to guarantee 100% isolation in shared Supabase project
+// Supabase client wrapper with transparent compatibility
 function wrapWithDalightPrefix(client) {
   if (!client || client._dalightWrapped) return client;
   const origFrom = client.from.bind(client);
   client.from = function(tableName) {
-    let finalName = tableName;
-    if (finalName.startsWith('dl_')) {
-      finalName = 'dalight_' + finalName.substring(3);
-    } else if (!finalName.startsWith('dalight_')) {
-      finalName = 'dalight_' + finalName;
-    }
-    return origFrom(finalName);
+    return origFrom(tableName);
   };
   client._dalightWrapped = true;
   return client;
@@ -781,7 +775,7 @@ async function sendStatusUpdateEmail(reservation, newStatus) {
       'COMPLETED': { icon:'★', title:'Merci pour votre visite!', color:'#2196F3', bgColor:'#e3f2fd', message:'Nous espérons que vous avez apprécié votre expérience chez DALIGHT.' },
     };
     const config = statusConfig[newStatus] || statusConfig['CONFIRMED'];
-    const logoUrl = 'https://oykuhhogcdbmoybskexd.supabase.co/storage/v1/object/public/assets/images/logodaligth.png';
+    const logoUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/assets/images/logodaligth.png';
     subject = statusSubjects[newStatus] || 'Mise à jour de votre réservation - DALIGHT';
     html = buildStatusUpdateEmailHTML(reservation, config, logoUrl, newStatus);
   }
@@ -830,7 +824,7 @@ async function sendOrderEmail(order, isAdmin = false) {
     html = dbResult.html;
   } else {
     subject = isAdmin ? '🔔 Nouvelle Commande Reçue' : '✓ Confirmation de Commande - DALIGHT';
-    const logoUrl = 'https://oykuhhogcdbmoybskexd.supabase.co/storage/v1/object/public/assets/images/logodaligth.png';
+    const logoUrl = 'https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/assets/images/logodaligth.png';
     html = isAdmin ? buildAdminOrderEmailHTML(order, logoUrl) : buildClientOrderEmailHTML(order, logoUrl);
   }
 

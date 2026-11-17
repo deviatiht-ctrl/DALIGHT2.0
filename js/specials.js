@@ -2,8 +2,8 @@
 // SPECIALS FRONTEND LOGIC (DALIGHT LUXURY SUITE)
 // ============================================
 
-const SUPABASE_URL = 'https://oykuhhogcdbmoybskexd.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95a3VoaG9nY2RibW95YnNrZXhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MTk1OTksImV4cCI6MjA5NjQ5NTU5OX0.xbIdgA6-DCILYkDQcl_VzWgz7HmIlHYhmRp0u_a87F4';
+const SUPABASE_URL = 'https://rbwoiejztrkghfkpxquo.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U';
 
 // Guaranteed Fallback Specials from Supabase (Always displays instantly)
 const FALLBACK_SPECIALS = [
@@ -11,7 +11,7 @@ const FALLBACK_SPECIALS = [
     id: "e78d8502-8a3f-4547-8186-fbf98312b263",
     title: "Spécial Offre Combo Duo Zen",
     description: "Offre spéciale sur nos formules Combo Duo Zen (Head Spa & Massage Relaxant). Profitez d'une expérience de relaxation ultime adaptée à la nature de vos cheveux (Naturels, Défrisés, ou Locs).",
-    flyer_url: "https://oykuhhogcdbmoybskexd.supabase.co/storage/v1/object/public/specials-flyers/special-1785789027490-WhatsApp%20Image%202026-08-02%20at%204.11.20%20PM.jpeg",
+    flyer_url: "https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/specials-flyers/special-1785789027490-WhatsApp%20Image%202026-08-02%20at%204.11.20%20PM.jpeg",
     start_date: "2026-08-03",
     end_date: "2026-12-31",
     is_active: true,
@@ -36,7 +36,7 @@ const FALLBACK_SPECIALS = [
     id: "8cbb89db-6f62-4680-89ca-48ef62d5947c",
     title: "Special Wood Therapy & Détox",
     description: "Technique sculptante aux instruments en bois précieux pour drainer la lymphe et tonifier le corps chez DALIGHT à Delmas 65.",
-    flyer_url: "https://oykuhhogcdbmoybskexd.supabase.co/storage/v1/object/public/specials-flyers/special-1782408370237-9df1f52a-9190-4853-8921-2e4f3b0937b0.jpeg",
+    flyer_url: "https://rbwoiejztrkghfkpxquo.supabase.co/storage/v1/object/public/specials-flyers/special-1782408370237-9df1f52a-9190-4853-8921-2e4f3b0937b0.jpeg",
     start_date: "2026-06-25",
     end_date: "2026-12-31",
     is_active: true,
