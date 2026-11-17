@@ -729,6 +729,7 @@ async function sendReservationWhatsAppConfirmation(reservation) {
     message: waMessage,
     kind: 'receipt', // Fast Lane anti-ban
     mode: 'async',
+    account_index: 1, // Exclusif Ligne DALIGHT
     idempotencyKey: `wa_conf_${reservation.id}_${Date.now()}`
   };
 
