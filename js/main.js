@@ -4,7 +4,12 @@ function wrapWithDalightPrefix(client) {
   if (!client || client._dalightWrapped) return client;
   const origFrom = client.from.bind(client);
   client.from = function(tableName) {
-    const finalName = tableName.startsWith('dalight_') ? tableName : ('dalight_' + tableName);
+    let finalName = tableName;
+    if (finalName.startsWith('dl_')) {
+      finalName = 'dalight_' + finalName.substring(3);
+    } else if (!finalName.startsWith('dalight_')) {
+      finalName = 'dalight_' + finalName;
+    }
     return origFrom(finalName);
   };
   client._dalightWrapped = true;

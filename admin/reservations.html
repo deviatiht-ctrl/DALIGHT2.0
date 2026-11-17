@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -779,7 +779,12 @@
         function wrapWithDalightPrefix(c) {
         if (!c || c._dalightWrapped) return c;
         const orig = c.from.bind(c);
-        c.from = (t) => orig(t.startsWith('dalight_') ? t : ('dalight_' + t));
+        c.from = (t) => {
+          let n = t;
+          if (n.startsWith('dl_')) n = 'dalight_' + n.substring(3);
+          else if (!n.startsWith('dalight_')) n = 'dalight_' + n;
+          return orig(n);
+        };
         c._dalightWrapped = true;
         return c;
       }
