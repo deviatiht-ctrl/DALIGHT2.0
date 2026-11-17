@@ -3,296 +3,390 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestion Contenu Vidéo — DALIGHT Admin</title>
+  <title>Contenu Vidéo - DALIGHT Admin</title>
   <link rel="icon" href="../assets/images/logodaligth.png?v=2" type="image/png">
   
-  <!-- Fonts & Icons -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <script src="../vendor/lucide/lucide.min.js"></script>
-  <script src="../vendor/supabase/supabase.min.js"></script>
-  
-  <!-- Stylesheets -->
+  <link href="../vendor/fonts/inter-fonts.css" rel="stylesheet">
   <link rel="stylesheet" href="css/admin.css?v=20261117">
+  <script src="../vendor/supabase/supabase.min.js"></script>
+  <script src="../vendor/lucide/lucide.min.js"></script>
   
   <style>
     .badge-consent-public {
-      background: rgba(34, 197, 94, 0.15);
+      background: rgba(34, 197, 94, 0.16);
       color: #4ade80;
       border: 1px solid rgba(34, 197, 94, 0.35);
       padding: 0.3rem 0.75rem;
       border-radius: 9999px;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       font-weight: 600;
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
+      white-space: nowrap;
     }
     .badge-consent-private {
-      background: rgba(245, 158, 11, 0.15);
+      background: rgba(245, 158, 11, 0.16);
       color: #fbbf24;
       border: 1px solid rgba(245, 158, 11, 0.35);
       padding: 0.3rem 0.75rem;
       border-radius: 9999px;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       font-weight: 600;
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
+      white-space: nowrap;
     }
     .status-select {
-      background: rgba(18, 27, 18, 0.9);
+      background: rgba(18, 27, 18, 0.85);
       color: #FAF8F5;
-      border: 1px solid rgba(194, 164, 144, 0.25);
+      border: 1px solid rgba(194, 164, 144, 0.3);
       border-radius: 8px;
-      padding: 0.35rem 0.65rem;
-      font-size: 0.8rem;
+      padding: 0.4rem 0.65rem;
+      font-size: 0.82rem;
       outline: none;
       cursor: pointer;
+      transition: border-color 0.2s;
     }
     .status-select:focus {
-      border-color: #D4AF37;
+      border-color: var(--admin-accent, #D4AF37);
+    }
+    .price-config-box {
+      display: flex;
+      align-items: flex-end;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+    @media (max-width: 768px) {
+      .price-config-box {
+        flex-direction: column;
+        align-items: stretch;
+      }
     }
   </style>
 </head>
-<body data-page="contenu-video">
-  <div class="admin-layout">
-    <!-- Sidebar -->
-    <aside class="admin-sidebar" id="admin-sidebar">
-      <div class="sidebar-header">
-        <a href="../index.html" class="sidebar-brand">
-          <img src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" class="sidebar-logo">
-          <div class="sidebar-brand-text">
-            <span class="brand-name">DALIGHT</span>
-            <span class="brand-tag">Administration</span>
-          </div>
+<body>
+  <!-- Sidebar -->
+  <aside class="admin-sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="sidebar-logo">
+        <img src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" onerror="this.style.display='none'">
+        <div class="sidebar-logo-text">
+          DALIGHT
+          <span>Administration</span>
+        </div>
+      </a>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Principal</div>
+        <a href="dashboard.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+          Dashboard
+        </a>
+        <a href="reservations.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          Réservations
+        </a>
+        <a href="pos.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+          </svg>
+          Caisse / POS
+        </a>
+        <a href="retraits.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Retraits & Revenus
         </a>
       </div>
+      
+      <div class="nav-section">
+        <div class="nav-section-title">Contenu</div>
+        <a href="contenu-video.html" class="nav-item active">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+          </svg>
+          Contenu Vidéo
+        </a>
+        <a href="posts.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+          </svg>
+          Posts & Vidéos
+        </a>
+        <a href="formations.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
+          </svg>
+          Formations
+        </a>
+        <a href="services.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+          </svg>
+          Services
+        </a>
+        <a href="products.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+          Produits
+        </a>
+      </div>
+      
+      <div class="nav-section">
+        <div class="nav-section-title">Utilisateurs &amp; Communication</div>
+        <a href="clients.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+          Clients
+        </a>
+        <a href="whatsapp.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/>
+          </svg>
+          WhatsApp Gateway
+        </a>
+        <a href="influencers.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+          </svg>
+          Influenceurs
+        </a>
+      </div>
+      
+      <div class="nav-section">
+        <div class="nav-section-title">Système</div>
+        <a href="settings.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          Paramètres
+        </a>
+        <a href="../index.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          </svg>
+          Voir le site
+        </a>
+      </div>
+    </nav>
+    
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="user-avatar">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="user-name">Admin</div>
+          <div class="sidebar-user-role">Super Admin</div>
+        </div>
+      </div>
+    </div>
+  </aside>
 
-      <nav class="sidebar-nav">
-        <div class="nav-section">
-          <span class="nav-section-title">Principal</span>
-          <a href="dashboard.html" class="nav-item">
-            <i data-lucide="layout-dashboard"></i>
-            <span>Tableau de bord</span>
-          </a>
-          <a href="reservations.html" class="nav-item">
-            <i data-lucide="calendar"></i>
-            <span>Réservations</span>
-          </a>
-          <a href="pos.html" class="nav-item">
-            <i data-lucide="calculator"></i>
-            <span>Point de Vente (POS)</span>
-          </a>
-          <a href="contenu-video.html" class="nav-item active">
-            <i data-lucide="video"></i>
-            <span>Contenu Vidéo</span>
-          </a>
-          <a href="whatsapp.html" class="nav-item">
-            <i data-lucide="message-square"></i>
-            <span>WhatsApp Gateway</span>
-          </a>
+  <!-- Main Content -->
+  <main class="admin-main">
+    <header class="admin-header">
+      <div class="header-left">
+        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+        <div>
+          <h1 class="page-title">Contenu Vidéo</h1>
+          <p style="font-size:0.8rem;color:var(--admin-text-muted);margin:0;">Suivi des tournages, autorisations de diffusion et tarification du service</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary btn-sm" onclick="loadVideoData()" style="display:inline-flex;align-items:center;gap:.4rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          Actualiser
+        </button>
+        <button class="header-btn" id="logout-btn" title="Déconnexion">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="admin-content">
+      <!-- KPI Stats Grid (BÈL ESTATIK) -->
+      <div class="stats-grid mb-4">
+        <div class="stat-card">
+          <div class="stat-icon gold">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-total-videos">0</div>
+            <div class="stat-label">Vidéos Demandées</div>
+            <div class="stat-change positive">Souscriptions actives</div>
+          </div>
         </div>
 
-        <div class="nav-section">
-          <span class="nav-section-title">Clients & Équipe</span>
-          <a href="clients.html" class="nav-item">
-            <i data-lucide="users"></i>
-            <span>Fichier Clients</span>
-          </a>
-          <a href="employees.html" class="nav-item">
-            <i data-lucide="user-check"></i>
-            <span>Employés & Présence</span>
-          </a>
-          <a href="loyalty-cards.html" class="nav-item">
-            <i data-lucide="crown"></i>
-            <span>Fidélité & Cartes</span>
-          </a>
-          <a href="influencers.html" class="nav-item">
-            <i data-lucide="award"></i>
-            <span>Influenceurs</span>
-          </a>
+        <div class="stat-card">
+          <div class="stat-icon green" style="background: rgba(34, 197, 94, 0.15); color: #4ade80;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-public-videos" style="color: #4ade80;">0</div>
+            <div class="stat-label">Autorisées Réseaux</div>
+            <div class="stat-change positive" style="color: #4ade80;">Instagram &amp; TikTok OK</div>
+          </div>
         </div>
 
-        <div class="nav-section">
-          <span class="nav-section-title">Catalogue</span>
-          <a href="services.html" class="nav-item">
-            <i data-lucide="sparkles"></i>
-            <span>Services & Tarifs</span>
-          </a>
-          <a href="shop.html" class="nav-item">
-            <i data-lucide="shopping-bag"></i>
-            <span>Boutique Produits</span>
-          </a>
+        <div class="stat-card">
+          <div class="stat-icon blue" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-private-videos" style="color: #fbbf24;">0</div>
+            <div class="stat-label">Usage Privé</div>
+            <div class="stat-change" style="color: #94a3b8;">Diffusion interdite</div>
+          </div>
         </div>
-      </nav>
 
-      <div class="sidebar-footer">
-        <div class="user-profile">
-          <div class="user-avatar" id="admin-user-avatar">AD</div>
-          <div class="user-info">
-            <span class="user-name" id="admin-user-name">Administrateur</span>
-            <span class="user-role" id="admin-user-role">Super Admin</span>
+        <div class="stat-card">
+          <div class="stat-icon gold">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-revenue-videos">0 HTG</div>
+            <div class="stat-label">Revenus Vidéos</div>
+            <div class="stat-change positive">Total cumulé</div>
           </div>
         </div>
       </div>
-    </aside>
 
-    <!-- Main Content -->
-    <main class="admin-main">
-      <header class="admin-header">
-        <div class="header-left">
-          <h1 class="page-title">Gestion du Contenu Vidéo</h1>
-          <p class="admin-header-subtitle">Suivi des captations de séances, gestion des consentements de diffusion et tarification</p>
+      <!-- Tarification & Paramètres de l'Option Vidéo -->
+      <div class="glass-card mb-4" style="padding: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+          <div>
+            <h2 style="font-size: 1.15rem; font-weight: 700; color: #FAF8F5; margin: 0 0 0.25rem 0;">
+              ⚙️ Paramètres &amp; Prix de l'Option Vidéo
+            </h2>
+            <p style="font-size: 0.82rem; color: var(--admin-text-muted); margin: 0;">
+              Définissez le prix facturé au client lorsqu'il coche l'option vidéo lors de la réservation
+            </p>
+          </div>
+          <span class="status-badge confirmed" id="video-service-status-badge">Option Active</span>
         </div>
-        <div class="header-actions">
-          <button class="btn btn-secondary" onclick="loadVideoData()">
-            <i data-lucide="refresh-cw"></i> Actualiser
+
+        <form id="video-price-form" onsubmit="updateVideoPricing(event)" class="price-config-box">
+          <div class="form-group" style="margin-bottom: 0; min-width: 220px; flex: 1;">
+            <label class="form-label" style="font-weight: 600; color: #FAF8F5;">Prix de l'Option Vidéo (HTG) :</label>
+            <input type="number" id="setting-video-price" class="form-input" min="0" step="50" value="500" required style="font-size: 1.1rem; font-weight: 700; color: #D4AF37;">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0; min-width: 240px; flex: 1;">
+            <label class="form-label" style="font-weight: 600; color: #FAF8F5;">Disponibilité sur le site :</label>
+            <select id="setting-video-active" class="form-select">
+              <option value="true" selected>Activé (Proposé lors de la réservation)</option>
+              <option value="false">Désactivé temporairement</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="save-price-btn" style="height: 44px; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+            </svg>
+            Enregistrer le tarif
           </button>
-        </div>
-      </header>
+        </form>
+      </div>
 
-      <div class="admin-content">
-        <!-- KPI Stats HUD -->
-        <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 2rem;">
-          <div class="kpi-card">
-            <div class="kpi-icon" style="background: rgba(212, 175, 55, 0.15); color: #D4AF37;">
-              <i data-lucide="video"></i>
-            </div>
-            <div class="kpi-details">
-              <span class="kpi-label">Vidéos Demandées</span>
-              <strong class="kpi-value" id="stat-total-videos">0</strong>
-            </div>
+      <!-- Table des Réservations avec Option Vidéo -->
+      <div class="glass-card" style="padding: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h2 style="font-size: 1.15rem; font-weight: 700; color: #FAF8F5; margin: 0 0 0.25rem 0;">
+              Réservations avec Contenu Vidéo
+            </h2>
+            <p style="font-size: 0.82rem; color: var(--admin-text-muted); margin: 0;">
+              Gestion des consentements, statut de production et contact direct client
+            </p>
           </div>
 
-          <div class="kpi-card">
-            <div class="kpi-icon" style="background: rgba(34, 197, 94, 0.15); color: #4ade80;">
-              <i data-lucide="share-2"></i>
-            </div>
-            <div class="kpi-details">
-              <span class="kpi-label">Autorisées Réseaux</span>
-              <strong class="kpi-value" id="stat-public-videos" style="color: #4ade80;">0</strong>
-              <small style="color: #94a3b8; font-size: 0.72rem;">Prêtes pour Instagram / TikTok</small>
-            </div>
-          </div>
+          <!-- Filtres -->
+          <div style="display: flex; gap: 0.65rem; flex-wrap: wrap;">
+            <select id="filter-consent" class="form-select" style="padding: 0.45rem 0.8rem; font-size: 0.82rem; min-width: 170px;" onchange="applyFilters()">
+              <option value="all">Tous les consentements</option>
+              <option value="public">Réseaux Sociaux autorisés</option>
+              <option value="private">Usage Privé Uniquement</option>
+            </select>
 
-          <div class="kpi-card">
-            <div class="kpi-icon" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">
-              <i data-lucide="lock"></i>
-            </div>
-            <div class="kpi-details">
-              <span class="kpi-label">Usage Privé Uniquement</span>
-              <strong class="kpi-value" id="stat-private-videos" style="color: #fbbf24;">0</strong>
-              <small style="color: #94a3b8; font-size: 0.72rem;">Diffusion publique interdite</small>
-            </div>
-          </div>
-
-          <div class="kpi-card">
-            <div class="kpi-icon" style="background: rgba(194, 164, 144, 0.15); color: #C2A490;">
-              <i data-lucide="banknote"></i>
-            </div>
-            <div class="kpi-details">
-              <span class="kpi-label">Revenus Vidéos</span>
-              <strong class="kpi-value" id="stat-revenue-videos">0 HTG</strong>
-            </div>
+            <select id="filter-status" class="form-select" style="padding: 0.45rem 0.8rem; font-size: 0.82rem; min-width: 170px;" onchange="applyFilters()">
+              <option value="all">Tous les statuts</option>
+              <option value="pending">⏳ À filmer / En attente</option>
+              <option value="filmed">🎥 Filmée</option>
+              <option value="editing">✂️ En montage</option>
+              <option value="delivered">📦 Livrée au client</option>
+              <option value="published">🚀 Publiée sur réseaux</option>
+            </select>
           </div>
         </div>
 
-        <!-- Configuration du Prix du Service Vidéo -->
-        <div class="admin-card" style="margin-bottom: 2rem;">
-          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <h3 class="card-title">⚙️ Tarification & Paramètres de l'Option Vidéo</h3>
-              <p class="card-subtitle" style="margin: 0; color: #D5CEBF; font-size: 0.85rem;">Définissez le tarif facturé au client lorsqu'il choisit l'option vidéo lors de la réservation</p>
-            </div>
-            <span class="badge" id="video-service-status-badge" style="background: rgba(34, 197, 94, 0.2); color: #4ade80;">Actif sur le site</span>
-          </div>
-          <div class="card-body">
-            <form id="video-price-form" onsubmit="updateVideoPricing(event)" style="display: flex; gap: 1.5rem; align-items: flex-end; flex-wrap: wrap;">
-              <div class="form-group" style="margin-bottom: 0; min-width: 220px;">
-                <label style="font-weight: 600; color: #FAF8F5; font-size: 0.85rem; margin-bottom: 0.4rem; display: block;">Prix de l'Option Vidéo (HTG) :</label>
-                <input type="number" id="setting-video-price" class="form-input" min="0" step="50" value="500" required style="font-size: 1.1rem; font-weight: 700; color: #D4AF37;">
-              </div>
-
-              <div class="form-group" style="margin-bottom: 0; min-width: 260px;">
-                <label style="font-weight: 600; color: #FAF8F5; font-size: 0.85rem; margin-bottom: 0.4rem; display: block;">Statut de l'option :</label>
-                <select id="setting-video-active" class="form-input">
-                  <option value="true" selected>Activé (proposé aux clients)</option>
-                  <option value="false">Désactivé temporairement</option>
-                </select>
-              </div>
-
-              <button type="submit" class="btn btn-primary" id="save-price-btn" style="height: 44px; display: inline-flex; align-items: center; gap: 0.5rem;">
-                <i data-lucide="check"></i> Enregistrer le tarif
-              </button>
-            </form>
-          </div>
-        </div>
-
-        <!-- Table des Réservations avec Option Vidéo -->
-        <div class="admin-card">
-          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-            <div>
-              <h3 class="card-title">Liste des Réservations avec Contenu Vidéo</h3>
-              <p class="card-subtitle" style="margin: 0; color: #D5CEBF; font-size: 0.85rem;">Visualisez les clients ayant souscrit, leurs choix de consentement et l'avancement</p>
-            </div>
-            
-            <!-- Filters -->
-            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-              <select id="filter-consent" class="form-input" style="padding: 0.45rem 0.8rem; font-size: 0.85rem;" onchange="applyFilters()">
-                <option value="all">Tous les consentements</option>
-                <option value="public">Réseaux Sociaux autorisés</option>
-                <option value="private">Usage Privé Uniquement</option>
-              </select>
-
-              <select id="filter-status" class="form-input" style="padding: 0.45rem 0.8rem; font-size: 0.85rem;" onchange="applyFilters()">
-                <option value="all">Tous les statuts production</option>
-                <option value="pending">À filmer / En attente</option>
-                <option value="filmed">Filmée</option>
-                <option value="editing">En montage</option>
-                <option value="delivered">Livrée au client</option>
-                <option value="published">Publiée sur réseaux</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="card-body" style="padding: 0;">
-            <div class="table-responsive">
-              <table class="admin-table">
-                <thead>
-                  <tr>
-                    <th>Date & Heure</th>
-                    <th>Client</th>
-                    <th>Téléphone</th>
-                    <th>Soin / Service</th>
-                    <th>Consentement Réseaux</th>
-                    <th>Montant Vidéo</th>
-                    <th>Avancement Production</th>
-                    <th style="text-align: right;">Action</th>
-                  </tr>
-                </thead>
-                <tbody id="video-reservations-tbody">
-                  <tr>
-                    <td colspan="8" style="text-align: center; padding: 2.5rem; color: #94a3b8;">
-                      Chargement des réservations vidéo...
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+        <div class="table-container" style="overflow-x: auto;">
+          <table class="data-table" style="width: 100%;">
+            <thead>
+              <tr>
+                <th>Date &amp; Heure</th>
+                <th>Client</th>
+                <th>Téléphone</th>
+                <th>Soin / Prestation</th>
+                <th>Consentement</th>
+                <th>Montant</th>
+                <th>Statut Production</th>
+                <th style="text-align: right;">WhatsApp</th>
+              </tr>
+            </thead>
+            <tbody id="video-reservations-tbody">
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--admin-text-muted);">
+                  Chargement des données vidéo...
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
-    </main>
-  </div>
+    </div>
+  </main>
 
   <script src="js/admin-core.js?v=20261117"></script>
   <script>
     let allVideoReservations = [];
 
     document.addEventListener('DOMContentLoaded', async () => {
-      if (window.lucide) lucide.createIcons();
+      // Mobile sidebar menu toggle
+      const mobileBtn = document.getElementById('mobile-menu-btn');
+      const sidebar = document.getElementById('sidebar');
+      if (mobileBtn && sidebar) {
+        mobileBtn.addEventListener('click', () => {
+          sidebar.classList.toggle('active');
+        });
+      }
+
       await loadVideoSettings();
       await loadVideoData();
     });
@@ -300,7 +394,11 @@
     async function getClient() {
       if (window.adminCore?.supabase) return window.adminCore.supabase;
       if (window.dalightAdminSupabase) return window.dalightAdminSupabase;
-      return window.supabaseClient;
+      if (window.supabaseClient) return window.supabaseClient;
+      if (typeof supabase !== 'undefined' && supabase.createClient) {
+        return supabase.createClient('https://rbwoiejztrkghfkpxquo.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U');
+      }
+      return null;
     }
 
     async function loadVideoSettings() {
@@ -308,15 +406,23 @@
         const sb = await getClient();
         if (!sb) return;
 
+        // Try querying by key first, then by id
         const { data, error } = await sb
-          .from('dalight_settings')
-          .select('value')
-          .eq('id', 'video_service')
+          .from('settings')
+          .select('*')
+          .or('key.eq.video_service,id.eq.video_service')
           .maybeSingle();
 
         if (data && data.value) {
-          document.getElementById('setting-video-price').value = data.value.price_htg || 500;
-          document.getElementById('setting-video-active').value = String(data.value.is_active !== false);
+          let val = data.value;
+          if (typeof val === 'string') {
+            try { val = JSON.parse(val); } catch(e){}
+          }
+          const price = typeof val === 'object' ? (val.price_htg || 500) : Number(val);
+          document.getElementById('setting-video-price').value = price || 500;
+          if (typeof val === 'object' && val.is_active !== undefined) {
+            document.getElementById('setting-video-active').value = String(val.is_active !== false);
+          }
         }
       } catch (e) {
         console.warn('Could not load video settings:', e);
@@ -327,46 +433,56 @@
       e.preventDefault();
       const btn = document.getElementById('save-price-btn');
       btn.disabled = true;
-      btn.innerHTML = 'Enregistrement...';
+      btn.textContent = 'Enregistrement...';
 
       try {
         const sb = await getClient();
         const price = Number(document.getElementById('setting-video-price').value) || 500;
         const isActive = document.getElementById('setting-video-active').value === 'true';
 
+        const payload = {
+          id: 'video_service',
+          key: 'video_service',
+          value: {
+            price_htg: price,
+            is_active: isActive,
+            title: "Option Vidéo Souvenir",
+            description: "Captation vidéo professionnelle et montage de votre séance"
+          },
+          description: "Configuration du service vidéo DALIGHT",
+          updated_at: new Date().toISOString()
+        };
+
         const { error } = await sb
-          .from('dalight_settings')
-          .upsert({
-            id: 'video_service',
-            value: {
-              price_htg: price,
-              is_active: isActive,
-              title: "Vidéo Souvenir Professionnelle",
-              description: "Captation vidéo haute définition et montage de votre séance de détente"
-            },
-            updated_at: new Date().toISOString()
-          });
+          .from('settings')
+          .upsert(payload, { onConflict: 'id' });
 
         if (error) throw error;
-        
+
+        // Visual feedback
+        const badge = document.getElementById('video-service-status-badge');
+        if (badge) {
+          badge.textContent = isActive ? 'Option Active' : 'Option Désactivée';
+          badge.className = isActive ? 'status-badge confirmed' : 'status-badge cancelled';
+        }
+
         if (window.adminCore?.showToast) {
-          window.adminCore.showToast(`Tarif vidéo mis à jour avec succès (${price} HTG) !`, 'success');
+          window.adminCore.showToast(`Tarif vidéo mis à jour : ${price} HTG !`, 'success');
         } else {
-          alert(`Tarif vidéo mis à jour : ${price} HTG`);
+          alert(`Tarif vidéo enregistré avec succès : ${price} HTG`);
         }
       } catch (err) {
         console.error('Error saving video settings:', err);
         alert('Erreur lors de la mise à jour : ' + err.message);
       } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i data-lucide="check"></i> Enregistrer le tarif';
-        if (window.lucide) lucide.createIcons();
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Enregistrer le tarif`;
       }
     }
 
     async function loadVideoData() {
       const tbody = document.getElementById('video-reservations-tbody');
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2.5rem; color: #94a3b8;">Chargement...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--admin-text-muted);">Chargement...</td></tr>';
 
       try {
         const sb = await getClient();
@@ -375,10 +491,11 @@
           return;
         }
 
+        // Query reservations where video was requested
         const { data, error } = await sb
-          .from('dalight_reservations')
+          .from('reservations')
           .select('*')
-          .eq('video_requested', true)
+          .or('wants_video.eq.true,video_requested.eq.true')
           .order('date', { ascending: false });
 
         if (error) throw error;
@@ -399,7 +516,8 @@
       let revenue = 0;
 
       list.forEach(r => {
-        if (r.video_consent === 'public') publicCount++;
+        const consent = (r.video_consent || 'public').toLowerCase();
+        if (consent === 'public') publicCount++;
         else privateCount++;
         revenue += Number(r.video_price || 500);
       });
@@ -415,40 +533,47 @@
       if (!list.length) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="8" style="text-align: center; padding: 3rem; color: #94a3b8;">
-              <i data-lucide="video-off" style="width: 36px; height: 36px; stroke-width: 1.5; margin-bottom: 0.5rem; display: block; margin: 0 auto 0.5rem;"></i>
+            <td colspan="8" style="text-align: center; padding: 3rem; color: var(--admin-text-muted);">
               Aucune réservation avec option vidéo pour l'instant.
             </td>
           </tr>
         `;
-        if (window.lucide) lucide.createIcons();
         return;
       }
 
       tbody.innerHTML = list.map(r => {
-        const isPublic = r.video_consent === 'public';
+        const isPublic = (r.video_consent || 'public').toLowerCase() === 'public';
         const consentBadge = isPublic
-          ? `<span class="badge-consent-public"><i data-lucide="check-circle" style="width:14px;height:14px;"></i> Autorisé Réseaux</span>`
-          : `<span class="badge-consent-private"><i data-lucide="lock" style="width:14px;height:14px;"></i> Usage Privé</span>`;
+          ? `<span class="badge-consent-public">✓ Autorisé Réseaux</span>`
+          : `<span class="badge-consent-private">🔒 Usage Privé</span>`;
 
+        const clientName = r.user_name || r.client_name || 'Client';
+        const clientEmail = r.user_email || r.client_email || '';
+        const clientPhone = r.phone || r.client_phone || '—';
+        const serviceName = r.service || r.service_name || 'Head Spa';
         const price = (Number(r.video_price) || 500).toLocaleString() + ' HTG';
         const status = r.video_status || 'pending';
+
+        const cleanPhone = String(clientPhone).replace(/\D/g, '');
+        const waLink = cleanPhone.length >= 8
+          ? `https://wa.me/${cleanPhone.length === 8 ? ('509' + cleanPhone) : cleanPhone}?text=${encodeURIComponent('Bonjour ' + clientName + ', concernant votre vidéo souvenir DALIGHT :')}`
+          : null;
 
         return `
           <tr>
             <td>
-              <strong>${r.date || '—'}</strong><br>
-              <small style="color: #94a3b8;">${r.time || '—'}</small>
+              <div style="font-weight: 600; color: #FAF8F5;">${r.date || '—'}</div>
+              <div style="font-size: 0.78rem; color: var(--admin-text-muted);">${r.time || '—'}</div>
             </td>
             <td>
-              <div style="font-weight: 600; color: #FAF8F5;">${escapeHtml(r.client_name || 'Client')}</div>
-              <small style="color: #94a3b8;">${escapeHtml(r.client_email || '')}</small>
+              <div style="font-weight: 600; color: #FAF8F5;">${escapeHtml(clientName)}</div>
+              <div style="font-size: 0.78rem; color: var(--admin-text-muted);">${escapeHtml(clientEmail)}</div>
             </td>
             <td>
-              <span style="font-family: monospace;">${escapeHtml(r.client_phone || '—')}</span>
+              <span style="font-family: monospace; font-size: 0.85rem;">${escapeHtml(clientPhone)}</span>
             </td>
             <td>
-              <strong>${escapeHtml(r.service_name || 'Head Spa')}</strong>
+              <span style="font-weight: 500;">${escapeHtml(serviceName)}</span>
             </td>
             <td>
               ${consentBadge}
@@ -466,32 +591,33 @@
               </select>
             </td>
             <td style="text-align: right;">
-              <a href="https://wa.me/${String(r.client_phone).replace(/\\D/g, '')}?text=${encodeURIComponent('Bonjour ' + r.client_name + ', concernant votre vidéo souvenir DALIGHT :')}" target="_blank" class="btn btn-secondary btn-sm" style="padding: 0.35rem 0.65rem;" title="WhatsApp direct">
-                <i data-lucide="message-circle" style="width:14px;height:14px;"></i>
-              </a>
+              ${waLink ? `
+                <a href="${waLink}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="padding: 0.35rem 0.65rem; display: inline-flex; align-items: center; gap: 0.3rem;" title="Contacter sur WhatsApp">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/></svg>
+                  WhatsApp
+                </a>
+              ` : '<span style="color:var(--admin-text-muted);font-size:0.75rem;">—</span>'}
             </td>
           </tr>
         `;
       }).join('');
-
-      if (window.lucide) lucide.createIcons();
     }
 
     async function updateVideoStatus(resId, newStatus) {
       try {
         const sb = await getClient();
         const { error } = await sb
-          .from('dalight_reservations')
+          .from('reservations')
           .update({ video_status: newStatus, updated_at: new Date().toISOString() })
           .eq('id', resId);
 
         if (error) throw error;
         if (window.adminCore?.showToast) {
-          window.adminCore.showToast('Statut vidéo mis à jour !', 'success');
+          window.adminCore.showToast('Statut vidéo mis à jour avec succès !', 'success');
         }
       } catch (err) {
         console.error('Error updating status:', err);
-        alert('Erreur: ' + err.message);
+        alert('Erreur lors de la mise à jour : ' + err.message);
       }
     }
 
@@ -501,7 +627,7 @@
 
       let filtered = [...allVideoReservations];
       if (consentFilter !== 'all') {
-        filtered = filtered.filter(r => r.video_consent === consentFilter);
+        filtered = filtered.filter(r => (r.video_consent || 'public').toLowerCase() === consentFilter);
       }
       if (statusFilter !== 'all') {
         filtered = filtered.filter(r => (r.video_status || 'pending') === statusFilter);
