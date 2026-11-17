@@ -522,19 +522,126 @@
 
       <!-- Navigation Tabs -->
       <div class="wa-tabs-nav">
-        <button class="wa-tab-btn active" data-tab="templates">
-          📋 Modèles Automatiques (Templates)
+        <button class="wa-tab-btn active" data-tab="scan" style="font-weight:600; color:var(--admin-accent);">
+          <i data-lucide="qr-code"></i> Connexion WhatsApp DALIGHT (Scan QR)
+        </button>
+        <button class="wa-tab-btn" data-tab="templates">
+          <i data-lucide="file-text"></i> Modèles Automatiques (Templates)
         </button>
         <button class="wa-tab-btn" data-tab="console">
-          📱 Console de Test &amp; Envoi Direct
+          <i data-lucide="terminal"></i> Console de Test &amp; Envoi Direct
         </button>
         <button class="wa-tab-btn" data-tab="receipts">
-          📄 Générateur de Reçus PDF
+          <i data-lucide="receipt"></i> Générateur de Reçus PDF
         </button>
       </div>
 
       <!-- TAB 1: TEMPLATES LIST & EDITOR -->
-      <section id="tab-templates">
+            <!-- TAB 0: SCAN & CONNECT DALIGHT WHATSAPP -->
+      <section id="tab-scan" style="display:block; margin-bottom: 2.5rem;">
+        <div style="display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 1.5rem; align-items: start;">
+          
+          <!-- Left: Live QR Code Card -->
+          <div class="glass-card" style="padding: 2rem; text-align: center; position: relative;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; text-align: left; border-bottom: 1px solid var(--admin-border); padding-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+              <div>
+                <h3 style="font-family:'Cormorant Garamond',serif; font-size:1.6rem; color:var(--admin-accent); margin:0 0 0.25rem 0;">
+                  Connexion WhatsApp Officiel DALIGHT
+                </h3>
+                <p style="color:var(--admin-text-muted); font-size:0.85rem; margin:0;">
+                  Liez le numéro officiel DALIGHT (<strong>+509 4747-7221</strong>) en scannant en direct
+                </p>
+              </div>
+              <div id="wa-connection-badge">
+                <span class="badge" style="background:rgba(212,175,55,0.18); border:1px solid rgba(212,175,55,0.4); color:var(--admin-accent); padding:0.4rem 0.9rem; border-radius:999px; font-weight:600; font-size:0.82rem;">
+                  <i data-lucide="loader-2" class="spin icon-sm"></i> VÉRIFICATION EN COURS...
+                </span>
+              </div>
+            </div>
+
+            <!-- Disconnected / Scan Required Container -->
+            <div id="wa-qr-box" style="display: block;">
+              <p style="color:#FAF8F5; font-size:0.95rem; line-height:1.5; margin-bottom:1.5rem;">
+                Ouvrez WhatsApp sur le téléphone DALIGHT &gt; <strong>Appareils connectés</strong> &gt; Scannez le code QR ci-dessous pour connecter votre compte :
+              </p>
+
+              <!-- QR Code Frame -->
+              <div style="display:inline-block; position:relative; background:#ffffff; padding:16px; border-radius:20px; box-shadow:0 15px 40px rgba(0,0,0,0.6); margin-bottom:1.25rem;">
+                <img id="dalight-qr-image" src="" alt="Code QR WhatsApp DALIGHT" style="width:280px; height:280px; display:none; object-fit:contain;" />
+                <div id="dalight-qr-loading" style="width:280px; height:280px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.75rem; color:#121b12;">
+                  <i data-lucide="loader-2" class="spin" style="width:40px; height:40px; color:var(--admin-accent);"></i>
+                  <span style="font-size:0.85rem; font-weight:600; color:#444;">Génération du code QR en direct...</span>
+                </div>
+              </div>
+
+              <!-- Live pulse indicator -->
+              <div style="font-size:0.78rem; color:var(--admin-text-muted); display:flex; align-items:center; justify-content:center; gap:0.4rem; margin-bottom:1.5rem;">
+                <span style="width:8px; height:8px; border-radius:50%; background:#4ade80; display:inline-block; animation: pulse 1.8s infinite;"></span>
+                <span>Code QR synchronisé en temps réel · Mise à jour automatique</span>
+              </div>
+
+              <div style="display:flex; justify-content:center; gap:0.75rem; flex-wrap:wrap;">
+                <button class="btn btn-secondary" id="btn-force-refresh-qr" style="display:inline-flex; align-items:center; gap:0.4rem;">
+                  <i data-lucide="rotate-cw" style="width:16px;height:16px;"></i> Régénérer Nouveau Code QR
+                </button>
+              </div>
+            </div>
+
+            <!-- Connected View Container -->
+            <div id="wa-connected-box" style="display: none; padding: 2rem 1rem;">
+              <div style="width:80px; height:80px; background:rgba(74,222,128,0.15); border:2px solid #4ade80; color:#4ade80; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;">
+                <i data-lucide="check-check" style="width:44px; height:44px;"></i>
+              </div>
+              <h3 style="font-family:'Cormorant Garamond',serif; font-size:1.85rem; color:#4ade80; margin:0 0 0.5rem 0;">
+                WhatsApp DALIGHT Connecté en Ligne !
+              </h3>
+              <p style="color:#FAF8F5; font-size:1.15rem; font-weight:700; margin:0 0 0.75rem 0;" id="wa-connected-phone-display">
+                Numéro actif : +509 4747-7221
+              </p>
+              <p style="color:var(--admin-text-muted); font-size:0.88rem; max-width:460px; margin:0 auto 2rem; line-height:1.6;">
+                Votre propre compte WhatsApp est opérationnel. Tous les reçus et confirmations de réservation partent désormais de ce numéro, et vos clients peuvent directement dialoguer avec vous.
+              </p>
+
+              <div style="display:flex; justify-content:center; gap:1rem;">
+                <button class="btn btn-danger" id="btn-disconnect-wa" style="display:inline-flex; align-items:center; gap:0.4rem;">
+                  <i data-lucide="log-out" style="width:16px;height:16px;"></i> Déconnecter / Lier un autre numéro
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right: Instructions & Benefits -->
+          <div style="display:flex; flex-direction:column; gap:1.25rem;">
+            <div class="glass-card" style="padding:1.5rem;">
+              <h4 style="font-size:1rem; color:var(--admin-accent); margin:0 0 1rem 0; display:flex; align-items:center; gap:0.5rem;">
+                <i data-lucide="smartphone" style="width:18px;height:18px;"></i> Guide de Connexion en 4 Étapes
+              </h4>
+              <ol style="margin:0; padding-left:1.25rem; color:#FAF8F5; font-size:0.88rem; line-height:1.85;">
+                <li>Ouvrez l'application <strong>WhatsApp</strong> sur le téléphone DALIGHT.</li>
+                <li>Appuyez sur <strong>Menu ⋮ (3 points)</strong> ou <strong>Réglages</strong>.</li>
+                <li>Choisissez <strong>Appareils connectés (Linked Devices)</strong>.</li>
+                <li>Touchez <strong>Connecter un appareil</strong> et pointez la caméra vers le code QR ci-contre.</li>
+              </ol>
+            </div>
+
+            <div class="glass-card" style="padding:1.5rem;">
+              <h4 style="font-size:1rem; color:#4ade80; margin:0 0 0.75rem 0; display:flex; align-items:center; gap:0.5rem;">
+                <i data-lucide="shield-check" style="width:18px;height:18px;"></i> Avantages de la Ligne Pro
+              </h4>
+              <ul style="margin:0; padding-left:1.25rem; color:var(--admin-text-muted); font-size:0.84rem; line-height:1.75;">
+                <li><strong style="color:#FAF8F5;">Numéro Officiel DALIGHT :</strong> Vos clients reçoivent leurs reçus depuis votre vrai numéro officiel.</li>
+                <li><strong style="color:#FAF8F5;">Réponses Directes :</strong> Les clients peuvent répondre directement sans message d'avertissement de non-réponse.</li>
+                <li><strong style="color:#FAF8F5;">Voie Rapide (Fast Lane) :</strong> Envois instantanés sécurisés en haute priorité.</li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TAB 1: TEMPLATES LIST & EDITOR -->
+      <section id="tab-templates" style="display:none;">
         <div style="display:grid; grid-template-columns: 1.15fr 0.85fr; gap: 1.5rem; align-items: start;">
           <!-- Left: Templates Cards & Editor -->
           <div>
@@ -806,7 +913,7 @@
         kind: 'receipt',
         mode: 'async',
         attachPdf: true,
-        message: `*DALIGHT — CONFIRMATION OFFICIELLE DE RENDEZ-VOUS*\n\n{Bonjour|Bonsoir|Chère cliente} *{{client_name}}*,\n\n{Merci pour votre réservation|Nous avons le plaisir de confirmer votre soin|Merci de votre confiance} chez *DALIGHT* ! Votre rendez-vous est désormais CONFIRMÉ.\n\nDÉTAILS DE VOTRE SOIN :\n• Prestation : *{{service}}*\n• Date : *{{date}}*\n• Heure : *{{time}}*\n• Montant : *${'{{price}}'}*\n• N° Réservation : *#{{order_number}}*\n• Lieu : Delmas 65, Rue Durandisse #10, Port-au-Prince\n\nAVIS TRÈS IMPORTANT :\n*Ce message est envoyé automatiquement. Merci de NE PAS répondre directement à ce numéro.*\n\nPour toute question ou échange avec notre équipe, contactez directement le numéro officiel DALIGHT :\n*+509 4747-7221*\n\n_Votre reçu officiel est joint à ce message en format PDF. Toute notre équipe vous attend pour un pur moment d'exception._`
+        message: `*DALIGHT — CONFIRMATION OFFICIELLE DE RENDEZ-VOUS*\n\n{Bonjour|Bonsoir|Chère cliente} *{{client_name}}*,\n\n{Merci pour votre réservation|Nous avons le plaisir de confirmer votre soin|Merci de votre confiance} chez *DALIGHT* ! Votre rendez-vous est désormais CONFIRMÉ.\n\nDÉTAILS DE VOTRE SOIN :\n• Prestation : *{{service}}*\n• Date : *{{date}}*\n• Heure : *{{time}}*\n• Montant : *${'{{price}}'}*\n• N° Réservation : *#{{order_number}}*\n• Lieu : Delmas 65, Rue Durandisse #10, Port-au-Prince\n\nPour toute question, modification ou échange avec notre équipe, vous pouvez nous répondre directement ici sur WhatsApp ou nous appeler au :\n*+509 4747-7221*\n\n_Votre reçu officiel est joint à ce message en format PDF. Toute notre équipe vous attend pour un pur moment d'exception._`
       },
       {
         id: 'tpl_reminder',
@@ -854,11 +961,30 @@
           document.querySelectorAll('.wa-tab-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           const tab = btn.dataset.tab;
-          document.getElementById('tab-templates').style.display = tab === 'templates' ? 'block' : 'none';
-          document.getElementById('tab-console').style.display = tab === 'console' ? 'block' : 'none';
-          document.getElementById('tab-receipts').style.display = tab === 'receipts' ? 'block' : 'none';
+          const scanEl = document.getElementById('tab-scan');
+          const tplEl = document.getElementById('tab-templates');
+          const conEl = document.getElementById('tab-console');
+          const recEl = document.getElementById('tab-receipts');
+
+          if (scanEl) scanEl.style.display = tab === 'scan' ? 'block' : 'none';
+          if (tplEl) tplEl.style.display = tab === 'templates' ? 'block' : 'none';
+          if (conEl) conEl.style.display = tab === 'console' ? 'block' : 'none';
+          if (recEl) recEl.style.display = tab === 'receipts' ? 'block' : 'none';
+
+          if (tab === 'scan') {
+            fetchDalightAccountQr(true);
+          }
         });
       });
+
+      // Wire up QR controls
+      document.getElementById('btn-force-refresh-qr')?.addEventListener('click', resetDalightWhatsAppSession);
+      document.getElementById('btn-disconnect-wa')?.addEventListener('click', resetDalightWhatsAppSession);
+
+      // Start automatic QR polling
+      fetchDalightAccountQr(true);
+      if (window.dalightQrPollInterval) clearInterval(window.dalightQrPollInterval);
+      window.dalightQrPollInterval = setInterval(fetchDalightAccountQr, 4000);
 
       renderTemplatesList();
       selectTemplate(selectedTemplate.id);
@@ -1123,6 +1249,98 @@
         }
       });
     });
+
+    
+    // ══════════════════════════════════════════════════════════════════════════
+    // DALIGHT WHATSAPP QR SCAN & SESSION CONTROLLER
+    // ══════════════════════════════════════════════════════════════════════════
+
+    async function fetchDalightAccountQr(forceRefresh = false) {
+      const GATEWAY_URL = 'https://cvisual-whatsapp-gateway.onrender.com';
+      const API_KEY = localStorage.getItem('cvisual_wa_api_key') || 'cv_live_admin_6094ed1bf65bf0945706d3d7';
+
+      try {
+        const res = await fetch(`${GATEWAY_URL}/api/v1/accounts/1/qr`, {
+          headers: { 'Authorization': `Bearer ${API_KEY}` }
+        });
+        if (!res.ok) throw new Error('Gateway non joignable');
+        const data = await res.json();
+
+        const badge = document.getElementById('wa-connection-badge');
+        const qrBox = document.getElementById('wa-qr-box');
+        const connectedBox = document.getElementById('wa-connected-box');
+        const qrImg = document.getElementById('dalight-qr-image');
+        const qrLoading = document.getElementById('dalight-qr-loading');
+        const phoneDisplay = document.getElementById('wa-connected-phone-display');
+        const hudPill = document.getElementById('gateway-pill');
+        const hudStatus = document.getElementById('gateway-status-text');
+
+        if (data.is_ready || data.service_status === 'READY') {
+          // Line is connected!
+          if (badge) badge.innerHTML = `<span class="badge" style="background:rgba(74,222,128,0.2);color:#4ade80;font-weight:700;padding:0.4rem 0.9rem;border-radius:999px;">● CONNECTÉ EN LIGNE</span>`;
+          if (qrBox) qrBox.style.display = 'none';
+          if (connectedBox) connectedBox.style.display = 'block';
+          if (phoneDisplay) phoneDisplay.textContent = `Numéro actif : +${data.phone_number || '509 4747-7221'}`;
+          if (hudPill) {
+            hudPill.textContent = '● CONNECTÉ';
+            hudPill.style.background = 'rgba(74,222,128,0.2)';
+            hudPill.style.color = '#4ade80';
+          }
+          if (hudStatus) hudStatus.textContent = `Ligne DALIGHT (+${data.phone_number || '509 4747-7221'})`;
+        } else if (data.qr_code_data_url) {
+          // Scan required with live QR
+          if (badge) badge.innerHTML = `<span class="badge" style="background:rgba(212,175,55,0.2);color:var(--admin-accent);font-weight:700;padding:0.4rem 0.9rem;border-radius:999px;">SCAN REQUIS</span>`;
+          if (connectedBox) connectedBox.style.display = 'none';
+          if (qrBox) qrBox.style.display = 'block';
+          if (qrImg) {
+            qrImg.src = data.qr_code_data_url;
+            qrImg.style.display = 'block';
+          }
+          if (qrLoading) qrLoading.style.display = 'none';
+          if (hudPill) {
+            hudPill.textContent = '● SCAN REQUIS';
+            hudPill.style.background = 'rgba(212,175,55,0.2)';
+            hudPill.style.color = '#d4af37';
+          }
+          if (hudStatus) hudStatus.textContent = 'En attente de scan QR';
+        } else {
+          // Initializing / waiting for QR
+          if (badge) badge.innerHTML = `<span class="badge" style="background:rgba(59,130,246,0.2);color:#60a5fa;font-weight:700;padding:0.4rem 0.9rem;border-radius:999px;">INITIALISATION...</span>`;
+          if (connectedBox) connectedBox.style.display = 'none';
+          if (qrBox) qrBox.style.display = 'block';
+          if (qrImg) qrImg.style.display = 'none';
+          if (qrLoading) qrLoading.style.display = 'flex';
+        }
+
+        if (window.lucide) lucide.createIcons();
+      } catch (err) {
+        console.warn('Erreur QR fetch:', err);
+      }
+    }
+
+    async function resetDalightWhatsAppSession() {
+      if (!confirm('Voulez-vous réinitialiser la session WhatsApp de DALIGHT pour générer un nouveau code QR ?')) return;
+
+      const GATEWAY_URL = 'https://cvisual-whatsapp-gateway.onrender.com';
+      const API_KEY = localStorage.getItem('cvisual_wa_api_key') || 'cv_live_admin_6094ed1bf65bf0945706d3d7';
+
+      const qrImg = document.getElementById('dalight-qr-image');
+      const qrLoading = document.getElementById('dalight-qr-loading');
+      if (qrImg) qrImg.style.display = 'none';
+      if (qrLoading) qrLoading.style.display = 'flex';
+
+      try {
+        const res = await fetch(`${GATEWAY_URL}/api/v1/accounts/1/reset`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${API_KEY}` }
+        });
+        const json = await res.json();
+        alert('Session réinitialisée. Nouveau code QR en cours de génération...');
+        setTimeout(() => fetchDalightAccountQr(true), 1500);
+      } catch (err) {
+        alert('Erreur: ' + err.message);
+      }
+    }
 
     function renderTemplatesList() {
       const container = document.getElementById('templates-cards-list');

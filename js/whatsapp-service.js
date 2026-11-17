@@ -147,9 +147,7 @@ export async function sendReservationWhatsAppReceipt(order) {
     '• N° Réservation : *#' + orderNumber + '*\n\n' +
     'Lieu : Delmas 65, Rue Durandisse #10, Port-au-Prince\n' +
     'Site officiel : ' + siteUrl + '\n\n' +
-    'AVIS TRÈS IMPORTANT :\n' +
-    '*Ce message est envoyé automatiquement par notre système. Merci de NE PAS répondre directement à ce numéro.*\n\n' +
-    'Pour toute question, modification ou échange avec notre équipe, contactez directement le numéro officiel DALIGHT :\n' +
+    'Pour toute question, modification ou échange particulier, vous pouvez nous répondre directement ici sur WhatsApp ou nous appeler au :\n' +
     '*+509 4747-7221*\n\n' +
     '_Votre reçu officiel est joint à ce message en format PDF. Toute notre équipe vous attend pour un pur moment de relaxation !_\n\n';
 

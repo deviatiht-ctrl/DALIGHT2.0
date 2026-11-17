@@ -710,7 +710,7 @@ async function sendReservationWhatsAppConfirmation(reservation) {
   }
 
   const waMessage =
-    `*DALIGHT — CONFIRMATION OFFICIELLE DE RENDEZ-VOUS*\n\n` +
+    `*DALIGHT — CONFIRMATION DE RENDEZ-VOUS*\n\n` +
     `Bonjour *${clientName}*,\n\n` +
     `Nous avons le plaisir de vous informer que votre rendez-vous chez *DALIGHT* est desormais *CONFIRME* par notre equipe.\n\n` +
     `DETAILS DE VOTRE RENDEZ-VOUS :\n` +
@@ -720,9 +720,7 @@ async function sendReservationWhatsAppConfirmation(reservation) {
     (amountStr ? `• Montant : *${amountStr}*\n` : '') +
     `• N° Reservation : *#${resNumber}*\n` +
     `• Lieu : Delmas 65, Rue Durandisse #10, Port-au-Prince\n\n` +
-    `AVIS TRES IMPORTANT :\n` +
-    `*Ce message est envoye automatiquement par notre systeme de notification. Merci de NE PAS repondre directement a ce numero.*\n\n` +
-    `Pour nous contacter, poser une question ou modifier votre rendez-vous, merci d'ecrire ou d'appeler uniquement le numero officiel DALIGHT :\n` +
+    `Pour toute question, modification ou echange, vous pouvez repondre directement a ce message WhatsApp ou nous appeler au :\n` +
     `*+509 4747-7221*\n\n` +
     `Toute l'equipe DALIGHT a hate de vous accueillir pour ce moment d'exception.`;
 
