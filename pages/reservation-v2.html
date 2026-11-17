@@ -519,6 +519,44 @@
       height: 0;
     }
 
+    /* Auto-filled User Badge */
+    .prefill-user-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(212, 175, 55, 0.12);
+      border: 1px solid var(--dalight-border);
+      color: var(--dalight-gold);
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+    }
+
+    /* Booking Target Option Cards */
+    .booking-for-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .booking-for-option:hover {
+      border-color: rgba(212, 175, 55, 0.4);
+    }
+
+    .booking-for-option.selected {
+      border-color: var(--dalight-gold);
+      background: rgba(212, 175, 55, 0.1);
+      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15);
+    }
+
     .switch-slider {
       position: absolute;
       inset: 0;
@@ -946,8 +984,68 @@
 
           <!-- ══════ ÉTAPE 2 : COORDONNÉES & OPTION VIDÉO ══════ -->
           <div class="resv-card step-panel" id="step-panel-2" style="display: none;">
-            <h2 style="font-family:'Cormorant Garamond',serif; font-size:1.65rem; color:var(--dalight-gold); margin:0 0 0.5rem 0;">Vos Informations</h2>
-            <p style="color:var(--dalight-muted); font-size:0.88rem; margin:0 0 1.5rem 0;">Ces informations permettront de vous envoyer votre confirmation et vos resi WhatsApp.</p>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.5rem;">
+              <h2 style="font-family:'Cormorant Garamond',serif; font-size:1.65rem; color:var(--dalight-gold); margin:0;">Vos Coordonnées</h2>
+              <!-- Auto-prefill Status Badge -->
+              <div id="user-prefill-badge" class="prefill-user-badge" style="display: none;">
+                <i data-lucide="check-circle" style="width:14px;height:14px;color:#4ade80;"></i>
+                <span>Compte connecté : <strong id="prefill-user-name" style="color:#FAF8F5;">---</strong> (Infos pré-remplies)</span>
+              </div>
+            </div>
+            <p style="color:var(--dalight-muted); font-size:0.88rem; margin:0 0 1.5rem 0;">Ces informations permettront de vous envoyer votre confirmation officielle et reçu sur WhatsApp.</p>
+
+            <!-- 🎁 Booking for Self vs Proche / Cadeau -->
+            <div style="margin-bottom: 1.75rem; background: rgba(18, 27, 18, 0.65); border: 1.5px solid var(--dalight-border); border-radius: 16px; padding: 1.25rem;">
+              <label style="display: block; font-size: 0.88rem; font-weight: 700; color: var(--dalight-gold); margin-bottom: 0.85rem;">
+                🎁 Pour qui réservez-vous ce moment de bien-être ?
+              </label>
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem;">
+                <label class="booking-for-option selected" id="opt-for-self" onclick="selectBookingFor('self')">
+                  <input type="radio" name="booking_target" value="self" checked style="accent-color: var(--dalight-gold);">
+                  <div>
+                    <strong style="color: var(--dalight-text); font-size: 0.95rem; display: block;">🙋‍♀️ Pour moi-même</strong>
+                    <span style="font-size: 0.78rem; color: var(--dalight-muted);">Le soin est pour mon propre rendez-vous</span>
+                  </div>
+                </label>
+
+                <label class="booking-for-option" id="opt-for-other" onclick="selectBookingFor('other')">
+                  <input type="radio" name="booking_target" value="other" style="accent-color: var(--dalight-gold);">
+                  <div>
+                    <strong style="color: var(--dalight-text); font-size: 0.95rem; display: block;">🎁 Pour un(e) proche</strong>
+                    <span style="font-size: 0.78rem; color: var(--dalight-muted);">Offrir ce soin à un(e) invité(e) / cadeau</span>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Box for Beneficiary info (appears when 'other' is selected) -->
+              <div id="beneficiary-details-box" style="display: none; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px dashed rgba(212, 175, 55, 0.3);">
+                <div style="display: flex; align-items: center; gap: 0.5rem; color: #4ade80; font-size: 0.85rem; font-weight: 600; margin-bottom: 1rem;">
+                  <i data-lucide="gift" style="width: 16px; height: 16px;"></i> Informations de la personne qui recevra le soin :
+                </div>
+
+                <div class="form-grid-2">
+                  <div class="form-group-v2">
+                    <label for="beneficiary-name">Nom &amp; Prénom de la personne *</label>
+                    <input type="text" id="beneficiary-name" class="form-input-v2" placeholder="Ex: Marie-Claire Voltaire" oninput="updateSummary()">
+                  </div>
+                  <div class="form-group-v2">
+                    <label for="beneficiary-phone">Numéro WhatsApp de l'invité(e) (Optionnel)</label>
+                    <input type="tel" id="beneficiary-phone" class="form-input-v2" placeholder="Ex: +509 3844-1234" oninput="updateSummary()">
+                  </div>
+                </div>
+
+                <div class="form-group-v2" style="margin-bottom: 0;">
+                  <label for="beneficiary-message">Message d'accompagnement / Dédicace personnalisée</label>
+                  <input type="text" id="beneficiary-message" class="form-input-v2" placeholder="Ex: Joyeux Anniversaire de ma part, profite bien de ce moment de pure détente !">
+                </div>
+              </div>
+            </div>
+
+            <!-- Client Info Fields -->
+            <div style="font-size: 0.85rem; font-weight: 700; color: var(--dalight-gold); margin-bottom: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">
+              Coordonnées de réservation :
+            </div>
 
             <div class="form-grid-2">
               <div class="form-group-v2">
@@ -972,8 +1070,8 @@
             </div>
 
             <div class="form-group-v2">
-              <label for="notes">Notes spéciales (Allergies, type de cuir chevelu, etc.)</label>
-              <textarea id="notes" class="form-input-v2" rows="2" placeholder="Précisez tout besoin particulier pour votre soin..."></textarea>
+              <label for="notes">Notes spéciales pour le spa (Allergies, cuir chevelu sensible, préférences, etc.)</label>
+              <textarea id="notes" class="form-input-v2" rows="2" placeholder="Précisez tout besoin particulier pour votre séance..."></textarea>
             </div>
 
             <!-- Option Vidéo Souvenir Professionnelle (+500 HTG) -->
@@ -1119,6 +1217,11 @@
             <strong>Delmas 65, Rue Durandisse #10</strong>
           </div>
 
+          <div class="summary-line" id="sum-beneficiary-row" style="display:none;color:#4ade80;">
+            <span>Bénéficiaire</span>
+            <strong id="sum-beneficiary-name" style="color:#4ade80;">Pour un(e) proche</strong>
+          </div>
+
           <div class="summary-line" id="sum-video-row" style="display:none;color:#4ade80;">
             <span>Option Vidéo</span>
             <strong style="color:#4ade80;">+500 HTG</strong>
@@ -1198,6 +1301,7 @@
     let currentStep = 1;
     let selectedDate = null;
     let selectedTime = null;
+    let bookingTarget = 'self'; // 'self' or 'other'
     let activeService = {
       id: '24b8f338-8509-42a2-ae7f-466f99e9c2de',
       name: 'Head Spa Japonais Signature',
@@ -1255,25 +1359,110 @@
       document.getElementById('sum-service-duration').textContent = activeService.duration || '60 min';
     }
 
-    // 2. Prefill user profile if logged in
+    // 2. Prefill user profile if logged in (from localStorage & Supabase)
     async function prefillIfLoggedIn() {
-      if (!supabase) return;
+      let displayName = '';
+      
+      // Step A: Check localStorage ('dalight:user_profile' or 'dalight_user')
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session && session.user) {
-          const u = session.user;
-          if (u.email) document.getElementById('email').value = u.email;
-          const fullName = u.user_metadata?.full_name || u.user_metadata?.name || '';
-          if (fullName) {
-            const parts = fullName.split(' ');
+        const rawLocalProfile = localStorage.getItem('dalight:user_profile') || localStorage.getItem('dalight_user_profile');
+        if (rawLocalProfile) {
+          const p = JSON.parse(rawLocalProfile);
+          if (p.firstName) document.getElementById('first-name').value = p.firstName;
+          if (p.lastName) document.getElementById('last-name').value = p.lastName;
+          if (!p.firstName && p.fullName) {
+            const parts = p.fullName.trim().split(/\s+/);
             document.getElementById('first-name').value = parts[0] || '';
             document.getElementById('last-name').value = parts.slice(1).join(' ') || '';
           }
-          if (u.user_metadata?.phone) {
-            document.getElementById('phone').value = u.user_metadata.phone;
-          }
+          if (p.phone) document.getElementById('phone').value = p.phone;
+          if (p.email) document.getElementById('email').value = p.email;
+          displayName = p.fullName || `${p.firstName || ''} ${p.lastName || ''}`.trim() || p.email;
         }
-      } catch(e){}
+      } catch (e) {
+        console.warn('Error reading local user profile:', e);
+      }
+
+      // Step B: Check active Supabase session & profiles table
+      if (supabase) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session && session.user) {
+            const u = session.user;
+            if (u.email && !document.getElementById('email').value) {
+              document.getElementById('email').value = u.email;
+            }
+
+            // Check metadata first
+            const metaName = u.user_metadata?.full_name || u.user_metadata?.name;
+            if (metaName && !document.getElementById('first-name').value) {
+              const parts = metaName.trim().split(/\s+/);
+              document.getElementById('first-name').value = parts[0] || '';
+              document.getElementById('last-name').value = parts.slice(1).join(' ') || '';
+              displayName = metaName;
+            }
+            if (u.user_metadata?.phone && !document.getElementById('phone').value) {
+              document.getElementById('phone').value = u.user_metadata.phone;
+            }
+
+            // Fetch live from profiles table
+            const { data: dbProfile } = await supabase
+              .from('profiles')
+              .select('full_name, phone, email')
+              .eq('id', u.id)
+              .maybeSingle();
+
+            if (dbProfile) {
+              if (dbProfile.full_name) {
+                const parts = dbProfile.full_name.trim().split(/\s+/);
+                document.getElementById('first-name').value = parts[0] || '';
+                document.getElementById('last-name').value = parts.slice(1).join(' ') || '';
+                displayName = dbProfile.full_name;
+              }
+              if (dbProfile.phone) {
+                document.getElementById('phone').value = dbProfile.phone;
+              }
+              if (dbProfile.email) {
+                document.getElementById('email').value = dbProfile.email;
+              }
+            }
+          }
+        } catch(e) {
+          console.warn('Error checking supabase session:', e);
+        }
+      }
+
+      // Display Connected Badge if user is recognized
+      if (displayName || document.getElementById('first-name').value) {
+        const badge = document.getElementById('user-prefill-badge');
+        const badgeName = document.getElementById('prefill-user-name');
+        if (badge && badgeName) {
+          badgeName.textContent = displayName || `${document.getElementById('first-name').value} ${document.getElementById('last-name').value}`.trim();
+          badge.style.display = 'inline-flex';
+        }
+      }
+    }
+
+    // Toggle Booking Target: Pour moi-même vs Pour un(e) proche
+    function selectBookingFor(target) {
+      bookingTarget = target;
+      const optSelf = document.getElementById('opt-for-self');
+      const optOther = document.getElementById('opt-for-other');
+      const beneficiaryBox = document.getElementById('beneficiary-details-box');
+
+      if (target === 'self') {
+        if (optSelf) optSelf.classList.add('selected');
+        if (optOther) optOther.classList.remove('selected');
+        if (optSelf) optSelf.querySelector('input').checked = true;
+        if (beneficiaryBox) beneficiaryBox.style.display = 'none';
+      } else {
+        if (optOther) optOther.classList.add('selected');
+        if (optSelf) optSelf.classList.remove('selected');
+        if (optOther) optOther.querySelector('input').checked = true;
+        if (beneficiaryBox) beneficiaryBox.style.display = 'block';
+      }
+      if (window.lucide) lucide.createIcons();
+      updateSummary();
     }
 
     // 3. High-Contrast Interactive Calendar
@@ -1477,6 +1666,15 @@
         }
         goToStep(2);
       } else if (targetStep === 3) {
+        if (bookingTarget === 'other') {
+          const benName = document.getElementById('beneficiary-name')?.value.trim();
+          if (!benName) {
+            alert('Veuillez renseigner le nom complet de la personne bénéficiaire de ce soin cadeau.');
+            document.getElementById('beneficiary-name')?.focus();
+            return;
+          }
+        }
+
         const fn = document.getElementById('first-name').value.trim();
         const ln = document.getElementById('last-name').value.trim();
         const ph = document.getElementById('phone').value.trim();
@@ -1564,6 +1762,19 @@
       document.getElementById('sum-total-htg').textContent = finalHTG.toLocaleString() + ' HTG';
       document.getElementById('sum-total-usd').textContent = `~ $${finalUSD} USD`;
 
+      // Update Beneficiary line in summary if gift booking
+      const beneficiaryRow = document.getElementById('sum-beneficiary-row');
+      const beneficiaryNameEl = document.getElementById('sum-beneficiary-name');
+      if (beneficiaryRow && beneficiaryNameEl) {
+        if (bookingTarget === 'other') {
+          beneficiaryRow.style.display = 'flex';
+          const benName = document.getElementById('beneficiary-name')?.value.trim();
+          beneficiaryNameEl.textContent = benName ? `${benName} (Cadeau)` : 'Pour un(e) proche (Cadeau)';
+        } else {
+          beneficiaryRow.style.display = 'none';
+        }
+      }
+
       const videoRow = document.getElementById('sum-video-row');
       if (videoRow) videoRow.style.display = wantsVideo ? 'flex' : 'none';
 
@@ -1585,9 +1796,32 @@
       const ln = document.getElementById('last-name').value.trim();
       const ph = document.getElementById('phone').value.trim();
       const em = document.getElementById('email').value.trim();
-      const notes = document.getElementById('notes').value.trim();
+      const rawNotes = document.getElementById('notes').value.trim();
       const pm = document.querySelector('input[name="payment_method"]:checked')?.value || 'sur_place';
       const proofFile = document.getElementById('payment-proof')?.files[0];
+
+      // Format beneficiary / gift info into notes
+      let fullNotes = rawNotes;
+      let beneficiaryName = '';
+      let beneficiaryPhone = '';
+      let beneficiaryMsg = '';
+
+      if (bookingTarget === 'other') {
+        beneficiaryName = document.getElementById('beneficiary-name')?.value.trim() || '';
+        beneficiaryPhone = document.getElementById('beneficiary-phone')?.value.trim() || '';
+        beneficiaryMsg = document.getElementById('beneficiary-message')?.value.trim() || '';
+
+        const giftDetails = [
+          '🎁 [RÉSERVATION POUR UN(E) PROCHE / CADEAU]',
+          `• Nom du bénéficiaire : ${beneficiaryName}`,
+          `• Téléphone WhatsApp bénéficiaire : ${beneficiaryPhone || 'Non spécifié'}`,
+          `• Message / Dédicace : ${beneficiaryMsg || 'Aucun'}`
+        ];
+        if (rawNotes) {
+          giftDetails.push(`• Notes client : ${rawNotes}`);
+        }
+        fullNotes = giftDetails.join('\n');
+      }
 
       const reservationNumber = 'DL' + Date.now().toString().slice(-8);
 
@@ -1618,8 +1852,18 @@
 
         const videoConsentChoice = document.querySelector('input[name="client_video_consent"]:checked')?.value || 'public';
 
+        // Check logged in user ID if available
+        let currentUserId = null;
+        if (supabase) {
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user?.id) currentUserId = session.user.id;
+          } catch(e){}
+        }
+
         const payload = {
           reservation_number: reservationNumber,
+          user_id: currentUserId,
           user_name: `${fn} ${ln}`,
           user_email: em,
           phone: ph,
@@ -1627,7 +1871,7 @@
           location: 'Spa',
           date: document.getElementById('selected-date').value,
           time: document.getElementById('selected-time').value,
-          notes: notes || null,
+          notes: fullNotes || null,
           status: 'PENDING',
           payment_status: pm === 'sur_place' ? 'pending' : 'awaiting_confirmation',
           payment_method: pm,
@@ -1654,8 +1898,18 @@
         document.getElementById('suc-ref').textContent = '#' + reservationNumber;
         document.getElementById('suc-datetime').textContent = `${payload.date} à ${payload.time}`;
 
-        const cleanPhone = String(ph).replace(/\D/g, '');
-        const waMsg = encodeURIComponent(`Bonjour DALIGHT ! Je viens de réserver mon soin : ${activeService.name} pour le ${payload.date} à ${payload.time}. N° Réservation : #${reservationNumber}`);
+        // Construct customized WhatsApp confirmation message
+        let waMsgText = '';
+        if (bookingTarget === 'other' && beneficiaryName) {
+          waMsgText = `Bonjour DALIGHT ! Je viens d'effectuer une réservation cadeau pour ${beneficiaryName} pour le soin : ${activeService.name} le ${payload.date} à ${payload.time}. N° Réservation : #${reservationNumber}.`;
+        } else {
+          waMsgText = `Bonjour DALIGHT ! Je viens de réserver mon soin : ${activeService.name} pour le ${payload.date} à ${payload.time}. N° Réservation : #${reservationNumber}.`;
+        }
+        if (wantsVideo) {
+          waMsgText += ` (Option Vidéo Souvenir : ${videoConsentChoice === 'public' ? 'Autorisé Réseaux' : 'Usage Privé'})`;
+        }
+
+        const waMsg = encodeURIComponent(waMsgText);
         document.getElementById('suc-whatsapp-btn').href = `https://wa.me/50947477221?text=${waMsg}`;
 
         document.getElementById('success-overlay').classList.add('active');
