@@ -136,18 +136,22 @@ export async function sendReservationWhatsAppReceipt(order) {
   const spintaxThanks = '{Merci pour votre réservation|Nous avons le plaisir de confirmer votre moment de détente|Merci de votre confiance}';
   const siteUrl = 'https://dalightbeauty.com';
 
-  const message = `${spintaxGreeting} *${clientName}* 🌿\n\n` +
-    `${spintaxThanks} chez *DALIGHT* !\n\n` +
-    `📋 *DÉTAILS DE VOTRE SOIN :*\n` +
-    `• Prestation : *${serviceName}*\n` +
-    `• Date : *${date}*\n` +
-    `• Heure : *${time}*\n` +
-    `• Montant : *${typeof price === 'number' ? '$' + price : price}*\n` +
-    `• N° Réservation : *#${orderNumber}*\n\n` +
-    `📍 *Adresse :* Delmas 65, Rue Durandisse #10, Port-au-Prince\n` +
-    `📞 *Téléphone :* +509 4747-7221\n` +
-    `🌐 *Site officiel :* ${siteUrl}\n\n` +
-    `_Votre reçu officiel est joint à ce message en format PDF. Toute notre équipe vous attend pour un pur moment de relaxation !_ ✨`;
+  const message = '*DALIGHT — CONFIRMATION DE RENDEZ-VOUS*\n\n' +
+    spintaxGreeting + ' *' + clientName + '*,\n\n' +
+    spintaxThanks + ' chez *DALIGHT* ! Votre rendez-vous est officiellement CONFIRMÉ.\n\n' +
+    'DÉTAILS DE VOTRE SOIN :\n' +
+    '• Prestation : *' + serviceName + '*\n' +
+    '• Date : *' + date + '*\n' +
+    '• Heure : *' + time + '*\n' +
+    '• Montant : *' + (typeof price === 'number' ? '$' + price : price) + '*\n' +
+    '• N° Réservation : *#' + orderNumber + '*\n\n' +
+    'Lieu : Delmas 65, Rue Durandisse #10, Port-au-Prince\n' +
+    'Site officiel : ' + siteUrl + '\n\n' +
+    'AVIS TRÈS IMPORTANT :\n' +
+    '*Ce message est envoyé automatiquement par notre système. Merci de NE PAS répondre directement à ce numéro.*\n\n' +
+    'Pour toute question, modification ou échange avec notre équipe, contactez directement le numéro officiel DALIGHT :\n' +
+    '*+509 4747-7221*\n\n' +
+    '_Votre reçu officiel est joint à ce message en format PDF. Toute notre équipe vous attend pour un pur moment de relaxation !_\n\n';
 
   return sendWhatsAppMessage({
     to: phone,

@@ -806,7 +806,7 @@
         kind: 'receipt',
         mode: 'async',
         attachPdf: true,
-        message: `{Bonjour|Bonsoir|Chère cliente} *{{client_name}}* 🌿\n\n{Merci pour votre réservation|Nous avons le plaisir de confirmer votre moment de détente|Merci de votre confiance} chez *DALIGHT* !\n\n📋 *DÉTAILS DE VOTRE SOIN :*\n• Prestation : *{{service}}*\n• Date : *{{date}}*\n• Heure : *{{time}}*\n• Montant : *${'{{price}}'}*\n• N° Réservation : *#{{order_number}}*\n\n📍 *Adresse :* Delmas 65, Rue Durandisse #10, Port-au-Prince\n📞 *Téléphone :* +509 4747-7221\n🌐 *Site officiel :* {{site_url}}\n\n_Votre reçu officiel est joint à ce message en format PDF. Toute notre équipe vous attend pour un pur moment de relaxation !_ ✨`
+        message: `*DALIGHT — CONFIRMATION OFFICIELLE DE RENDEZ-VOUS*\n\n{Bonjour|Bonsoir|Chère cliente} *{{client_name}}*,\n\n{Merci pour votre réservation|Nous avons le plaisir de confirmer votre soin|Merci de votre confiance} chez *DALIGHT* ! Votre rendez-vous est désormais CONFIRMÉ.\n\nDÉTAILS DE VOTRE SOIN :\n• Prestation : *{{service}}*\n• Date : *{{date}}*\n• Heure : *{{time}}*\n• Montant : *${'{{price}}'}*\n• N° Réservation : *#{{order_number}}*\n• Lieu : Delmas 65, Rue Durandisse #10, Port-au-Prince\n\nAVIS TRÈS IMPORTANT :\n*Ce message est envoyé automatiquement. Merci de NE PAS répondre directement à ce numéro.*\n\nPour toute question ou échange avec notre équipe, contactez directement le numéro officiel DALIGHT :\n*+509 4747-7221*\n\n_Votre reçu officiel est joint à ce message en format PDF. Toute notre équipe vous attend pour un pur moment d'exception._`
       },
       {
         id: 'tpl_reminder',
@@ -816,7 +816,7 @@
         kind: 'reminder',
         mode: 'async',
         attachPdf: false,
-        message: `{Bonjour|Douce journée|Chère cliente} *{{client_name}}* ✨\n\n{Petit rappel bienveillant|Nous avons le plaisir de vous rappeler} : votre rendez-vous de relaxation *DALIGHT* approche.\n\n💆‍♀️ *Soin :* {{service}}\n📅 *Date :* {{date}}\n⏰ *Heure :* {{time}}\n📍 *Lieu :* Delmas 65, Rue Durandisse #10\n\nEn cas d'imprévu, merci de nous contacter au moins 3h à l'avance au +509 4747-7221.\n🌐 {{site_url}}\n\n_Hâte de prendre soin de vous !_ 🌿`
+        message: `*DALIGHT — RAPPEL DE RENDEZ-VOUS*\n\n{Bonjour|Douce journée|Chère cliente} *{{client_name}}*,\n\n{Petit rappel|Nous vous rappelons} : votre rendez-vous chez *DALIGHT* approche.\n\n• Soin : {{service}}\n• Date : {{date}}\n• Heure : {{time}}\n• Lieu : Delmas 65, Rue Durandisse #10, Port-au-Prince\n\nAVIS : Ce message est automatique. Pour tout imprévu ou modification, merci de contacter au moins 3h à l'avance le numéro officiel DALIGHT : +509 4747-7221.`
       },
       {
         id: 'tpl_welcome',
@@ -826,7 +826,7 @@
         kind: 'welcome',
         mode: 'async',
         attachPdf: false,
-        message: `✨ {Bienvenue dans l'univers|Heureux de vous accueillir chez|Bienvenue chez} *DALIGHT* ! ✨\n\nChère *{{client_name}}*,\nVotre compte membre a été créé avec succès. Pour célébrer votre arrivée, *100 points privilège* ont été crédités sur votre carte de fidélité.\n\nDécouvrez nos soins de détente et réservez en ligne :\n🌐 {{site_url}}/pages/services.html\n\n_DALIGHT — L'art du soin d'exception à Port-au-Prince._ 🌿`
+        message: `*DALIGHT — BIENVENUE DANS NOTRE UNIVERS*\n\nChère *{{client_name}}*,\n\nVotre compte membre a été créé avec succès chez DALIGHT. Pour célébrer votre arrivée, *100 points privilège* ont été crédités sur votre carte de fidélité.\n\nDécouvrez nos soins et réservez en ligne :\n{{site_url}}/pages/services.html\n\nContact officiel : +509 4747-7221\n_DALIGHT — L'art du soin d'exception à Port-au-Prince._`
       },
       {
         id: 'tpl_marketing',
@@ -836,7 +836,7 @@
         kind: 'marketing',
         mode: 'async',
         attachPdf: false,
-        message: `{Bonjour|Chère cliente} *{{client_name}}* 🌸\n\n{Envie d'une parenthèse de sérénité ?|Votre cuir chevelu a besoin de revitalisation ?|Prenez du temps pour vous !} Offrez-vous un Head Spa Signature chez *DALIGHT* à Delmas 65.\n\nProfitez d'un diagnostic offert lors de votre prochain passage.\n📅 Réservations directes : {{site_url}}/pages/services.html\n📞 +509 4747-7221`
+        message: `*DALIGHT — PRIVILÈGE & BIEN-ÊTRE*\n\n{Bonjour|Chère cliente} *{{client_name}}*,\n\n{Envie d'une parenthèse de sérénité ?|Votre cuir chevelu a besoin de revitalisation ?|Prenez du temps pour vous !} Offrez-vous un Head Spa d'exception chez *DALIGHT* à Delmas 65.\n\nProfitez d'un diagnostic offert lors de votre prochain passage.\nRéservations en ligne : {{site_url}}/pages/services.html\nContact officiel WhatsApp / Appel : +509 4747-7221`
       }
     ];
 

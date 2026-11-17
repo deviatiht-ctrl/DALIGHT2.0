@@ -1211,7 +1211,7 @@
                 <i data-lucide="arrow-left"></i> Retour
               </button>
               <button type="button" class="btn-resv-primary" id="btn-submit" onclick="submitReservation()" style="width:auto;min-width:240px;">
-                <i data-lucide="check" style="width:18px;height:18px;"></i> Confirmer mon Rendez-vous
+                <i data-lucide="send" style="width:18px;height:18px;"></i> Envoyer ma Demande de Rendez-vous
               </button>
             </div>
           </div>
@@ -1271,7 +1271,7 @@
 
           <div style="margin-top:1.5rem;padding:0.85rem;background:rgba(212,175,55,0.08);border-radius:10px;font-size:0.75rem;color:var(--dalight-muted);line-height:1.4;display:flex;align-items:center;gap:0.5rem;">
             <i data-lucide="shield-check" style="width:16px;height:16px;color:var(--dalight-gold);flex-shrink:0;"></i>
-            <em>Vous recevrez une confirmation instantanée sur votre WhatsApp officiel dès validation.</em>
+            <em>Votre demande sera enregistrée en attente de validation. Vous recevrez une confirmation officielle par WhatsApp et par email dès sa confirmation.</em>
           </div>
         </aside>
       </div>
@@ -1281,32 +1281,39 @@
   <!-- Success Confirmation Modal -->
   <div class="resv-success-overlay" id="success-overlay">
     <div class="resv-success-card">
-      <div style="width:70px;height:70px;background:rgba(34,197,94,0.18);border:2px solid #22c55e;color:#22c55e;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
-        <i data-lucide="check" style="width:36px;height:36px;"></i>
+      <div style="width:72px;height:72px;background:rgba(212,175,55,0.15);border:2px solid var(--dalight-gold);color:var(--dalight-gold);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
+        <i data-lucide="clock" style="width:36px;height:36px;"></i>
       </div>
-      <h2 style="font-family:'Cormorant Garamond',serif;font-size:2rem;color:var(--dalight-gold);margin:0 0 0.5rem 0;">Réservation Confirmée !</h2>
-      <p style="color:var(--dalight-muted);font-size:0.92rem;line-height:1.5;margin:0 0 1.5rem 0;">
-        Merci pour votre confiance. Votre rendez-vous chez DALIGHT a été enregistré avec succès.
+      <div style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.35rem 0.9rem;border-radius:999px;background:rgba(212,175,55,0.18);border:1px solid rgba(212,175,55,0.4);color:var(--dalight-gold);font-weight:600;font-size:0.78rem;margin-bottom:1rem;letter-spacing:0.04em;text-transform:uppercase;">
+        <i data-lucide="hourglass" style="width:14px;height:14px;"></i> En attente de confirmation
+      </div>
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:2rem;color:var(--dalight-gold);margin:0 0 0.5rem 0;">Demande Enregistrée !</h2>
+      <p style="color:var(--dalight-muted);font-size:0.92rem;line-height:1.55;margin:0 0 1.5rem 0;">
+        Merci de votre confiance. Votre demande de rendez-vous chez DALIGHT a bien été transmise. Elle est actuellement <strong style="color:#faf8f5;">en attente de confirmation</strong> par notre équipe. Vous recevrez une validation automatique sur WhatsApp et par email dès acceptation.
       </p>
 
       <div style="background:rgba(18,27,18,0.7);border:1px solid var(--dalight-border);border-radius:14px;padding:1.25rem;text-align:left;margin-bottom:1.75rem;font-size:0.88rem;">
         <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
-          <span style="color:var(--dalight-muted);">N° Réservation :</span>
+          <span style="color:var(--dalight-muted);">N° Demande :</span>
           <strong id="suc-ref" style="color:var(--dalight-gold);">#---</strong>
         </div>
         <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
           <span style="color:var(--dalight-muted);">Date &amp; Heure :</span>
           <strong id="suc-datetime">---</strong>
         </div>
-        <div style="display:flex;justify-content:space-between;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
           <span style="color:var(--dalight-muted);">Lieu :</span>
           <strong>Delmas 65, Rue Durandisse #10</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:0.5rem;padding-top:0.5rem;border-top:1px dashed var(--dalight-border);">
+          <span style="color:var(--dalight-muted);">Statut du créneau :</span>
+          <span style="color:var(--dalight-gold);font-weight:600;font-size:0.82rem;">En attente de validation</span>
         </div>
       </div>
 
       <div style="display:flex;flex-direction:column;gap:0.75rem;">
-        <a id="suc-whatsapp-btn" href="#" target="_blank" class="btn-resv-primary" style="text-decoration:none;background:#25D366;color:#fff;">
-          <i data-lucide="message-circle"></i> Ouvrir mon reçu sur WhatsApp
+        <a id="suc-whatsapp-btn" href="#" target="_blank" class="btn-resv-primary" style="text-decoration:none;background:#25D366;color:#fff;justify-content:center;">
+          <i data-lucide="message-circle"></i> Échanger avec DALIGHT sur WhatsApp
         </a>
         <a href="../index.html" class="btn-resv-secondary" style="text-decoration:none;justify-content:center;">
           Retour à l'accueil
@@ -1928,12 +1935,12 @@
         document.getElementById('suc-ref').textContent = '#' + reservationNumber;
         document.getElementById('suc-datetime').textContent = `${payload.date} à ${payload.time}`;
 
-        // Construct customized WhatsApp confirmation message
+        // Construct customized WhatsApp message for pending reservation
         let waMsgText = '';
         if (bookingTarget === 'other' && beneficiaryName) {
-          waMsgText = `Bonjour DALIGHT ! Je viens d'effectuer une réservation cadeau pour ${beneficiaryName} pour le soin : ${activeService.name} le ${payload.date} à ${payload.time}. N° Réservation : #${reservationNumber}.`;
+          waMsgText = `Bonjour DALIGHT ! Je viens de transmettre une demande de réservation cadeau pour ${beneficiaryName} (Soin : ${activeService.name}) pour le ${payload.date} à ${payload.time}. N° Demande : #${reservationNumber} (En attente de confirmation).`;
         } else {
-          waMsgText = `Bonjour DALIGHT ! Je viens de réserver mon soin : ${activeService.name} pour le ${payload.date} à ${payload.time}. N° Réservation : #${reservationNumber}.`;
+          waMsgText = `Bonjour DALIGHT ! Je viens de transmettre ma demande de réservation pour le soin : ${activeService.name} pour le ${payload.date} à ${payload.time}. N° Demande : #${reservationNumber} (En attente de confirmation).`;
         }
         if (wantsVideo) {
           waMsgText += ` (Option Vidéo Souvenir : ${videoConsentChoice === 'public' ? 'Autorisé Réseaux' : 'Usage Privé'})`;
@@ -1953,7 +1960,7 @@
         alert('Erreur lors de la réservation : ' + (err.message || 'Veuillez vérifier vos informations.'));
       } finally {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i data-lucide="check" style="width:18px;height:18px;"></i> Confirmer mon Rendez-vous';
+        submitBtn.innerHTML = '<i data-lucide="send" style="width:18px;height:18px;"></i> Envoyer ma Demande de Rendez-vous';
         if (window.lucide) lucide.createIcons();
       }
     }

@@ -1183,7 +1183,7 @@ window.autoConfirmReservation = async function(id) {
   const reservation = allReservations.find(r => r.id === id);
   if (!reservation) return;
 
-  if (!confirm(`Voulez-vous confirmer cette réservation et envoyer un email automatique au client?`)) return;
+  if (!confirm(`Voulez-vous confirmer cette réservation et envoyer les notifications automatiques (WhatsApp & Email) au client?`)) return;
 
   try {
     // Update status first
@@ -1192,7 +1192,7 @@ window.autoConfirmReservation = async function(id) {
     // Send confirmation email via Brevo
     await sendBrevoEmail(reservation, 'confirmation');
     
-    window.adminCore.showToast('Réservation confirmée et email envoyé !');
+    window.adminCore.showToast('Réservation confirmée ! Notification WhatsApp & Email envoyées.');
     
     // Update local data
     const index = allReservations.findIndex(r => r.id === id);
@@ -1489,7 +1489,7 @@ window.updateStatus = async function(id, status) {
   
   try {
     await window.adminCore.updateReservationStatus(id, status);
-    window.adminCore.showToast(`Réservation ${status === 'CONFIRMED' ? 'confirmée' : status === 'COMPLETED' ? 'terminée' : 'annulée'} !`);
+    window.adminCore.showToast(`Réservation ${status === 'CONFIRMED' ? 'confirmée (WhatsApp & Email envoyés)' : status === 'COMPLETED' ? 'terminée' : 'annulée'} !`);
     
     // Update local data
     const index = allReservations.findIndex(r => r.id === id);

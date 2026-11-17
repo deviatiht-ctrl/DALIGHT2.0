@@ -662,6 +662,119 @@ async function fetchClients() {
   return getInitialMockClients();
 }
 
+
+/**
+ * Envoi automatique de la confirmation WhatsApp via CVISUAL Gateway (Fast Lane)
+ * Avec mention explicite de ne pas repondre a ce numero et de contacter le numero officiel DALIGHT (+509 4747-7221)
+ */
+async function sendReservationWhatsAppConfirmation(reservation) {
+  if (!reservation) return false;
+
+  const rawPhone = reservation.phone || reservation.user_phone || reservation.client_phone;
+  if (!rawPhone) {
+    console.warn('Avertissement: Aucun numero de telephone trouve pour la reservation:', reservation.id);
+    return false;
+  }
+
+  // Normalisation du numero de telephone (8 chiffres locaux vers 509XXXXXXXX)
+  const cleaned = String(rawPhone).replace(/\D/g, '');
+  const phone = cleaned.length === 8 ? '509' + cleaned : cleaned;
+  if (phone.length < 8) {
+    console.warn('Avertissement: Numero de telephone invalide:', rawPhone);
+    return false;
+  }
+
+  const clientName = reservation.user_name || 'Client(e)';
+  const serviceName = reservation.service || 'Head Spa & Soin DALIGHT';
+  const resNumber = reservation.reservation_number || (reservation.id ? reservation.id.substring(0, 8) : 'DL');
+
+  let formattedDate = reservation.date || '';
+  try {
+    if (reservation.date) {
+      const match = typeof reservation.date === 'string' ? reservation.date.match(/^(\d{4})-(\d{2})-(\d{2})/) : null;
+      const d = match ? new Date(parseInt(match[1], 10), parseInt(match[2], 10) - 1, parseInt(match[3], 10)) : new Date(reservation.date);
+      formattedDate = d.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+  } catch(e) {}
+
+  let timeStr = reservation.time || '';
+  if (timeStr && timeStr.length > 5) timeStr = timeStr.substring(0, 5);
+
+  let amountStr = '';
+  if (reservation.total_amount_htg) {
+    amountStr = `${Number(reservation.total_amount_htg).toLocaleString()} HTG`;
+  } else if (reservation.total_amount) {
+    amountStr = `${Number(reservation.total_amount).toLocaleString()} HTG`;
+  } else if (reservation.total_amount_usd) {
+    amountStr = `${reservation.total_amount_usd} USD`;
+  }
+
+  const waMessage =
+    `*DALIGHT — CONFIRMATION OFFICIELLE DE RENDEZ-VOUS*\n\n` +
+    `Bonjour *${clientName}*,\n\n` +
+    `Nous avons le plaisir de vous informer que votre rendez-vous chez *DALIGHT* est desormais *CONFIRME* par notre equipe.\n\n` +
+    `DETAILS DE VOTRE RENDEZ-VOUS :\n` +
+    `• Prestation : *${serviceName}*\n` +
+    `• Date : *${formattedDate}*\n` +
+    `• Heure : *${timeStr}*\n` +
+    (amountStr ? `• Montant : *${amountStr}*\n` : '') +
+    `• N° Reservation : *#${resNumber}*\n` +
+    `• Lieu : Delmas 65, Rue Durandisse #10, Port-au-Prince\n\n` +
+    `AVIS TRES IMPORTANT :\n` +
+    `*Ce message est envoye automatiquement par notre systeme de notification. Merci de NE PAS repondre directement a ce numero.*\n\n` +
+    `Pour nous contacter, poser une question ou modifier votre rendez-vous, merci d'ecrire ou d'appeler uniquement le numero officiel DALIGHT :\n` +
+    `*+509 4747-7221*\n\n` +
+    `Toute l'equipe DALIGHT a hate de vous accueillir pour ce moment d'exception.`;
+
+  const payload = {
+    to: phone,
+    message: waMessage,
+    kind: 'receipt', // Fast Lane anti-ban
+    mode: 'async',
+    idempotencyKey: `wa_conf_${reservation.id}_${Date.now()}`
+  };
+
+  const CVISUAL_GATEWAY_URL = 'https://cvisual-whatsapp-gateway.onrender.com';
+  const DEFAULT_CVISUAL_KEY = 'cv_live_admin_6094ed1bf65bf0945706d3d7';
+  const apiKey = localStorage.getItem('cvisual_wa_api_key') || DEFAULT_CVISUAL_KEY;
+
+  try {
+    console.log(`📱 Envoi WhatsApp de confirmation vers ${phone} (Fast Lane)...Generateur...`);
+    const res = await fetch(`${CVISUAL_GATEWAY_URL}/api/v1/messages/send`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'Idempotency-Key': payload.idempotencyKey
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    console.log('📱 Reponse WhatsApp Gateway:', res.status, data);
+
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('whatsapp_logs').insert([{
+          reservation_id: reservation.id,
+          phone: phone,
+          message: waMessage,
+          status: res.ok ? 'sent' : 'failed',
+          kind: 'receipt',
+          created_at: new Date().toISOString()
+        }]);
+      } catch (logErr) {
+        // Table or schema difference non-blocking
+      }
+    }
+
+    return res.ok;
+  } catch (err) {
+    console.error('Erreur lors de l envoi automatique WhatsApp:', err);
+    return false;
+  }
+}
+
 async function updateReservationStatus(id, status) {
   // Update mock store if present
   if (_mockReservationsStore) {
