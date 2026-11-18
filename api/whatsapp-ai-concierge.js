@@ -115,9 +115,8 @@ function buildSystemPrompt(liveServices) {
   let servicesFormatted = "";
   if (liveServices && liveServices.length) {
     servicesFormatted = liveServices.map(s => {
-      const dur = s.duration ? (s.duration + ' min') : '45-60 min';
-      const desc = s.description ? (' (' + s.description.replace(/\n+/g, ' ').slice(0, 120) + ')') : '';
-      return '• ' + s.name + ' (' + dur + ') : ' + (s.price_htg ? (s.price_htg + ' HTG') : (s.price_usd + ' USD')) + desc;
+      const dur = s.duration ? (' (' + s.duration + ' min)') : '';
+      return '• ' + s.name + dur + ' : ' + (s.price_htg ? (s.price_htg + ' HTG') : (s.price_usd + ' USD'));
     }).join('\n');
   } else {
     servicesFormatted = 
@@ -132,41 +131,29 @@ function buildSystemPrompt(liveServices) {
       "• Massage relaxant Diamond (45 min) : 15 000 HTG";
   }
 
-  return `Tu es le Concierge Virtuel d'élite de "DALIGHT" (ne dis jamais "DALIGHT HEAD SPA", dis toujours uniquement "DALIGHT").
-Sanctuaire de bien-être, Head Spa Japonais et Massages thérapeutiques à Delmas 65, Port-au-Prince, Haïti.
+  return `Tu es le Concierge de "DALIGHT" (ne dis jamais "DALIGHT HEAD SPA", dis toujours uniquement "DALIGHT") sur WhatsApp.
+Institut haut de gamme de Head Spa Japonais et Massages à Delmas 65, Rue Durandisse #10, Port-au-Prince, Haïti.
+HORAIRES : Tous les jours (Lundi au Dimanche, 7j/7) de 07h00 à 17h00.
+TÉLÉPHONE / MONCASH / NATCASH : +509 4747-7221.
+LIEN RÉSERVATION EN LIGNE : https://dalightbeauty.com/pages/reservation-v2.html
 
-INFORMATIONS OFFICIELLES CERTIFIÉES :
-- NOM OFFICIEL : Strictement "DALIGHT"
-- HORAIRES D'OUVERTURE : TOUS LES JOURS (Lundi au Dimanche, 7 jours sur 7) de 07h00 à 17h00 (7h du matin à 5h de l'après-midi).
-- ADRESSE EXACTE : Delmas 65, Rue Faustin Premier / Rue Durandisse #10, Port-au-Prince, Haïti. Cadre privé, haut de gamme et sécurisé avec stationnement réservé.
-- TÉLÉPHONE / WHATSAPP OFFICIEL : +509 4747-7221.
-- ACOMPTE EXIGÉ : Un acompte obligatoire de 50% (ou la totalité) doit être réglé pour garantir et bloquer le créneau via :
-  • MonCash Direct : +509 4747-7221 (DALIGHT BEAUTY)
-  • NatCash Direct : +509 4747-7221 (DALIGHT BEAUTY)
-  • Virement Bancaire : Sogebank, Unibank, BNC
-- LIEN OFFICIEL DE RÉSERVATION EN LIGNE : https://dalightbeauty.com/pages/reservation-v2.html
-- OPTION VIDÉO SOUVENIR 4K : +500 HTG (Réseaux sociaux) ou +1 000 HTG (Usage privé exclusif WhatsApp).
-
-CARTE OFFICIELLE DES SOINS & PRIX ACTUELS (EN DIRECT DU SITE) :
+SERVICES & PRIX EN DIRECT DU SITE :
 ${servicesFormatted}
 
-RÈGLES D'INTERACTION ET DE VENTE :
-1. COMPRÉHENSION : Tu comprends à 100% le Créole Haïtien (Kreyòl) et le Français.
-2. LANGUE DE RÉPONSE : Réponds TOUJOURS en Français élégant, bienveillant, distingué et chaleureux. Exception : Si le client te demande explicitement de parler en Créole ("Ekri m an kreyòl"), réponds-lui alors en Créole soigné et très respectueux.
-3. SALUTATION CONTEXTUELLE :
-   - Commence par "Bonjour !" le matin ou en journée.
-   - Si le message contient "Bonswa" ou "Bonsoir", commence par "Bonsoir !".
-4. PRIX EXACTS : Donne TOUJOURS les prix exacts en HTG de la liste ci-dessus. Ne devine jamais un prix différent.
-5. CONTINUITÉ & CONVERSION DE LA CONVERSATION :
-   - Ne te contente pas de donner un prix et de t'arrêter.
-   - Poursuis TOUJOURS l'échange en guidant le client vers sa réservation.
-   - Demande-lui poliment :
-     1. Son nom et prénom
-     2. Son numéro de téléphone de contact
-     3. Son adresse e-mail
-     4. La date et l'heure souhaitées pour son soin
-6. BIENFAITS & EXPERTISE : Explique brièvement les bienfaits (détoxification du cuir chevelu, cascade d'eau chaude circulante, massage shiatsu crânien relaxant, stimulation de la pousse des cheveux).
-7. RAPPEL ACOMPTE : Rappelle avec bienveillance que le créneau est confirmé dès réception de l'acompte de 50% sur MonCash ou NatCash au +509 4747-7221.`;
+RÈGLES ABSOLUES DE CONVERSATION NATURELLE SUR WHATSAPP :
+1. PARLE NORMALEMENT ET SOIS BREF : Sois comme une vraie personne accueillante sur WhatsApp. Ne fais JAMAIS de longs pavés de texte. Fais des messages courts, clairs, chaleureux et précis (2 à 4 phrases maximum).
+2. RÉPONDS STRICTEMENT À CE QU'ON TE DEMANDE :
+   - Si le client dit simplement "Bonjour", "Bonswa", "Salut", "Hi", "Sak pase", etc. :
+     Réponds UNIQUEMENT par une salutation polie et brève :
+     "Bonjour ! Bienvenue chez DALIGHT. Comment puis-je vous aider aujourd'hui ?" (ou Bonsoir selon l'heure).
+     NE DÉBALLE AUCUN PRIX, AUCUN SERVICE NI AUCUNE ADRESSE s'il n'a rien demandé !
+   - S'il demande les types de services ("ki sèvis nou genyen ?", "quels soins proposez-vous ?") :
+     Présente très brièvement en 2 phrases : nos soins Head Spa Japonais et nos Massages relaxants du corps, puis demande quel type de soin il recherche.
+   - S'il demande les prix ("konbyen pri headspa ye ?", "combien coûte le massage ?") :
+     Donne uniquement les tarifs demandés de manière synthétique et directe, puis demande quel forfait l'intéresse.
+   - S'il demande l'adresse ou les horaires : Donne uniquement l'adresse (Delmas 65, Rue Durandisse #10) ou les horaires (tous les jours de 7h à 17h).
+   - S'il souhaite réserver ou a choisi son soin : Demande son nom complet et l'heure souhaitée, puis rappelle avec bienveillance l'acompte de 50% sur MonCash ou NatCash (+509 4747-7221).
+3. LANGUE : Tu comprends 100% le Créole Haïtien et le Français. Réponds toujours en Français élégant, direct et naturel (sauf s'il demande explicitement d'écrire en Créole).`;
 }
 
 // --------------------------------------------
@@ -237,78 +224,40 @@ async function generateGeminiConciergeResponse(senderPhone, userMessage, apiKey 
 // MOTEUR LOCAL DE REPLI (DYNAMIQUE AVEC BDD)
 // --------------------------------------------
 function generateSmartLocalResponse(input, liveServices = []) {
-  const text = (input || '').toLowerCase();
-  
+  const text = (input || '').toLowerCase().trim();
   const isBonswa = text.includes('bonswa') || text.includes('bonsoir');
-  const isBonjou = text.includes('bonjou') || text.includes('bonjour') || text.includes('good morning');
-  let salutation = isBonswa ? "Bonsoir !" : (isBonjou ? "Bonjour !" : "Bonjour et bienvenue chez DALIGHT !");
+  const salut = isBonswa ? "Bonsoir !" : "Bonjour !";
 
-  // 1. Question sur l'adresse / horaires
+  // 1. Salutation simple ("Bonjour", "Bonjou", "Bonswa", "Salut", "Sak pase")
+  const isGreetingOnly = /^(bonjour|bonjou|bonswa|bonsoir|salut|hello|hi|sak pase|koman ou ye|kòman ou ye|allo|alo)[s!?.]*$/i.test(text);
+  if (isGreetingOnly) {
+    return salut + " Bienvenue chez DALIGHT. Comment puis-je vous aider aujourd'hui ?";
+  }
+
+  // 2. Types de services demandés
+  if ((text.includes('ki') || text.includes('quel')) && (text.includes('sèvis') || text.includes('sevis') || text.includes('service') || text.includes('soin') || text.includes('proposez'))) {
+    return "Chez DALIGHT, nous proposons principalement des soins **Head Spa Japonais** (détente profonde et soin du cuir chevelu) ainsi que des **Massages relaxants** pour le corps.\n\nQuel type de soin aimeriez-vous découvrir ?";
+  }
+
+  // 3. Question sur l'adresse / horaires
   if (text.includes('kote') || text.includes('adrès') || text.includes('adres') || text.includes('adresse') || text.includes('localisation') || text.includes('situé') || text.includes('horaire') || text.includes('heure') || text.includes('kote nou ye')) {
-    return salutation + "\n\n" +
-"C'est un plaisir de vous renseigner sur **DALIGHT** :\n\n" +
-"📍 **Notre Adresse :**\n" +
-"Delmas 65, Rue Faustin Premier / Rue Durandisse #10, Port-au-Prince, Haïti.\n" +
-"(Sanctuaire privé, calme et sécurisé avec stationnement réservé à notre clientèle).\n\n" +
-"🕐 **Horaires d'Ouverture :**\n" +
-"• **Tous les jours (Lundi au Dimanche, 7j/7) de 07h00 à 17h00** (7h du matin à 5h de l'après-midi).\n\n" +
-"Afin de vous accueillir dans les meilleures conditions, quel jour et à quelle heure souhaiteriez-vous réserver votre soin ?";
+    return "Nous sommes situés à **Delmas 65, Rue Durandisse #10** (cadre privé et sécurisé avec parking clientèle).\n\nNos horaires : **Tous les jours (7j/7) de 07h00 à 17h00**.\n\nQuel jour aimeriez-vous passer ?";
   }
 
-  // 2. Question sur les prix / services / soins
-  if (text.includes('pri') || text.includes('prix') || text.includes('konbyen') || text.includes('combien') || text.includes('tarif') || text.includes('service') || text.includes('head spa') || text.includes('soin') || text.includes('massage')) {
-    let serviceListStr = "";
-    if (liveServices && liveServices.length) {
-      serviceListStr = liveServices.slice(0, 8).map(s => {
-        return "✨ **" + s.name + "** (" + (s.duration ? s.duration + ' min' : '45-60 min') + ") — **" + (s.price_htg ? (s.price_htg + ' HTG') : (s.price_usd + ' USD')) + "**";
-      }).join('\n');
-    } else {
-      serviceListStr = 
-        "✨ **Silver Package Head Spa (60 min)** — **5 000 HTG**\n" +
-        "✨ **Golden Head Spa (60 min)** — **7 000 HTG**\n" +
-        "✨ **Diamond Head Spa (60 min)** — **10 000 HTG**\n" +
-        "✨ **Silver Head Spa Dreadlocks (60 min)** — **6 000 HTG**\n" +
-        "✨ **Massage relaxant Silver (45 min)** — **10 000 HTG**\n" +
-        "✨ **Massage relaxant Golden (45 min)** — **12 000 HTG**";
+  // 4. Question sur les prix
+  if (text.includes('pri') || text.includes('prix') || text.includes('konbyen') || text.includes('combien') || text.includes('tarif')) {
+    if (text.includes('massage')) {
+      return "Nos tarifs pour les **Massages relaxants** sont :\n• Silver Package (45 min) : 10 000 HTG\n• Golden Package (45 min) : 12 000 HTG\n• Diamond Package (45 min) : 15 000 HTG\n\nQuel forfait vous intéresse ?";
     }
-
-    return salutation + "\n\n" +
-"Voici les tarifs de nos soins exclusifs chez **DALIGHT** :\n\n" +
-serviceListStr + "\n\n" +
-"🎥 **Option Vidéo Souvenir 4K :** +500 HTG (réseaux sociaux) ou +1 000 HTG (usage privé WhatsApp).\n\n" +
-"💳 **Acompte de 50% obligatoire** par MonCash ou NatCash au **+509 4747-7221** pour garantir votre créneau.\n\n" +
-"Pour préparer au mieux votre venue, pouvez-vous me communiquer :\n" +
-"1️⃣ Votre **nom complet** ?\n" +
-"2️⃣ Votre **numéro de téléphone** & **adresse e-mail** ?\n" +
-"3️⃣ La **date et l'heure** souhaitées ?";
+    return "Nos forfaits **Head Spa** sont les suivants :\n• **Silver** : 5 000 HTG (Duo : 9 000 HTG)\n• **Golden** : 7 000 HTG (Duo : 12 000 HTG)\n• **Diamond** : 10 000 HTG\n• **Dreadlocks** : 6 000 HTG (Duo : 10 000 HTG)\n\nLequel de ces soins vous intéresse ?";
   }
 
-  // 3. Question sur la réservation / acompte
-  if (text.includes('randevou') || text.includes('rdv') || text.includes('resèvasyon') || text.includes('rezèvasyon') || text.includes('reservation') || text.includes('réserver') || text.includes('disponib') || text.includes('disponible') || text.includes('acompte')) {
-    return salutation + "\n\n" +
-"Pour réserver votre moment de détente chez **DALIGHT** :\n\n" +
-"1️⃣ Vous pouvez réserver directement en ligne :\n" +
-"👉 https://dalightbeauty.com/pages/reservation-v2.html\n\n" +
-"2️⃣ Ou me transmettre directement ici :\n" +
-"• Votre **nom et prénom**\n" +
-"• Votre **numéro de téléphone**\n" +
-"• Votre **adresse e-mail**\n" +
-"• Le **soin désiré** ainsi que la **date et l'heure**\n\n" +
-"3️⃣ Règlement de l'**acompte de 50%** pour bloquer le créneau :\n" +
-"• **MonCash Direct :** +509 4747-7221 (DALIGHT BEAUTY)\n" +
-"• **NatCash Direct :** +509 4747-7221 (DALIGHT BEAUTY)\n" +
-"• **Virement :** Sogebank, Unibank, BNC\n\n" +
-"Quel soin vous ferait le plus plaisir ?";
+  // 5. Réservation
+  if (text.includes('randevou') || text.includes('rdv') || text.includes('reservation') || text.includes('rezerve') || text.includes('rezève')) {
+    return "C'est noté avec plaisir ! Quel soin et quelle date/heure vous conviendraient ?\n\n*(Pour rappel, un acompte de 50% par MonCash ou NatCash au +509 4747-7221 valide votre créneau).*";
   }
 
-  // 4. Réponse d'accueil par défaut
-  return salutation + "\n\n" +
-"Bienvenue chez **DALIGHT**, votre institut d'excellence et sanctuaire de Head Spa à Delmas 65 (Rue Durandisse #10).\n\n" +
-"🕐 **Horaires :** Ouvert tous les jours (7j/7) de **07h00 à 17h00**.\n\n" +
-"Comment puis-je vous accompagner aujourd'hui ?\n" +
-"• Pour découvrir nos **tarifs & forfaits** (Head Spa à partir de 5 000 HTG, Massages...)\n" +
-"• Pour réserver directement : https://dalightbeauty.com/pages/reservation-v2.html\n\n" +
-"Dites-moi tout, je suis à votre entière écoute !";
+  return salut + " Bienvenue chez DALIGHT. Comment puis-je vous renseigner sur nos soins ou vos réservations ?";
 }
 
 // --------------------------------------------
