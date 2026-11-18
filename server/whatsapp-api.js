@@ -141,6 +141,33 @@ async function handleWhatsAppRequest(req, res) {
       });
     }
 
+    // 8. POST /api/whatsapp/concierge-chat (AI Concierge with live prices & auto-reply)
+    if ((pathname === '/api/whatsapp/concierge-chat' || pathname === '/api/whatsapp/webhook') && method === 'POST') {
+      const body = await parseJsonBody(req);
+      const phone = body.phone || body.from || body.sender || '';
+      const message = body.message || body.text || body.body || '';
+
+      const { handleIncomingWhatsAppMessage } = require('../api/whatsapp-ai-concierge');
+      const result = await handleIncomingWhatsAppMessage(phone, message);
+
+      // Auto-dispatch reply back to client if phone is provided
+      if (body.dispatch_reply !== false && phone && result.reply) {
+        let cleanTo = String(phone).replace(/\D/g, '');
+        if (cleanTo.length === 8) cleanTo = '509' + cleanTo;
+        await defaultClient.sendMessage({
+          to: cleanTo,
+          message: result.reply,
+          kind: 'concierge_reply',
+          mode: 'sync'
+        }).catch(err => console.warn('Auto-reply dispatch notice:', err.message));
+      }
+
+      return sendJson(200, {
+        ok: true,
+        ...result
+      });
+    }
+
     // Unmatched API path
     sendJson(404, { ok: false, error: `Endpoint inconnu: ${pathname}` });
   } catch (err) {
