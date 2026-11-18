@@ -36,11 +36,35 @@ function loadEnv() {
 loadEnv();
 
 const CVISUAL_BASE_URL = process.env.CVISUAL_WA_BASE_URL || 'https://cvisual-whatsapp-gateway.onrender.com';
-const CVISUAL_API_KEY = process.env.CVISUAL_WA_API_KEY || 'cv_live_admin_6094ed1bf65bf0945706d3d7';
+const CVISUAL_API_KEY = process.env.CVISUAL_WA_API_KEY || 'cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c';
+const CVISUAL_ACCOUNT_INDEX = Number(process.env.CVISUAL_WA_ACCOUNT_INDEX) || 3;
 
 const FAST_LANE_KINDS = new Set(['receipt', 'welcome', 'otp', 'test', 'manual_direct']);
 const SLOW_LANE_KINDS = new Set(['reminder', 'reminder_7d', 'reminder_2d', 'marketing', 'manual']);
 const MAX_PDF_BYTES = 10 * 1024 * 1024; // 10 MB
+
+/**
+ * Maps HTTP status codes to clear, actionable error messages
+ */
+function formatGatewayError(statusCode, parsed) {
+  const detail = parsed?.detail || parsed?.message || parsed?.error || '';
+  switch (statusCode) {
+    case 400:
+      return `[CVISUAL 400 Bad Request] Format de requête ou numéro invalide. ${detail}`;
+    case 401:
+      return `[CVISUAL 401 Unauthorized] Clé API non reconnue ou expirée. Vérifiez CVISUAL_WA_API_KEY. ${detail}`;
+    case 413:
+      return `[CVISUAL 413 Payload Too Large] Pièce jointe trop volumineuse (limite 10 Mo). ${detail}`;
+    case 422:
+      return `[CVISUAL 422 Unprocessable] Règle Anti-Ban Meta violée (Slow Lane doit être async). ${detail}`;
+    case 429:
+      return `[CVISUAL 429 Rate Limit] Limite de débit atteinte ou quota quotidien de la ligne dépassé. ${detail}`;
+    case 503:
+      return `[CVISUAL 503 Gateway Offline] La ligne WhatsApp #3 est déconnectée. Veuillez scanner le QR code. ${detail}`;
+    default:
+      return detail || `Erreur passerelle HTTP ${statusCode}`;
+  }
+}
 
 /**
  * Normalizes phone numbers:
@@ -117,7 +141,8 @@ function makeRequest(method, endpoint, payload = null, customHeaders = {}) {
             data: parsed
           });
         } else {
-          const err = new Error(parsed.detail || parsed.message || parsed.error || `HTTP ${res.statusCode}`);
+          const errMsg = formatGatewayError(res.statusCode, parsed);
+          const err = new Error(errMsg);
           err.statusCode = res.statusCode;
           err.response = parsed;
           reject(err);
@@ -144,9 +169,10 @@ function makeRequest(method, endpoint, payload = null, customHeaders = {}) {
 }
 
 class CvisualWhatsAppClient {
-  constructor(apiKey = null, baseUrl = null) {
+  constructor(apiKey = null, baseUrl = null, accountIndex = null) {
     this.apiKey = apiKey || CVISUAL_API_KEY;
     this.baseUrl = baseUrl || CVISUAL_BASE_URL;
+    this.accountIndex = accountIndex !== null ? accountIndex : CVISUAL_ACCOUNT_INDEX;
   }
 
   /**
@@ -255,7 +281,8 @@ class CvisualWhatsAppClient {
       to: normalizedPhone,
       message: finalMessage,
       kind: kind,
-      mode: mode
+      mode: mode,
+      account_index: this.accountIndex || CVISUAL_ACCOUNT_INDEX
     };
 
     if (cleanedPdf) {
@@ -355,7 +382,7 @@ class CvisualWhatsAppClient {
     return crypto.timingSafeEqual(a, b);
   }
 
-  // ─── HIGH-LEVEL DALIGHT AUTOMATED TEMPLATE DISPATCHERS ───
+  // ─── HIGH-LEVEL DALIGHT AUTOMATED TEMPLATE DISPATCHERS (ZERO EMOJI) ───
 
   /**
    * 1. Confirmation de Réservation + Reçu PDF (Fast Lane)
@@ -372,23 +399,23 @@ class CvisualWhatsAppClient {
       pdfBase64 = null
     } = data;
 
-    const spintaxGreeting = '{Bonjour|Bonsoir|Chère cliente}';
-    const spintaxThanks = '{Merci pour votre confiance|Nous sommes enchantés de vous recevoir|Votre bien-être est notre priorité}';
+    const spintaxGreeting = '{Bonjour|Bonsoir|Chere cliente}';
+    const spintaxThanks = '{Merci pour votre confiance|Nous sommes enchantes de vous recevoir|Votre bien-etre est notre priorite}';
     const siteUrl = process.env.DALIGHT_SITE_URL || 'https://dalightbeauty.com';
 
-    const message = `${spintaxGreeting} *${clientName}* 🌿\n\n` +
+    const message = `${spintaxGreeting} *${clientName}*,\n\n` +
       `${spintaxThanks}.\n` +
-      `Votre réservation chez *DALIGHT* a bien été enregistrée !\n\n` +
-      `📋 *DÉTAILS DU SOIN :*\n` +
+      `Votre reservation chez *DALIGHT* a bien ete enregistree et confirmee.\n\n` +
+      `DETAILS DE VOTRE SOIN :\n` +
       `• Soin : *${serviceName || 'Head Spa & Soin Capillaire'}*\n` +
-      `• Date : *${date || 'À convenir'}*\n` +
+      `• Date : *${date || 'A convenir'}*\n` +
       `• Heure : *${time || '09:00'}*\n` +
-      `• Montant : *${price ? '$' + price : 'Confirmé'}*\n` +
-      `• Référence : *#${orderNumber || 'DL-' + Math.floor(1000 + Math.random() * 9000)}*\n\n` +
-      `📍 *Adresse :* Delmas 65, Rue Durandisse #10, Port-au-Prince\n` +
-      `📞 *Contact :* +509 4747-7221\n` +
-      `🌐 *Site web :* ${siteUrl}\n\n` +
-      `_Veuillez trouver ci-joint votre reçu officiel en format PDF. À très bientôt pour votre moment de détente absolue !_ ✨`;
+      `• Montant : *${price ? '$' + price : 'Confirme'}*\n` +
+      `• Reference : *#${orderNumber || 'DL-' + Math.floor(1000 + Math.random() * 9000)}*\n\n` +
+      `Adresse : Delmas 65, Rue Durandisse #10, Port-au-Prince\n` +
+      `Contact direct : +509 4747-7221\n` +
+      `Site web : ${siteUrl}\n\n` +
+      `_Veuillez trouver ci-joint votre recu officiel en format PDF. A tres bientot chez DALIGHT._`;
 
     return this.sendMessage({
       to: phone,
@@ -402,30 +429,34 @@ class CvisualWhatsAppClient {
   }
 
   /**
-   * 2. Rappel de Soin J-1 (Slow Lane)
+   * 2. Rappel de Soin J-1 (24h avant) (Slow Lane Anti-Ban)
+   * Mentionne la règle d'annulation 24h et les informations d'arrivée.
    */
-  async sendBookingReminder(data) {
+  async sendReservationReminder24h(data) {
     const {
       phone,
       clientName = 'Client(e)',
-      serviceName,
+      serviceName = 'Head Spa & Soin DALIGHT',
       date = 'demain',
-      time = 'votre heure prévue'
+      time = 'votre heure prevue'
     } = data;
 
-    const spintaxGreeting = '{Bonjour|Chère cliente|Douce journée}';
-    const spintaxIntro = '{Petit rappel bienveillant|Nous avons le plaisir de vous rappeler}';
+    const spintaxGreeting = '{Bonjour|Chere cliente|Douce journee}';
+    const spintaxIntro = '{Rappel bienveillant|Nous avons le plaisir de vous rappeler}';
     const siteUrl = process.env.DALIGHT_SITE_URL || 'https://dalightbeauty.com';
 
-    const message = `${spintaxGreeting} *${clientName}* ✨\n\n` +
-      `${spintaxIntro} : votre rendez-vous de relaxation *DALIGHT* approche.\n\n` +
-      `💆‍♀️ *Soin :* ${serviceName}\n` +
-      `📅 *Date :* ${date}\n` +
-      `⏰ *Heure :* ${time}\n` +
-      `📍 *Lieu :* Delmas 65, Rue Durandisse #10\n\n` +
-      `En cas d'imprévu, merci de nous contacter au moins 3h à l'avance au +509 4747-7221.\n` +
-      `🌐 ${siteUrl}\n\n` +
-      `_Hâte de prendre soin de vous !_ 🌿`;
+    const message = `*DALIGHT — RAPPEL DE RENDEZ-VOUS (J-1)*\n\n` +
+      `${spintaxGreeting} *${clientName}*,\n\n` +
+      `${spintaxIntro} : votre rendez-vous de relaxation chez *DALIGHT* a lieu demain.\n\n` +
+      `• Soin : ${serviceName}\n` +
+      `• Date : ${date}\n` +
+      `• Heure : ${time}\n` +
+      `• Lieu : Delmas 65, Rue Durandisse #10, Port-au-Prince\n\n` +
+      `CONDITIONS IMPORTANTES :\n` +
+      `- Toute modification ou annulation doit etre effectuee au moins 24h a l'avance au +509 4747-7221.\n` +
+      `- Merci de vous presenter 10 a 15 minutes a l'avance pour votre diagnostic d'accueil.\n\n` +
+      `L'equipe DALIGHT a hate de prendre soin de vous.\n` +
+      `${siteUrl}`;
 
     return this.sendMessage({
       to: phone,
@@ -436,7 +467,42 @@ class CvisualWhatsAppClient {
   }
 
   /**
-   * 3. Message de Bienvenue & Carte de Fidélité (Fast Lane)
+   * 3. Alerte Départ & Retard (H-30 / H-45 min avant) (Fast Lane)
+   * Rappel strict de la politique de ponctualité et de retard de DALIGHT.
+   */
+  async sendReservationAlert30m(data) {
+    const {
+      phone,
+      clientName = 'Client(e)',
+      serviceName = 'Head Spa DALIGHT',
+      time = 'votre heure'
+    } = data;
+
+    const spintaxGreeting = '{Bonjour|Chere cliente}';
+    const siteUrl = process.env.DALIGHT_SITE_URL || 'https://dalightbeauty.com';
+
+    const message = `*DALIGHT — ALERTE RENDEZ-VOUS IMMINENT*\n\n` +
+      `${spintaxGreeting} *${clientName}*,\n\n` +
+      `Votre seance de *${serviceName}* commence dans moins de 45 minutes (prevue a *${time}*).\n\n` +
+      `Adresse : Delmas 65, Rue Durandisse #10, Port-au-Prince\n` +
+      `Telephone salon : +509 4747-7221\n\n` +
+      `REGLEMENT PONCTUALITE DALIGHT :\n` +
+      `- Tout retard entraine automatiquement une reduction equivalente de votre temps de soin afin de garantir le respect des rendez-vous suivants.\n` +
+      `- Au-dela de 15 minutes de retard sans preavis, la seance ne pourra plus etre assuree et fera l'objet d'une reprogrammation selon les disponibilites.\n` +
+      `- Merci de prevoir votre trajet afin d'arriver 10 a 15 minutes a l'avance.\n\n` +
+      `Notre praticienne vous attend pour votre rituel bien-etre.\n` +
+      `${siteUrl}`;
+
+    return this.sendMessage({
+      to: phone,
+      message: message,
+      kind: 'manual_direct',
+      mode: 'async'
+    });
+  }
+
+  /**
+   * 4. Message de Bienvenue & Carte de Fidelite (Fast Lane)
    */
   async sendWelcomeBonus(data) {
     const {
@@ -445,15 +511,16 @@ class CvisualWhatsAppClient {
       points = 100
     } = data;
 
-    const spintaxWelcome = '{Bienvenue dans l\'univers|Heureux de vous compter parmi nous chez|Bienvenue chez}';
+    const spintaxWelcome = '{Bienvenue dans l univers|Heureux de vous compter parmi nous chez|Bienvenue chez}';
     const siteUrl = process.env.DALIGHT_SITE_URL || 'https://dalightbeauty.com';
 
-    const message = `✨ ${spintaxWelcome} *DALIGHT* ! ✨\n\n` +
-      `Chère *${clientName}*,\n` +
-      `Votre espace membre a été activé avec succès. Pour célébrer votre première visite, *${points} points privilège* ont été crédités sur votre carte de fidélité.\n\n` +
-      `Découvrez nos soins de détente bien-être et réservez vos futurs moments de relaxation en un clic :\n` +
-      `🌐 ${siteUrl}/pages/services.html\n\n` +
-      `_DALIGHT — L'art du bien-être et du soin d'exception à Port-au-Prince._ 🌿`;
+    const message = `${spintaxWelcome} *DALIGHT* !\n\n` +
+      `Chere *${clientName}*,\n\n` +
+      `Votre compte membre a ete active avec succes. Pour celebrer votre bienvenue, *${points} points privilege* ont ete credites sur votre carte de fidelite.\n\n` +
+      `Decouvrez nos soins et reservez en ligne :\n` +
+      `${siteUrl}/pages/services.html\n\n` +
+      `Contact officiel : +509 4747-7221\n` +
+      `_DALIGHT — L art du soin d exception a Port-au-Prince._`;
 
     return this.sendMessage({
       to: phone,

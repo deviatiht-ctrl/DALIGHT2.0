@@ -6,7 +6,8 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
 const CVISUAL_BASE_URL = Deno.env.get('CVISUAL_WA_BASE_URL') || 'https://cvisual-whatsapp-gateway.onrender.com';
-const CVISUAL_API_KEY = Deno.env.get('CVISUAL_WA_API_KEY') || 'cv_live_admin_6094ed1bf65bf0945706d3d7';
+const CVISUAL_API_KEY = Deno.env.get('CVISUAL_WA_API_KEY') || 'cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c';
+const CVISUAL_ACCOUNT_INDEX = 3;
 
 const FAST_LANE_KINDS = new Set(['receipt', 'welcome', 'otp', 'test', 'manual_direct']);
 const SLOW_LANE_KINDS = new Set(['reminder', 'reminder_7d', 'reminder_2d', 'marketing', 'manual']);
@@ -87,6 +88,7 @@ serve(async (req) => {
         message,
         kind,
         mode,
+        account_index: payload.account_index || CVISUAL_ACCOUNT_INDEX,
       };
 
       if (payload.pdf_base64) {

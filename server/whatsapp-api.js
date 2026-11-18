@@ -94,10 +94,20 @@ async function handleWhatsAppRequest(req, res) {
       });
     }
 
-    // 5. POST /api/whatsapp/send-reminder (helper with reminder structure)
-    if (pathname === '/api/whatsapp/send-reminder' && method === 'POST') {
+    // 5. POST /api/whatsapp/send-reminder & send-reminder-24h
+    if ((pathname === '/api/whatsapp/send-reminder' || pathname === '/api/whatsapp/send-reminder-24h') && method === 'POST') {
       const body = await parseJsonBody(req);
-      const result = await defaultClient.sendBookingReminder(body);
+      const result = await defaultClient.sendReservationReminder24h(body);
+      return sendJson(result.statusCode, {
+        ok: true,
+        ...result.data
+      });
+    }
+
+    // 5b. POST /api/whatsapp/send-alert-30m (30-45 min arrival & lateness policy alert)
+    if (pathname === '/api/whatsapp/send-alert-30m' && method === 'POST') {
+      const body = await parseJsonBody(req);
+      const result = await defaultClient.sendReservationAlert30m(body);
       return sendJson(result.statusCode, {
         ok: true,
         ...result.data

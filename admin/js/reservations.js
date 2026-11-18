@@ -432,6 +432,22 @@ window.openDetailModal = function(id) {
         <button class="btn btn-success btn-sm" onclick="autoCompleteReservation('${r.id}')">Terminer &amp; Email</button>` : ''}
     </div>`;
 
+  const whatsappButtonsHtml = `
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap;width:100%;margin-bottom:.75rem;padding-bottom:.75rem;border-bottom:1px solid var(--admin-border);">
+      <span style="font-size:.75rem;color:var(--admin-text-muted);width:100%;margin-bottom:.2rem;display:flex;align-items:center;gap:.3rem;">
+        ${ico('M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z', 13)} Actions WhatsApp (Ligne 3 DALIGHT)
+      </span>
+      <button class="btn btn-secondary btn-sm" onclick="sendWhatsAppConfirmationAction('${r.id}')" title="Renvoyer confirmation WhatsApp">
+        ${ico('M5 13l4 4L19 7', 12)} Confirmer (WhatsApp)
+      </button>
+      <button class="btn btn-secondary btn-sm" onclick="sendWhatsAppReminder24hAction('${r.id}')" title="Rappel J-1 avec regle d'annulation 24h">
+        ${ico('M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9', 12)} Rappel J-1 (WhatsApp)
+      </button>
+      <button class="btn btn-secondary btn-sm" onclick="sendWhatsAppAlert30mAction('${r.id}')" title="Alerte depart & retard (H-30 min)">
+        ${ico('M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', 12)} Alerte H-30 min (Retard)
+      </button>
+    </div>`;
+
   const emailButtonsHtml = `
     <div style="display:flex;gap:.4rem;flex-wrap:wrap;width:100%;margin-bottom:.75rem;padding-bottom:.75rem;border-bottom:1px solid var(--admin-border);">
       <span style="font-size:.75rem;color:var(--admin-text-muted);width:100%;margin-bottom:.2rem;display:flex;align-items:center;gap:.3rem;">
@@ -473,7 +489,7 @@ window.openDetailModal = function(id) {
       ${showBalanceBtn ? `<button class="btn btn-primary" onclick="openBalanceModal('${r.id}')">${ico('M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', 14)} Payer solde</button>` : ''}`;
   }
 
-  footer.innerHTML = automaticButtonsHtml + emailButtonsHtml +
+  footer.innerHTML = automaticButtonsHtml + emailButtonsHtml + whatsappButtonsHtml +
     '<div style="display:flex;gap:.5rem;justify-content:flex-end;flex-wrap:wrap;width:100%;">' + actions + '</div>';
   footer.style.flexDirection = 'column';
   footer.style.alignItems    = 'stretch';
@@ -3005,3 +3021,73 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
+
+// ============================================
+// WHATSAPP DEDICATED ACTIONS (LIGNE 3 DALIGHT)
+// ============================================
+
+window.sendWhatsAppConfirmationAction = async function(id) {
+  const r = allReservations.find(res => res.id === id);
+  if (!r) return;
+  const phone = r.phone || r.user_phone;
+  if (!phone) {
+    window.adminCore.showToast('Aucun numéro de téléphone pour cette réservation', 'warning');
+    return;
+  }
+  if (!confirm(`Envoyer la confirmation WhatsApp officielle sur le ${phone} ?`)) return;
+
+  try {
+    const success = await window.adminCore.sendReservationWhatsAppConfirmation(r);
+    if (success) {
+      window.adminCore.showToast('Confirmation WhatsApp envoyée avec succès !');
+    } else {
+      window.adminCore.showToast('Échec de l\'envoi WhatsApp (vérifiez la connexion)', 'error');
+    }
+  } catch (err) {
+    window.adminCore.showToast('Erreur: ' + (err.message || 'Échec d\'envoi'), 'error');
+  }
+};
+
+window.sendWhatsAppReminder24hAction = async function(id) {
+  const r = allReservations.find(res => res.id === id);
+  if (!r) return;
+  const phone = r.phone || r.user_phone;
+  if (!phone) {
+    window.adminCore.showToast('Aucun numéro de téléphone pour cette réservation', 'warning');
+    return;
+  }
+  if (!confirm(`Envoyer le Rappel J-1 (24h avant) par WhatsApp au client (${phone}) ?`)) return;
+
+  try {
+    const success = await window.adminCore.sendReservationWhatsAppReminder24h(r);
+    if (success) {
+      window.adminCore.showToast('Rappel J-1 WhatsApp transmis avec succès (Slow Lane) !');
+    } else {
+      window.adminCore.showToast('Échec lors de l\'envoi du rappel WhatsApp', 'error');
+    }
+  } catch (err) {
+    window.adminCore.showToast('Erreur: ' + (err.message || 'Échec'), 'error');
+  }
+};
+
+window.sendWhatsAppAlert30mAction = async function(id) {
+  const r = allReservations.find(res => res.id === id);
+  if (!r) return;
+  const phone = r.phone || r.user_phone;
+  if (!phone) {
+    window.adminCore.showToast('Aucun numéro de téléphone pour cette réservation', 'warning');
+    return;
+  }
+  if (!confirm(`Envoyer l'Alerte Ponctualité & Retard (H-30 min) à ${phone} ?`)) return;
+
+  try {
+    const success = await window.adminCore.sendReservationWhatsAppAlert30m(r);
+    if (success) {
+      window.adminCore.showToast('Alerte H-30 min WhatsApp envoyée avec succès (Fast Lane) !');
+    } else {
+      window.adminCore.showToast('Échec lors de l\'envoi de l\'alerte WhatsApp', 'error');
+    }
+  } catch (err) {
+    window.adminCore.showToast('Erreur: ' + (err.message || 'Échec'), 'error');
+  }
+};

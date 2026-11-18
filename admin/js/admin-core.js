@@ -734,7 +734,7 @@ async function sendReservationWhatsAppConfirmation(reservation) {
   };
 
   const CVISUAL_GATEWAY_URL = 'https://cvisual-whatsapp-gateway.onrender.com';
-  const DEFAULT_CVISUAL_KEY = 'cv_live_admin_6094ed1bf65bf0945706d3d7';
+  const DEFAULT_CVISUAL_KEY = 'cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c';
   const apiKey = localStorage.getItem('cvisual_wa_api_key') || DEFAULT_CVISUAL_KEY;
 
   try {
@@ -770,6 +770,141 @@ async function sendReservationWhatsAppConfirmation(reservation) {
     return res.ok;
   } catch (err) {
     console.error('Erreur lors de l envoi automatique WhatsApp:', err);
+    return false;
+  }
+}
+
+
+/**
+ * Envoi manuel ou automatique de rappel WhatsApp J-1 (24h avant) via CVISUAL Gateway (Slow Lane)
+ * Avec mention de la politique d'annulation 24h à l'avance
+ */
+async function sendReservationWhatsAppReminder24h(reservation) {
+  if (!reservation) return false;
+  const rawPhone = reservation.phone || reservation.user_phone || reservation.client_phone;
+  if (!rawPhone) return false;
+
+  const cleaned = String(rawPhone).replace(/\D/g, '');
+  const phone = cleaned.length === 8 ? '509' + cleaned : cleaned;
+  if (phone.length < 8) return false;
+
+  const clientName = reservation.user_name || 'Client(e)';
+  const serviceName = reservation.service || 'Head Spa & Soin DALIGHT';
+
+  let formattedDate = reservation.date || '';
+  try {
+    if (reservation.date) {
+      const match = typeof reservation.date === 'string' ? reservation.date.match(/^(\d{4})-(\d{2})-(\d{2})/) : null;
+      const d = match ? new Date(parseInt(match[1], 10), parseInt(match[2], 10) - 1, parseInt(match[3], 10)) : new Date(reservation.date);
+      formattedDate = d.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+  } catch(e) {}
+
+  let timeStr = reservation.time || '';
+  if (timeStr && timeStr.length > 5) timeStr = timeStr.substring(0, 5);
+
+  const waMessage =
+    `*DALIGHT — RAPPEL DE RENDEZ-VOUS (J-1)*\n\n` +
+    `Bonjour *${clientName}*,\n\n` +
+    `Nous vous rappelons que votre soin chez *DALIGHT* est prevu demain.\n\n` +
+    `• Prestation : *${serviceName}*\n` +
+    `• Date : *${formattedDate}*\n` +
+    `• Heure : *${timeStr}*\n` +
+    `• Lieu : Delmas 65, Rue Durandisse #10, Port-au-Prince\n\n` +
+    `CONDITIONS D'ANNULATION & REGLEMENT :\n` +
+    `- Toute modification ou annulation doit etre signalee au moins 24h a l'avance au +509 4747-7221.\n` +
+    `- Merci de vous presenter 10 a 15 minutes a l'avance pour votre diagnostic d'accueil.\n\n` +
+    `Toute notre equipe a hate de prendre soin de vous.\n` +
+    `https://dalightbeauty.com`;
+
+  const payload = {
+    to: phone,
+    message: waMessage,
+    kind: 'reminder', // Slow Lane Anti-ban
+    mode: 'async',
+    account_index: 3,
+    idempotencyKey: `wa_rem24h_${reservation.id}_${Date.now()}`
+  };
+
+  const CVISUAL_GATEWAY_URL = 'https://cvisual-whatsapp-gateway.onrender.com';
+  const DEFAULT_CVISUAL_KEY = 'cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c';
+  const apiKey = localStorage.getItem('cvisual_wa_api_key') || DEFAULT_CVISUAL_KEY;
+
+  try {
+    const res = await fetch(`${CVISUAL_GATEWAY_URL}/api/v1/messages/send`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'Idempotency-Key': payload.idempotencyKey
+      },
+      body: JSON.stringify(payload)
+    });
+    return res.ok;
+  } catch (err) {
+    console.error('Erreur WhatsApp rappel 24h:', err);
+    return false;
+  }
+}
+
+/**
+ * Envoi d'alerte depart & ponctualite H-30 / H-45 min via CVISUAL Gateway (Fast Lane)
+ * Rappel strict de la politique de retard de DALIGHT
+ */
+async function sendReservationWhatsAppAlert30m(reservation) {
+  if (!reservation) return false;
+  const rawPhone = reservation.phone || reservation.user_phone || reservation.client_phone;
+  if (!rawPhone) return false;
+
+  const cleaned = String(rawPhone).replace(/\D/g, '');
+  const phone = cleaned.length === 8 ? '509' + cleaned : cleaned;
+  if (phone.length < 8) return false;
+
+  const clientName = reservation.user_name || 'Client(e)';
+  const serviceName = reservation.service || 'Head Spa DALIGHT';
+
+  let timeStr = reservation.time || '';
+  if (timeStr && timeStr.length > 5) timeStr = timeStr.substring(0, 5);
+
+  const waMessage =
+    `*DALIGHT — ALERTE RENDEZ-VOUS IMMINENT*\n\n` +
+    `Bonjour *${clientName}*,\n\n` +
+    `Votre soin *${serviceName}* commence dans moins de 45 minutes (prevu a *${timeStr}*).\n\n` +
+    `Adresse : Delmas 65, Rue Durandisse #10, Port-au-Prince\n` +
+    `Telephone salon : +509 4747-7221\n\n` +
+    `REGLEMENT DE PONCTUALITE DALIGHT :\n` +
+    `- Tout retard entraine automatiquement une reduction equivalente de votre temps de soin afin de garantir le respect des creneaux suivants.\n` +
+    `- Au-dela de 15 minutes de retard sans preavis, la seance ne pourra plus etre assuree et fera l'objet d'une reprogrammation selon les disponibilites.\n` +
+    `- Merci de prevoir votre trajet afin d'arriver 10 a 15 minutes a l'avance.\n\n` +
+    `Notre praticienne vous attend pour votre rituel bien-etre.\n` +
+    `https://dalightbeauty.com`;
+
+  const payload = {
+    to: phone,
+    message: waMessage,
+    kind: 'manual_direct', // Fast Lane
+    mode: 'async',
+    account_index: 3,
+    idempotencyKey: `wa_alert30m_${reservation.id}_${Date.now()}`
+  };
+
+  const CVISUAL_GATEWAY_URL = 'https://cvisual-whatsapp-gateway.onrender.com';
+  const DEFAULT_CVISUAL_KEY = 'cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c';
+  const apiKey = localStorage.getItem('cvisual_wa_api_key') || DEFAULT_CVISUAL_KEY;
+
+  try {
+    const res = await fetch(`${CVISUAL_GATEWAY_URL}/api/v1/messages/send`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'Idempotency-Key': payload.idempotencyKey
+      },
+      body: JSON.stringify(payload)
+    });
+    return res.ok;
+  } catch (err) {
+    console.error('Erreur WhatsApp alerte 30m:', err);
     return false;
   }
 }
@@ -1299,6 +1434,9 @@ window.adminCore = {
   formatDate,
   formatTime,
   formatCurrency,
+  sendReservationWhatsAppConfirmation,
+  sendReservationWhatsAppReminder24h,
+  sendReservationWhatsAppAlert30m,
   getStatusBadge,
   getInitials,
   showToast,

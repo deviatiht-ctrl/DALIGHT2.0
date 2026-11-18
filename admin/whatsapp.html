@@ -906,7 +906,7 @@
       normalizePhone
     } from '../js/whatsapp-service.js';
 
-    // ── DEFAULT AUTOMATED DALIGHT TEMPLATES ──
+        // ── DEFAULT AUTOMATED DALIGHT TEMPLATES (ZERO EMOJI) ──
     const DEFAULT_TEMPLATES = [
       {
         id: 'tpl_receipt',
@@ -916,17 +916,27 @@
         kind: 'receipt',
         mode: 'async',
         attachPdf: true,
-        message: `*DALIGHT — CONFIRMATION OFFICIELLE DE RENDEZ-VOUS*\n\n{Bonjour|Bonsoir|Chère cliente} *{{client_name}}*,\n\n{Merci pour votre réservation|Nous avons le plaisir de confirmer votre soin|Merci de votre confiance} chez *DALIGHT* ! Votre rendez-vous est désormais CONFIRMÉ.\n\nDÉTAILS DE VOTRE SOIN :\n• Prestation : *{{service}}*\n• Date : *{{date}}*\n• Heure : *{{time}}*\n• Montant : *${'{{price}}'}*\n• N° Réservation : *#{{order_number}}*\n• Lieu : Delmas 65, Rue Durandisse #10, Port-au-Prince\n\nPour toute question, modification ou échange avec notre équipe, vous pouvez nous répondre directement ici sur WhatsApp ou nous appeler au :\n*+509 4747-7221*\n\n_Votre reçu officiel est joint à ce message en format PDF. Toute notre équipe vous attend pour un pur moment d'exception._`
+        message: `*DALIGHT — CONFIRMATION OFFICIELLE DE RENDEZ-VOUS*\n\n{Bonjour|Bonsoir|Chère cliente} *{{client_name}}*,\n\n{Merci pour votre réservation|Nous avons le plaisir de confirmer votre soin|Merci de votre confiance} chez *DALIGHT* ! Votre rendez-vous est désormais CONFIRMÉ.\n\nDÉTAILS DE VOTRE SOIN :\n• Prestation : *{{service}}*\n• Date : *{{date}}*\n• Heure : *{{time}}*\n• Montant : *${'{{price}}'}*\n• N° Réservation : *#{{order_number}}*\n• Lieu : Delmas 65, Rue Durandisse #10, Port-au-Prince\n\nPour toute question ou modification, vous pouvez nous contacter directement sur WhatsApp ou au :\n*+509 4747-7221*\n\n_Votre reçu officiel est joint à ce message en format PDF. Toute notre équipe vous attend pour un moment d'exception._`
+      },
+      {
+        id: 'tpl_alert_30min',
+        key: 'manual_direct',
+        label: 'Alerte Départ & Retard (H-30 / H-45 min)',
+        lane: 'fast',
+        kind: 'manual_direct',
+        mode: 'async',
+        attachPdf: false,
+        message: `*DALIGHT — ALERTE RENDEZ-VOUS IMMINENT*\n\n{Bonjour|Chère cliente} *{{client_name}}*,\n\nVotre soin *{{service}}* commence dans moins de 45 minutes (prévu à *{{time}}*).\n\nAdresse : Delmas 65, Rue Durandisse #10, Port-au-Prince\nTéléphone salon : +509 4747-7221\n\nRÈGLEMENT DE PONCTUALITÉ DALIGHT :\n- Tout retard entraîne automatiquement une réduction proportionnelle de la durée de votre soin afin de respecter les créneaux suivants.\n- Au-delà de 15 minutes de retard sans préavis, la séance ne pourra plus être assurée et fera l'objet d'une reprogrammation selon les disponibilités.\n- Merci de prévoir votre trajet afin d'arriver 10 à 15 minutes à l'avance.\n\nNotre praticienne vous attend pour votre rituel bien-être.\n{{site_url}}`
       },
       {
         id: 'tpl_reminder',
         key: 'reminder',
-        label: 'Rappel de Soin J-1 (Anti-Ban)',
+        label: 'Rappel de Soin J-1 (Slow Lane Anti-Ban)',
         lane: 'slow',
         kind: 'reminder',
         mode: 'async',
         attachPdf: false,
-        message: `*DALIGHT — RAPPEL DE RENDEZ-VOUS*\n\n{Bonjour|Douce journée|Chère cliente} *{{client_name}}*,\n\n{Petit rappel|Nous vous rappelons} : votre rendez-vous chez *DALIGHT* approche.\n\n• Soin : {{service}}\n• Date : {{date}}\n• Heure : {{time}}\n• Lieu : Delmas 65, Rue Durandisse #10, Port-au-Prince\n\nAVIS : Ce message est automatique. Pour tout imprévu ou modification, merci de contacter au moins 3h à l'avance le numéro officiel DALIGHT : +509 4747-7221.`
+        message: `*DALIGHT — RAPPEL DE RENDEZ-VOUS (J-1)*\n\n{Bonjour|Douce journée|Chère cliente} *{{client_name}}*,\n\n{Rappel bienveillant|Nous vous rappelons} : votre rendez-vous chez *DALIGHT* a lieu demain.\n\n• Prestation : {{service}}\n• Date : {{date}}\n• Heure : {{time}}\n• Lieu : Delmas 65, Rue Durandisse #10, Port-au-Prince\n\nCONDITIONS IMPORTANTES :\n- Toute modification ou annulation doit être effectuée au moins 24h à l'avance au +509 4747-7221.\n- Merci de vous présenter 10 à 15 minutes à l'avance pour votre accueil en douceur.\n\nL'équipe DALIGHT a hâte de prendre soin de vous.\n{{site_url}}`
       },
       {
         id: 'tpl_welcome',
@@ -946,7 +956,7 @@
         kind: 'marketing',
         mode: 'async',
         attachPdf: false,
-        message: `*DALIGHT — PRIVILÈGE & BIEN-ÊTRE*\n\n{Bonjour|Chère cliente} *{{client_name}}*,\n\n{Envie d'une parenthèse de sérénité ?|Votre cuir chevelu a besoin de revitalisation ?|Prenez du temps pour vous !} Offrez-vous un Head Spa d'exception chez *DALIGHT* à Delmas 65.\n\nProfitez d'un diagnostic offert lors de votre prochain passage.\nRéservations en ligne : {{site_url}}/pages/services.html\nContact officiel WhatsApp / Appel : +509 4747-7221`
+        message: `*DALIGHT — PRIVILÈGE & BIEN-ÊTRE*\n\n{Bonjour|Chère cliente} *{{client_name}}*,\n\n{Envie d'une parenthèse de sérénité ?|Votre cuir chevelu a besoin de revitalisation ?|Prenez du temps pour vous !} Offrez-vous un Head Spa d'exception chez *DALIGHT* à Delmas 65.\n\nProfitez d'un diagnostic personnalisé lors de votre prochain passage.\nRéservations en ligne : {{site_url}}/pages/services.html\nContact officiel : +509 4747-7221`
       }
     ];
 
@@ -1266,7 +1276,7 @@
 
     async function fetchDalightAccountQr(isUserAction = false) {
       const GATEWAY_URL = 'https://cvisual-whatsapp-gateway.onrender.com';
-      const API_KEY = localStorage.getItem('cvisual_wa_api_key') || 'cv_live_admin_6094ed1bf65bf0945706d3d7';
+      const API_KEY = 'cv_live_admin_6094ed1bf65bf0945706d3d7'; // Master key for hardware line #3 socket control
 
       const badge = document.getElementById('wa-connection-badge');
       const qrBox = document.getElementById('wa-qr-box');
@@ -1397,7 +1407,7 @@
                   <div class="wa-card-key">kind: "${tpl.kind}"</div>
                 </div>
                 <span class="lane-badge ${isFast ? 'lane-fast' : 'lane-slow'}">
-                  ${isFast ? '⚡ FAST' : '🛡️ SLOW'}
+                  ${isFast ? '<i data-lucide="zap" style="width:12px;height:12px;"></i> FAST' : '<i data-lucide="shield-check" style="width:12px;height:12px;"></i> SLOW'}
                 </span>
               </div>
               <div class="wa-card-preview" style="margin-top:0.75rem;">
@@ -1406,7 +1416,7 @@
             </div>
             <div class="wa-card-footer">
               <span style="font-size:0.75rem; color:${tpl.attachPdf ? 'var(--admin-accent)' : 'var(--admin-text-muted)'};">
-                ${tpl.attachPdf ? '📄 Reçu PDF joint' : '✉️ Message texte seul'}
+                ${tpl.attachPdf ? '<i data-lucide="file-text" style="width:12px;height:12px;"></i> Reçu PDF joint' : '<i data-lucide="message-square" style="width:12px;height:12px;"></i> Message texte seul'}
               </span>
               <span style="font-size:0.8rem; color:var(--admin-accent); font-weight:600;">Éditer →</span>
             </div>
@@ -1479,7 +1489,7 @@
 
     async function fetchLiveGatewayStatus(isManual = false) {
       const GATEWAY_URL = 'https://cvisual-whatsapp-gateway.onrender.com';
-      const API_KEY = 'cv_live_admin_6094ed1bf65bf0945706d3d7';
+      const API_KEY = localStorage.getItem('cvisual_wa_api_key') || 'cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c';
 
       // 1. Try direct CVISUAL gateway /api/v1/me and /api/v1/status
       try {
