@@ -188,11 +188,125 @@ async function loadPostes() {
     const { data } = await sb().from('settings').select('value').eq('key', 'employee_postes').maybeSingle();
     if (data && Array.isArray(data.value)) {
       allPostes = data.value;
+    } else {
+      allPostes = [
+        { id: 'poste-headspa', color: '#d4af37', title: 'Praticienne Head Spa Japonais', category: 'headspa', services: ['Head Spa Japonais Signature', 'Head Spa Sérénité Royale', 'Rituel Renaissance Express', 'Head Spa'] },
+        { id: 'poste-massage', color: '#4ade80', title: 'Massothérapeute Thérapeutique', category: 'massage', services: ['Massage relaxant Silver package', 'Massage aux pierres chaudes', 'Massage shiatsu', 'Massage'] },
+        { id: 'poste-esthetique', color: '#a855f7', title: 'Esthéticienne & Soin Visage', category: 'esthetique', services: ['Soin visage éclat', 'Hydrafacial', 'Gommage corps', 'Soin visage'] },
+        { id: 'poste-coiffure', color: '#38bdf8', title: 'Spécialiste Capillaire & Coiffure', category: 'coiffure', services: ['Diagnostic capillaire', 'Brushing haute définition', 'Masque nourrissant profond', 'Coiffure'] },
+        { id: 'poste-reception', color: '#fbbf24', title: 'Accueil & Conciergerie', category: 'administration', services: [] }
+      ];
     }
   } catch(err) {
     console.warn('Postes load error:', err);
   }
 }
+
+window.openPostesModal = function() {
+  const modal = document.getElementById('postes-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  renderPostesList();
+};
+
+window.closePostesModal = function() {
+  const modal = document.getElementById('postes-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+window.renderPostesList = function() {
+  const container = document.getElementById('postes-list-container');
+  if (!container) return;
+  if (!allPostes.length) {
+    container.innerHTML = '<p class="text-muted" style="font-size:0.85rem;">Aucun poste enregistré.</p>';
+    return;
+  }
+  const categoryColors = {
+    headspa: '#d4af37',
+    massage: '#4ade80',
+    esthetique: '#a855f7',
+    coiffure: '#38bdf8',
+    administration: '#fbbf24',
+    autre: '#94a3b8'
+  };
+  container.innerHTML = allPostes.map((p, idx) => {
+    const col = p.color || categoryColors[p.category] || '#d4af37';
+    const srvs = (p.services || []).map(s => '<span style="display:inline-block; background:rgba(255,255,255,0.06); padding:0.15rem 0.4rem; border-radius:4px; font-size:0.7rem; margin-right:0.25rem; margin-top:0.25rem;">' + esc(s) + '</span>').join('');
+    return '<div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:0.75rem; display:flex; justify-content:space-between; align-items:flex-start;">' +
+      '<div>' +
+        '<div style="display:flex; align-items:center; gap:0.5rem;">' +
+          '<span style="width:10px; height:10px; border-radius:50%; background:' + col + '; display:inline-block;"></span>' +
+          '<strong style="font-size:0.9rem; color:#FAF8F5;">' + esc(p.title) + '</strong>' +
+          '<span style="font-size:0.7rem; color:' + col + '; text-transform:uppercase; letter-spacing:0.04em; background:rgba(255,255,255,0.05); padding:0.1rem 0.4rem; border-radius:4px;">' + esc(p.category) + '</span>' +
+        '</div>' +
+        (srvs ? '<div style="margin-top:0.4rem;">' + srvs + '</div>' : '') +
+      '</div>' +
+      '<button type="button" class="btn btn-icon btn-danger btn-sm" onclick="deletePoste(\'' + (p.id || idx) + '\')" title="Supprimer">' +
+        '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>' +
+      '</button>' +
+    '</div>';
+  }).join('');
+};
+
+window.submitCreatePoste = async function() {
+  const title = document.getElementById('new-poste-title')?.value.trim();
+  const category = document.getElementById('new-poste-category')?.value || 'autre';
+  const servicesRaw = document.getElementById('new-poste-services')?.value.trim() || '';
+  if (!title) {
+    toast('Veuillez indiquer un intitulé pour ce poste.', 'warning');
+    return;
+  }
+  const services = servicesRaw ? servicesRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const categoryColors = {
+    headspa: '#d4af37',
+    massage: '#4ade80',
+    esthetique: '#a855f7',
+    coiffure: '#38bdf8',
+    administration: '#fbbf24',
+    autre: '#94a3b8'
+  };
+  const newPoste = {
+    id: 'poste-' + Date.now(),
+    title,
+    category,
+    color: categoryColors[category] || '#d4af37',
+    services
+  };
+  allPostes.push(newPoste);
+  try {
+    await sb().from('settings').upsert({
+      key: 'employee_postes',
+      value: allPostes,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'key' });
+    document.getElementById('new-poste-title').value = '';
+    document.getElementById('new-poste-services').value = '';
+    renderPostesList();
+    renderAssignments();
+    toast('Nouveau poste créé avec succès !', 'success');
+  } catch(err) {
+    console.error(err);
+    toast('Erreur lors de la sauvegarde : ' + (err.message || err), 'error');
+  }
+};
+
+window.deletePoste = async function(posteId) {
+  if (!confirm('Supprimer ce poste ?')) return;
+  allPostes = allPostes.filter(p => p.id !== posteId);
+  try {
+    await sb().from('settings').upsert({
+      key: 'employee_postes',
+      value: allPostes,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'key' });
+    renderPostesList();
+    renderAssignments();
+    toast('Poste supprimé.', 'info');
+  } catch(err) {
+    console.error(err);
+    toast('Erreur lors de la suppression.', 'error');
+  }
+};
 
 // ---- Employees ----
 async function loadEmployees() {
@@ -841,7 +955,7 @@ async function sendWhatsAppNotificationToEmployee(reservation, employee) {
         to: rawPhone,
         message: msgText,
         mode: 'sync',
-        kind: 'staff_assignment'
+        kind: 'manual_direct'
       })
     });
     return { ok: true, status: res.status };
@@ -900,7 +1014,7 @@ window.dispatchDirectWhatsAppNotification = async function() {
         to: rawPhone,
         message: customMessage,
         mode: 'sync',
-        kind: 'staff_assignment'
+        kind: 'manual_direct'
       })
     });
 

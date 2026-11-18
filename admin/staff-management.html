@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -101,8 +101,9 @@
         </button>
         <h1 class="page-title">Gestion du Personnel</h1>
       </div>
-      <div class="header-right">
-        <a href="employees.html" class="btn btn-secondary">Employés & Présence</a>
+      <div class="header-right" style="display:flex; gap:0.5rem; align-items:center;">
+        <button type="button" class="btn btn-secondary" onclick="openPostesModal()">🏷️ Gérer les Postes</button>
+        <a href="employees.html" class="btn btn-secondary">Employés &amp; Présence</a>
       </div>
     </header>
 
@@ -317,6 +318,64 @@
             🚀 Envoyer via Passerelle DALIGHT
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Gestion des Postes & Spécialités -->
+  <div class="modal-overlay" id="postes-modal" style="display:none;">
+    <div class="modal" style="max-width:620px; width:95%; max-height:85vh; display:flex; flex-direction:column;">
+      <div class="modal-header">
+        <h3 class="modal-title">🏷️ Gestion des Postes &amp; Spécialités</h3>
+        <button class="modal-close" onclick="closePostesModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="overflow-y:auto; flex:1; display:grid; gap:1rem;">
+        
+        <!-- Add New Poste Form -->
+        <div style="background:rgba(212,175,55,0.06); border:1px solid rgba(212,175,55,0.3); border-radius:12px; padding:1rem;">
+          <div style="font-weight:600; font-size:0.88rem; color:var(--admin-accent); margin-bottom:0.75rem;">
+            + Créer un Nouveau Poste
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:0.78rem;">Intitulé du Poste *</label>
+              <input type="text" id="new-poste-title" class="form-input" placeholder="Ex: Spécialiste Head Spa">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:0.78rem;">Catégorie</label>
+              <select id="new-poste-category" class="form-input">
+                <option value="headspa">Head Spa Japonais</option>
+                <option value="massage">Massage &amp; Shiatsu</option>
+                <option value="esthetique">Esthétique &amp; Soins</option>
+                <option value="coiffure">Coiffure &amp; Cheveux</option>
+                <option value="administration">Accueil / Admin</option>
+                <option value="autre">Autre spécialité</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0.75rem;">
+            <label style="font-size:0.78rem;">Services associés (mots-clés séparés par des virgules) :</label>
+            <input type="text" id="new-poste-services" class="form-input" placeholder="Ex: Head Spa, Signature, Royale, Renaissance">
+            <small style="color:var(--admin-text-muted); font-size:0.72rem;">Utilisé par l'IA pour matcher automatiquement les réservations.</small>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="submitCreatePoste()">Ajouter le poste</button>
+        </div>
+
+        <!-- Postes List -->
+        <div>
+          <div style="font-size:0.82rem; font-weight:600; color:var(--admin-text-muted); margin-bottom:0.5rem;">
+            Postes Existants dans DALIGHT :
+          </div>
+          <div id="postes-list-container" style="display:grid; gap:0.5rem;">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closePostesModal()">Fermer</button>
       </div>
     </div>
   </div>
