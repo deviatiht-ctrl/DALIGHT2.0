@@ -1,5 +1,5 @@
 // ============================================
-// DALIGHT HEAD SPA - DASHBOARD
+// DALIGHT - DASHBOARD
 // ============================================
 
 document.addEventListener('DOMContentLoaded', async () => {

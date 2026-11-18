@@ -1,5 +1,5 @@
 /**
- * DALIGHT LUXURY HEAD SPA — CONCIERGE IA WHATSAPP (GOOGLE GEMINI)
+ * DALIGHT — CONCIERGE IA WHATSAPP (GOOGLE GEMINI)
  * 
  * Capable de :
  * 1. Comprendre le Créole Haïtien (Kreyòl) et le Français à 100%.
@@ -11,8 +11,10 @@
  * 7. Préciser les tarifs de l'option vidéo (+500 HTG public vs +1 000 HTG privé).
  */
 
+const GEMINI_DEFAULT_KEY = process.env.GEMINI_API_KEY || "";
+
 const DALIGHT_KNOWLEDGE_BASE = {
-  name: "DALIGHT Head Spa & Institut de Beauté",
+  name: "DALIGHT",
   location: "Delmas 65, Rue Faustin Premier / Rue Durandisse #10, Port-au-Prince, Haïti",
   phone: "+509 4747-7221",
   openingHours: "Mardi au Samedi de 08h00 à 20h00 | Dimanche et Lundi de 08h00 à 18h00",
@@ -45,7 +47,8 @@ const DALIGHT_KNOWLEDGE_BASE = {
   }
 };
 
-const SYSTEM_PROMPT = `Tu es le Concierge Virtuel d'élite de "DALIGHT Head Spa & Institut de Beauté", le premier sanctuaire de Head Spa Japonais à Delmas 65, Haïti.
+const SYSTEM_PROMPT = `Tu es le Concierge Virtuel d'élite de "DALIGHT", le sanctuaire de bien-être et de Head Spa Japonais à Delmas 65, Haïti.
+Le nom officiel est strictement "DALIGHT" (ne dis jamais "DALIGHT HEAD SPA", dis toujours "DALIGHT").
 
 RÈGLES D'OR STRICTES :
 1. COMPRÉHENSION LINGUISTIQUE TOTALE :
@@ -87,37 +90,45 @@ RÈGLES D'OR STRICTES :
  * Génère la réponse du Concierge via Google Gemini API
  */
 async function generateGeminiConciergeResponse(userMessage, apiKey = null) {
-  const cleanKey = apiKey || process.env.GEMINI_API_KEY || '';
+  const cleanKey = apiKey || process.env.GEMINI_API_KEY || GEMINI_DEFAULT_KEY || '';
 
   if (cleanKey) {
-    try {
-      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + cleanKey, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: {
-            parts: [{ text: SYSTEM_PROMPT }]
-          },
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: userMessage }]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.35,
-            maxOutputTokens: 600
-          }
-        })
-      });
+    const candidateModels = [
+      'gemini-flash-latest',
+      'gemini-3.8-flash',
+      'gemini-2.5-flash'
+    ];
 
-      if (response.ok) {
-        const data = await response.json();
-        const aiText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (aiText) return aiText.trim();
+    for (const model of candidateModels) {
+      try {
+        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + cleanKey, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: {
+              parts: [{ text: SYSTEM_PROMPT }]
+            },
+            contents: [
+              {
+                role: 'user',
+                parts: [{ text: userMessage }]
+              }
+            ],
+            generationConfig: {
+              temperature: 0.35,
+              maxOutputTokens: 600
+            }
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const aiText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (aiText) return aiText.trim();
+        }
+      } catch (err) {
+        console.warn('Gemini API call failed on ' + model + ':', err.message);
       }
-    } catch (err) {
-      console.warn("Gemini API call failed, switching to smart fallback:", err.message);
     }
   }
 
@@ -141,7 +152,7 @@ function generateSmartLocalResponse(input) {
     return salutation + "\n\n" +
 "C'est un réel plaisir de vous renseigner.\n\n" +
 "🌿 **Notre Adresse :**\n" +
-"DALIGHT Head Spa est idéalement situé à :\n" +
+"DALIGHT est idéalement situé à :\n" +
 "📍 **Delmas 65, Rue Faustin Premier / Rue Durandisse #10**, Port-au-Prince, Haïti.\n" +
 "(Espace calme, discret et sécurisé avec stationnement privé réservé à notre clientèle).\n\n" +
 "🕐 **Horaires d'Ouverture :**\n" +
@@ -189,7 +200,7 @@ function generateSmartLocalResponse(input) {
 
   // 5. Réponse par défaut chaleureuse et guidée
   return salutation + "\n\n" +
-"Bienvenue chez DALIGHT Head Spa, votre sanctuaire de relaxation et de soin du cuir chevelu à Delmas 65.\n\n" +
+"Bienvenue chez DALIGHT, votre sanctuaire de relaxation et de soin du cuir chevelu à Delmas 65.\n\n" +
 "Comment puis-je vous accompagner aujourd'hui ?\n" +
 "• Pour consulter nos **tarifs & rituels** (Head Spa Signature 8 500 HTG, Sérénité Royale 12 000 HTG)\n" +
 "• Pour obtenir notre **adresse exacte & horaires** (Delmas 65, Rue Durandisse #10)\n" +

@@ -72,7 +72,7 @@ export function clientConfirmationEmail(reservation) {
     </div>
     <div class="content">
       <p class="greeting">Bonjour ${reservation.user_name || 'Cher client'},</p>
-      <p class="message">Merci pour votre réservation chez DALIGHT Head Spa. Nous avons bien reçu votre demande et nous sommes ravis de vous accueillir.</p>
+      <p class="message">Merci pour votre réservation chez DALIGHT. Nous avons bien reçu votre demande et nous sommes ravis de vous accueillir.</p>
       
       <div class="details-box">
         <div class="detail-row">

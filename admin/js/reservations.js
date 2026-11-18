@@ -1,5 +1,5 @@
 // ============================================
-// DALIGHT HEAD SPA - RESERVATIONS MANAGEMENT
+// DALIGHT - RESERVATIONS MANAGEMENT
 // ============================================
 
 let allReservations = [];
@@ -3252,7 +3252,7 @@ Votre réservation chez DALIGHT a bien été enregistrée :
 📍 Lieu : ${record.location}
 💰 Total : ${total.toLocaleString()} HTG${wantsVideo ? ` (Option Vidéo ${videoPrice.toLocaleString()} HTG inclus)` : ''}
 
-Merci de votre confiance et au plaisir de vous choyer chez DALIGHT Head Spa ! 🌿`;
+Merci de votre confiance et au plaisir de vous choyer chez DALIGHT ! 🌿`;
       }
 
       // Send via CVISUAL Gateway Ligne #3

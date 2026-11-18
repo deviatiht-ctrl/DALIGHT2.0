@@ -1,5 +1,5 @@
 // ============================================
-// DALIGHT HEAD SPA - ADMIN CORE
+// DALIGHT - ADMIN CORE
 // Shared functionality for all admin pages
 // ============================================
 

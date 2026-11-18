@@ -999,7 +999,7 @@
                 </span>
               </div>
               <div style="align-self:flex-start; max-width:85%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:12px 12px 12px 2px; padding:0.75rem 1rem; font-size:0.85rem; color:#FAF8F5; line-height:1.45;">
-                Bonjour et bienvenue chez DALIGHT Head Spa ! 🌿<br>Je suis votre Concierge IA. Écrivez-moi en Créole ou en Français pour toute question sur nos soins, nos tarifs ou notre adresse.
+                Bonjour et bienvenue chez DALIGHT ! 🌿<br>Je suis votre Concierge IA. Écrivez-moi en Créole ou en Français pour toute question sur nos soins, nos tarifs ou notre adresse.
               </div>
             </div>
 
@@ -1775,7 +1775,7 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               system_instruction: {
-                parts: [{ text: "Tu es le Concierge Virtuel d'élite de DALIGHT Head Spa à Delmas 65, Haïti. Tu comprends parfaitement le Créole Haïtien et le Français. Tu réponds TOUJOURS en Français poli, chaleureux et raffiné. Rituels : Signature 8 500 HTG (60 min), Sérénité Royale 12 000 HTG (90 min), Renaissance Express 6 500 HTG (45 min). Option Vidéo 4K : +500 HTG public / +1 000 HTG privé. Adresse : Delmas 65, Rue Faustin Premier / Rue Durandisse #10. Acompte de 50% obligatoire via MonCash (+509 4747-7221), NatCash ou Virement. Lien réservation : https://dalightbeauty.com/pages/reservation-v2.html." }]
+                parts: [{ text: "Tu es le Concierge Virtuel d'élite de DALIGHT à Delmas 65, Haïti. Le nom officiel est strictement DALIGHT (ne dis jamais DALIGHT HEAD SPA). Tu comprends parfaitement le Créole Haïtien et le Français. Tu réponds TOUJOURS en Français poli, chaleureux et raffiné. Rituels : Signature 8 500 HTG (60 min), Sérénité Royale 12 000 HTG (90 min), Renaissance Express 6 500 HTG (45 min). Option Vidéo 4K : +500 HTG public / +1 000 HTG privé. Adresse : Delmas 65, Rue Faustin Premier / Rue Durandisse #10. Acompte de 50% obligatoire via MonCash (+509 4747-7221), NatCash ou Virement. Lien réservation : https://dalightbeauty.com/pages/reservation-v2.html." }]
               },
               contents: [{ role: 'user', parts: [{ text: text }] }]
             })
@@ -1811,7 +1811,7 @@
       const salut = isBonswa ? "Bonsoir !" : (isBonjou ? "Bonjour !" : "Bonjour et bienvenue chez DALIGHT !");
 
       if (text.includes('kote') || text.includes('adrès') || text.includes('adres') || text.includes('adresse') || text.includes('situé')) {
-        return salut + "\n\nC'est un réel plaisir de vous renseigner.\n\n🌿 Notre Adresse :\nDALIGHT Head Spa est situé à :\n📍 Delmas 65, Rue Faustin Premier / Rue Durandisse #10, Port-au-Prince, Haïti.\n(Cadre calme, sécurisé avec parking privé réservé à la clientèle).\n\n🕐 Horaires d'Ouverture :\n• Mardi au Samedi : 08h00 à 20h00\n• Dimanche et Lundi : 08h00 à 18h00\n\nPour réserver : https://dalightbeauty.com/pages/reservation-v2.html";
+        return salut + "\n\nC'est un réel plaisir de vous renseigner.\n\n🌿 Notre Adresse :\nDALIGHT est situé à :\n📍 Delmas 65, Rue Faustin Premier / Rue Durandisse #10, Port-au-Prince, Haïti.\n(Cadre calme, sécurisé avec parking privé réservé à la clientèle).\n\n🕐 Horaires d'Ouverture :\n• Mardi au Samedi : 08h00 à 20h00\n• Dimanche et Lundi : 08h00 à 18h00\n\nPour réserver : https://dalightbeauty.com/pages/reservation-v2.html";
       }
 
       if (text.includes('pri') || text.includes('prix') || text.includes('konbyen') || text.includes('combien') || text.includes('tarif') || text.includes('head spa') || text.includes('soin')) {
@@ -1822,7 +1822,7 @@
         return salut + "\n\nPour réserver votre créneau exclusif :\n\n1️⃣ Choisissez votre soin et votre horaire sur notre plateforme :\n👉 https://dalightbeauty.com/pages/reservation-v2.html\n\n2️⃣ Réglez votre acompte de 50% (ou paiement complet) :\n• MonCash Direct : +509 4747-7221 (DALIGHT BEAUTY)\n• NatCash Direct : +509 4747-7221 (DALIGHT BEAUTY)\n• Virement Bancaire : Sogebank, Unibank, BNC\n\n3️⃣ Joignez votre preuve de paiement. Dès validation, vous recevrez une confirmation officielle par WhatsApp !";
       }
 
-      return salut + "\n\nBienvenue chez DALIGHT Head Spa, votre sanctuaire de relaxation et de soin du cuir chevelu à Delmas 65.\n\nComment puis-je vous accompagner aujourd'hui ?\n• Pour consulter nos tarifs (Signature 8 500 HTG, Royale 12 000 HTG)\n• Pour notre adresse (Delmas 65, Rue Durandisse #10)\n• Pour réserver en ligne : https://dalightbeauty.com/pages/reservation-v2.html";
+      return salut + "\n\nBienvenue chez DALIGHT, votre sanctuaire de relaxation et de soin du cuir chevelu à Delmas 65.\n\nComment puis-je vous accompagner aujourd'hui ?\n• Pour consulter nos tarifs (Signature 8 500 HTG, Royale 12 000 HTG)\n• Pour notre adresse (Delmas 65, Rue Durandisse #10)\n• Pour réserver en ligne : https://dalightbeauty.com/pages/reservation-v2.html";
     }
 
     async function sendLastAiResponseToRealPhone() {

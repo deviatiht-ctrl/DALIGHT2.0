@@ -1,5 +1,5 @@
 // ============================================
-// DALIGHT HEAD SPA - POSTS MANAGEMENT
+// DALIGHT - POSTS MANAGEMENT
 // ============================================
 
 let allPosts = [];

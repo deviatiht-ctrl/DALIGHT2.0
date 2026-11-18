@@ -1,5 +1,5 @@
 // ============================================
-// DALIGHT HEAD SPA - EMPLOYEE PRESENCE SYSTEM
+// DALIGHT - EMPLOYEE PRESENCE SYSTEM
 // ============================================
 
 let allEmployees = [];
