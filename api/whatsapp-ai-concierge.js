@@ -208,11 +208,98 @@ function generateSmartLocalResponse(input) {
 "Écrivez-nous votre question, nous nous ferons un plaisir de vous répondre !";
 }
 
+/**
+ * Détecte si le message du client exprime une intention réelle de réservation ou d'assistance humaine
+ */
+function detectBookingIntent(message) {
+  if (!message || typeof message !== 'string') return false;
+  const m = message.toLowerCase();
+
+  const keywords = [
+    'randevou', 'rdv', 'rezerve', 'rezève', 'rezèv', 'reserv', 'plas', 'disponib',
+    'pale ak moun', 'pale ak yon moun', 'moun reyel', 'moun reyèl', 'humain',
+    'vle vin', 'ta renmen vin', 'vin jodi', 'vin demen', 'ede m rezerve', 'pou demen', 'pou jodi'
+  ];
+
+  return keywords.some(k => m.includes(k));
+}
+
+/**
+ * Envoie une notification instantanée d'alerte sur le numéro WhatsApp officiel de DALIGHT
+ */
+async function dispatchBookingAlertToDalight(clientPhone, clientMessage, dalightPhone = "50947477221") {
+  const cleanClient = String(clientPhone || '').replace(/\D/g, '');
+  const formattedClient = cleanClient.length === 8 ? ('509' + cleanClient) : cleanClient;
+  const directChatLink = formattedClient ? `https://wa.me/${formattedClient}` : 'Numéro non spécifié';
+
+  const alertText = `🚨 *ALERTE DALIGHT — INTENTION DE RÉSERVATION DÉTECTÉE !* 🌿\n\n` +
+    `👤 *Client :* +${formattedClient}\n` +
+    `💬 *Message reçu :* « ${clientMessage} »\n` +
+    `⏰ *Heure :* ${new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}\n\n` +
+    `👉 *Prendre le relais et répondre directement au client :*\n${directChatLink}`;
+
+  try {
+    const gatewayUrl = process.env.CVISUAL_WA_BASE_URL || 'https://cvisual-whatsapp-gateway.onrender.com';
+    const apiKey = process.env.CVISUAL_WA_API_KEY || 'cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c';
+
+    const res = await fetch(`${gatewayUrl}/api/v1/messages/send`, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        account_index: 3,
+        to: dalightPhone,
+        message: alertText,
+        mode: 'sync',
+        kind: 'manual_direct'
+      })
+    });
+
+    const data = await res.json().catch(() => ({}));
+    return { success: res.ok, data, alertText };
+  } catch(err) {
+    console.warn("Failed to dispatch alert to DALIGHT number:", err.message);
+    return { success: false, error: err.message, alertText };
+  }
+}
+
+/**
+ * Gestionnaire complet de message entrant :
+ * 1. Détecte si le message est une intention de réservation.
+ * 2. Génère la réponse personnalisée de l'IA.
+ * 3. Si intention de réservation : alerte instantanément le numéro WhatsApp officiel de DALIGHT (+509 4747-7221).
+ */
+async function handleIncomingWhatsAppMessage(senderPhone, messageText, options = {}) {
+  const isBooking = detectBookingIntent(messageText);
+  let reply = await generateGeminiConciergeResponse(messageText, options.geminiApiKey || null);
+
+  let alertResult = null;
+  if (isBooking) {
+    const dalightNumber = options.dalightAlertPhone || "50947477221";
+    alertResult = await dispatchBookingAlertToDalight(senderPhone, messageText, dalightNumber);
+
+    // Ajoute une mention élégante informant le client que l'équipe est prévenue
+    reply += "\n\n🔔 *Information :* Notre responsable a également reçu votre demande en direct et peut prendre le relais ici même d'un instant à l'autre.";
+  }
+
+  return {
+    reply,
+    isBookingIntent: isBooking,
+    alertSent: isBooking && (alertResult?.success || false),
+    alertDetails: alertResult
+  };
+}
+
 if (typeof module !== 'undefined') {
   module.exports = {
     DALIGHT_KNOWLEDGE_BASE,
     SYSTEM_PROMPT,
     generateGeminiConciergeResponse,
-    generateSmartLocalResponse
+    generateSmartLocalResponse,
+    detectBookingIntent,
+    dispatchBookingAlertToDalight,
+    handleIncomingWhatsAppMessage
   };
 }

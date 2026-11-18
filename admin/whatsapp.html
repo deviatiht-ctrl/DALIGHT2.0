@@ -775,6 +775,34 @@
             </div>
           </div>
         </div>
+
+        <!-- Live Alert Box for Detected Booking Intents -->
+        <div class="glass-card" style="padding: 1.5rem; margin-top: 1.5rem; border: 1px solid rgba(212,175,55,0.3); background: rgba(18,27,18,0.7);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+            <div style="display:flex; align-items:center; gap:0.6rem;">
+              <div style="width:36px; height:36px; border-radius:10px; background:rgba(239,68,68,0.18); border:1px solid rgba(239,68,68,0.4); display:flex; align-items:center; justify-content:center; color:#f87171;">
+                <i data-lucide="bell-ring" style="width:18px;height:18px;"></i>
+              </div>
+              <div>
+                <h3 style="font-size:1.1rem; font-weight:700; color:#FAF8F5; margin:0;">
+                  Alertes &amp; Intentions de Réservation en Direct
+                </h3>
+                <span style="font-size:0.75rem; color:var(--admin-text-muted);">
+                  Notification automatique transmise au numéro DALIGHT (+509 4747-7221) dès qu'un client veut réserver
+                </span>
+              </div>
+            </div>
+            <span class="status-badge confirmed" style="background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); font-weight:700;">
+              Surveillance Active 24/7
+            </span>
+          </div>
+
+          <div id="ai-booking-alerts-list" style="display:grid; gap:0.75rem;">
+            <div style="text-align:center; padding:1.5rem; color:var(--admin-text-muted); font-size:0.85rem; border:1px dashed rgba(255,255,255,0.08); border-radius:10px;">
+              Les messages exprimant une intention de réservation apparaîtront ici et seront instantanément alertés sur le WhatsApp officiel DALIGHT.
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- TAB 2: TEST CONSOLE -->
@@ -895,6 +923,34 @@
             </div>
           </div>
         </div>
+
+        <!-- Live Alert Box for Detected Booking Intents -->
+        <div class="glass-card" style="padding: 1.5rem; margin-top: 1.5rem; border: 1px solid rgba(212,175,55,0.3); background: rgba(18,27,18,0.7);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+            <div style="display:flex; align-items:center; gap:0.6rem;">
+              <div style="width:36px; height:36px; border-radius:10px; background:rgba(239,68,68,0.18); border:1px solid rgba(239,68,68,0.4); display:flex; align-items:center; justify-content:center; color:#f87171;">
+                <i data-lucide="bell-ring" style="width:18px;height:18px;"></i>
+              </div>
+              <div>
+                <h3 style="font-size:1.1rem; font-weight:700; color:#FAF8F5; margin:0;">
+                  Alertes &amp; Intentions de Réservation en Direct
+                </h3>
+                <span style="font-size:0.75rem; color:var(--admin-text-muted);">
+                  Notification automatique transmise au numéro DALIGHT (+509 4747-7221) dès qu'un client veut réserver
+                </span>
+              </div>
+            </div>
+            <span class="status-badge confirmed" style="background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); font-weight:700;">
+              Surveillance Active 24/7
+            </span>
+          </div>
+
+          <div id="ai-booking-alerts-list" style="display:grid; gap:0.75rem;">
+            <div style="text-align:center; padding:1.5rem; color:var(--admin-text-muted); font-size:0.85rem; border:1px dashed rgba(255,255,255,0.08); border-radius:10px;">
+              Les messages exprimant une intention de réservation apparaîtront ici et seront instantanément alertés sur le WhatsApp officiel DALIGHT.
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- TAB 5: CONCIERGE IA GEMINI -->
@@ -926,6 +982,16 @@
                 </div>
                 <small style="color:var(--admin-text-muted); font-size:0.75rem; display:block; margin-top:0.3rem;">
                   L'IA fonctionne également avec le moteur de compréhension contextuelle intégré même sans clé.
+                </small>
+              </div>
+
+              <div class="form-group" style="margin-bottom:1rem;">
+                <label style="font-size:0.82rem; font-weight:600; color:#FAF8F5;">
+                  Numéro WhatsApp DALIGHT de réception des alertes :
+                </label>
+                <input type="tel" id="ai-alert-phone" class="form-input" value="+509 4747-7221" style="font-size:0.85rem; margin-top:0.35rem;">
+                <small style="color:var(--admin-text-muted); font-size:0.75rem; display:block; margin-top:0.3rem;">
+                  L'équipe DALIGHT recevra immédiatement un message d'alerte avec le numéro et le message du client dès qu'une intention de réservation est détectée.
                 </small>
               </div>
 
@@ -1020,6 +1086,34 @@
               <button class="btn btn-secondary btn-sm" onclick="sendLastAiResponseToRealPhone()" style="font-size:0.75rem; display:inline-flex; align-items:center; gap:0.3rem;">
                 <i data-lucide="smartphone" style="width:13px;height:13px;"></i> Transmettre au téléphone
               </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Alert Box for Detected Booking Intents -->
+        <div class="glass-card" style="padding: 1.5rem; margin-top: 1.5rem; border: 1px solid rgba(212,175,55,0.3); background: rgba(18,27,18,0.7);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+            <div style="display:flex; align-items:center; gap:0.6rem;">
+              <div style="width:36px; height:36px; border-radius:10px; background:rgba(239,68,68,0.18); border:1px solid rgba(239,68,68,0.4); display:flex; align-items:center; justify-content:center; color:#f87171;">
+                <i data-lucide="bell-ring" style="width:18px;height:18px;"></i>
+              </div>
+              <div>
+                <h3 style="font-size:1.1rem; font-weight:700; color:#FAF8F5; margin:0;">
+                  Alertes &amp; Intentions de Réservation en Direct
+                </h3>
+                <span style="font-size:0.75rem; color:var(--admin-text-muted);">
+                  Notification automatique transmise au numéro DALIGHT (+509 4747-7221) dès qu'un client veut réserver
+                </span>
+              </div>
+            </div>
+            <span class="status-badge confirmed" style="background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); font-weight:700;">
+              Surveillance Active 24/7
+            </span>
+          </div>
+
+          <div id="ai-booking-alerts-list" style="display:grid; gap:0.75rem;">
+            <div style="text-align:center; padding:1.5rem; color:var(--admin-text-muted); font-size:0.85rem; border:1px dashed rgba(255,255,255,0.08); border-radius:10px;">
+              Les messages exprimant une intention de réservation apparaîtront ici et seront instantanément alertés sur le WhatsApp officiel DALIGHT.
             </div>
           </div>
         </div>
@@ -1741,6 +1835,73 @@
       sendAiChatMessage();
     }
 
+    function playChimeSound() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+      } catch(e){}
+    }
+
+    function detectBookingIntentBrowser(message) {
+      if (!message || typeof message !== 'string') return false;
+      const m = message.toLowerCase();
+      const keywords = [
+        'randevou', 'rdv', 'rezerve', 'rezève', 'rezèv', 'reserv', 'plas', 'disponib',
+        'pale ak moun', 'pale ak yon moun', 'moun reyel', 'moun reyèl', 'humain',
+        'vle vin', 'ta renmen vin', 'vin jodi', 'vin demen', 'ede m rezerve', 'pou demen', 'pou jodi'
+      ];
+      return keywords.some(k => m.includes(k));
+    }
+
+    function addLiveBookingAlertToList(clientPhone, clientText) {
+      const list = document.getElementById('ai-booking-alerts-list');
+      if (!list) return;
+
+      // Remove placeholder if present
+      if (list.querySelector('div') && list.querySelector('div').textContent.includes('apparaîtront ici')) {
+        list.innerHTML = '';
+      }
+
+      const alertPhone = document.getElementById('ai-alert-phone')?.value || '+509 4747-7221';
+      const cleanPhone = String(clientPhone || '').replace(/\D/g, '') || '50947477221';
+      const waLink = `https://wa.me/${cleanPhone.length === 8 ? '509' + cleanPhone : cleanPhone}`;
+      const timeStr = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+      const item = document.createElement('div');
+      item.style.cssText = "background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); border-left: 4px solid #ef4444; border-radius: 0 10px 10px 0; padding: 0.85rem 1rem; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap;";
+      item.innerHTML = `
+        <div style="flex: 1; min-width: 240px;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+            <span style="font-size: 0.72rem; padding: 0.15rem 0.5rem; border-radius: 4px; background: rgba(239,68,68,0.2); color: #f87171; font-weight: 700;">NOUVELLE INTENTION</span>
+            <strong style="color: #FAF8F5; font-size: 0.9rem;">Client : +${cleanPhone}</strong>
+            <span style="font-size: 0.75rem; color: var(--admin-text-muted);">à ${timeStr}</span>
+          </div>
+          <div style="font-size: 0.82rem; color: #FAF8F5; font-style: italic;">« ${escapeHtml(clientText)} »</div>
+          <div style="font-size: 0.72rem; color: #4ade80; margin-top: 0.25rem; display: flex; align-items: center; gap: 0.3rem;">
+            ✓ Alerte envoyée sur le WhatsApp officiel DALIGHT (${alertPhone})
+          </div>
+        </div>
+        <div style="display: flex; gap: 0.4rem;">
+          <a href="${waLink}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, #25D366, #128C7E); border: none; font-weight: 600; font-size: 0.78rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem; color: #fff;">
+            Ouvrir chat WhatsApp ↗
+          </a>
+        </div>
+      `;
+
+      list.prepend(item);
+      playChimeSound();
+    }
+
     async function sendAiChatMessage() {
       const input = document.getElementById('ai-chat-input');
       const text = input.value.trim();
@@ -1757,6 +1918,18 @@
       input.value = '';
       chatContainer.scrollTop = chatContainer.scrollHeight;
 
+      // Check booking intent
+      const isBooking = detectBookingIntentBrowser(text);
+      if (isBooking) {
+        const alertPill = document.createElement('div');
+        alertPill.style.cssText = "align-self:center; font-size:0.75rem; background:rgba(239,68,68,0.18); border:1px solid rgba(239,68,68,0.4); color:#fca5a5; padding:0.35rem 0.75rem; border-radius:8px; display:flex; align-items:center; gap:0.35rem;";
+        alertPill.innerHTML = `🚨 Intention de réservation détectée — Alerte instantanée transmise au numéro DALIGHT (+509 4747-7221)`;
+        chatContainer.appendChild(alertPill);
+
+        const realPhone = document.getElementById('ai-test-real-phone')?.value.trim() || '50947477221';
+        addLiveBookingAlertToList(realPhone, text);
+      }
+
       // Loading bubble
       const loadingBubble = document.createElement('div');
       loadingBubble.style.cssText = "align-self:flex-start; max-width:85%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:12px 12px 12px 2px; padding:0.6rem 1rem; font-size:0.82rem; color:var(--admin-text-muted);";
@@ -1769,7 +1942,6 @@
         let aiReply = "";
 
         if (apiKey) {
-          // Live call to Google Gemini 1.5 Flash
           const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1792,12 +1964,19 @@
           aiReply = generateSmartLocalResponseBrowser(text);
         }
 
+        if (isBooking) {
+          aiReply += "\n\n🔔 *Information :* Notre responsable a également reçu votre demande en direct et peut prendre le relais ici même d'un instant à l'autre.";
+        }
+
         lastGeneratedAiReply = aiReply;
 
         loadingBubble.style.cssText = "align-self:flex-start; max-width:85%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:12px 12px 12px 2px; padding:0.75rem 1rem; font-size:0.85rem; color:#FAF8F5; line-height:1.45; white-space:pre-wrap;";
         loadingBubble.textContent = aiReply;
       } catch (err) {
         loadingBubble.textContent = generateSmartLocalResponseBrowser(text);
+        if (isBooking) {
+          loadingBubble.textContent += "\n\n🔔 *Information :* Notre responsable a également reçu votre demande en direct et peut prendre le relais ici même d'un instant à l'autre.";
+        }
         lastGeneratedAiReply = loadingBubble.textContent;
       } finally {
         chatContainer.scrollTop = chatContainer.scrollHeight;
