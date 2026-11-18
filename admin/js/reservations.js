@@ -296,6 +296,53 @@ window.openDetailModal = function(id) {
       </div>
     </div>` : '';
 
+  // ── Actions & Communications HTML ────────────────────────────
+  const automaticButtonsHtml = `
+    <div style="background:rgba(255,255,255,0.02);border:1px solid var(--admin-border);border-radius:10px;padding:.75rem;">
+      <div style="font-size:.75rem;font-weight:600;color:var(--admin-text-muted);margin-bottom:.45rem;display:flex;align-items:center;gap:.3rem;">
+        ${ico('M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-2', 13)} Actions automatiques (Brevo & Statut)
+      </div>
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+        ${r.status === 'PENDING' ? `
+          <button class="btn btn-success btn-sm" onclick="autoConfirmReservation('${r.id}')">Confirmer &amp; Email</button>
+          <button class="btn btn-secondary btn-sm" onclick="autoSetPending('${r.id}')">Remettre en attente</button>` : ''}
+        ${r.status === 'CONFIRMED' ? `
+          <button class="btn btn-success btn-sm" onclick="autoCompleteReservation('${r.id}')">Terminer &amp; Email</button>` : ''}
+      </div>
+    </div>`;
+
+  const whatsappButtonsHtml = `
+    <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.25);border-radius:10px;padding:.75rem;">
+      <div style="font-size:.75rem;font-weight:600;color:var(--admin-accent);margin-bottom:.45rem;display:flex;align-items:center;gap:.35rem;">
+        ${ico('M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z', 13)} Actions WhatsApp (Ligne #3 DALIGHT Dédiée)
+      </div>
+      <div style="display:flex;gap:.45rem;flex-wrap:wrap;">
+        <button class="btn btn-secondary btn-sm" onclick="sendWhatsAppConfirmationAction('${r.id}')" title="Renvoyer confirmation WhatsApp">
+          ${ico('M5 13l4 4L19 7', 12)} Confirmer (WhatsApp)
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="sendWhatsAppReminder24hAction('${r.id}')" title="Rappel J-1 avec règle 24h">
+          ${ico('M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9', 12)} Rappel J-1 (WhatsApp)
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="sendWhatsAppAlert30mAction('${r.id}')" title="Alerte départ & retard (H-30 min)">
+          ${ico('M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', 12)} Alerte H-30 min (Retard)
+        </button>
+      </div>
+    </div>`;
+
+  const emailButtonsHtml = `
+    <div style="background:rgba(255,255,255,0.02);border:1px solid var(--admin-border);border-radius:10px;padding:.75rem;">
+      <div style="font-size:.75rem;font-weight:600;color:var(--admin-text-muted);margin-bottom:.45rem;display:flex;align-items:center;gap:.35rem;">
+        ${ico('M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', 13)} Emails manuels Brevo
+      </div>
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+        <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${r.id}','confirmation')">Confirmation</button>
+        <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${r.id}','cancellation')">Annulation</button>
+        <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${r.id}','reminder')">Rappel</button>
+        <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${r.id}','completion')">Terminé</button>
+        <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${r.id}','custom')">Vide</button>
+      </div>
+    </div>`;
+
   // ── Content HTML ──────────────────────────────────────────────
   content.innerHTML = `
     <div style="display:grid;gap:1rem;">
@@ -316,7 +363,18 @@ window.openDetailModal = function(id) {
           </div>
           <div>
             <div style="font-weight:600;font-size:.95rem;">${r.user_name || 'Client non renseigné'}</div>
-            <div style="font-size:.75rem;color:var(--admin-text-muted);">Client</div>
+            <!-- Section Actions Rapides & Communications Client -->
+      <div style="background:var(--admin-bg);border-radius:12px;padding:1rem;border:1px solid var(--admin-border);display:grid;gap:.75rem;margin-top:.25rem;">
+        <div style="font-weight:600;font-size:.88rem;color:var(--admin-accent);display:flex;align-items:center;gap:.4rem;">
+          ${ico('M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z', 15, 'var(--admin-accent)')}
+          Communications & Notifications
+        </div>
+        ${whatsappButtonsHtml}
+        ${automaticButtonsHtml}
+        ${emailButtonsHtml}
+      </div>
+
+      <div style="font-size:.75rem;color:var(--admin-text-muted);">Client</div>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:var(--admin-text-muted);">
@@ -440,79 +498,38 @@ window.openDetailModal = function(id) {
     </div>`;
 
   // ── Footer ────────────────────────────────────────────────────
-  const automaticButtonsHtml = `
-    <div style="display:flex;gap:.4rem;flex-wrap:wrap;width:100%;margin-bottom:.75rem;padding-bottom:.75rem;border-bottom:1px solid var(--admin-border);">
-      <span style="font-size:.75rem;color:var(--admin-text-muted);width:100%;margin-bottom:.2rem;display:flex;align-items:center;gap:.3rem;">
-        ${ico('M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-2', 13)} Actions automatiques (Brevo)
-      </span>
-      ${r.status === 'PENDING' ? `
-        <button class="btn btn-success btn-sm" onclick="autoConfirmReservation('${r.id}')">Confirmer &amp; Email</button>
-        <button class="btn btn-secondary btn-sm" onclick="autoSetPending('${r.id}')">Remettre en attente</button>` : ''}
-      ${r.status === 'CONFIRMED' ? `
-        <button class="btn btn-success btn-sm" onclick="autoCompleteReservation('${r.id}')">Terminer &amp; Email</button>` : ''}
-    </div>`;
-
-  const whatsappButtonsHtml = `
-    <div style="display:flex;gap:.4rem;flex-wrap:wrap;width:100%;margin-bottom:.75rem;padding-bottom:.75rem;border-bottom:1px solid var(--admin-border);">
-      <span style="font-size:.75rem;color:var(--admin-text-muted);width:100%;margin-bottom:.2rem;display:flex;align-items:center;gap:.3rem;">
-        ${ico('M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z', 13)} Actions WhatsApp (Ligne 3 DALIGHT)
-      </span>
-      <button class="btn btn-secondary btn-sm" onclick="sendWhatsAppConfirmationAction('${r.id}')" title="Renvoyer confirmation WhatsApp">
-        ${ico('M5 13l4 4L19 7', 12)} Confirmer (WhatsApp)
-      </button>
-      <button class="btn btn-secondary btn-sm" onclick="sendWhatsAppReminder24hAction('${r.id}')" title="Rappel J-1 avec regle d'annulation 24h">
-        ${ico('M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9', 12)} Rappel J-1 (WhatsApp)
-      </button>
-      <button class="btn btn-secondary btn-sm" onclick="sendWhatsAppAlert30mAction('${r.id}')" title="Alerte depart & retard (H-30 min)">
-        ${ico('M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', 12)} Alerte H-30 min (Retard)
-      </button>
-    </div>`;
-
-  const emailButtonsHtml = `
-    <div style="display:flex;gap:.4rem;flex-wrap:wrap;width:100%;margin-bottom:.75rem;padding-bottom:.75rem;border-bottom:1px solid var(--admin-border);">
-      <span style="font-size:.75rem;color:var(--admin-text-muted);width:100%;margin-bottom:.2rem;display:flex;align-items:center;gap:.3rem;">
-        ${ico('M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', 13)} Emails manuels
-      </span>
-      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${r.id}','confirmation')">Confirmation</button>
-      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${r.id}','cancellation')">Annulation</button>
-      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${r.id}','reminder')">Rappel</button>
-      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${r.id}','completion')">Terminé</button>
-      <button class="btn btn-secondary btn-sm" onclick="sendEmailTemplate('${r.id}','custom')">Vide</button>
-    </div>`;
-
   const showBalanceBtn = balance > 0 && !isFull && r.status !== 'CANCELLED';
 
-  let actions = `
-    <button class="btn btn-secondary" onclick="closeModal()">Fermer</button>
-    <button class="btn btn-secondary" onclick="printReservationDetail('${r.id}')" style="display:flex;align-items:center;gap:.35rem;">
-      ${ico('M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z', 14)} Imprimer
-    </button>
-    ${showBalanceBtn ? `<button class="btn btn-primary" onclick="openBalanceModal('${r.id}')" style="display:flex;align-items:center;gap:.35rem;">
-      ${ico('M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', 14)} Payer le solde
-    </button>` : ''}
-  `;
+  let actions = '';
   if (r.status === 'PENDING') {
     actions = `
-      <button class="btn btn-danger" onclick="updateStatus('${r.id}','CANCELLED');closeModal();">Annuler</button>
-      <button class="btn btn-secondary" onclick="printReservationDetail('${r.id}')">${ico('M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z', 14)} Imprimer</button>
-      <button class="btn btn-primary" onclick="updateStatus('${r.id}','CONFIRMED');closeModal();">Confirmer</button>`;
+      <button class="btn btn-danger btn-sm" onclick="updateStatus('${r.id}','CANCELLED');closeModal();">Annuler</button>
+      <button class="btn btn-primary btn-sm" onclick="updateStatus('${r.id}','CONFIRMED');closeModal();">Confirmer</button>`;
   } else if (r.status === 'AWAITING_PAYMENT') {
     actions = `
-      <button class="btn btn-danger" onclick="updateStatus('${r.id}','CANCELLED');closeModal();">Annuler</button>
-      <button class="btn btn-secondary" onclick="printReservationDetail('${r.id}')">${ico('M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z', 14)} Imprimer</button>
-      <button class="btn btn-primary" onclick="updateStatus('${r.id}','CONFIRMED');closeModal();">Confirmer</button>`;
+      <button class="btn btn-danger btn-sm" onclick="updateStatus('${r.id}','CANCELLED');closeModal();">Annuler</button>
+      <button class="btn btn-primary btn-sm" onclick="updateStatus('${r.id}','CONFIRMED');closeModal();">Confirmer</button>`;
   } else if (r.status === 'CONFIRMED') {
     actions = `
-      <button class="btn btn-secondary" onclick="closeModal()">Fermer</button>
-      <button class="btn btn-secondary" onclick="printReservationDetail('${r.id}')">${ico('M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z', 14)} Imprimer</button>
-      <button class="btn btn-primary" onclick="updateStatus('${r.id}','COMPLETED');closeModal();">Marquer terminé</button>
-      ${showBalanceBtn ? `<button class="btn btn-primary" onclick="openBalanceModal('${r.id}')">${ico('M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', 14)} Payer solde</button>` : ''}`;
+      <button class="btn btn-secondary btn-sm" onclick="closeModal()">Fermer</button>
+      ${showBalanceBtn ? `<button class="btn btn-primary btn-sm" onclick="openBalanceModal('${r.id}')">${ico('M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', 14)} Payer solde</button>` : ''}
+      <button class="btn btn-primary btn-sm" onclick="updateStatus('${r.id}','COMPLETED');closeModal();">Marquer terminé</button>`;
+  } else {
+    actions = `<button class="btn btn-secondary btn-sm" onclick="closeModal()">Fermer</button>`;
   }
 
-  footer.innerHTML = automaticButtonsHtml + emailButtonsHtml + whatsappButtonsHtml +
-    '<div style="display:flex;gap:.5rem;justify-content:flex-end;flex-wrap:wrap;width:100%;">' + actions + '</div>';
-  footer.style.flexDirection = 'column';
-  footer.style.alignItems    = 'stretch';
+  footer.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;width:100%;gap:.75rem;flex-wrap:wrap;">
+      <button class="btn btn-secondary btn-sm" onclick="printReservationDetail('${r.id}')" style="display:flex;align-items:center;gap:.35rem;">
+        ${ico('M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z', 14)} Imprimer
+      </button>
+      <div style="display:flex;gap:.5rem;align-items:center;">
+        ${actions}
+      </div>
+    </div>`;
+  footer.style.flexDirection = 'row';
+  footer.style.alignItems = 'center';
+  footer.style.padding = '0.75rem 0 0 0';
   modal.classList.add('active');
 
   // Load consent form info asynchronously
