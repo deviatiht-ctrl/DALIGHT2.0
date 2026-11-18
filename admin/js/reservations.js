@@ -3019,9 +3019,10 @@ function updateCreateReservationTotal() {
     feeAmount += includeFee ? (withFee(base) - base) : 0;
   });
 
-  // Option Vidéo Souvenir (+500 HTG)
+  // Option Vidéo Souvenir (+500 HTG Public / +1 000 HTG Privé)
   const wantsVideo = document.getElementById('create-video-toggle')?.checked ?? false;
-  const videoPrice = wantsVideo ? 500 : 0;
+  const videoConsent = document.querySelector('input[name="create_video_consent"]:checked')?.value || 'public';
+  const videoPrice = wantsVideo ? (videoConsent === 'private' ? 1000 : 500) : 0;
   if (wantsVideo) {
     subtotal += videoPrice;
     feeAmount += includeFee ? (withFee(videoPrice) - videoPrice) : 0;
@@ -3035,7 +3036,7 @@ function updateCreateReservationTotal() {
     let text = subtotal > 0 ? `Sous-total : ${subtotal.toLocaleString()} HTG` : '';
     if (includeFee && subtotal > 0) text += `  —  Frais MonCash : ${feeAmount.toLocaleString()} HTG  —  Total : ${total.toLocaleString()} HTG`;
     else if (subtotal > 0) text += `  —  Total : ${total.toLocaleString()} HTG`;
-    if (wantsVideo) text += ` (dont Option Vidéo : 500 HTG)`;
+    if (wantsVideo) text += ` (dont Option Vidéo : ${videoPrice.toLocaleString()} HTG - ${videoConsent === 'private' ? 'Usage Privé' : 'Public'})`;
     totalEl.textContent = text;
   }
   if (feeEl) feeEl.textContent = includeFee ? 'Frais MonCash (3%) inclus dans le total' : 'Frais MonCash retirés';
@@ -3158,7 +3159,7 @@ async function submitCreateReservation() {
     wants_video: wantsVideo,
     video_requested: wantsVideo,
     video_consent: wantsVideo ? videoConsent : null,
-    video_price: wantsVideo ? 500 : 0,
+    video_price: wantsVideo ? (videoConsent === 'private' ? 1000 : 500) : 0,
     video_status: wantsVideo ? 'pending' : null,
   };
 

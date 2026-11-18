@@ -666,10 +666,10 @@
               <label style="font-size: .8rem; color: var(--admin-text-muted); margin-bottom: .3rem; display: block;">Choix de consentement vidéo :</label>
               <div style="display: flex; gap: 1rem; font-size: .85rem;">
                 <label style="display: flex; align-items: center; gap: .35rem; cursor: pointer;">
-                  <input type="radio" name="create_video_consent" value="public" checked> Autorisé Réseaux (Public)
+                  <input type="radio" name="create_video_consent" value="public" checked onchange="updateCreateReservationTotal()"> Autorisé Réseaux (Public +500 HTG)
                 </label>
                 <label style="display: flex; align-items: center; gap: .35rem; cursor: pointer;">
-                  <input type="radio" name="create_video_consent" value="private"> Usage Privé Seul (WhatsApp)
+                  <input type="radio" name="create_video_consent" value="private" onchange="updateCreateReservationTotal()"> Usage Privé Seul (+1 000 HTG)
                 </label>
               </div>
             </div>

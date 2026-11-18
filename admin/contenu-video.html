@@ -294,24 +294,33 @@
         </div>
 
         <form id="video-price-form" onsubmit="updateVideoPricing(event)" class="price-config-box">
-          <div class="form-group" style="margin-bottom: 0; min-width: 220px; flex: 1;">
-            <label class="form-label" style="font-weight: 600; color: #FAF8F5;">Prix de l'Option Vidéo (HTG) :</label>
-            <input type="number" id="setting-video-price" class="form-input" min="0" step="50" value="500" required style="font-size: 1.1rem; font-weight: 700; color: #D4AF37;">
+          <div class="form-group" style="margin-bottom: 0; min-width: 190px; flex: 1;">
+            <label class="form-label" style="font-weight: 600; color: #FAF8F5; font-size: 0.8rem;">
+              Prix Réseaux Publics (HTG) :
+            </label>
+            <input type="number" id="setting-video-price-public" class="form-input" min="0" step="50" value="500" required style="font-size: 1.05rem; font-weight: 700; color: #4ade80;">
           </div>
 
-          <div class="form-group" style="margin-bottom: 0; min-width: 240px; flex: 1;">
-            <label class="form-label" style="font-weight: 600; color: #FAF8F5;">Disponibilité sur le site :</label>
+          <div class="form-group" style="margin-bottom: 0; min-width: 190px; flex: 1;">
+            <label class="form-label" style="font-weight: 600; color: #FAF8F5; font-size: 0.8rem;">
+              Prix Usage Privé Exclusif (HTG) :
+            </label>
+            <input type="number" id="setting-video-price-private" class="form-input" min="0" step="50" value="1000" required style="font-size: 1.05rem; font-weight: 700; color: #D4AF37;">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0; min-width: 220px; flex: 1;">
+            <label class="form-label" style="font-weight: 600; color: #FAF8F5; font-size: 0.8rem;">Disponibilité sur le site :</label>
             <select id="setting-video-active" class="form-select">
               <option value="true" selected>Activé (Proposé lors de la réservation)</option>
               <option value="false">Désactivé temporairement</option>
             </select>
           </div>
 
-          <button type="submit" class="btn btn-primary" id="save-price-btn" style="height: 44px; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+          <button type="submit" class="btn btn-primary" id="save-price-btn" style="height: 42px; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600;">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
             </svg>
-            Enregistrer le tarif
+            Enregistrer les tarifs
           </button>
         </form>
       </div>
@@ -372,10 +381,410 @@
         </div>
       </div>
     </div>
-  </main>
+  
+  <!-- Modal Upload Vidéo 4K & Envoi WhatsApp -->
+  <div class="modal-overlay" id="upload-video-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(8,12,8,0.85); backdrop-filter:blur(16px); z-index:9999; align-items:center; justify-content:center; padding:1rem;">
+    <div class="modal" style="max-width: 540px; width:100%; background: rgba(18, 27, 18, 0.98); border: 1px solid rgba(212,175,55,0.4); border-radius: 20px; padding: 1.5rem; box-shadow: 0 25px 60px rgba(0,0,0,0.8);">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:0.75rem;">
+        <h3 style="margin:0; font-family:'Cormorant Garamond',serif; font-size:1.4rem; color:var(--admin-accent,#D4AF37); display:flex; align-items:center; gap:0.5rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          Livraison Vidéo Souvenir 4K
+        </h3>
+        <button class="modal-close" onclick="closeUploadVideoModal()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:1.3rem;">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="upload-res-id">
+        <input type="hidden" id="upload-res-phone">
+        <input type="hidden" id="upload-res-name">
+        
+        <div id="upload-client-info" style="background:rgba(255,255,255,0.03); border:1px solid rgba(212,175,55,0.2); border-radius:10px; padding:0.85rem; margin-bottom:1rem; font-size:0.85rem;"></div>
+
+        <!-- File Drop Area -->
+        <div id="drop-video-zone" style="border:2px dashed rgba(212,175,55,0.4); border-radius:12px; padding:1.5rem; text-align:center; background:rgba(0,0,0,0.25); cursor:pointer; margin-bottom:1rem; transition:all 0.2s;" onclick="document.getElementById('video-file-input').click()">
+          <input type="file" id="video-file-input" accept="video/mp4,video/quicktime,video/x-matroska,video/*" style="display:none;" onchange="handleVideoFileSelected(this)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:0.4rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <div style="font-weight:600; color:#FAF8F5; font-size:0.95rem;">Cliquez pour sélectionner la vidéo (4K / HD)</div>
+          <div style="font-size:0.75rem; color:var(--admin-text-muted); margin-top:0.25rem;">Téléversement direct haute vitesse vers le stockage Cloud</div>
+          <div id="selected-video-filename" style="margin-top:0.5rem; font-size:0.82rem; color:#4ade80; font-weight:600; display:none;"></div>
+        </div>
+
+        <!-- Direct URL input -->
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label style="font-size:0.78rem; color:var(--admin-text-muted); display:block; margin-bottom:0.25rem;">Ou collez directement un lien vidéo externe (Google Drive, Cloudinary, etc.) :</label>
+          <input type="url" id="video-direct-url" class="form-input" placeholder="https://..." style="font-size:0.85rem;" oninput="updateWhatsAppPreview()">
+        </div>
+
+        <!-- Upload Progress Bar -->
+        <div id="upload-progress-wrapper" style="display:none; margin-bottom:1rem;">
+          <div style="display:flex; justify-content:space-between; font-size:0.78rem; margin-bottom:0.3rem;">
+            <span id="upload-progress-label" style="color:var(--admin-accent);">Téléversement ultra-rapide...</span>
+            <span id="upload-progress-pct" style="font-weight:700; color:#FAF8F5;">0%</span>
+          </div>
+          <div style="width:100%; height:8px; background:rgba(255,255,255,0.1); border-radius:4px; overflow:hidden;">
+            <div id="upload-progress-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #d4af37, #4ade80); transition:width 0.2s;"></div>
+          </div>
+        </div>
+
+        <!-- WhatsApp Preview -->
+        <div class="form-group" style="margin-bottom:0.5rem;">
+          <label style="font-size:0.78rem; color:var(--admin-text-muted); display:block; margin-bottom:0.25rem;">Message WhatsApp (Ligne #3 DALIGHT) :</label>
+          <textarea id="video-whatsapp-msg" class="form-textarea" rows="3" style="font-size:0.82rem;"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:0.5rem; border-top:1px solid rgba(255,255,255,0.1); padding-top:0.75rem; margin-top:1rem;">
+        <button class="btn btn-secondary btn-sm" onclick="closeUploadVideoModal()">Annuler</button>
+        <button class="btn btn-primary btn-sm" id="btn-start-upload" onclick="startVideoUploadAndDispatch()" style="display:inline-flex; align-items:center; gap:0.4rem; font-weight:600; background:linear-gradient(135deg,#d4af37,#996515); border:none; color:#fff;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Uploader &amp; Livrer sur WhatsApp
+        </button>
+      </div>
+    </div>
+  </div>
+
+</main>
 
   <script src="js/admin-core.js?v=20261117"></script>
   <script>
+    const CVISUAL_GATEWAY = {
+      baseUrl: 'https://cvisual-whatsapp-gateway.onrender.com',
+      apiKey: 'cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c',
+      accountIndex: 3
+    };
+
+    // Helper to extract video URL from notes
+    function extractVideoUrl(r) {
+      if (r.video_url) return r.video_url;
+      const combined = (r.notes || '') + ' ' + (r.therapist_notes || '');
+      const match = combined.match(/\[VIDEO_URL:\s*([^\]]+)\]/i);
+      return match ? match[1].trim() : null;
+    }
+
+    async function loadVideoSettings() {
+      try {
+        const sb = await getClient();
+        if (!sb) return;
+
+        const { data } = await sb
+          .from('settings')
+          .select('*')
+          .or('key.eq.video_service,id.eq.video_service')
+          .maybeSingle();
+
+        if (data && data.value) {
+          let val = data.value;
+          if (typeof val === 'string') {
+            try { val = JSON.parse(val); } catch(e){}
+          }
+          const pricePublic = val.price_public_htg || val.price_htg || 500;
+          const pricePrivate = val.price_private_htg || 1000;
+          
+          document.getElementById('setting-video-price-public').value = pricePublic;
+          document.getElementById('setting-video-price-private').value = pricePrivate;
+          
+          if (val.is_active !== undefined) {
+            document.getElementById('setting-video-active').value = String(val.is_active !== false);
+          }
+        }
+      } catch (e) {
+        console.warn('Could not load video settings:', e);
+      }
+    }
+
+    async function updateVideoPricing(e) {
+      e.preventDefault();
+      const btn = document.getElementById('save-price-btn');
+      btn.disabled = true;
+      btn.textContent = 'Enregistrement...';
+
+      try {
+        const sb = await getClient();
+        const pricePublic = Number(document.getElementById('setting-video-price-public').value) || 500;
+        const pricePrivate = Number(document.getElementById('setting-video-price-private').value) || 1000;
+        const isActive = document.getElementById('setting-video-active').value === 'true';
+
+        const payload = {
+          id: 'video_service',
+          key: 'video_service',
+          value: {
+            price_public_htg: pricePublic,
+            price_private_htg: pricePrivate,
+            price_htg: pricePublic,
+            is_active: isActive,
+            title: "Option Vidéo Souvenir",
+            description: "Captation vidéo professionnelle et montage 4K"
+          },
+          description: "Configuration service vidéo DALIGHT",
+          updated_at: new Date().toISOString()
+        };
+
+        const { error } = await sb
+          .from('settings')
+          .upsert(payload, { onConflict: 'id' });
+
+        if (error) throw error;
+
+        const badge = document.getElementById('video-service-status-badge');
+        if (badge) {
+          badge.textContent = isActive ? 'Option Active' : 'Option Désactivée';
+          badge.className = isActive ? 'status-badge confirmed' : 'status-badge cancelled';
+        }
+
+        if (window.adminCore?.showToast) {
+          window.adminCore.showToast(`Tarifs enregistrés : Public ${pricePublic} HTG | Privé ${pricePrivate} HTG`, 'success');
+        } else {
+          alert(`Tarifs enregistrés avec succès : Public ${pricePublic} HTG | Privé ${pricePrivate} HTG`);
+        }
+      } catch (err) {
+        console.error('Error saving video settings:', err);
+        alert('Erreur lors de la mise à jour : ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Enregistrer les tarifs';
+      }
+    }
+
+    // Modal & Upload Handlers
+    let currentSelectedVideoFile = null;
+
+    function openUploadVideoModal(resId) {
+      const r = allVideoReservations.find(x => x.id === resId);
+      if (!r) return;
+
+      currentSelectedVideoFile = null;
+      document.getElementById('video-file-input').value = '';
+      document.getElementById('selected-video-filename').style.display = 'none';
+      document.getElementById('video-direct-url').value = '';
+      document.getElementById('upload-progress-wrapper').style.display = 'none';
+
+      document.getElementById('upload-res-id').value = r.id;
+      document.getElementById('upload-res-phone').value = r.phone || '';
+      document.getElementById('upload-res-name').value = r.user_name || 'Client(e)';
+
+      const isPublic = (r.video_consent || 'public').toLowerCase() === 'public';
+      const consentHtml = isPublic
+        ? '<span class="badge-consent-public">Autorisé Réseaux</span>'
+        : '<span class="badge-consent-private">Usage Privé Uniquement</span>';
+
+      document.getElementById('upload-client-info').innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+          <strong>${escapeHtml(r.user_name || 'Client')}</strong>
+          ${consentHtml}
+        </div>
+        <div style="color:var(--admin-text-muted); font-size:0.8rem;">
+          Téléphone : <strong style="color:var(--admin-accent);">${escapeHtml(r.phone || 'Non renseigné')}</strong> | Soin : ${escapeHtml(r.service || 'Head Spa')}
+        </div>
+      `;
+
+      const videoLink = extractVideoUrl(r);
+      if (videoLink) {
+        document.getElementById('video-direct-url').value = videoLink;
+      }
+
+      updateWhatsAppPreview();
+      const modal = document.getElementById('upload-video-modal');
+      modal.style.display = 'flex';
+    }
+
+    function closeUploadVideoModal() {
+      document.getElementById('upload-video-modal').style.display = 'none';
+    }
+
+    function handleVideoFileSelected(input) {
+      const file = input.files?.[0];
+      if (!file) return;
+      currentSelectedVideoFile = file;
+
+      const nameEl = document.getElementById('selected-video-filename');
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      nameEl.textContent = `Fichier sélectionné : ${file.name} (${sizeMB} MB)`;
+      nameEl.style.display = 'block';
+
+      updateWhatsAppPreview();
+    }
+
+    function updateWhatsAppPreview() {
+      const name = document.getElementById('upload-res-name').value || 'cher(e) client(e)';
+      const directUrl = document.getElementById('video-direct-url').value.trim();
+      const file = currentSelectedVideoFile;
+      const urlText = directUrl || '[Lien Vidéo 4K Généré]';
+
+      document.getElementById('video-whatsapp-msg').value = 
+`Bonjour ${name} ! ✨
+
+Votre vidéo souvenir professionnelle DALIGHT est prête en haute définition 4K ! 🎥
+
+Vous pouvez visionner et télécharger votre vidéo en qualité originale via ce lien :
+${urlText}
+
+Merci de votre confiance et au plaisir de vous choyer à nouveau chez DALIGHT Head Spa ! 🌿`;
+    }
+
+    async function startVideoUploadAndDispatch() {
+      const resId = document.getElementById('upload-res-id').value;
+      const phone = document.getElementById('upload-res-phone').value;
+      const name = document.getElementById('upload-res-name').value;
+      const directUrl = document.getElementById('video-direct-url').value.trim();
+      const msgTemplate = document.getElementById('video-whatsapp-msg').value.trim();
+
+      if (!currentSelectedVideoFile && !directUrl) {
+        alert("Veuillez sélectionner un fichier vidéo ou renseigner un lien vidéo.");
+        return;
+      }
+
+      const btn = document.getElementById('btn-start-upload');
+      btn.disabled = true;
+      btn.textContent = 'Téléversement en cours...';
+
+      const progressWrapper = document.getElementById('upload-progress-wrapper');
+      const progressBar = document.getElementById('upload-progress-bar');
+      const progressPct = document.getElementById('upload-progress-pct');
+      const progressLabel = document.getElementById('upload-progress-label');
+
+      progressWrapper.style.display = 'block';
+      progressBar.style.width = '10%';
+      progressPct.textContent = '10%';
+
+      let finalVideoUrl = directUrl;
+
+      try {
+        const sb = await getClient();
+
+        // If a file was selected, upload directly to Supabase storage bucket 'videos'
+        if (currentSelectedVideoFile && sb) {
+          progressLabel.textContent = 'Téléversement vers le Cloud DALIGHT...';
+          progressBar.style.width = '40%';
+          progressPct.textContent = '40%';
+
+          const fileExt = currentSelectedVideoFile.name.split('.').pop() || 'mp4';
+          const filePath = `souvenirs/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+
+          // Direct cloud upload
+          const { data: upData, error: upErr } = await sb.storage
+            .from('videos')
+            .upload(filePath, currentSelectedVideoFile, {
+              cacheControl: '3600',
+              upsert: true
+            });
+
+          if (upErr) throw upErr;
+
+          const { data: urlData } = sb.storage.from('videos').getPublicUrl(filePath);
+          finalVideoUrl = urlData?.publicUrl || null;
+
+          progressBar.style.width = '80%';
+          progressPct.textContent = '80%';
+        }
+
+        if (!finalVideoUrl) throw new Error("Impossible d'obtenir l'URL de la vidéo.");
+
+        // Update reservation record with [VIDEO_URL: ...] and set status to 'delivered'
+        const r = allVideoReservations.find(x => x.id === resId);
+        let existingNotes = r?.notes || '';
+        existingNotes = existingNotes.replace(/\[VIDEO_URL:\s*[^\]]+\]/gi, '').trim();
+        const updatedNotes = existingNotes ? `${existingNotes}\n[VIDEO_URL: ${finalVideoUrl}]` : `[VIDEO_URL: ${finalVideoUrl}]`;
+
+        const { error: dbErr } = await sb
+          .from('reservations')
+          .update({
+            video_status: 'delivered',
+            notes: updatedNotes,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', resId);
+
+        if (dbErr) console.warn("DB update error:", dbErr);
+
+        // Send via WhatsApp Gateway Ligne #3
+        progressLabel.textContent = 'Envoi sur WhatsApp Ligne #3...';
+        progressBar.style.width = '90%';
+        progressPct.textContent = '90%';
+
+        const cleanPhone = String(phone).replace(/\D/g, '');
+        if (cleanPhone) {
+          const formattedPhone = cleanPhone.length === 8 ? ('509' + cleanPhone) : cleanPhone;
+          const finalMsg = msgTemplate.replace('[Lien Vidéo 4K Généré]', finalVideoUrl);
+
+          await fetch(`${CVISUAL_GATEWAY.baseUrl}/api/v1/messages/send`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${CVISUAL_GATEWAY.apiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              to: formattedPhone,
+              message: finalMsg,
+              kind: 'manual_direct',
+              mode: 'sync',
+              account_index: CVISUAL_GATEWAY.accountIndex
+            })
+          }).catch(e => console.warn('WhatsApp gateway send warning:', e));
+        }
+
+        progressBar.style.width = '100%';
+        progressPct.textContent = '100%';
+        progressLabel.textContent = 'Livré avec succès !';
+
+        if (window.adminCore?.showToast) {
+          window.adminCore.showToast('Vidéo livrée au client par WhatsApp avec succès !', 'success');
+        } else {
+          alert('Vidéo livrée au client par WhatsApp avec succès !');
+        }
+
+        closeUploadVideoModal();
+        await loadVideoData();
+
+      } catch (err) {
+        console.error("Upload error:", err);
+        alert("Erreur lors de l'envoi : " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Uploader &amp; Livrer sur WhatsApp';
+      }
+    }
+
+    // Delete video from storage and database to free up space
+    async function deleteVideo(resId) {
+      const r = allVideoReservations.find(x => x.id === resId);
+      if (!r) return;
+
+      const videoLink = extractVideoUrl(r);
+      if (!confirm("Voulez-vous supprimer définitivement ce fichier vidéo pour libérer de l'espace de stockage ?\n\nLe statut de la réservation sera conservé.")) {
+        return;
+      }
+
+      try {
+        const sb = await getClient();
+        if (videoLink && sb && videoLink.includes('/storage/v1/object/public/videos/')) {
+          const parts = videoLink.split('/storage/v1/object/public/videos/');
+          if (parts[1]) {
+            await sb.storage.from('videos').remove([parts[1]]);
+          }
+        }
+
+        // Clean [VIDEO_URL: ...] from notes
+        let updatedNotes = (r.notes || '').replace(/\[VIDEO_URL:\s*[^\]]+\]/gi, '').trim();
+        await sb
+          .from('reservations')
+          .update({
+            notes: updatedNotes || null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', resId);
+
+        if (window.adminCore?.showToast) {
+          window.adminCore.showToast("Vidéo supprimée avec succès. Espace libéré !", "success");
+        } else {
+          alert("Vidéo supprimée avec succès. Espace libéré !");
+        }
+
+        await loadVideoData();
+      } catch (err) {
+        console.error("Delete video error:", err);
+        alert("Erreur lors de la suppression : " + err.message);
+      }
+    }
+  
     let allVideoReservations = [];
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -552,8 +961,9 @@
         const clientEmail = r.user_email || r.client_email || '';
         const clientPhone = r.phone || r.client_phone || '—';
         const serviceName = r.service || r.service_name || 'Head Spa';
-        const price = (Number(r.video_price) || 500).toLocaleString() + ' HTG';
+        const price = (Number(r.video_price) || (isPublic ? 500 : 1000)).toLocaleString() + ' HTG';
         const status = r.video_status || 'pending';
+        const videoUrl = extractVideoUrl(r);
 
         const cleanPhone = String(clientPhone).replace(/\D/g, '');
         const waLink = cleanPhone.length >= 8
@@ -592,12 +1002,29 @@
               </select>
             </td>
             <td style="text-align: right;">
-              ${waLink ? `
-                <a href="${waLink}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="padding: 0.35rem 0.65rem; display: inline-flex; align-items: center; gap: 0.3rem;" title="Contacter sur WhatsApp">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/></svg>
-                  WhatsApp
-                </a>
-              ` : '<span style="color:var(--admin-text-muted);font-size:0.75rem;">—</span>'}
+              <div style="display:inline-flex; align-items:center; gap:0.4rem; justify-content:flex-end; flex-wrap:wrap;">
+                ${videoUrl ? `
+                  <a href="${videoUrl}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="padding:0.35rem 0.55rem; color:#4ade80;" title="Visionner la vidéo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </a>
+                  <button class="btn btn-secondary btn-sm" onclick="openUploadVideoModal('${r.id}')" style="padding:0.35rem 0.65rem;" title="Renvoyer / Remplacer vidéo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                  </button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteVideo('${r.id}')" style="padding:0.35rem 0.55rem; background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#ef4444;" title="Supprimer la vidéo pour libérer de l'espace">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                  </button>
+                ` : `
+                  <button class="btn btn-primary btn-sm" onclick="openUploadVideoModal('${r.id}')" style="padding:0.35rem 0.65rem; font-weight:600; display:inline-flex; align-items:center; gap:0.3rem;" title="Uploader & Livrer la vidéo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    Livrer 4K
+                  </button>
+                `}
+                ${waLink ? `
+                  <a href="${waLink}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="padding: 0.35rem 0.55rem;" title="Discuter sur WhatsApp">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/></svg>
+                  </a>
+                ` : ''}
+              </div>
             </td>
           </tr>
         `;

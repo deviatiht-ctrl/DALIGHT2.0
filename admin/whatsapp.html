@@ -534,6 +534,9 @@
         <button class="wa-tab-btn" data-tab="receipts">
           <i data-lucide="receipt"></i> Générateur de Reçus PDF
         </button>
+        <button class="wa-tab-btn" data-tab="concierge-ai" style="font-weight:600; color:#4ade80;">
+          <i data-lucide="bot"></i> Concierge IA Gemini (WhatsApp)
+        </button>
       </div>
 
       <!-- TAB 1: TEMPLATES LIST & EDITOR -->
@@ -893,6 +896,135 @@
           </div>
         </div>
       </section>
+
+      <!-- TAB 5: CONCIERGE IA GEMINI -->
+      <section id="tab-concierge-ai" style="display:none; margin-bottom: 2.5rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1.15fr; gap: 1.5rem; align-items: start;">
+          
+          <!-- Left Column: Config & Knowledge Base -->
+          <div style="display:flex; flex-direction:column; gap:1.25rem;">
+            <!-- Config Card -->
+            <div class="glass-card" style="padding: 1.5rem;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.75rem;">
+                <div>
+                  <h3 style="font-size:1.15rem; font-weight:700; color:#FAF8F5; margin:0; display:flex; align-items:center; gap:0.4rem;">
+                    <i data-lucide="sparkles" style="width:18px;height:18px;color:#4ade80;"></i> Configuration Gemini AI
+                  </h3>
+                  <span style="font-size:0.78rem; color:var(--admin-text-muted);">Intelligence Artificielle Gratuite Google Gemini 1.5 / 2.0 Flash</span>
+                </div>
+                <span class="status-badge confirmed" id="ai-status-badge">IA Active</span>
+              </div>
+
+              <div class="form-group" style="margin-bottom:1rem;">
+                <label style="font-size:0.82rem; font-weight:600; color:#FAF8F5; display:flex; justify-content:space-between;">
+                  <span>Clé API Google Gemini (Gratuite) :</span>
+                  <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color:var(--admin-accent); font-size:0.75rem; text-decoration:underline;">Obtenir une clé gratuite ↗</a>
+                </label>
+                <div style="display:flex; gap:0.5rem; margin-top:0.35rem;">
+                  <input type="password" id="gemini-api-key-input" class="form-input" placeholder="AIzaSy..." style="font-size:0.85rem; font-family:monospace;">
+                  <button class="btn btn-secondary btn-sm" onclick="toggleApiKeyVisibility()" style="padding:0.4rem 0.65rem;" title="Afficher/Masquer">👁️</button>
+                </div>
+                <small style="color:var(--admin-text-muted); font-size:0.75rem; display:block; margin-top:0.3rem;">
+                  L'IA fonctionne également avec le moteur de compréhension contextuelle intégré même sans clé.
+                </small>
+              </div>
+
+              <div class="form-group" style="margin-bottom:1rem;">
+                <label class="toggle-switch" style="display:flex; align-items:center; gap:0.75rem; cursor:pointer;">
+                  <input type="checkbox" id="ai-autoreply-toggle" checked>
+                  <span class="toggle-slider"></span>
+                  <span style="font-size:0.85rem; color:#FAF8F5; font-weight:600;">Réponse automatique active sur Ligne #3 DALIGHT</span>
+                </label>
+              </div>
+
+              <div style="display:flex; gap:0.5rem;">
+                <button class="btn btn-primary btn-sm" onclick="saveGeminiConfig()" id="btn-save-gemini" style="flex:1; font-weight:600;">
+                  <i data-lucide="save"></i> Enregistrer la configuration
+                </button>
+              </div>
+            </div>
+
+            <!-- Knowledge Base Summary Card -->
+            <div class="glass-card" style="padding: 1.5rem;">
+              <h3 style="font-size:1.05rem; font-weight:700; color:#FAF8F5; margin:0 0 0.75rem 0; display:flex; align-items:center; gap:0.4rem;">
+                <i data-lucide="book-open" style="width:16px;height:16px;color:var(--admin-accent);"></i> Base de Connaissances Active de l'IA
+              </h3>
+              <div style="font-size:0.8rem; color:var(--admin-text-muted); line-height:1.5; display:grid; gap:0.5rem;">
+                <div style="background:rgba(255,255,255,0.02); padding:0.6rem 0.75rem; border-radius:8px; border:1px solid rgba(255,255,255,0.06);">
+                  <strong style="color:var(--admin-accent);">Compréhension Multilingue :</strong> Détecte à 100% le Créole Haïtien et le Français. Salue contextuellement selon l'heure (Bonswa / Bonjou).
+                </div>
+                <div style="background:rgba(255,255,255,0.02); padding:0.6rem 0.75rem; border-radius:8px; border:1px solid rgba(255,255,255,0.06);">
+                  <strong style="color:var(--admin-accent);">Rituels &amp; Tarifs HTG :</strong> Signature (8 500 HTG), Sérénité Royale (12 000 HTG), Renaissance Express (6 500 HTG), Vidéo (+500 HTG / +1 000 HTG).
+                </div>
+                <div style="background:rgba(255,255,255,0.02); padding:0.6rem 0.75rem; border-radius:8px; border:1px solid rgba(255,255,255,0.06);">
+                  <strong style="color:var(--admin-accent);">Localisation &amp; Accès :</strong> Delmas 65, Rue Faustin Premier / Rue Durandisse #10. Parking privé sécurisé.
+                </div>
+                <div style="background:rgba(255,255,255,0.02); padding:0.6rem 0.75rem; border-radius:8px; border:1px solid rgba(255,255,255,0.06);">
+                  <strong style="color:var(--admin-accent);">Politique Réservation :</strong> Lien officiel dalightbeauty.com + 50% d'acompte obligatoire (MonCash, NatCash, Virement).
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Interactive Chat Simulator -->
+          <div class="glass-card" style="padding: 1.5rem; display:flex; flex-direction:column; height: 680px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.75rem;">
+              <div>
+                <h3 style="font-size:1.15rem; font-weight:700; color:#FAF8F5; margin:0; display:flex; align-items:center; gap:0.4rem;">
+                  <i data-lucide="message-square" style="width:18px;height:18px;color:var(--admin-accent);"></i> Simulateur Concierge IA (WhatsApp)
+                </h3>
+                <span style="font-size:0.78rem; color:var(--admin-text-muted);">Testez les questions en Créole ou en Français en temps réel</span>
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="clearAiChat()" style="font-size:0.75rem; padding:0.25rem 0.6rem;">Effacer</button>
+            </div>
+
+            <!-- Quick Prompt Pills -->
+            <div style="display:flex; gap:0.4rem; overflow-x:auto; padding-bottom:0.6rem; margin-bottom:0.6rem;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="sendQuickPrompt('Bonswa, konbyen Head Spa koute ?')" style="font-size:0.75rem; white-space:nowrap;">
+                💬 « Bonswa, konbyen Head Spa koute ? »
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="sendQuickPrompt('Ki kote nou ye tanpri ?')" style="font-size:0.75rem; white-space:nowrap;">
+                📍 « Ki kote nou ye ? »
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="sendQuickPrompt('Bonjou, kijan poum fe yon randevou ?')" style="font-size:0.75rem; white-space:nowrap;">
+                📅 « Kijan poum fe randevou ? »
+              </button>
+            </div>
+
+            <!-- Messages Window (WhatsApp Style) -->
+            <div id="ai-chat-messages" style="flex:1; overflow-y:auto; background:rgba(8,12,8,0.7); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:1rem; display:flex; flex-direction:column; gap:0.85rem; margin-bottom:1rem;">
+              <div style="display:flex; justify-content:center;">
+                <span style="font-size:0.72rem; padding:0.2rem 0.6rem; border-radius:6px; background:rgba(212,175,55,0.12); color:var(--admin-accent); font-weight:600;">
+                  Concierge DALIGHT connecté sur Ligne #3 Dédiée
+                </span>
+              </div>
+              <div style="align-self:flex-start; max-width:85%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:12px 12px 12px 2px; padding:0.75rem 1rem; font-size:0.85rem; color:#FAF8F5; line-height:1.45;">
+                Bonjour et bienvenue chez DALIGHT Head Spa ! 🌿<br>Je suis votre Concierge IA. Écrivez-moi en Créole ou en Français pour toute question sur nos soins, nos tarifs ou notre adresse.
+              </div>
+            </div>
+
+            <!-- Input Bar -->
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <input type="text" id="ai-chat-input" class="form-input" placeholder="Écrivez un message (ex: Bonswa, ki sèvis nou genyen ?)..." style="font-size:0.85rem; flex:1;" onkeydown="if(event.key==='Enter') sendAiChatMessage()">
+              <button class="btn btn-primary btn-sm" onclick="sendAiChatMessage()" id="btn-send-ai-chat" style="padding:0.6rem 1rem; font-weight:600; display:inline-flex; align-items:center; gap:0.35rem;">
+                <i data-lucide="send" style="width:15px;height:15px;"></i> Envoyer
+              </button>
+            </div>
+
+            <!-- Live Phone Dispatch Test -->
+            <div style="margin-top:0.75rem; padding-top:0.75rem; border-top:1px dashed rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:space-between; gap:0.75rem; flex-wrap:wrap;">
+              <div style="display:flex; align-items:center; gap:0.4rem; flex:1; min-width:220px;">
+                <span style="font-size:0.75rem; color:var(--admin-text-muted);">Tester sur WhatsApp réel :</span>
+                <input type="tel" id="ai-test-real-phone" class="form-input" placeholder="509 3844-1234" style="font-size:0.78rem; padding:0.35rem 0.6rem; max-width:140px;">
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="sendLastAiResponseToRealPhone()" style="font-size:0.75rem; display:inline-flex; align-items:center; gap:0.3rem;">
+                <i data-lucide="smartphone" style="width:13px;height:13px;"></i> Transmettre au téléphone
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </div>
   </main>
 
@@ -978,11 +1110,13 @@
           const tplEl = document.getElementById('tab-templates');
           const conEl = document.getElementById('tab-console');
           const recEl = document.getElementById('tab-receipts');
+          const aiEl  = document.getElementById('tab-concierge-ai');
 
           if (scanEl) scanEl.style.display = tab === 'scan' ? 'block' : 'none';
           if (tplEl) tplEl.style.display = tab === 'templates' ? 'block' : 'none';
           if (conEl) conEl.style.display = tab === 'console' ? 'block' : 'none';
           if (recEl) recEl.style.display = tab === 'receipts' ? 'block' : 'none';
+          if (aiEl)  aiEl.style.display  = tab === 'concierge-ai' ? 'block' : 'none';
 
           if (tab === 'scan') {
             fetchDalightAccountQr(true);
@@ -1533,6 +1667,208 @@
       document.getElementById('sim-total-count').textContent = '2';
       document.getElementById('quota-remaining').textContent = '5 000';
     }
-  </script>
+  
+    // ══════ CONCIERGE IA GEMINI CLIENT-SIDE ENGINE ══════
+    let lastGeneratedAiReply = "";
+
+    async function loadGeminiConfig() {
+      try {
+        const sb = window.supabaseClient || window.dalightAdminSupabase;
+        if (!sb) return;
+        const { data } = await sb.from('settings').select('*').eq('key', 'gemini_config').maybeSingle();
+        if (data && data.value) {
+          let val = data.value;
+          if (typeof val === 'string') {
+            try { val = JSON.parse(val); } catch(e){}
+          }
+          if (val.api_key) {
+            document.getElementById('gemini-api-key-input').value = val.api_key;
+          }
+          if (val.autoreply !== undefined) {
+            document.getElementById('ai-autoreply-toggle').checked = val.autoreply;
+          }
+        }
+      } catch(e) {
+        console.warn("Could not load gemini config:", e);
+      }
+    }
+
+    async function saveGeminiConfig() {
+      const apiKey = document.getElementById('gemini-api-key-input').value.trim();
+      const autoreply = document.getElementById('ai-autoreply-toggle').checked;
+      const btn = document.getElementById('btn-save-gemini');
+
+      btn.disabled = true;
+      btn.textContent = 'Enregistrement...';
+
+      try {
+        const sb = window.supabaseClient || window.dalightAdminSupabase;
+        if (sb) {
+          await sb.from('settings').upsert({
+            id: 'gemini_config',
+            key: 'gemini_config',
+            value: { api_key: apiKey, autoreply: autoreply },
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'id' });
+        }
+        alert('Configuration Gemini enregistrée avec succès !');
+      } catch(e) {
+        alert('Erreur: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="save"></i> Enregistrer la configuration';
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+
+    function toggleApiKeyVisibility() {
+      const input = document.getElementById('gemini-api-key-input');
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    function clearAiChat() {
+      document.getElementById('ai-chat-messages').innerHTML = `
+        <div style="display:flex; justify-content:center;">
+          <span style="font-size:0.72rem; padding:0.2rem 0.6rem; border-radius:6px; background:rgba(212,175,55,0.12); color:var(--admin-accent); font-weight:600;">
+            Conversation réinitialisée
+          </span>
+        </div>
+      `;
+    }
+
+    function sendQuickPrompt(text) {
+      document.getElementById('ai-chat-input').value = text;
+      sendAiChatMessage();
+    }
+
+    async function sendAiChatMessage() {
+      const input = document.getElementById('ai-chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const chatContainer = document.getElementById('ai-chat-messages');
+
+      // Append user bubble
+      const userBubble = document.createElement('div');
+      userBubble.style.cssText = "align-self:flex-end; max-width:85%; background:rgba(212,175,55,0.18); border:1px solid rgba(212,175,55,0.4); border-radius:12px 12px 2px 12px; padding:0.75rem 1rem; font-size:0.85rem; color:#FAF8F5; line-height:1.45;";
+      userBubble.textContent = text;
+      chatContainer.appendChild(userBubble);
+
+      input.value = '';
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      // Loading bubble
+      const loadingBubble = document.createElement('div');
+      loadingBubble.style.cssText = "align-self:flex-start; max-width:85%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:12px 12px 12px 2px; padding:0.6rem 1rem; font-size:0.82rem; color:var(--admin-text-muted);";
+      loadingBubble.innerHTML = '<span class="loading-spinner" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:0.4rem;"></span> Le Concierge DALIGHT formule sa réponse...';
+      chatContainer.appendChild(loadingBubble);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      try {
+        const apiKey = document.getElementById('gemini-api-key-input').value.trim();
+        let aiReply = "";
+
+        if (apiKey) {
+          // Live call to Google Gemini 1.5 Flash
+          const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              system_instruction: {
+                parts: [{ text: "Tu es le Concierge Virtuel d'élite de DALIGHT Head Spa à Delmas 65, Haïti. Tu comprends parfaitement le Créole Haïtien et le Français. Tu réponds TOUJOURS en Français poli, chaleureux et raffiné. Rituels : Signature 8 500 HTG (60 min), Sérénité Royale 12 000 HTG (90 min), Renaissance Express 6 500 HTG (45 min). Option Vidéo 4K : +500 HTG public / +1 000 HTG privé. Adresse : Delmas 65, Rue Faustin Premier / Rue Durandisse #10. Acompte de 50% obligatoire via MonCash (+509 4747-7221), NatCash ou Virement. Lien réservation : https://dalightbeauty.com/pages/reservation-v2.html." }]
+              },
+              contents: [{ role: 'user', parts: [{ text: text }] }]
+            })
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            aiReply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          }
+        }
+
+        // Fallback local NLP if no API key or call failed
+        if (!aiReply) {
+          aiReply = generateSmartLocalResponseBrowser(text);
+        }
+
+        lastGeneratedAiReply = aiReply;
+
+        loadingBubble.style.cssText = "align-self:flex-start; max-width:85%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:12px 12px 12px 2px; padding:0.75rem 1rem; font-size:0.85rem; color:#FAF8F5; line-height:1.45; white-space:pre-wrap;";
+        loadingBubble.textContent = aiReply;
+      } catch (err) {
+        loadingBubble.textContent = generateSmartLocalResponseBrowser(text);
+        lastGeneratedAiReply = loadingBubble.textContent;
+      } finally {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+    }
+
+    function generateSmartLocalResponseBrowser(input) {
+      const text = (input || '').toLowerCase();
+      const isBonswa = text.includes('bonswa') || text.includes('bonsoir');
+      const isBonjou = text.includes('bonjou') || text.includes('bonjour');
+      const salut = isBonswa ? "Bonsoir !" : (isBonjou ? "Bonjour !" : "Bonjour et bienvenue chez DALIGHT !");
+
+      if (text.includes('kote') || text.includes('adrès') || text.includes('adres') || text.includes('adresse') || text.includes('situé')) {
+        return salut + "\n\nC'est un réel plaisir de vous renseigner.\n\n🌿 Notre Adresse :\nDALIGHT Head Spa est situé à :\n📍 Delmas 65, Rue Faustin Premier / Rue Durandisse #10, Port-au-Prince, Haïti.\n(Cadre calme, sécurisé avec parking privé réservé à la clientèle).\n\n🕐 Horaires d'Ouverture :\n• Mardi au Samedi : 08h00 à 20h00\n• Dimanche et Lundi : 08h00 à 18h00\n\nPour réserver : https://dalightbeauty.com/pages/reservation-v2.html";
+      }
+
+      if (text.includes('pri') || text.includes('prix') || text.includes('konbyen') || text.includes('combien') || text.includes('tarif') || text.includes('head spa') || text.includes('soin')) {
+        return salut + "\n\nVoici la carte de nos rituels exclusifs de Head Spa Japonais chez DALIGHT :\n\n✨ 1. Head Spa Japonais Signature (60 min) — 8 500 HTG\nHydrothérapie japonaise, cascade d'eau chaude, gommage doux du cuir chevelu, massage shiatsu crânien et vapeur bienfaisante.\n\n👑 2. Head Spa Sérénité Royale (90 min) — 12 000 HTG\nSoin Signature complet enrichi d'un massage profond de la nuque, trapèzes et épaules, masque nutritif et luminothérapie.\n\n🌱 3. Rituel Renaissance Express (45 min) — 6 500 HTG\nCoup d'éclat revigorant pour personnes actives.\n\n🎥 Option Vidéo 4K : +500 HTG (Public) / +1 000 HTG (Usage Privé WhatsApp).\n\n📅 Réservation : https://dalightbeauty.com/pages/reservation-v2.html\n(Acompte de 50% par MonCash, NatCash ou Virement bancaire).";
+      }
+
+      if (text.includes('randevou') || text.includes('rdv') || text.includes('reservation') || text.includes('réserver') || text.includes('acompte')) {
+        return salut + "\n\nPour réserver votre créneau exclusif :\n\n1️⃣ Choisissez votre soin et votre horaire sur notre plateforme :\n👉 https://dalightbeauty.com/pages/reservation-v2.html\n\n2️⃣ Réglez votre acompte de 50% (ou paiement complet) :\n• MonCash Direct : +509 4747-7221 (DALIGHT BEAUTY)\n• NatCash Direct : +509 4747-7221 (DALIGHT BEAUTY)\n• Virement Bancaire : Sogebank, Unibank, BNC\n\n3️⃣ Joignez votre preuve de paiement. Dès validation, vous recevrez une confirmation officielle par WhatsApp !";
+      }
+
+      return salut + "\n\nBienvenue chez DALIGHT Head Spa, votre sanctuaire de relaxation et de soin du cuir chevelu à Delmas 65.\n\nComment puis-je vous accompagner aujourd'hui ?\n• Pour consulter nos tarifs (Signature 8 500 HTG, Royale 12 000 HTG)\n• Pour notre adresse (Delmas 65, Rue Durandisse #10)\n• Pour réserver en ligne : https://dalightbeauty.com/pages/reservation-v2.html";
+    }
+
+    async function sendLastAiResponseToRealPhone() {
+      const phoneInput = document.getElementById('ai-test-real-phone');
+      const phone = phoneInput.value.trim().replace(/\D/g, '');
+      if (!phone) {
+        alert("Veuillez saisir un numéro de téléphone valide (ex: 509 3844-1234).");
+        return;
+      }
+      if (!lastGeneratedAiReply) {
+        alert("Veuillez d'abord générer une réponse dans le simulateur.");
+        return;
+      }
+
+      const formatted = phone.length === 8 ? ('509' + phone) : phone;
+
+      try {
+        const res = await fetch('https://cvisual-whatsapp-gateway.onrender.com/api/v1/messages/send', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            to: formatted,
+            message: lastGeneratedAiReply,
+            kind: 'manual_direct',
+            mode: 'sync',
+            account_index: 3
+          })
+        });
+
+        if (res.ok) {
+          alert('Message IA envoyé avec succès sur le numéro +' + formatted + ' via la Ligne #3 DALIGHT !');
+        } else {
+          alert("Erreur lors de l'envoi : HTTP " + res.status);
+        }
+      } catch(e) {
+        alert("Erreur réseau : " + e.message);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadGeminiConfig();
+    });
+
+</script>
 </body>
 </html>
