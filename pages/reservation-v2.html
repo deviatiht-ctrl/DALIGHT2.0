@@ -697,6 +697,26 @@
       box-shadow: 0 4px 18px rgba(212, 175, 55, 0.15);
     }
 
+    .payment-choice-card {
+      background: rgba(18, 27, 18, 0.7);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 1.15rem 1.25rem;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+
+    .payment-choice-card:hover {
+      border-color: rgba(212, 175, 55, 0.5);
+    }
+
+    .payment-choice-card.selected {
+      border-color: var(--dalight-gold);
+      background: rgba(212, 175, 55, 0.1);
+      box-shadow: 0 4px 18px rgba(212, 175, 55, 0.15);
+    }
+
     /* Sticky Summary Column */
     .sticky-summary {
       position: sticky;
@@ -1161,47 +1181,261 @@
           <!-- ══════ ÉTAPE 3 : PAIEMENT & VALIDATION ══════ -->
           <div class="resv-card step-panel" id="step-panel-3" style="display: none;">
             <h2 style="font-family:'Cormorant Garamond',serif; font-size:1.65rem; color:var(--dalight-gold); margin:0 0 0.5rem 0;">Paiement &amp; Confirmation</h2>
-            <p style="color:var(--dalight-muted); font-size:0.88rem; margin:0 0 1.5rem 0;">Choisissez comment vous souhaitez régler votre séance.</p>
+            <p style="color:var(--dalight-muted); font-size:0.88rem; margin:0 0 1.5rem 0;">Choisissez votre modalité de règlement et confirmez votre rendez-vous.</p>
 
-            <div class="payment-cards-grid">
-              <!-- Option 1: Au Spa -->
-              <div class="payment-option-card selected" onclick="selectPaymentMethod('sur_place', this)">
-                <input type="radio" name="payment_method" value="sur_place" checked style="accent-color:var(--dalight-gold);">
-                <div style="flex:1;">
-                  <strong style="color:var(--dalight-text);font-size:1rem;display:flex;align-items:center;gap:0.4rem;">
-                    <i data-lucide="credit-card" style="width:16px;height:16px;color:var(--dalight-gold);"></i> Paiement au Spa (Recommandé)
-                  </strong>
-                  <span style="font-size:0.8rem;color:var(--dalight-muted);">Réglez sur place le jour de votre rendez-vous (Cash, MonCash ou Carte)</span>
+            <!-- 1. Formule de paiement : 50% Acompte vs 100% Complet -->
+            <div style="margin-bottom:1.5rem;">
+              <label style="font-size:0.88rem;font-weight:600;color:var(--dalight-gold);display:flex;align-items:center;gap:0.4rem;margin-bottom:0.75rem;">
+                <i data-lucide="calculator" style="width:16px;height:16px;"></i> 1. Formule de règlement :
+              </label>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;">
+                <!-- 50% Acompte -->
+                <div class="payment-choice-card selected" id="choice-deposit-card" onclick="selectPaymentChoice('deposit')">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem;">
+                    <span style="font-weight:700;font-size:1rem;color:var(--dalight-text);display:flex;align-items:center;gap:0.4rem;">
+                      <i data-lucide="percent" style="width:16px;height:16px;color:var(--dalight-gold);"></i> Acompte de 50%
+                    </span>
+                    <span style="font-size:0.72rem;padding:0.2rem 0.55rem;border-radius:999px;background:rgba(212,175,55,0.18);border:1px solid rgba(212,175,55,0.4);color:var(--dalight-gold);font-weight:600;">Recommandé</span>
+                  </div>
+                  <div style="font-size:0.82rem;color:var(--dalight-muted);line-height:1.4;margin-bottom:0.6rem;">
+                    Bloquez immédiatement votre créneau en réglant 50% aujourd'hui. Le solde sera payé sur place le jour du soin.
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:0.4rem;border-top:1px solid rgba(255,255,255,0.08);">
+                    <span style="font-size:0.78rem;color:var(--dalight-muted);">À payer maintenant :</span>
+                    <strong style="color:var(--dalight-gold);font-size:1.1rem;" id="choice-deposit-amount">4 250 HTG</strong>
+                  </div>
                 </div>
-              </div>
 
-              <!-- Option 2: MonCash -->
-              <div class="payment-option-card" onclick="selectPaymentMethod('moncash', this)">
-                <input type="radio" name="payment_method" value="moncash" style="accent-color:var(--dalight-gold);">
-                <div style="flex:1;">
-                  <strong style="color:var(--dalight-text);font-size:1rem;display:flex;align-items:center;gap:0.4rem;">
-                    <i data-lucide="smartphone" style="width:16px;height:16px;color:var(--dalight-gold);"></i> MonCash Direct (+509 4747-7221)
-                  </strong>
-                  <span style="font-size:0.8rem;color:var(--dalight-muted);">Paiement mobile instantané vers le compte officiel DALIGHT</span>
-                </div>
-              </div>
-
-              <!-- Option 3: Virement Bancaire -->
-              <div class="payment-option-card" onclick="selectPaymentMethod('bank', this)">
-                <input type="radio" name="payment_method" value="bank" style="accent-color:var(--dalight-gold);">
-                <div style="flex:1;">
-                  <strong style="color:var(--dalight-text);font-size:1rem;display:flex;align-items:center;gap:0.4rem;">
-                    <i data-lucide="landmark" style="width:16px;height:16px;color:var(--dalight-gold);"></i> Virement Bancaire (Sogebank / Unibank / BNC)
-                  </strong>
-                  <span style="font-size:0.8rem;color:var(--dalight-muted);">Transfert sécurisé sans frais supplémentaires</span>
+                <!-- 100% Complet -->
+                <div class="payment-choice-card" id="choice-full-card" onclick="selectPaymentChoice('full')">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem;">
+                    <span style="font-weight:700;font-size:1rem;color:var(--dalight-text);display:flex;align-items:center;gap:0.4rem;">
+                      <i data-lucide="check-circle" style="width:16px;height:16px;color:var(--dalight-gold);"></i> Paiement Complet (100%)
+                    </span>
+                    <span style="font-size:0.72rem;padding:0.2rem 0.55rem;border-radius:999px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#10b981;font-weight:600;">Sérénité totale</span>
+                  </div>
+                  <div style="font-size:0.82rem;color:var(--dalight-muted);line-height:1.4;margin-bottom:0.6rem;">
+                    Réglez la totalité dès maintenant et profitez de votre soin sans aucune formalité de paiement le jour du rendez-vous.
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:0.4rem;border-top:1px solid rgba(255,255,255,0.08);">
+                    <span style="font-size:0.78rem;color:var(--dalight-muted);">Total complet :</span>
+                    <strong style="color:var(--dalight-gold);font-size:1.1rem;" id="choice-full-amount">8 500 HTG</strong>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Upload zone for proof if electronic -->
-            <div id="upload-proof-box" style="display:none;margin-bottom:1.5rem;padding:1.25rem;background:rgba(18,27,18,0.6);border:1px dashed var(--dalight-border);border-radius:14px;text-align:center;">
-              <p style="font-size:0.85rem;color:var(--dalight-muted);margin:0 0 0.75rem 0;">Téléchargez votre capture d'écran ou reçu de transfert :</p>
-              <input type="file" id="payment-proof" accept="image/*,.pdf" style="font-size:0.85rem;color:var(--dalight-text);">
+            <!-- 2. Choix de la méthode de transfert -->
+            <div style="margin-bottom:1.5rem;">
+              <label style="font-size:0.88rem;font-weight:600;color:var(--dalight-gold);display:flex;align-items:center;gap:0.4rem;margin-bottom:0.75rem;">
+                <i data-lucide="credit-card" style="width:16px;height:16px;"></i> 2. Mode de paiement :
+              </label>
+
+              <div class="payment-cards-grid">
+                <!-- Option 1: MonCash -->
+                <div class="payment-option-card selected" onclick="selectPaymentMethod('moncash', this)">
+                  <input type="radio" name="payment_method" value="moncash" checked style="accent-color:var(--dalight-gold);">
+                  <div style="flex:1;">
+                    <strong style="color:var(--dalight-text);font-size:1rem;display:flex;align-items:center;gap:0.4rem;">
+                      <i data-lucide="smartphone" style="width:16px;height:16px;color:var(--dalight-gold);"></i> MonCash (+509 4747-7221)
+                    </strong>
+                    <span style="font-size:0.8rem;color:var(--dalight-muted);">Transfert mobile direct vers le compte officiel DALIGHT BEAUTY</span>
+                  </div>
+                </div>
+
+                <!-- Option 2: NatCash -->
+                <div class="payment-option-card" onclick="selectPaymentMethod('natcash', this)">
+                  <input type="radio" name="payment_method" value="natcash" style="accent-color:var(--dalight-gold);">
+                  <div style="flex:1;">
+                    <strong style="color:var(--dalight-text);font-size:1rem;display:flex;align-items:center;gap:0.4rem;">
+                      <i data-lucide="smartphone" style="width:16px;height:16px;color:var(--dalight-gold);"></i> NatCash (+509 4747-7221)
+                    </strong>
+                    <span style="font-size:0.8rem;color:var(--dalight-muted);">Transfert Natcom vers le compte officiel DALIGHT BEAUTY</span>
+                  </div>
+                </div>
+
+                <!-- Option 3: Virement Bancaire -->
+                <div class="payment-option-card" onclick="selectPaymentMethod('bank', this)">
+                  <input type="radio" name="payment_method" value="bank" style="accent-color:var(--dalight-gold);">
+                  <div style="flex:1;">
+                    <strong style="color:var(--dalight-text);font-size:1rem;display:flex;align-items:center;gap:0.4rem;">
+                      <i data-lucide="landmark" style="width:16px;height:16px;color:var(--dalight-gold);"></i> Virement Bancaire (Sogebank / Unibank / BNC)
+                    </strong>
+                    <span style="font-size:0.8rem;color:var(--dalight-muted);">Dépôt ou virement vers nos comptes d'entreprise officiels</span>
+                  </div>
+                </div>
+
+                <!-- Option 4: Au Spa -->
+                <div class="payment-option-card" onclick="selectPaymentMethod('sur_place', this)">
+                  <input type="radio" name="payment_method" value="sur_place" style="accent-color:var(--dalight-gold);">
+                  <div style="flex:1;">
+                    <strong style="color:var(--dalight-text);font-size:1rem;display:flex;align-items:center;gap:0.4rem;">
+                      <i data-lucide="store" style="width:16px;height:16px;color:var(--dalight-gold);"></i> Paiement au Spa (Sur place)
+                    </strong>
+                    <span style="font-size:0.8rem;color:var(--dalight-muted);">Règlement sur place (Réservation soumise à disponibilité)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Boîtes d'Instructions & Coordonnées Bancaires / Mobiles -->
+
+            <!-- MonCash Box -->
+            <div id="moncash-details-box" style="margin-bottom:1.5rem;padding:1.25rem;background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.3);border-radius:14px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
+                <span style="font-weight:700;color:var(--dalight-gold);font-size:0.95rem;display:flex;align-items:center;gap:0.4rem;">
+                  <i data-lucide="smartphone" style="width:16px;height:16px;"></i> Coordonnées Officielles MonCash
+                </span>
+                <span style="font-size:0.75rem;padding:0.2rem 0.6rem;background:rgba(212,175,55,0.15);border-radius:6px;color:var(--dalight-gold);font-weight:600;">DALIGHT BEAUTY</span>
+              </div>
+              <div style="background:rgba(18,27,18,0.7);border-radius:10px;padding:0.85rem 1rem;margin-bottom:0.85rem;border:1px solid var(--dalight-border);display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.75rem;">
+                <div>
+                  <div style="font-size:0.75rem;color:var(--dalight-muted);">Numéro MonCash officiel :</div>
+                  <div style="font-size:1.1rem;font-weight:700;color:#faf8f5;display:flex;align-items:center;gap:0.5rem;margin-top:0.2rem;">
+                    <span>+509 4747-7221</span>
+                    <button type="button" onclick="copyToClipboard('47477221')" style="background:none;border:none;color:var(--dalight-gold);cursor:pointer;padding:2px;" title="Copier">
+                      <i data-lucide="copy" style="width:14px;height:14px;"></i>
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size:0.75rem;color:var(--dalight-muted);">Nom du compte :</div>
+                  <div style="font-size:1rem;font-weight:700;color:var(--dalight-gold);margin-top:0.2rem;">DALIGHT BEAUTY</div>
+                </div>
+                <div>
+                  <div style="font-size:0.75rem;color:var(--dalight-muted);">Montant à transférer :</div>
+                  <div style="font-size:1.1rem;font-weight:700;color:#4ade80;margin-top:0.2rem;" id="moncash-target-amount">4 250 HTG</div>
+                </div>
+              </div>
+
+              <!-- Sender inputs for MonCash -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                <div class="form-group" style="margin-bottom:0;">
+                  <label class="form-label" style="font-size:0.8rem;">Votre Numéro MonCash :</label>
+                  <input type="tel" id="moncash-sender-phone" class="form-input" placeholder="Ex: 509 3123-4567" style="padding:0.55rem 0.75rem;font-size:0.88rem;">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label class="form-label" style="font-size:0.8rem;">N° Référence Transaction :</label>
+                  <input type="text" id="moncash-tx-ref" class="form-input" placeholder="Ex: TX-874219..." style="padding:0.55rem 0.75rem;font-size:0.88rem;">
+                </div>
+              </div>
+            </div>
+
+            <!-- NatCash Box -->
+            <div id="natcash-details-box" style="display:none;margin-bottom:1.5rem;padding:1.25rem;background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.3);border-radius:14px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
+                <span style="font-weight:700;color:var(--dalight-gold);font-size:0.95rem;display:flex;align-items:center;gap:0.4rem;">
+                  <i data-lucide="smartphone" style="width:16px;height:16px;"></i> Coordonnées Officielles NatCash
+                </span>
+                <span style="font-size:0.75rem;padding:0.2rem 0.6rem;background:rgba(212,175,55,0.15);border-radius:6px;color:var(--dalight-gold);font-weight:600;">DALIGHT BEAUTY</span>
+              </div>
+              <div style="background:rgba(18,27,18,0.7);border-radius:10px;padding:0.85rem 1rem;margin-bottom:0.85rem;border:1px solid var(--dalight-border);display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.75rem;">
+                <div>
+                  <div style="font-size:0.75rem;color:var(--dalight-muted);">Numéro NatCash officiel :</div>
+                  <div style="font-size:1.1rem;font-weight:700;color:#faf8f5;display:flex;align-items:center;gap:0.5rem;margin-top:0.2rem;">
+                    <span>+509 4747-7221</span>
+                    <button type="button" onclick="copyToClipboard('47477221')" style="background:none;border:none;color:var(--dalight-gold);cursor:pointer;padding:2px;" title="Copier">
+                      <i data-lucide="copy" style="width:14px;height:14px;"></i>
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size:0.75rem;color:var(--dalight-muted);">Nom du compte :</div>
+                  <div style="font-size:1rem;font-weight:700;color:var(--dalight-gold);margin-top:0.2rem;">DALIGHT BEAUTY</div>
+                </div>
+                <div>
+                  <div style="font-size:0.75rem;color:var(--dalight-muted);">Montant à transférer :</div>
+                  <div style="font-size:1.1rem;font-weight:700;color:#4ade80;margin-top:0.2rem;" id="natcash-target-amount">4 250 HTG</div>
+                </div>
+              </div>
+
+              <!-- Sender inputs for NatCash -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                <div class="form-group" style="margin-bottom:0;">
+                  <label class="form-label" style="font-size:0.8rem;">Votre Numéro NatCash :</label>
+                  <input type="tel" id="natcash-sender-phone" class="form-input" placeholder="Ex: 509 4123-4567" style="padding:0.55rem 0.75rem;font-size:0.88rem;">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label class="form-label" style="font-size:0.8rem;">N° Référence Transaction :</label>
+                  <input type="text" id="natcash-tx-ref" class="form-input" placeholder="Ex: NC-749210..." style="padding:0.55rem 0.75rem;font-size:0.88rem;">
+                </div>
+              </div>
+            </div>
+
+            <!-- Virement Bancaire Box -->
+            <div id="bank-details-box" style="display:none;margin-bottom:1.5rem;padding:1.25rem;background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.3);border-radius:14px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
+                <span style="font-weight:700;color:var(--dalight-gold);font-size:0.95rem;display:flex;align-items:center;gap:0.4rem;">
+                  <i data-lucide="landmark" style="width:16px;height:16px;"></i> Coordonnées Bancaires Officielles (Virement)
+                </span>
+                <span style="font-size:0.75rem;padding:0.2rem 0.6rem;background:rgba(212,175,55,0.15);border-radius:6px;color:var(--dalight-gold);font-weight:600;">DALIGHT HEAD SPA</span>
+              </div>
+
+              <!-- Bank selector -->
+              <div class="form-group" style="margin-bottom:0.75rem;">
+                <label class="form-label" style="font-size:0.8rem;color:var(--dalight-muted);">Sélectionnez la banque bénéficiaire :</label>
+                <select id="bank-select" class="form-input" onchange="updateBankDetailsDisplay()" style="padding:0.6rem 0.75rem;font-size:0.88rem;">
+                  <option value="sogebank" selected>SOGEBANK — Compte Courant Gourdes</option>
+                  <option value="unibank">UNIBANK — Compte Courant Gourdes</option>
+                  <option value="bnc">BNC (Banque Nationale de Crédit) — Compte Gourdes</option>
+                </select>
+              </div>
+
+              <div style="background:rgba(18,27,18,0.7);border-radius:10px;padding:0.85rem 1rem;margin-bottom:0.85rem;border:1px solid var(--dalight-border);display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.75rem;">
+                <div>
+                  <div style="font-size:0.75rem;color:var(--dalight-muted);">Numéro de Compte :</div>
+                  <div style="font-size:1.1rem;font-weight:700;color:#faf8f5;display:flex;align-items:center;gap:0.5rem;margin-top:0.2rem;">
+                    <span id="bank-account-num">2616035221</span>
+                    <button type="button" onclick="copyToClipboard(document.getElementById('bank-account-num').textContent)" style="background:none;border:none;color:var(--dalight-gold);cursor:pointer;padding:2px;" title="Copier">
+                      <i data-lucide="copy" style="width:14px;height:14px;"></i>
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size:0.75rem;color:var(--dalight-muted);">Titulaire certifié :</div>
+                  <div style="font-size:1rem;font-weight:700;color:var(--dalight-gold);margin-top:0.2rem;">DALIGHT HEAD SPA</div>
+                </div>
+                <div>
+                  <div style="font-size:0.75rem;color:var(--dalight-muted);">Montant à virer :</div>
+                  <div style="font-size:1.1rem;font-weight:700;color:#4ade80;margin-top:0.2rem;" id="bank-target-amount">4 250 HTG</div>
+                </div>
+              </div>
+
+              <!-- Sender inputs for Bank -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                <div class="form-group" style="margin-bottom:0;">
+                  <label class="form-label" style="font-size:0.8rem;">Nom du titulaire émetteur :</label>
+                  <input type="text" id="bank-sender-name" class="form-input" placeholder="Ex: Jean Baptiste" style="padding:0.55rem 0.75rem;font-size:0.88rem;">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label class="form-label" style="font-size:0.8rem;">N° Bordereau / Transaction :</label>
+                  <input type="text" id="bank-tx-ref" class="form-input" placeholder="Ex: VIR-849102" style="padding:0.55rem 0.75rem;font-size:0.88rem;">
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. Preuve de Paiement Obligatoire -->
+            <div id="upload-proof-box" style="margin-bottom:1.5rem;padding:1.35rem;background:rgba(18,27,18,0.7);border:1.5px dashed var(--dalight-gold);border-radius:14px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.45rem;">
+                <label style="font-size:0.92rem;font-weight:700;color:var(--dalight-gold);display:flex;align-items:center;gap:0.4rem;margin:0;">
+                  <i data-lucide="receipt" style="width:18px;height:18px;"></i> Preuve de paiement obligatoire *
+                </label>
+                <span style="font-size:0.72rem;padding:0.2rem 0.55rem;border-radius:6px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;font-weight:600;">Requis pour bloquer le créneau</span>
+              </div>
+              <p style="font-size:0.82rem;color:var(--dalight-muted);margin:0 0 1rem 0;line-height:1.4;">
+                Veuillez joindre la capture d'écran du SMS / reçu de transfert MonCash / NatCash ou la photo du bordereau bancaire. Sans preuve valide, votre réservation ne pourra pas être validée.
+              </p>
+
+              <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.75rem;">
+                <input type="file" id="payment-proof" accept="image/*,.pdf" onchange="handleProofPreview(this)" style="font-size:0.85rem;color:var(--dalight-text);width:100%;max-width:380px;">
+                <div id="proof-preview-container" style="display:none;margin-top:0.5rem;text-align:center;">
+                  <img id="proof-preview-img" src="" alt="Aperçu de la preuve" style="max-height:140px;border-radius:8px;border:1px solid var(--dalight-gold);box-shadow:0 4px 12px rgba(0,0,0,0.5);">
+                  <div style="font-size:0.75rem;color:#4ade80;margin-top:0.3rem;" id="proof-file-name">Fichier sélectionné</div>
+                </div>
+              </div>
+              <div id="proof-error-msg" style="display:none;color:#ef4444;font-size:0.82rem;margin-top:0.6rem;text-align:center;font-weight:600;">
+                <i data-lucide="alert-circle" style="width:14px;height:14px;display:inline-block;vertical-align:middle;"></i> Veuillez joindre la preuve de votre paiement pour valider.
+              </div>
             </div>
 
             <!-- Conditions Checkbox -->
@@ -1271,6 +1505,21 @@
             </div>
             <div class="summary-total-amount" id="sum-total-htg">8 500 HTG</div>
             <div class="summary-total-usd" id="sum-total-usd">~ $85.00 USD</div>
+          </div>
+
+          <div class="summary-line" id="sum-choice-row" style="border-top:1px dashed var(--dalight-border);padding-top:0.6rem;margin-top:0.6rem;">
+            <span>Formule choisie</span>
+            <strong id="sum-choice-label" style="color:var(--dalight-gold);">Acompte 50%</strong>
+          </div>
+
+          <div class="summary-line" id="sum-pay-now-row">
+            <span style="font-weight:600;color:var(--dalight-gold);">À payer aujourd'hui</span>
+            <strong id="sum-pay-now-htg" style="color:var(--dalight-gold);font-size:1.05rem;">4 250 HTG</strong>
+          </div>
+
+          <div class="summary-line" id="sum-balance-row">
+            <span>Solde au Spa (Jour J)</span>
+            <strong id="sum-balance-htg" style="color:var(--dalight-muted);">4 250 HTG</strong>
           </div>
 
           <div style="margin-top:1.5rem;padding:0.85rem;background:rgba(212,175,55,0.08);border-radius:10px;font-size:0.75rem;color:var(--dalight-muted);line-height:1.4;display:flex;align-items:center;gap:0.5rem;">
@@ -1729,15 +1978,106 @@
       }
     }
 
-    // 7. Payment Selection
+    // 7. Payment Selection & Deposit Logic
+    let paymentChoice = 'deposit'; // 'deposit' (50%) or 'full' (100%)
+
+    const BANK_ACCOUNTS = {
+      sogebank: { num: '2616035221', name: 'DALIGHT HEAD SPA' },
+      unibank: { num: '109-2415-8821', name: 'DALIGHT HEAD SPA' },
+      bnc: { num: '010-0234-9912', name: 'DALIGHT HEAD SPA' }
+    };
+
+    function selectPaymentChoice(choice) {
+      paymentChoice = choice;
+      const depositCard = document.getElementById('choice-deposit-card');
+      const fullCard = document.getElementById('choice-full-card');
+
+      if (choice === 'deposit') {
+        depositCard?.classList.add('selected');
+        fullCard?.classList.remove('selected');
+      } else {
+        fullCard?.classList.add('selected');
+        depositCard?.classList.remove('selected');
+      }
+      updateSummary();
+    }
+
     function selectPaymentMethod(method, cardElement) {
       document.querySelectorAll('.payment-option-card').forEach(c => c.classList.remove('selected'));
       cardElement.classList.add('selected');
       cardElement.querySelector('input').checked = true;
 
+      // Show/Hide dynamic detail boxes
+      const moncashBox = document.getElementById('moncash-details-box');
+      const natcashBox = document.getElementById('natcash-details-box');
+      const bankBox = document.getElementById('bank-details-box');
       const uploadBox = document.getElementById('upload-proof-box');
+
+      if (moncashBox) moncashBox.style.display = (method === 'moncash') ? 'block' : 'none';
+      if (natcashBox) natcashBox.style.display = (method === 'natcash') ? 'block' : 'none';
+      if (bankBox) bankBox.style.display = (method === 'bank') ? 'block' : 'none';
+
+      // Proof is strictly mandatory for MonCash, NatCash, and Bank
       if (uploadBox) {
-        uploadBox.style.display = (method === 'moncash' || method === 'bank') ? 'block' : 'none';
+        uploadBox.style.display = (method === 'sur_place') ? 'none' : 'block';
+      }
+
+      // Hide error msg when switching
+      const errorMsg = document.getElementById('proof-error-msg');
+      if (errorMsg) errorMsg.style.display = 'none';
+      if (uploadBox) {
+        uploadBox.style.borderColor = 'var(--dalight-gold)';
+        uploadBox.style.boxShadow = 'none';
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function updateBankDetailsDisplay() {
+      const sel = document.getElementById('bank-select')?.value || 'sogebank';
+      const info = BANK_ACCOUNTS[sel] || BANK_ACCOUNTS.sogebank;
+      const numEl = document.getElementById('bank-account-num');
+      if (numEl) numEl.textContent = info.num;
+    }
+
+    function copyToClipboard(text) {
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Copié dans le presse-papier : ' + text);
+      }).catch(() => {
+        prompt('Copiez le texte :', text);
+      });
+    }
+
+    function handleProofPreview(input) {
+      const file = input.files?.[0];
+      const previewContainer = document.getElementById('proof-preview-container');
+      const previewImg = document.getElementById('proof-preview-img');
+      const fileNameEl = document.getElementById('proof-file-name');
+      const errorMsg = document.getElementById('proof-error-msg');
+      const uploadBox = document.getElementById('upload-proof-box');
+
+      if (errorMsg) errorMsg.style.display = 'none';
+      if (uploadBox) {
+        uploadBox.style.borderColor = 'var(--dalight-gold)';
+        uploadBox.style.boxShadow = 'none';
+      }
+
+      if (file) {
+        if (previewContainer) previewContainer.style.display = 'block';
+        if (fileNameEl) fileNameEl.textContent = file.name;
+        if (file.type.startsWith('image/') && previewImg) {
+          const reader = new FileReader();
+          reader.onload = e => {
+            previewImg.src = e.target.result;
+            previewImg.style.display = 'inline-block';
+          };
+          reader.readAsDataURL(file);
+        } else if (previewImg) {
+          previewImg.style.display = 'none';
+        }
+      } else {
+        if (previewContainer) previewContainer.style.display = 'none';
       }
     }
 
@@ -1782,7 +2122,7 @@
       msg.textContent = text;
     }
 
-    // 9. Live Summary Calculation
+    // 9. Live Summary Calculation with 50% Deposit & Balance
     function updateSummary() {
       const basePrice = Number(activeService.price_htg) || 8500;
       let extraPrice = wantsVideo ? VIDEO_PRICE : 0;
@@ -1799,9 +2139,41 @@
       const finalHTG = Math.max(0, basePrice + extraPrice - discount);
       const finalUSD = (finalHTG / 130).toFixed(2);
 
-      // Update right summary
+      const depositHTG = paymentChoice === 'deposit' ? Math.round(finalHTG / 2) : finalHTG;
+      const balanceHTG = finalHTG - depositHTG;
+
+      // Update Choice cards dynamic amounts
+      const choiceDepositEl = document.getElementById('choice-deposit-amount');
+      if (choiceDepositEl) choiceDepositEl.textContent = Math.round(finalHTG / 2).toLocaleString() + ' HTG';
+
+      const choiceFullEl = document.getElementById('choice-full-amount');
+      if (choiceFullEl) choiceFullEl.textContent = finalHTG.toLocaleString() + ' HTG';
+
+      // Update instructions target amounts
+      const moncashTargetEl = document.getElementById('moncash-target-amount');
+      if (moncashTargetEl) moncashTargetEl.textContent = depositHTG.toLocaleString() + ' HTG';
+
+      const natcashTargetEl = document.getElementById('natcash-target-amount');
+      if (natcashTargetEl) natcashTargetEl.textContent = depositHTG.toLocaleString() + ' HTG';
+
+      const bankTargetEl = document.getElementById('bank-target-amount');
+      if (bankTargetEl) bankTargetEl.textContent = depositHTG.toLocaleString() + ' HTG';
+
+      // Update right sticky summary
       document.getElementById('sum-total-htg').textContent = finalHTG.toLocaleString() + ' HTG';
       document.getElementById('sum-total-usd').textContent = `~ $${finalUSD} USD`;
+
+      const sumChoiceLabel = document.getElementById('sum-choice-label');
+      if (sumChoiceLabel) sumChoiceLabel.textContent = paymentChoice === 'deposit' ? 'Acompte 50%' : 'Paiement Complet 100%';
+
+      const sumPayNow = document.getElementById('sum-pay-now-htg');
+      if (sumPayNow) sumPayNow.textContent = depositHTG.toLocaleString() + ' HTG';
+
+      const sumBalance = document.getElementById('sum-balance-htg');
+      if (sumBalance) {
+        sumBalance.textContent = balanceHTG > 0 ? (balanceHTG.toLocaleString() + ' HTG') : '0 HTG (Réglé)';
+        sumBalance.style.color = balanceHTG > 0 ? 'var(--dalight-muted)' : '#4ade80';
+      }
 
       // Update Beneficiary line in summary if gift booking
       const beneficiaryRow = document.getElementById('sum-beneficiary-row');
@@ -1826,7 +2198,7 @@
       }
     }
 
-    // 10. Form Submission
+    // 10. Form Submission with Mandatory Proof Check
     async function submitReservation() {
       const submitBtn = document.getElementById('btn-submit');
       submitBtn.disabled = true;
@@ -1838,8 +2210,27 @@
       const ph = document.getElementById('phone').value.trim();
       const em = document.getElementById('email').value.trim();
       const rawNotes = document.getElementById('notes').value.trim();
-      const pm = document.querySelector('input[name="payment_method"]:checked')?.value || 'sur_place';
+      const pm = document.querySelector('input[name="payment_method"]:checked')?.value || 'moncash';
       const proofFile = document.getElementById('payment-proof')?.files[0];
+
+      // STRICT VALIDATION : Proof of payment is mandatory for MonCash, NatCash, and Bank
+      if ((pm === 'moncash' || pm === 'natcash' || pm === 'bank') && !proofFile) {
+        const errorBox = document.getElementById('proof-error-msg');
+        if (errorBox) {
+          errorBox.style.display = 'block';
+        }
+        const uploadBox = document.getElementById('upload-proof-box');
+        if (uploadBox) {
+          uploadBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          uploadBox.style.borderColor = '#ef4444';
+          uploadBox.style.boxShadow = '0 0 18px rgba(239, 68, 68, 0.35)';
+        }
+        alert("La preuve de paiement (capture d'écran MonCash, NatCash ou bordereau bancaire) est obligatoire pour valider votre réservation.");
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i data-lucide="send" style="width:18px;height:18px;"></i> Envoyer ma Demande de Rendez-vous';
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
 
       // Format beneficiary / gift info into notes
       let fullNotes = rawNotes;
@@ -1894,6 +2285,29 @@
             : Number(appliedPromo.discount_value);
         }
         const totalAmount = Math.max(0, basePrice + extraPrice - discount);
+        const depositAmt = paymentChoice === 'deposit' ? Math.round(totalAmount / 2) : totalAmount;
+        const balanceAmt = totalAmount - depositAmt;
+
+        // Payment sender reference info
+        let paymentRef = '';
+        let senderAccountInfo = '';
+        if (pm === 'moncash') {
+          const mPhone = document.getElementById('moncash-sender-phone')?.value.trim() || '';
+          const mRef = document.getElementById('moncash-tx-ref')?.value.trim() || '';
+          paymentRef = mRef || mPhone || '';
+          senderAccountInfo = `MonCash: ${mPhone} (Réf: ${mRef})`;
+        } else if (pm === 'natcash') {
+          const nPhone = document.getElementById('natcash-sender-phone')?.value.trim() || '';
+          const nRef = document.getElementById('natcash-tx-ref')?.value.trim() || '';
+          paymentRef = nRef || nPhone || '';
+          senderAccountInfo = `NatCash: ${nPhone} (Réf: ${nRef})`;
+        } else if (pm === 'bank') {
+          const bSel = document.getElementById('bank-select')?.value || 'sogebank';
+          const bName = document.getElementById('bank-sender-name')?.value.trim() || '';
+          const bRef = document.getElementById('bank-tx-ref')?.value.trim() || '';
+          paymentRef = bRef || bName || '';
+          senderAccountInfo = `Banque: ${bSel.toUpperCase()} | Titulaire: ${bName} (Réf: ${bRef})`;
+        }
 
         const videoConsentChoice = document.querySelector('input[name="client_video_consent"]:checked')?.value || 'public';
 
@@ -1906,6 +2320,11 @@
           } catch(e){}
         }
 
+        const finalNotesWithPayment = [
+          fullNotes || '',
+          senderAccountInfo ? `[Informations de Paiement : ${senderAccountInfo}]` : ''
+        ].filter(Boolean).join('\n');
+
         const payload = {
           reservation_number: reservationNumber,
           user_id: currentUserId,
@@ -1916,12 +2335,17 @@
           location: 'Spa',
           date: document.getElementById('selected-date').value,
           time: document.getElementById('selected-time').value,
-          notes: fullNotes || null,
+          notes: finalNotesWithPayment || null,
           status: 'PENDING',
           payment_status: pm === 'sur_place' ? 'pending' : 'awaiting_confirmation',
+          payment_choice: paymentChoice,
+          deposit_amount: depositAmt,
+          balance_amount_due: balanceAmt,
           payment_method: pm,
+          payment_reference: paymentRef || null,
           payment_proof_url: proofUrl,
           total_amount_htg: totalAmount,
+          total_amount: totalAmount,
           wants_video: wantsVideo,
           video_requested: wantsVideo,
           video_consent: videoConsentChoice,
@@ -1945,13 +2369,17 @@
 
         // Construct customized WhatsApp message for pending reservation
         let waMsgText = '';
+        const paySummaryText = paymentChoice === 'deposit'
+          ? `Acompte 50% versé (${depositAmt.toLocaleString()} HTG) - Solde dû au Spa: ${balanceAmt.toLocaleString()} HTG`
+          : `Paiement Complet (${totalAmount.toLocaleString()} HTG)`;
+
         if (bookingTarget === 'other' && beneficiaryName) {
-          waMsgText = `Bonjour DALIGHT ! Je viens de transmettre une demande de réservation cadeau pour ${beneficiaryName} (Soin : ${activeService.name}) pour le ${payload.date} à ${payload.time}. N° Demande : #${reservationNumber} (En attente de confirmation).`;
+          waMsgText = `Bonjour DALIGHT ! Je viens d'effectuer une réservation cadeau pour ${beneficiaryName} (Soin : ${activeService.name}) pour le ${payload.date} à ${payload.time}. N° Demande : #${reservationNumber}. Mode : ${pm.toUpperCase()} (${paySummaryText}). Preuve transmise.`;
         } else {
-          waMsgText = `Bonjour DALIGHT ! Je viens de transmettre ma demande de réservation pour le soin : ${activeService.name} pour le ${payload.date} à ${payload.time}. N° Demande : #${reservationNumber} (En attente de confirmation).`;
+          waMsgText = `Bonjour DALIGHT ! Je viens de réserver mon soin : ${activeService.name} pour le ${payload.date} à ${payload.time}. N° Demande : #${reservationNumber}. Mode : ${pm.toUpperCase()} (${paySummaryText}). Preuve transmise.`;
         }
         if (wantsVideo) {
-          waMsgText += ` (Option Vidéo Souvenir : ${videoConsentChoice === 'public' ? 'Autorisé Réseaux' : 'Usage Privé'})`;
+          waMsgText += ` (Option Vidéo Souvenir Professionnelle : ${videoConsentChoice === 'public' ? 'Autorisé Réseaux' : 'Usage Privé'})`;
         }
 
         const waMsg = encodeURIComponent(waMsgText);
@@ -1959,7 +2387,7 @@
 
         document.getElementById('success-overlay').classList.add('active');
 
-        // Clear Cart
+            // Clear Cart
         localStorage.removeItem('dalight:serviceCart');
         localStorage.removeItem('dalight:cartServices');
 

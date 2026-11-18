@@ -1564,8 +1564,9 @@ table tbody tr:last-child td {
 .modal-overlay .modal-body {
   overflow-y: auto !important;
   flex: 1 1 auto !important;
+  min-height: 0 !important;
   padding-right: 0.5rem !important;
-  margin-bottom: 1.25rem !important;
+  margin-bottom: 0.75rem !important;
 }
 
 .modal-overlay .modal-footer {

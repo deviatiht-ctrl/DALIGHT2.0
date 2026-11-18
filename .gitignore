@@ -5,3 +5,4 @@ app/build/
 .env.local
 .env.*
 !.env.example
+scratch/
