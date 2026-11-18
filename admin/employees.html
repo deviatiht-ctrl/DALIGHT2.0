@@ -164,8 +164,16 @@
         </button>
         <h1 class="page-title">Employés & Présence</h1>
       </div>
-      <div class="header-right">
-        <button class="btn btn-primary" onclick="openEmployeeModal()">
+      <div class="header-right" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <button class="btn btn-secondary btn-sm" onclick="openPostesModal()" style="display:inline-flex; align-items:center; gap:0.35rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+          Gérer les Postes
+        </button>
+        <a href="staff-management.html" class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:0.35rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Assignations RDV (IA)
+        </a>
+        <button class="btn btn-primary btn-sm" onclick="openEmployeeModal()" style="display:inline-flex; align-items:center; gap:0.35rem;">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
           Nouvel employé
         </button>
@@ -473,60 +481,227 @@
 
   <!-- Employee Modal -->
   <div class="modal-overlay" id="employee-modal" style="display:none;">
-    <div class="modal" style="max-width:500px;">
+    <div class="modal" style="max-width:680px; width:95%; max-height:90vh; display:flex; flex-direction:column;">
       <div class="modal-header">
-        <h3 class="modal-title" id="emp-modal-title">Nouvel employé</h3>
+        <h3 class="modal-title" id="emp-modal-title">Fiche Employé &amp; Horaires</h3>
         <button class="modal-close" onclick="closeEmployeeModal()">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body" style="overflow-y:auto; flex:1; padding-right:0.5rem; display:grid; gap:1.2rem;">
         <input type="hidden" id="emp-id">
-        <div class="form-group">
-          <label>Numéro employé</label>
-          <input type="text" id="emp-number" class="form-input" placeholder="EMP-001">
+
+        <!-- 1. Identité & Contact -->
+        <div style="background:rgba(255,255,255,0.02); border:1px solid var(--admin-border); border-radius:12px; padding:1rem;">
+          <div style="font-weight:600; font-size:0.88rem; color:var(--admin-accent); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.35rem;">
+            👤 Informations Personnelles &amp; Contact
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:0.75rem;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:0.78rem;">Numéro employé</label>
+              <input type="text" id="emp-number" class="form-input" placeholder="EMP-001">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:0.78rem;">Nom complet *</label>
+              <input type="text" id="emp-name" class="form-input" placeholder="Marie Jean" required>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:0.78rem;">Téléphone WhatsApp *</label>
+              <input type="tel" id="emp-phone" class="form-input" placeholder="+509 3844-1234" required>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:0.78rem;">Email professionnel</label>
+              <input type="email" id="emp-email" class="form-input" placeholder="marie@dalight.com">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:0.78rem;">NIF</label>
+              <input type="text" id="emp-nif" class="form-input" placeholder="000-000-000-0">
+            </div>
+          </div>
         </div>
-        <div class="form-group">
-          <label>Nom complet</label>
-          <input type="text" id="emp-name" class="form-input" placeholder="Marie Jean">
+
+        <!-- 2. Poste / Spécialité -->
+        <div style="background:rgba(212,175,55,0.05); border:1px solid rgba(212,175,55,0.25); border-radius:12px; padding:1rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+            <div style="font-weight:600; font-size:0.88rem; color:var(--admin-accent); display:flex; align-items:center; gap:0.35rem;">
+              🏷️ Poste &amp; Spécialité (Pour l'assignation intelligente)
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="openPostesModal()" style="font-size:0.7rem; padding:0.15rem 0.45rem;">
+              + Gérer les postes
+            </button>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr auto; gap:0.5rem; align-items:center;">
+            <select id="emp-position-select" class="form-input" onchange="onPositionSelectChange(this)" style="font-size:0.85rem;">
+              <option value="">Sélectionner un poste...</option>
+            </select>
+            <input type="text" id="emp-position" class="form-input" placeholder="Ou saisir intitulé..." style="max-width:200px; font-size:0.85rem;">
+          </div>
+          <small style="color:var(--admin-text-muted); font-size:0.73rem; display:block; margin-top:0.35rem;">
+            Le poste permet à l'IA d'assigner automatiquement les soins compatibles (Head Spa Japonais, Massothérapie, Esthétique...).
+          </small>
         </div>
-        <div class="form-group">
-          <label>Poste / Fonction</label>
-          <input type="text" id="emp-position" class="form-input" placeholder="Esthéticienne">
+
+        <!-- 3. Horaires & Planning Hebdomadaire -->
+        <div style="background:rgba(255,255,255,0.02); border:1px solid var(--admin-border); border-radius:12px; padding:1rem;">
+          <div style="font-weight:600; font-size:0.88rem; color:var(--admin-accent); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.35rem;">
+            🕒 Horaires Habitual &amp; Jours de Repos Hebdomadaires
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:0.78rem;">Heure début shift</label>
+              <input type="time" id="emp-work-start" class="form-input" value="08:00">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:0.78rem;">Heure fin shift</label>
+              <input type="time" id="emp-work-end" class="form-input" value="18:00">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:0.78rem;">Pause déjeuner</label>
+              <input type="text" id="emp-lunch-break" class="form-input" placeholder="12:00 - 13:00" value="12:00 - 13:00">
+            </div>
+          </div>
+
+          <div>
+            <label style="font-size:0.78rem; font-weight:600; color:#FAF8F5; display:block; margin-bottom:0.4rem;">
+              Jours de Congé / Repos Réguliers (Cocher les jours NON travaillés) :
+            </label>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+              <label class="day-off-pill" style="display:inline-flex; align-items:center; gap:0.3rem; background:rgba(255,255,255,0.06); padding:0.35rem 0.65rem; border-radius:8px; font-size:0.78rem; cursor:pointer;">
+                <input type="checkbox" name="emp-day-off" value="dimanche" checked> Dimanche
+              </label>
+              <label class="day-off-pill" style="display:inline-flex; align-items:center; gap:0.3rem; background:rgba(255,255,255,0.06); padding:0.35rem 0.65rem; border-radius:8px; font-size:0.78rem; cursor:pointer;">
+                <input type="checkbox" name="emp-day-off" value="lundi"> Lundi
+              </label>
+              <label class="day-off-pill" style="display:inline-flex; align-items:center; gap:0.3rem; background:rgba(255,255,255,0.06); padding:0.35rem 0.65rem; border-radius:8px; font-size:0.78rem; cursor:pointer;">
+                <input type="checkbox" name="emp-day-off" value="mardi"> Mardi
+              </label>
+              <label class="day-off-pill" style="display:inline-flex; align-items:center; gap:0.3rem; background:rgba(255,255,255,0.06); padding:0.35rem 0.65rem; border-radius:8px; font-size:0.78rem; cursor:pointer;">
+                <input type="checkbox" name="emp-day-off" value="mercredi"> Mercredi
+              </label>
+              <label class="day-off-pill" style="display:inline-flex; align-items:center; gap:0.3rem; background:rgba(255,255,255,0.06); padding:0.35rem 0.65rem; border-radius:8px; font-size:0.78rem; cursor:pointer;">
+                <input type="checkbox" name="emp-day-off" value="jeudi"> Jeudi
+              </label>
+              <label class="day-off-pill" style="display:inline-flex; align-items:center; gap:0.3rem; background:rgba(255,255,255,0.06); padding:0.35rem 0.65rem; border-radius:8px; font-size:0.78rem; cursor:pointer;">
+                <input type="checkbox" name="emp-day-off" value="vendredi"> Vendredi
+              </label>
+              <label class="day-off-pill" style="display:inline-flex; align-items:center; gap:0.3rem; background:rgba(255,255,255,0.06); padding:0.35rem 0.65rem; border-radius:8px; font-size:0.78rem; cursor:pointer;">
+                <input type="checkbox" name="emp-day-off" value="samedi"> Samedi
+              </label>
+            </div>
+            <small style="color:var(--admin-text-muted); font-size:0.72rem; display:block; margin-top:0.35rem;">
+              L'IA ne planifiera jamais de client sur un jour de repos de l'employé(e).
+            </small>
+          </div>
         </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="emp-email" class="form-input" placeholder="email@dalight.com">
+
+        <!-- 4. Congés Exceptionnels & Vacances -->
+        <div style="background:rgba(239,68,68,0.04); border:1px solid rgba(239,68,68,0.25); border-radius:12px; padding:1rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+            <div style="font-weight:600; font-size:0.88rem; color:#f87171; display:flex; align-items:center; gap:0.35rem;">
+              🏖️ Congés Exceptionnels &amp; Absences Planifiées
+            </div>
+            <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.78rem; color:#FAF8F5; cursor:pointer;">
+              <input type="checkbox" id="emp-is-on-leave"> En congé actuellement
+            </label>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.75rem;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:0.78rem;">Du (Date début)</label>
+              <input type="date" id="emp-leave-start" class="form-input">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:0.78rem;">Au (Date fin)</label>
+              <input type="date" id="emp-leave-end" class="form-input">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:0.78rem;">Motif du congé</label>
+              <input type="text" id="emp-leave-reason" class="form-input" placeholder="Ex: Vacances annuelles, Maladie...">
+            </div>
+          </div>
         </div>
+
+        <!-- 5. Photo -->
         <div class="form-group">
-          <label>Téléphone</label>
-          <input type="text" id="emp-phone" class="form-input" placeholder="+509 00 00 00 00">
-        </div>
-        <div class="form-group">
-          <label>NIF</label>
-          <input type="text" id="emp-nif" class="form-input" placeholder="Numéro d'identification fiscale">
-        </div>
-        <div class="form-group">
-          <label>Photo d'identité</label>
+          <label style="font-size:0.78rem;">Photo d'identité</label>
           <input type="file" id="emp-photo" class="form-input" accept="image/*" onchange="onEmployeePhotoSelected(this)">
           <div id="emp-photo-cropper-container" style="margin-top:.75rem;display:none;max-width:100%;">
             <div style="max-height:300px;overflow:hidden;border-radius:12px;border:1px solid var(--admin-border);">
               <img id="emp-photo-cropper-image" src="" alt="Photo à recadrer" style="max-width:100%;display:block;">
             </div>
             <div class="d-flex gap-1" style="margin-top:.5rem;flex-wrap:wrap;">
-              <button type="button" class="btn btn-secondary" onclick="rotatePhotoCropper(-45)">↺ Tourner</button>
-              <button type="button" class="btn btn-secondary" onclick="rotatePhotoCropper(45)">↻ Tourner</button>
-              <button type="button" class="btn btn-secondary" onclick="resetPhotoCropper()">Réinitialiser</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="rotatePhotoCropper(-45)">↺ Tourner</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="rotatePhotoCropper(45)">↻ Tourner</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="resetPhotoCropper()">Réinitialiser</button>
             </div>
           </div>
           <div id="emp-photo-preview" style="margin-top:.5rem;display:none;">
-            <img src="" alt="Preview" style="width:80px;height:80px;object-fit:cover;border-radius:50%;">
+            <img src="" alt="Preview" style="width:70px;height:70px;object-fit:cover;border-radius:50%;">
           </div>
         </div>
+
+      </div>
+      <div class="modal-footer" style="padding-top:0.75rem; display:flex; justify-content:flex-end; gap:0.5rem;">
+        <button class="btn btn-secondary" onclick="closeEmployeeModal()">Annuler</button>
+        <button class="btn btn-primary" onclick="saveEmployee()">Enregistrer la fiche</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Postes & Catégories Management Modal -->
+  <div class="modal-overlay" id="postes-modal" style="display:none;">
+    <div class="modal" style="max-width:620px; width:95%; max-height:85vh; display:flex; flex-direction:column;">
+      <div class="modal-header">
+        <h3 class="modal-title">🏷️ Gestion des Postes &amp; Spécialités</h3>
+        <button class="modal-close" onclick="closePostesModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="overflow-y:auto; flex:1; display:grid; gap:1rem;">
+        
+        <!-- Add New Poste Form -->
+        <div style="background:rgba(212,175,55,0.06); border:1px solid rgba(212,175,55,0.3); border-radius:12px; padding:1rem;">
+          <div style="font-weight:600; font-size:0.88rem; color:var(--admin-accent); margin-bottom:0.75rem;">
+            + Créer un Nouveau Poste
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:0.78rem;">Intitulé du Poste *</label>
+              <input type="text" id="new-poste-title" class="form-input" placeholder="Ex: Spécialiste Head Spa">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:0.78rem;">Catégorie</label>
+              <select id="new-poste-category" class="form-input">
+                <option value="headspa">Head Spa Japonais</option>
+                <option value="massage">Massage &amp; Shiatsu</option>
+                <option value="esthetique">Esthétique &amp; Soins</option>
+                <option value="coiffure">Coiffure &amp; Cheveux</option>
+                <option value="administration">Accueil / Admin</option>
+                <option value="autre">Autre spécialité</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0.75rem;">
+            <label style="font-size:0.78rem;">Services associés (mots-clés séparés par des virgules) :</label>
+            <input type="text" id="new-poste-services" class="form-input" placeholder="Ex: Head Spa, Signature, Royale, Renaissance">
+            <small style="color:var(--admin-text-muted); font-size:0.72rem;">Utilisé par l'IA pour matcher automatiquement les réservations.</small>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="submitCreatePoste()">Ajouter le poste</button>
+        </div>
+
+        <!-- Postes List -->
+        <div>
+          <div style="font-size:0.82rem; font-weight:600; color:var(--admin-text-muted); margin-bottom:0.5rem;">
+            Postes Existants dans DALIGHT :
+          </div>
+          <div id="postes-list-container" style="display:grid; gap:0.5rem;">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeEmployeeModal()">Annuler</button>
-        <button class="btn btn-primary" onclick="saveEmployee()">Enregistrer</button>
+        <button class="btn btn-secondary" onclick="closePostesModal()">Fermer</button>
       </div>
     </div>
   </div>

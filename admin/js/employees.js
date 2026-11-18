@@ -1,8 +1,182 @@
+
+// ============================================
+// POSTES & ROLES MANAGEMENT
+// ============================================
+async function loadPostes() {
+  const supabase = getSupabaseClient();
+  if (!supabase) return;
+  try {
+    const { data, error } = await supabase.from('settings').select('value').eq('key', 'employee_postes').maybeSingle();
+    if (!error && data && Array.isArray(data.value)) {
+      allPostes = data.value;
+    } else {
+      allPostes = [
+        { id: 'poste-headspa', color: '#d4af37', title: 'Praticienne Head Spa Japonais', category: 'headspa', services: ['Head Spa Japonais Signature', 'Head Spa Sérénité Royale', 'Rituel Renaissance Express'] },
+        { id: 'poste-massage', color: '#4ade80', title: 'Massothérapeute Thérapeutique', category: 'massage', services: ['Massage relaxant Silver package', 'Massage aux pierres chaudes', 'Massage shiatsu'] },
+        { id: 'poste-esthetique', color: '#a855f7', title: 'Esthéticienne & Soin Visage', category: 'esthetique', services: ['Soin visage éclat', 'Hydrafacial', 'Gommage corps'] },
+        { id: 'poste-coiffure', color: '#38bdf8', title: 'Spécialiste Capillaire & Coiffure', category: 'coiffure', services: ['Diagnostic capillaire', 'Brushing haute définition', 'Masque nourrissant profond'] },
+        { id: 'poste-reception', color: '#fbbf24', title: 'Accueil & Conciergerie', category: 'administration', services: [] }
+      ];
+    }
+    populatePostesDropdown();
+  } catch (err) {
+    console.warn('Error loading postes:', err);
+  }
+}
+
+function populatePostesDropdown() {
+  const select = document.getElementById('emp-position-select');
+  if (!select) return;
+  const currentVal = select.value;
+  select.innerHTML = '<option value="">-- Sélectionner un poste officiel --</option>' +
+    allPostes.map(p => '<option value="' + esc(p.title) + '">' + esc(p.title) + ' (' + esc(p.category) + ')</option>').join('') +
+    '<option value="__custom__">➕ Autre / Saisie personnalisée...</option>';
+  if (currentVal) select.value = currentVal;
+}
+
+window.onPositionSelectChange = function(select) {
+  const customInput = document.getElementById('emp-position');
+  if (!customInput) return;
+  if (select.value === '__custom__') {
+    customInput.style.display = 'block';
+    customInput.value = '';
+    customInput.focus();
+  } else if (select.value) {
+    customInput.value = select.value;
+    customInput.style.display = 'none';
+  } else {
+    customInput.style.display = 'none';
+  }
+};
+
+window.openPostesModal = function() {
+  const modal = document.getElementById('postes-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  renderPostesList();
+};
+
+window.closePostesModal = function() {
+  const modal = document.getElementById('postes-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+function renderPostesList() {
+  const container = document.getElementById('postes-list-container');
+  if (!container) return;
+  if (!allPostes.length) {
+    container.innerHTML = '<p class="text-muted" style="font-size:0.85rem;">Aucun poste enregistré.</p>';
+    return;
+  }
+  const categoryColors = {
+    headspa: '#d4af37',
+    massage: '#4ade80',
+    esthetique: '#a855f7',
+    coiffure: '#38bdf8',
+    administration: '#fbbf24',
+    autre: '#94a3b8'
+  };
+  container.innerHTML = allPostes.map((p, idx) => {
+    const col = p.color || categoryColors[p.category] || '#d4af37';
+    const srvs = (p.services || []).map(s => '<span style="display:inline-block; background:rgba(255,255,255,0.06); padding:0.15rem 0.4rem; border-radius:4px; font-size:0.7rem; margin-right:0.25rem; margin-top:0.25rem;">' + esc(s) + '</span>').join('');
+    return '<div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:0.75rem; display:flex; justify-content:space-between; align-items:flex-start;">' +
+      '<div>' +
+        '<div style="display:flex; align-items:center; gap:0.5rem;">' +
+          '<span style="width:10px; height:10px; border-radius:50%; background:' + col + '; display:inline-block;"></span>' +
+          '<strong style="font-size:0.9rem; color:#FAF8F5;">' + esc(p.title) + '</strong>' +
+          '<span style="font-size:0.7rem; color:' + col + '; text-transform:uppercase; letter-spacing:0.04em; background:rgba(255,255,255,0.05); padding:0.1rem 0.4rem; border-radius:4px;">' + esc(p.category) + '</span>' +
+        '</div>' +
+        (srvs ? '<div style="margin-top:0.4rem;">' + srvs + '</div>' : '') +
+      '</div>' +
+      '<button type="button" class="btn btn-icon btn-danger btn-sm" onclick="deletePoste(\'' + (p.id || idx) + '\')" title="Supprimer">' +
+        '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>' +
+      '</button>' +
+    '</div>';
+  }).join('');
+}
+
+window.submitCreatePoste = async function() {
+  const title = document.getElementById('new-poste-title')?.value.trim();
+  const category = document.getElementById('new-poste-category')?.value || 'autre';
+  const servicesRaw = document.getElementById('new-poste-services')?.value.trim() || '';
+  if (!title) {
+    showToast('Veuillez saisir un intitulé pour le poste', 'warning');
+    return;
+  }
+  const services = servicesRaw ? servicesRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const id = 'poste-' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  
+  const categoryColors = {
+    headspa: '#d4af37',
+    massage: '#4ade80',
+    esthetique: '#a855f7',
+    coiffure: '#38bdf8',
+    administration: '#fbbf24',
+    autre: '#94a3b8'
+  };
+
+  const newPoste = {
+    id,
+    title,
+    category,
+    color: categoryColors[category] || '#d4af37',
+    services,
+    description: 'Poste ' + title + ' - Catégorie ' + category
+  };
+
+  const existingIdx = allPostes.findIndex(p => p.id === id || p.title.toLowerCase() === title.toLowerCase());
+  if (existingIdx >= 0) {
+    allPostes[existingIdx] = newPoste;
+  } else {
+    allPostes.push(newPoste);
+  }
+
+  const supabase = getSupabaseClient();
+  try {
+    const { error } = await supabase.from('settings').upsert({
+      key: 'employee_postes',
+      value: allPostes,
+      description: 'Liste officielle des Postes & Spécialités des employés DALIGHT',
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'key' });
+    if (error) throw error;
+    showToast('Poste enregistré avec succès', 'success');
+    document.getElementById('new-poste-title').value = '';
+    document.getElementById('new-poste-services').value = '';
+    renderPostesList();
+    populatePostesDropdown();
+  } catch (err) {
+    console.error('Error saving poste:', err);
+    showToast('Erreur: ' + (err.message || err), 'error');
+  }
+};
+
+window.deletePoste = async function(idOrIdx) {
+  if (!confirm('Supprimer ce poste ?')) return;
+  allPostes = allPostes.filter((p, idx) => p.id !== idOrIdx && String(idx) !== String(idOrIdx));
+  const supabase = getSupabaseClient();
+  try {
+    const { error } = await supabase.from('settings').upsert({
+      key: 'employee_postes',
+      value: allPostes,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'key' });
+    if (error) throw error;
+    showToast('Poste supprimé', 'success');
+    renderPostesList();
+    populatePostesDropdown();
+  } catch (err) {
+    console.error('Error deleting poste:', err);
+    showToast('Erreur lors de la suppression', 'error');
+  }
+};
+
 // ============================================
 // DALIGHT - EMPLOYEE PRESENCE SYSTEM
 // ============================================
 
 let allEmployees = [];
+let allPostes = [];
 let allAttendance = [];
 let currentEmployee = null;
 let currentBadgeEmployee = null;
@@ -78,6 +252,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('attendance-month').value = month;
   attendanceSelectedDate = today;
 
+  await loadPostes();
   await loadEmployees();
   await loadAttendanceRange(start, end);
 });
@@ -173,6 +348,24 @@ window.renderEmployees = function() {
     const portalBadge = e.portal_enabled && e.username
       ? `<span style="display:inline-block;background:#10b981;color:white;padding:0.1rem 0.4rem;border-radius:4px;font-size:0.62rem;font-weight:700;">Portail: ${esc(e.username)}</span>`
       : '';
+
+    // Extract schedule info
+    let sched = {};
+    if (e.bio) {
+      try { sched = JSON.parse(e.bio); } catch(err){}
+    }
+    const daysOffList = (sched.days_off || ['dimanche']).map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ');
+    const isLeave = sched.is_on_leave || (sched.leave_start && sched.leave_end && (new Date().toISOString().split('T')[0] >= sched.leave_start && new Date().toISOString().split('T')[0] <= sched.leave_end));
+    const leaveBadge = isLeave
+      ? '<span style="display:inline-block;background:#fee2e2;color:#ef4444;border:1px solid #fca5a5;padding:0.12rem 0.45rem;border-radius:4px;font-size:0.65rem;font-weight:700;margin-top:0.2rem;">🏖️ En congé (' + esc(sched.leave_reason || 'Absent') + ')</span>'
+      : '';
+    const scheduleBadge = sched.work_start
+      ? '<div style="margin-top:0.25rem;font-size:0.72rem;color:var(--admin-text-muted);display:flex;align-items:center;gap:0.35rem;"><span>⏰ ' + sched.work_start + ' - ' + (sched.work_end || '18:00') + '</span> • <span>Repos: <strong>' + daysOffList + '</strong></span></div>'
+      : '';
+
+    const matchedPoste = allPostes.find(p => p.title.toLowerCase() === (e.position || '').toLowerCase());
+    const posteColor = matchedPoste ? (matchedPoste.color || '#d4af37') : '#d4af37';
+    const posteBadge = '<span style="display:inline-block;background:rgba(212,175,55,0.12);color:' + posteColor + ';border:1px solid ' + posteColor + '40;padding:0.12rem 0.45rem;border-radius:4px;font-size:0.68rem;font-weight:700;">' + esc(e.position) + '</span>';
     
     return `
       <div class="emp-card">
@@ -181,7 +374,12 @@ window.renderEmployees = function() {
         </div>
         <div class="emp-info">
           <div class="emp-name">${esc(e.full_name)}${qrModifierBadge}</div>
-          <div class="emp-meta">${esc(e.position)} • ${esc(e.employee_number || '')}</div>
+          <div style="margin-top:0.2rem;display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+            ${posteBadge}
+            <span class="emp-meta">• ${esc(e.employee_number || '')}</span>
+          </div>
+          ${scheduleBadge}
+          ${leaveBadge}
           ${e.nif ? `<div class="emp-meta">NIF: ${esc(e.nif)}</div>` : ''}
           <div class="emp-meta">${e.is_active ? 'Actif' : 'Inactif'}</div>
           ${rolesBadges ? `<div style="margin-top:.3rem;">${rolesBadges}</div>` : ''}
@@ -268,7 +466,8 @@ function getCroppedPhotoFile() {
 
 window.openEmployeeModal = function(employee = null) {
   currentEmployee = employee;
-  document.getElementById('emp-modal-title').textContent = employee ? 'Modifier employé' : 'Nouvel employé';
+  populatePostesDropdown();
+  document.getElementById('emp-modal-title').textContent = employee ? 'Fiche Employé & Horaires' : 'Nouvel employé';
   document.getElementById('emp-id').value = employee?.id || '';
   document.getElementById('emp-number').value = employee?.employee_number || '';
   document.getElementById('emp-name').value = employee?.full_name || '';
@@ -278,6 +477,60 @@ window.openEmployeeModal = function(employee = null) {
   document.getElementById('emp-nif').value = employee?.nif || '';
   document.getElementById('emp-photo').value = '';
   employeePhotoFile = null;
+
+  // Handle Position Select
+  const posSelect = document.getElementById('emp-position-select');
+  const posInput = document.getElementById('emp-position');
+  if (posSelect) {
+    const found = Array.from(posSelect.options).some(o => o.value === (employee?.position || ''));
+    if (found && employee?.position) {
+      posSelect.value = employee.position;
+      if (posInput) posInput.style.display = 'none';
+    } else if (employee?.position) {
+      posSelect.value = '__custom__';
+      if (posInput) {
+        posInput.value = employee.position;
+        posInput.style.display = 'block';
+      }
+    } else {
+      posSelect.value = '';
+      if (posInput) posInput.style.display = 'none';
+    }
+  }
+
+  // Parse schedule and leaves from bio JSON
+  let sched = {
+    work_start: '08:00',
+    work_end: '18:00',
+    lunch_break: '12:00 - 13:00',
+    days_off: ['dimanche'],
+    leave_start: '',
+    leave_end: '',
+    leave_reason: '',
+    is_on_leave: false
+  };
+  if (employee?.bio) {
+    try {
+      const parsed = JSON.parse(employee.bio);
+      if (typeof parsed === 'object' && parsed !== null) {
+        sched = { ...sched, ...parsed };
+      }
+    } catch(err){}
+  }
+
+  if (document.getElementById('emp-work-start')) document.getElementById('emp-work-start').value = sched.work_start || '08:00';
+  if (document.getElementById('emp-work-end')) document.getElementById('emp-work-end').value = sched.work_end || '18:00';
+  if (document.getElementById('emp-lunch-break')) document.getElementById('emp-lunch-break').value = sched.lunch_break || '12:00 - 13:00';
+  
+  const daysOff = sched.days_off || ['dimanche'];
+  document.querySelectorAll('input[name="emp-day-off"]').forEach(cb => {
+    cb.checked = daysOff.includes(cb.value.toLowerCase());
+  });
+
+  if (document.getElementById('emp-leave-start')) document.getElementById('emp-leave-start').value = sched.leave_start || '';
+  if (document.getElementById('emp-leave-end')) document.getElementById('emp-leave-end').value = sched.leave_end || '';
+  if (document.getElementById('emp-leave-reason')) document.getElementById('emp-leave-reason').value = sched.leave_reason || '';
+  if (document.getElementById('emp-is-on-leave')) document.getElementById('emp-is-on-leave').checked = !!sched.is_on_leave;
 
   if (photoCropper) {
     photoCropper.destroy();
@@ -391,10 +644,31 @@ window.saveEmployee = async function() {
 
     const qrData = currentEmployee?.qr_data || `DALIGHT-EMP-${(crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36))}`;
 
+    // Determine effective position
+    const posSelect = document.getElementById('emp-position-select');
+    let finalPosition = position;
+    if (posSelect && posSelect.value && posSelect.value !== '__custom__') {
+      finalPosition = posSelect.value;
+    }
+
+    // Collect schedule & leave data
+    const daysOffChecked = Array.from(document.querySelectorAll('input[name="emp-day-off"]:checked')).map(cb => cb.value.toLowerCase());
+    const schedulePayload = {
+      work_start: document.getElementById('emp-work-start')?.value || '08:00',
+      work_end: document.getElementById('emp-work-end')?.value || '18:00',
+      lunch_break: document.getElementById('emp-lunch-break')?.value || '12:00 - 13:00',
+      days_off: daysOffChecked,
+      leave_start: document.getElementById('emp-leave-start')?.value || '',
+      leave_end: document.getElementById('emp-leave-end')?.value || '',
+      leave_reason: document.getElementById('emp-leave-reason')?.value || '',
+      is_on_leave: document.getElementById('emp-is-on-leave')?.checked || false
+    };
+
     const data = {
       employee_number: number,
       full_name: name,
-      position,
+      position: finalPosition,
+      bio: JSON.stringify(schedulePayload),
       email: email || null,
       phone: phone || null,
       nif: nif || null,

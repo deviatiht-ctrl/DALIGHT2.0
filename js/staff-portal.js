@@ -1,3 +1,40 @@
+
+function calculatePortalEndTime(startTime, durationMinutes = 60) {
+  if (!startTime) return '—';
+  const [h, m] = String(startTime).split(':').map(Number);
+  const total = (h || 0) * 60 + (m || 0) + (Number(durationMinutes) || 60);
+  const endH = String(Math.floor(total / 60) % 24).padStart(2, '0');
+  const endM = String(total % 60).padStart(2, '0');
+  return endH + ':' + endM;
+}
+
+function getPortalCountdownBadge(r) {
+  if (!r.date || !r.time) return '';
+  const now = new Date();
+  const dur = Number(r.duration_minutes) || (r.service && r.service.includes('Royale') ? 90 : (r.service && r.service.includes('Express') ? 45 : 60));
+  const [y, m, d] = r.date.split('-').map(Number);
+  const [h, min] = r.time.split(':').map(Number);
+  const apptDate = new Date(y, m - 1, d, h, min, 0);
+  const diffMs = apptDate.getTime() - now.getTime();
+  const diffMin = Math.round(diffMs / 60000);
+
+  if (r.status === 'COMPLETED') return '<span class="badge badge-muted">Terminé</span>';
+  if (diffMin > 0) {
+    if (diffMin <= 60) return '<span class="badge badge-gold" style="font-weight:700;border:1px solid #d4af3760;">⏳ Dans ' + diffMin + 'm</span>';
+    if (diffMin <= 1440) {
+      const hrs = Math.floor(diffMin / 60);
+      const rem = diffMin % 60;
+      return '<span class="badge badge-gold" style="border:1px solid #d4af3740;">⏳ Dans ' + hrs + 'h ' + (rem > 0 ? rem + 'm' : '') + '</span>';
+    }
+    return '<span class="badge badge-muted">📅 Dans ' + Math.round(diffMin / 1440) + 'j</span>';
+  }
+  if (diffMin <= 0 && diffMin >= -dur) {
+    const rem = dur + diffMin;
+    return '<span class="badge badge-green" style="font-weight:700;border:1px solid #22c55e60;"><span class="live-dot" style="margin-right:4px;"></span>En cours (' + rem + 'm restantes)</span>';
+  }
+  return '<span class="badge badge-muted">Passé (+' + (Math.abs(diffMin) - dur) + 'm)</span>';
+}
+
 // ============================================
 // DALIGHT - STAFF PORTAL
 // Interface personnelle employé (accès par code)
@@ -355,11 +392,22 @@ function apptCard(r) {
   }[r.status] || 'badge-muted';
   const clientName = esc(r.user_name || 'Client');
   const svc = esc(r.service || 'Service');
-  return `<div class="list-item" style="cursor:pointer;" onclick="openApptDetail('${r.id}')">
-    <div class="avatar">${getInitials(r.user_name || 'C')}</div>
+  const dur = Number(r.duration_minutes) || (r.service && r.service.includes('Royale') ? 90 : (r.service && r.service.includes('Express') ? 45 : 60));
+  const endTime = calculatePortalEndTime(r.time, dur);
+  const countdown = getPortalCountdownBadge(r);
+
+  return `<div class="list-item" style="cursor:pointer;display:flex;align-items:center;gap:.75rem;padding:.85rem;border-radius:12px;background:var(--surface-2);border:1px solid var(--admin-border);margin-bottom:.6rem;" onclick="openApptDetail('${r.id}')">
+    <div class="avatar" style="width:44px;height:44px;font-size:.9rem;flex-shrink:0;">${getInitials(r.user_name || 'C')}</div>
     <div style="flex:1;min-width:0;">
-      <div style="font-weight:600;">${clientName} <span class="badge ${statusBadge}" style="margin-left:.3rem;">${esc(r.status)}</span></div>
-      <div style="color:var(--admin-text-muted);font-size:.85rem;">${svc} · ${fmtDate(r.date)} · ${fmtTime(r.time)} · ${esc(r.location || '')}</div>
+      <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;">
+        <span style="font-weight:700;font-size:.95rem;">${clientName}</span>
+        <span class="badge ${statusBadge}">${esc(r.status)}</span>
+        ${countdown}
+      </div>
+      <div style="color:var(--admin-text);font-size:.86rem;margin-top:.15rem;font-weight:500;">${svc}</div>
+      <div style="color:var(--admin-text-muted);font-size:.78rem;margin-top:.1rem;">
+        📅 ${fmtDate(r.date)} · ⏰ <strong>${fmtTime(r.time)} → ${endTime}</strong> (${dur} min)
+      </div>
     </div>
     <div style="display:flex;gap:.4rem;align-items:center;" onclick="event.stopPropagation()">
       <button class="btn btn-green btn-sm" onclick="startServiceFromAppt('${r.id}')">Démarrer</button>
@@ -396,7 +444,8 @@ window.openApptDetail = function (reservationId) {
       <div style="display:flex;flex-direction:column;gap:.6rem;font-size:.9rem;color:var(--admin-text);">
         <div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('sparkles')} <span>${esc(r.service || 'Service')}</span></div>
         <div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('calendar')} <span>${fmtDate(r.date)}</span></div>
-        <div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('clock')} <span>${fmtTime(r.time)}</span></div>
+        <div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('clock')} <span>${fmtTime(r.time)} → ${calculatePortalEndTime(r.time, r.duration_minutes || 60)} (${r.duration_minutes || 60} min)</span></div>
+        <div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('hourglass')} <span>${getPortalCountdownBadge(r)}</span></div>
         <div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('map-pin')} <span>${esc(r.location || '—')}</span></div>
         ${r.phone ? `<div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('phone')} <span>${esc(r.phone)}</span></div>` : ''}
         ${email ? `<div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('mail')} <span>${email}</span></div>` : ''}
