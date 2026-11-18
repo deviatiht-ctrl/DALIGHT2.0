@@ -402,6 +402,26 @@ window.openDetailModal = function(id) {
         <div style="background:var(--admin-bg);padding:.85rem 1rem;border-radius:10px;border:1px solid var(--admin-border);font-size:.88rem;">${r.notes}</div>
       </div>` : ''}
 
+      ${(r.wants_video || r.video_requested) ? `
+      <!-- Option Video Souvenir -->
+      <div style="background:var(--admin-bg);border-radius:12px;padding:1rem;border:1px solid rgba(212,175,55,0.3);display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+        <div style="display:flex;align-items:center;gap:.6rem;">
+          <div style="background:rgba(212,175,55,0.15);width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            ${ico('M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z', 17, 'var(--admin-accent,#c9a227)')}
+          </div>
+          <div>
+            <div style="font-weight:600;font-size:.88rem;color:var(--admin-accent,#c9a227);">Option Vidéo Souvenir Professionnelle</div>
+            <div style="font-size:.76rem;color:var(--admin-text-muted);margin-top:.15rem;">
+              Consentement : <strong style="color:var(--admin-text);">${r.video_consent === 'private' ? 'Usage Privé Uniquement (WhatsApp)' : 'Autorisé Réseaux Sociaux (Public)'}</strong>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-weight:700;color:var(--admin-accent,#c9a227);font-size:.95rem;">+${(Number(r.video_price) || 500).toLocaleString()} HTG</div>
+          <span style="font-size:.7rem;padding:.15rem .5rem;border-radius:6px;background:rgba(74,222,128,0.15);color:#4ade80;font-weight:600;">Inclus</span>
+        </div>
+      </div>` : ''}
+
       <!-- Consent Form section -->
       <div id="consent-section-${r.id}" style="background:var(--admin-bg);border-radius:12px;padding:1rem;border:1px solid var(--admin-border);">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
@@ -2461,6 +2481,13 @@ function openCreateReservationModal() {
   const videoConsentBox = document.getElementById('create-video-consent-box');
   if (videoConsentBox) videoConsentBox.style.display = 'none';
 
+  const videoToggle = document.getElementById('create-video-toggle');
+  if (videoToggle) videoToggle.checked = false;
+  const videoBlock = document.getElementById('create-video-consent-block');
+  if (videoBlock) videoBlock.style.display = 'none';
+  const defaultRadio = document.querySelector('input[name="create_video_consent"][value="public"]');
+  if (defaultRadio) defaultRadio.checked = true;
+
   createReservationClient = null;
   createReservationExtras = [];
 
@@ -2493,6 +2520,13 @@ function closeCreateReservationModal() {
   modal.style.display = 'none';
   createReservationClient = null;
 }
+
+
+window.toggleCreateVideoOption = function(isChecked) {
+  const block = document.getElementById('create-video-consent-block');
+  if (block) block.style.display = isChecked ? 'block' : 'none';
+  updateCreateReservationTotal();
+};
 
 async function loadCreateReservationServices() {
   const listEl = document.getElementById('create-services-list');
@@ -2821,6 +2855,14 @@ function updateCreateReservationTotal() {
     feeAmount += includeFee ? (withFee(base) - base) : 0;
   });
 
+  // Option Vidéo Souvenir (+500 HTG)
+  const wantsVideo = document.getElementById('create-video-toggle')?.checked ?? false;
+  const videoPrice = wantsVideo ? 500 : 0;
+  if (wantsVideo) {
+    subtotal += videoPrice;
+    feeAmount += includeFee ? (withFee(videoPrice) - videoPrice) : 0;
+  }
+
   const total = includeFee ? withFee(subtotal) : subtotal;
   const totalEl = document.getElementById('create-reservation-total');
   const feeEl = document.getElementById('create-moncash-fee-display');
@@ -2829,6 +2871,7 @@ function updateCreateReservationTotal() {
     let text = subtotal > 0 ? `Sous-total : ${subtotal.toLocaleString()} HTG` : '';
     if (includeFee && subtotal > 0) text += `  —  Frais MonCash : ${feeAmount.toLocaleString()} HTG  —  Total : ${total.toLocaleString()} HTG`;
     else if (subtotal > 0) text += `  —  Total : ${total.toLocaleString()} HTG`;
+    if (wantsVideo) text += ` (dont Option Vidéo : 500 HTG)`;
     totalEl.textContent = text;
   }
   if (feeEl) feeEl.textContent = includeFee ? 'Frais MonCash (3%) inclus dans le total' : 'Frais MonCash retirés';
@@ -2923,6 +2966,9 @@ async function submitCreateReservation() {
     return;
   }
 
+  const wantsVideo = document.getElementById('create-video-toggle')?.checked ?? false;
+  const videoConsent = document.querySelector('input[name="create_video_consent"]:checked')?.value || 'public';
+
   const reservationNumber = 'DL' + Date.now().toString().slice(-8);
   const client = createReservationClient;
 
@@ -2945,6 +2991,11 @@ async function submitCreateReservation() {
     total_amount: total,
     deposit_amount: total,
     notes: document.getElementById('create-notes').value.trim() || null,
+    wants_video: wantsVideo,
+    video_requested: wantsVideo,
+    video_consent: wantsVideo ? videoConsent : null,
+    video_price: wantsVideo ? 500 : 0,
+    video_status: wantsVideo ? 'pending' : null,
   };
 
   const supabase = getSupabaseClient();
@@ -2981,6 +3032,7 @@ async function submitCreateReservation() {
                    <strong>Heure :</strong> ${time}<br>
                    <strong>Lieu :</strong> ${escapeHtml(record.location)}<br>
                    ${includeFee ? `<strong>Sous-total :</strong> ${subtotal.toLocaleString()} HTG<br><strong>Frais MonCash :</strong> ${feeAmount.toLocaleString()} HTG<br>` : ''}
+                   ${wantsVideo ? `<strong>Option Vidéo Souvenir :</strong> 500 HTG (${videoConsent === 'public' ? 'Autorisé Réseaux' : 'Usage Privé'})<br>` : ''}
                    <strong>Total :</strong> ${total.toLocaleString()} HTG</p>
                 <p>Merci de votre confiance.</p>
               </div>
@@ -2989,6 +3041,15 @@ async function submitCreateReservation() {
         });
       } catch (emailErr) {
         console.warn('Email confirmation failed:', emailErr);
+      }
+    }
+
+    // Auto-trigger WhatsApp confirmation if created as CONFIRMED
+    if (record.status === 'CONFIRMED' && window.adminCore?.sendReservationWhatsAppConfirmation) {
+      try {
+        window.adminCore.sendReservationWhatsAppConfirmation(reservation);
+      } catch (waErr) {
+        console.warn('Auto WhatsApp confirmation on create:', waErr);
       }
     }
 
