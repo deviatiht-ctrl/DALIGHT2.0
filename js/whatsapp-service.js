@@ -333,6 +333,56 @@ export async function sendWelcomeBonusWhatsApp(client) {
 }
 
 /**
+ * 5. Envoi officiel de la Carte Cadeau & Dédicace personnalisée au bénéficiaire (Fast Lane)
+ * Transmet au bénéficiaire la dédicace de l'acheteur ainsi que les détails du soin.
+ */
+export async function sendGiftDedicationWhatsApp(data) {
+  const {
+    beneficiaryPhone,
+    beneficiaryName = 'Bénéficiaire',
+    purchaserName = 'Un(e) proche',
+    dedicationMessage = '',
+    serviceName = 'Head Spa & Soin DALIGHT',
+    date = 'Date à confirmer',
+    time = 'Heure à confirmer',
+    orderNumber = 'CADEAU'
+  } = data;
+
+  const phone = normalizePhone(beneficiaryPhone);
+  if (!phone || phone.length < 8) {
+    throw new Error('Numéro WhatsApp du bénéficiaire invalide (8 à 15 chiffres requis).');
+  }
+
+  const siteUrl = 'https://dalightbeauty.com';
+
+  const message =
+    `*DALIGHT — UNE SURPRISE D'EXCEPTION POUR VOUS*\n\n` +
+    `Bonjour *${beneficiaryName}*,\n\n` +
+    `Nous avons le grand plaisir de vous annoncer que *${purchaserName}* vous offre un moment de pure détente et de soin d'exception chez *DALIGHT* !\n\n` +
+    `MESSAGE & DÉDICACE PERSONNALISÉE DE ${purchaserName} :\n` +
+    `« ${dedicationMessage || 'Profitez pleinement de ce moment de pure détente !'} »\n\n` +
+    `DÉTAILS DE VOTRE SOIN PRIVILÈGE :\n` +
+    `• Prestation : *${serviceName}*\n` +
+    `• Date : *${date}*\n` +
+    `• Heure : *${time}*\n` +
+    `• Référence Cadeau : *#${orderNumber}*\n` +
+    `• Lieu : Delmas 65, Rue Durandisse #10, Port-au-Prince\n\n` +
+    `Pour tout renseignement ou aménagement particulier, vous pouvez nous répondre directement ici ou nous appeler au :\n` +
+    `*+509 4747-7221*\n\n` +
+    `Toute l'équipe DALIGHT est impatiente de vous accueillir et de prendre soin de vous.\n` +
+    siteUrl;
+
+  return sendWhatsAppMessage({
+    to: phone,
+    message,
+    kind: 'manual_direct', // Fast Lane
+    mode: 'async',
+    account_index: DEDICATED_LINE_INDEX,
+    idempotencyKey: `wa_gift_${orderNumber || phone}_${Date.now()}`
+  });
+}
+
+/**
  * Generate a luxury DALIGHT branded PDF receipt on client side (using jsPDF)
  */
 export function generateReceiptPDF(order) {

@@ -909,6 +909,99 @@ async function sendReservationWhatsAppAlert30m(reservation) {
   }
 }
 
+/**
+ * Envoi officiel de la Carte Cadeau & Dédicace personnalisée au bénéficiaire via WhatsApp (Fast Lane)
+ * Utilise la Ligne #3 DALIGHT
+ */
+async function sendGiftDedicationWhatsApp(reservation, giftInfo = null) {
+  if (!reservation) return false;
+
+  let gInfo = giftInfo;
+  if (!gInfo && reservation.notes) {
+    const nameMatch = reservation.notes.match(/•\s*Nom du bénéficiaire\s*:\s*([^\n\r•]+)/i);
+    const phoneMatch = reservation.notes.match(/•\s*Téléphone WhatsApp bénéficiaire\s*:\s*([^\n\r•]+)/i);
+    const dedieMatch = reservation.notes.match(/•\s*Message\s*\/\s*Dédicace\s*:\s*([\s\S]*?)(?=(•\s*Date d'envoi|•\s*Notes client|$))/i);
+    if (nameMatch || phoneMatch) {
+      gInfo = {
+        beneficiaryName: nameMatch ? nameMatch[1].trim() : '',
+        beneficiaryPhone: phoneMatch ? phoneMatch[1].trim() : '',
+        dedicationMessage: dedieMatch ? dedieMatch[1].trim() : ''
+      };
+    }
+  }
+
+  const rawPhone = gInfo?.beneficiaryPhone || reservation.phone || reservation.user_phone;
+  if (!rawPhone) return false;
+
+  const cleaned = String(rawPhone).replace(/\D/g, '');
+  const phone = cleaned.length === 8 ? '509' + cleaned : cleaned;
+  if (phone.length < 8) return false;
+
+  const benName = gInfo?.beneficiaryName || 'Bénéficiaire';
+  const purchaserName = reservation.user_name || 'Un(e) proche';
+  const dedication = gInfo?.dedicationMessage || 'Profitez pleinement de ce moment de pure détente !';
+  const serviceName = reservation.service || 'Head Spa & Soin DALIGHT';
+  const resNumber = reservation.reservation_number || (reservation.id ? reservation.id.substring(0, 8) : 'CADEAU');
+
+  let formattedDate = reservation.date || '';
+  try {
+    if (reservation.date) {
+      const match = typeof reservation.date === 'string' ? reservation.date.match(/^(\d{4})-(\d{2})-(\d{2})/) : null;
+      const d = match ? new Date(parseInt(match[1], 10), parseInt(match[2], 10) - 1, parseInt(match[3], 10)) : new Date(reservation.date);
+      formattedDate = d.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+  } catch(e) {}
+
+  let timeStr = reservation.time || '';
+  if (timeStr && timeStr.length > 5) timeStr = timeStr.substring(0, 5);
+
+  const waMessage =
+    `*DALIGHT — UNE SURPRISE D'EXCEPTION POUR VOUS*\n\n` +
+    `Bonjour *${benName}*,\n\n` +
+    `Nous avons le grand plaisir de vous annoncer que *${purchaserName}* vous offre un moment de pure détente et de soin d'exception chez *DALIGHT* !\n\n` +
+    `MESSAGE & DÉDICACE PERSONNALISÉE DE ${purchaserName} :\n` +
+    `« ${dedication} »\n\n` +
+    `DÉTAILS DE VOTRE SOIN PRIVILÈGE :\n` +
+    `• Prestation : *${serviceName}*\n` +
+    `• Date : *${formattedDate}*\n` +
+    `• Heure : *${timeStr}*\n` +
+    `• N° Réservation : *#${resNumber}*\n` +
+    `• Lieu : Delmas 65, Rue Durandisse #10, Port-au-Prince\n\n` +
+    `Pour toute question ou aménagement d'horaire, notre équipe est à votre entière écoute au :\n` +
+    `*+509 4747-7221*\n\n` +
+    `Toute l'équipe DALIGHT est impatiente de vous recevoir pour ce moment privilégié.\n` +
+    `https://dalightbeauty.com`;
+
+  const payload = {
+    to: phone,
+    message: waMessage,
+    kind: 'manual_direct', // Fast Lane
+    mode: 'async',
+    account_index: 3,
+    idempotencyKey: `wa_gift_${reservation.id}_${Date.now()}`
+  };
+
+  const CVISUAL_GATEWAY_URL = 'https://cvisual-whatsapp-gateway.onrender.com';
+  const DEFAULT_CVISUAL_KEY = 'cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c';
+  const apiKey = localStorage.getItem('cvisual_wa_api_key') || DEFAULT_CVISUAL_KEY;
+
+  try {
+    const res = await fetch(`${CVISUAL_GATEWAY_URL}/api/v1/messages/send`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'Idempotency-Key': payload.idempotencyKey
+      },
+      body: JSON.stringify(payload)
+    });
+    return res.ok;
+  } catch (err) {
+    console.error('Erreur WhatsApp carte cadeau:', err);
+    return false;
+  }
+}
+
 async function updateReservationStatus(id, status) {
   // Update mock store if present
   if (_mockReservationsStore) {
@@ -1437,6 +1530,7 @@ window.adminCore = {
   sendReservationWhatsAppConfirmation,
   sendReservationWhatsAppReminder24h,
   sendReservationWhatsAppAlert30m,
+  sendGiftDedicationWhatsApp,
   getStatusBadge,
   getInitials,
   showToast,

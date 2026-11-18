@@ -215,12 +215,154 @@ function renderReservations() {
 // MODAL
 // ============================================
 
+
+// ============================================
+// GIFT RESERVATION & DÉDICACE PARSER / RENDERER
+// ============================================
+
+function parseGiftReservationDetails(notes) {
+  if (!notes || typeof notes !== 'string') return null;
+  const isGift = notes.includes('[RÉSERVATION POUR UN(E) PROCHE / CADEAU]') ||
+                 notes.includes('Nom du bénéficiaire') ||
+                 notes.includes('Dédicace');
+
+  if (!isGift) return null;
+
+  const nameMatch = notes.match(/•\s*Nom du bénéficiaire\s*:\s*([^\n\r•]+)/i);
+  const phoneMatch = notes.match(/•\s*Téléphone WhatsApp bénéficiaire\s*:\s*([^\n\r•]+)/i);
+  const dedieMatch = notes.match(/•\s*Message\s*\/\s*Dédicace\s*:\s*([\s\S]*?)(?=(•\s*Date d'envoi|•\s*Notes client|$))/i);
+  const sendScheduleMatch = notes.match(/•\s*Date d'envoi souhaitée\s*:\s*([^\n\r•]+)/i);
+  const clientNotesMatch = notes.match(/•\s*Notes client\s*:\s*([\s\S]*?)$/i);
+
+  const beneficiaryName = nameMatch ? nameMatch[1].trim() : '';
+  const beneficiaryPhone = phoneMatch ? phoneMatch[1].trim() : '';
+  let dedicationMessage = dedieMatch ? dedieMatch[1].trim() : '';
+  if (dedicationMessage === 'Aucun') dedicationMessage = '';
+  const sendSchedule = sendScheduleMatch ? sendScheduleMatch[1].trim() : '';
+  const clientNotes = clientNotesMatch ? clientNotesMatch[1].trim() : '';
+
+  return {
+    isGift: true,
+    beneficiaryName,
+    beneficiaryPhone,
+    dedicationMessage,
+    sendSchedule,
+    clientNotes
+  };
+}
+
+function renderGiftDedicationCard(r, giftInfo) {
+  const ico = (path, size = 14, color = 'currentColor') =>
+    `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="${color}" stroke-width="2" width="${size}" height="${size}" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="${path}"/></svg>`;
+
+  const escapeHtml = (str) => {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  };
+
+  const purchaser = r.user_name || 'Client(e)';
+  const cleanPhone = giftInfo.beneficiaryPhone ? giftInfo.beneficiaryPhone.replace(/\D/g, '') : '';
+  const waDirectLink = cleanPhone ? `https://wa.me/${cleanPhone.length === 8 ? '509' + cleanPhone : cleanPhone}` : '#';
+
+  return `
+    <!-- Carte Cadeau & Dédicace DALIGHT Haute Couture -->
+    <div style="background: linear-gradient(135deg, rgba(34,47,29,0.95), rgba(18,27,18,0.98)); border: 1px solid rgba(212,175,55,0.45); border-radius: 14px; padding: 1.25rem; box-shadow: 0 10px 25px rgba(0,0,0,0.4), inset 0 0 20px rgba(212,175,55,0.06); display: grid; gap: 0.9rem;">
+      
+      <!-- Card Header -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(212,175,55,0.25); padding-bottom: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <div style="background: rgba(212,175,55,0.18); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(212,175,55,0.35);">
+            ${ico('M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 00-2 2v6a2 2 0 002 2h14a2 2 0 002-2v-6a2 2 0 00-2-2H5z', 18, '#d4af37')}
+          </div>
+          <div>
+            <div style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.2rem; font-weight: 700; color: #FAF8F5; letter-spacing: 0.03em;">
+              CARTE CADEAU &amp; DÉDICACE PERSONNALISÉE
+            </div>
+            <div style="font-size: 0.78rem; color: var(--admin-accent); display: flex; align-items: center; gap: 0.35rem; margin-top: 0.1rem;">
+              Offert avec bienveillance par <strong style="color: #fff;">${escapeHtml(purchaser)}</strong>
+            </div>
+          </div>
+        </div>
+        <span style="background: rgba(212,175,55,0.18); color: #d4af37; border: 1px solid rgba(212,175,55,0.4); padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.74rem; font-weight: 700; letter-spacing: 0.04em;">
+          SOIN CADEAU
+        </span>
+      </div>
+
+      <!-- Beneficiary Details -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.75rem; background: rgba(0,0,0,0.3); padding: 0.85rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06);">
+        <div>
+          <span style="font-size: 0.72rem; color: var(--admin-text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.2rem;">Bénéficiaire du soin</span>
+          <strong style="font-size: 0.98rem; color: #FAF8F5;">${escapeHtml(giftInfo.beneficiaryName || 'Non spécifié')}</strong>
+        </div>
+        <div>
+          <span style="font-size: 0.72rem; color: var(--admin-text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.2rem;">Téléphone WhatsApp Bénéficiaire</span>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <strong style="font-size: 0.98rem; color: #4ade80;">${escapeHtml(giftInfo.beneficiaryPhone || 'Non spécifié')}</strong>
+            ${cleanPhone ? `
+            <a href="${waDirectLink}" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; justify-content: center; background: rgba(74,222,128,0.15); border: 1px solid rgba(74,222,128,0.35); border-radius: 6px; padding: 0.2rem 0.45rem; font-size: 0.72rem; color: #4ade80; text-decoration: none;">
+              Ouvrir chat ↗
+            </a>` : ''}
+          </div>
+        </div>
+        ${giftInfo.sendSchedule ? `
+        <div style="grid-column: 1 / -1; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 0.5rem 0.75rem; display: flex; align-items: center; gap: 0.45rem;">
+          ${ico('M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', 14, '#f59e0b')}
+          <span style="font-size: 0.76rem; color: var(--admin-text-muted);">Moment d'envoi demandé :</span>
+          <strong style="font-size: 0.85rem; color: #fbbf24;">${escapeHtml(giftInfo.sendSchedule)}</strong>
+        </div>` : ''}
+      </div>
+
+      <!-- Dédicace Message Letter Box -->
+      ${giftInfo.dedicationMessage ? `
+      <div style="background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.25); border-left: 4px solid #d4af37; border-radius: 0 10px 10px 0; padding: 1rem 1.25rem; position: relative;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <div style="font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--admin-accent); font-weight: 700; display: flex; align-items: center; gap: 0.35rem;">
+            ${ico('M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z', 13)}
+            Dédicace Personnalisée
+          </div>
+          <button type="button" onclick="copyDedicationMessage('${r.id}')" style="background: transparent; border: none; color: var(--admin-accent); font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 0.25rem;">
+            ${ico('M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3', 12)}
+            Copier
+          </button>
+        </div>
+        <div style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.05rem; font-style: italic; line-height: 1.6; color: #FAF8F5; white-space: pre-wrap;">
+          « ${escapeHtml(giftInfo.dedicationMessage)} »
+        </div>
+      </div>` : ''}
+
+      <!-- Direct Action Buttons for Gift -->
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; padding-top: 0.35rem;">
+        <button type="button" class="btn btn-primary btn-sm" onclick="sendGiftWhatsAppDedicationAction('${r.id}')" style="display: inline-flex; align-items: center; gap: 0.4rem; background: linear-gradient(135deg, #25D366, #128C7E); border: none; font-weight: 600; color: #fff;">
+          ${ico('M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z', 13, '#fff')}
+          Envoyer Dédicace au Bénéficiaire (WhatsApp)
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="copyDedicationMessage('${r.id}')" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+          ${ico('M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3', 13)}
+          Copier le texte
+        </button>
+      </div>
+
+      <!-- Medical / Salon health notes separated -->
+      ${giftInfo.clientNotes ? `
+      <div style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); border-radius: 8px; padding: 0.65rem 0.85rem; font-size: 0.82rem; margin-top: 0.2rem;">
+        <span style="color: #f87171; font-weight: 600; display: block; margin-bottom: 0.15rem;">Notes santé / préférences pour la praticienne :</span>
+        <span style="color: #FAF8F5;">${escapeHtml(giftInfo.clientNotes)}</span>
+      </div>` : ''}
+    </div>`;
+}
+
 window.openDetailModal = function(id) {
   const { formatDate, formatTime, getStatusBadge } = window.adminCore;
   const r = allReservations.find(r => r.id === id);
   if (!r) return;
 
   currentReservation = r;
+  const giftInfo = parseGiftReservationDetails(r.notes);
 
   const modal   = document.getElementById('detail-modal');
   const content = document.getElementById('modal-content');
@@ -317,6 +459,10 @@ window.openDetailModal = function(id) {
         ${ico('M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z', 13)} Actions WhatsApp (Ligne #3 DALIGHT Dédiée)
       </div>
       <div style="display:flex;gap:.45rem;flex-wrap:wrap;">
+        ${giftInfo ? `
+        <button class="btn btn-primary btn-sm" onclick="sendGiftWhatsAppDedicationAction('${r.id}')" style="background:linear-gradient(135deg,#d4af37,#996515);border:none;color:#fff;font-weight:600;" title="Envoyer dédicace au bénéficiaire">
+          ${ico('M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 00-2 2v6a2 2 0 002 2h14a2 2 0 002-2v-6a2 2 0 00-2-2H5z', 12, '#fff')} Envoyer Dédicace (Bénéficiaire)
+        </button>` : ''}
         <button class="btn btn-secondary btn-sm" onclick="sendWhatsAppConfirmationAction('${r.id}')" title="Renvoyer confirmation WhatsApp">
           ${ico('M5 13l4 4L19 7', 12)} Confirmer (WhatsApp)
         </button>
@@ -454,11 +600,11 @@ window.openDetailModal = function(id) {
         </div>
       </div>` : ''}
 
-      ${r.notes ? `
+      ${giftInfo ? renderGiftDedicationCard(r, giftInfo) : (r.notes ? `
       <div>
         <div style="font-size:.78rem;color:var(--admin-text-muted);margin-bottom:.35rem;">Notes</div>
         <div style="background:var(--admin-bg);padding:.85rem 1rem;border-radius:10px;border:1px solid var(--admin-border);font-size:.88rem;">${r.notes}</div>
-      </div>` : ''}
+      </div>` : '')}
 
       ${(r.wants_video || r.video_requested) ? `
       <!-- Option Video Souvenir -->
@@ -3168,4 +3314,50 @@ window.sendWhatsAppAlert30mAction = async function(id) {
   } catch (err) {
     window.adminCore.showToast('Erreur: ' + (err.message || 'Échec'), 'error');
   }
+};
+
+window.sendGiftWhatsAppDedicationAction = async function(id) {
+  const r = allReservations.find(res => res.id === id);
+  if (!r) return;
+  const giftInfo = parseGiftReservationDetails(r.notes);
+  if (!giftInfo) {
+    window.adminCore?.showToast('Cette réservation ne comporte pas de dédicace cadeau.', 'warning');
+    return;
+  }
+  const phone = giftInfo.beneficiaryPhone;
+  if (!phone) {
+    window.adminCore?.showToast('Aucun numéro WhatsApp trouvé pour le bénéficiaire.', 'warning');
+    return;
+  }
+
+  const promptMsg = `Envoyer la Carte Cadeau & Dédicace personnalisée par WhatsApp au bénéficiaire (${giftInfo.beneficiaryName || 'Bénéficiaire'} - ${phone}) via la Ligne #3 DALIGHT ?`;
+  if (!confirm(promptMsg)) return;
+
+  try {
+    const success = await window.adminCore.sendGiftDedicationWhatsApp(r, giftInfo);
+    if (success) {
+      window.adminCore?.showToast(`Dédicace cadeau envoyée avec succès à ${giftInfo.beneficiaryName} (${phone}) !`);
+    } else {
+      window.adminCore?.showToast('Échec lors de l\'envoi WhatsApp (vérifiez la passerelle)', 'error');
+    }
+  } catch (err) {
+    window.adminCore?.showToast('Erreur : ' + (err.message || 'Échec d\'envoi'), 'error');
+  }
+};
+
+window.copyDedicationMessage = function(id) {
+  const r = allReservations.find(res => res.id === id);
+  if (!r) return;
+  const giftInfo = parseGiftReservationDetails(r.notes);
+  const textToCopy = giftInfo?.dedicationMessage || r.notes || '';
+  if (!textToCopy) {
+    window.adminCore?.showToast('Aucun message à copier.', 'warning');
+    return;
+  }
+
+  navigator.clipboard.writeText(textToCopy).then(() => {
+    window.adminCore?.showToast('Dédicace copiée dans le presse-papiers ✓');
+  }).catch(() => {
+    window.adminCore?.showToast('Impossible de copier automatiquement.', 'error');
+  });
 };

@@ -1058,9 +1058,13 @@
                   </div>
                 </div>
 
-                <div class="form-group-v2" style="margin-bottom: 0;">
+                <div class="form-group-v2">
                   <label for="beneficiary-message">Message d'accompagnement / Dédicace personnalisée</label>
-                  <input type="text" id="beneficiary-message" class="form-input-v2" placeholder="Ex: Joyeux Anniversaire de ma part, profite bien de ce moment de pure détente !">
+                  <textarea id="beneficiary-message" class="form-input-v2" rows="3" placeholder="Ex: Joyeux Anniversaire ! Profite bien de cette pause bien-être bien méritée..."></textarea>
+                </div>
+                <div class="form-group-v2" style="margin-bottom: 0;">
+                  <label for="beneficiary-send-time">Date &amp; Heure souhaitée pour envoyer le message cadeau (Optionnel)</label>
+                  <input type="text" id="beneficiary-send-time" class="form-input-v2" placeholder="Ex: Le 25 Novembre à 08:00 (Matin de sa fête)">
                 </div>
               </div>
             </div>
@@ -1848,12 +1852,16 @@
         beneficiaryPhone = document.getElementById('beneficiary-phone')?.value.trim() || '';
         beneficiaryMsg = document.getElementById('beneficiary-message')?.value.trim() || '';
 
+        const beneficiarySendTime = document.getElementById('beneficiary-send-time')?.value.trim() || '';
         const giftDetails = [
           '[RÉSERVATION POUR UN(E) PROCHE / CADEAU]',
           `• Nom du bénéficiaire : ${beneficiaryName}`,
           `• Téléphone WhatsApp bénéficiaire : ${beneficiaryPhone || 'Non spécifié'}`,
           `• Message / Dédicace : ${beneficiaryMsg || 'Aucun'}`
         ];
+        if (beneficiarySendTime) {
+          giftDetails.push(`• Date d'envoi souhaitée : ${beneficiarySendTime}`);
+        }
         if (rawNotes) {
           giftDetails.push(`• Notes client : ${rawNotes}`);
         }
