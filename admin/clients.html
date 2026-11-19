@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -8,6 +8,58 @@
   <link href="../vendor/fonts/inter-fonts.css" rel="stylesheet">
   <link rel="stylesheet" href="css/admin.css?v=202606211733">
   <script src="../vendor/supabase/supabase.min.js"></script>
+  <script src="../vendor/lucide/lucide.min.js"></script>
+  <style>
+    .client-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+    .btn-action-icon {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.65rem;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--admin-border);
+      background: var(--surface-2, rgba(255,255,255,0.05));
+      color: var(--admin-text);
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn-action-icon:hover {
+      background: rgba(201, 162, 39, 0.15);
+      border-color: var(--admin-accent);
+      color: var(--admin-accent);
+    }
+    .btn-action-icon.danger {
+      color: #f87171;
+    }
+    .btn-action-icon.danger:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: #ef4444;
+      color: #fca5a5;
+    }
+    .btn-action-icon i {
+      width: 14px;
+      height: 14px;
+    }
+    .stat-icon svg {
+      width: 22px;
+      height: 22px;
+    }
+    .top-action-bar {
+      display: flex;
+      gap: 0.6rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+  </style>
 </head>
 <body>
   <aside class="admin-sidebar" id="sidebar">
@@ -20,37 +72,83 @@
     <nav class="sidebar-nav">
       <div class="nav-section">
         <div class="nav-section-title">Principal</div>
-        <a href="dashboard.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Dashboard</a>
-        <a href="reservations.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Réservations<span class="badge" id="pending-count">0</span></a>
-        <a href="client-tracking.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>Suivi clients</a>
-        <a href="loyalty-cards.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>Cartes de Fidélité</a>
-        <a href="pos.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>Caisse / POS</a>
-        <a href="retraits.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Retraits &amp; Revenus</a>
+        <a href="dashboard.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+        <a href="reservations.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Réservations<span class="badge" id="pending-count">0</span>
+        </a>
+        <a href="client-tracking.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+          Suivi clients
+        </a>
+        <a href="loyalty-cards.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+          Cartes de Fidélité
+        </a>
+        <a href="promo-codes.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+          Codes Promo
+        </a>
+        <a href="pos.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          Caisse / POS
+        </a>
+        <a href="retraits.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Retraits &amp; Revenus
+        </a>
       </div>
       <div class="nav-section">
         <div class="nav-section-title">Contenu</div>
-        <a href="posts.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>Posts & Vidéos</a>
-        <a href="formations.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>Formations</a>
-        <a href="services.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>Services</a>
+        <a href="posts.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          Posts &amp; Vidéos
+        </a>
+        <a href="formations.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
+          Formations
+        </a>
+        <a href="services.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          Services
+        </a>
       </div>
       <div class="nav-section">
         <div class="nav-section-title">Utilisateurs</div>
-        <a href="clients.html" class="nav-item active"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>Clients</a>
-        <a href="emails.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Templates Email</a>
-                <a href="contenu-video.html" class="nav-item">
-            <i data-lucide="video"></i>
-            <span>Contenu Vidéo</span>
-          </a>
-          <a href="whatsapp.html" class="nav-item">
+        <a href="clients.html" class="nav-item active">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          Clients
+        </a>
+        <a href="emails.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 00-2 2z"/></svg>
+          Templates Email
+        </a>
+        <a href="contenu-video.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          Contenu Vidéo
+        </a>
+        <a href="whatsapp.html" class="nav-item">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/></svg>
           WhatsApp Gateway
         </a>
-<a href="messages.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>Messages</a>
+        <a href="messages.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          Messages
+        </a>
       </div>
       <div class="nav-section">
         <div class="nav-section-title">Système</div>
-        <a href="settings.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Paramètres</a>
-        <a href="../index.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>Voir le site</a>
+        <a href="settings.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Paramètres
+        </a>
+        <a href="../index.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          Voir le site
+        </a>
       </div>
     </nav>
     <div class="sidebar-footer">
@@ -67,32 +165,36 @@
   <main class="admin-main">
     <header class="admin-header">
       <div class="header-left">
-        <button class="mobile-menu-btn" id="mobile-menu-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-        <h1 class="page-title">Clients</h1>
+        <button class="mobile-menu-btn" id="mobile-menu-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <h1 class="page-title">Gestion des Clients</h1>
       </div>
       <div class="header-right">
         <div class="header-search">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-          <input type="text" placeholder="Rechercher un client..." id="search-input">
+          <i data-lucide="search" style="width:16px;height:16px;color:var(--admin-text-muted);"></i>
+          <input type="text" placeholder="Rechercher par nom ou email..." id="search-input">
         </div>
-        <button class="header-btn" id="logout-btn" title="Déconnexion"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
+        <button class="header-btn" id="logout-btn" title="Déconnexion">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
       </div>
     </header>
 
     <div class="admin-content">
-      <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+      <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
         <div class="glass-card stat-card">
           <div class="stat-icon blue">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            <i data-lucide="users"></i>
           </div>
           <div class="stat-info">
             <div class="stat-value" id="total-clients">0</div>
-            <div class="stat-label">Total clients</div>
+            <div class="stat-label">Total clients enregistrés</div>
           </div>
         </div>
         <div class="glass-card stat-card">
           <div class="stat-icon gold">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <i data-lucide="user-check"></i>
           </div>
           <div class="stat-info">
             <div class="stat-value" id="active-clients">0</div>
@@ -101,16 +203,26 @@
         </div>
       </div>
 
-      <div style='display:flex; gap:.5rem; margin-bottom:1rem; flex-wrap:wrap;'>
-        <button class='btn btn-primary' onclick='openBulkEmailModal()'>✉️ Envoyer un email à tous les clients</button>
+      <div class="top-action-bar">
+        <button class="btn btn-primary" onclick="openCreateClientModal()">
+          <i data-lucide="user-plus" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>
+          Nouveau Client
+        </button>
+        <button class="btn btn-secondary" onclick="openBulkEmailModal()">
+          <i data-lucide="mail" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>
+          Email groupé aux clients
+        </button>
       </div>
 
-      <div class='glass-card'>
-        <div class='card-header'>
+      <div class="glass-card">
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
           <div>
-            <h3 class="card-title">Liste des clients</h3>
+            <h3 class="card-title">Répertoire des clients</h3>
             <p class="card-subtitle" id="clients-count">0 clients</p>
           </div>
+          <button class="btn btn-secondary btn-sm" onclick="loadClients()" title="Rafraîchir la liste">
+            <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> Rafraîchir
+          </button>
         </div>
         <div class="table-responsive">
           <table class="admin-table">
@@ -125,7 +237,7 @@
               </tr>
             </thead>
             <tbody id="clients-table">
-              <tr><td colspan="6" class="text-center text-muted" style="padding: 2rem;"><div class="loading-spinner"></div>Chargement...</td></tr>
+              <tr><td colspan="6" class="text-center text-muted" style="padding: 2.5rem;"><div class="loading-spinner"></div>Chargement des clients...</td></tr>
             </tbody>
           </table>
         </div>
@@ -133,7 +245,114 @@
     </div>
   </main>
 
-  <script src="../vendor/supabase/supabase.min.js"></script>
+  <!-- Modal: Créer un nouveau client -->
+  <div id="create-client-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:1000; justify-content:center; align-items:flex-start; overflow-y:auto; padding:1.5rem;" onclick="if(event.target === this) closeCreateClientModal()">
+    <div style="background:var(--admin-card-bg); border:1px solid var(--admin-border); border-radius:14px; max-width:500px; width:100%; padding:1.75rem; margin:auto; display:flex; flex-direction:column; gap:1.2rem; box-shadow:0 20px 40px rgba(0,0,0,0.5);">
+      <div class="card-header" style="justify-content:space-between;border-bottom:1px solid var(--admin-border);padding-bottom:0.75rem;">
+        <h3 class="card-title" style="display:flex;align-items:center;gap:0.5rem;">
+          <i data-lucide="user-plus" style="width:18px;height:18px;color:var(--admin-accent);"></i>
+          Créer un nouveau client
+        </h3>
+        <button class="header-btn" onclick="closeCreateClientModal()" style="background:transparent; color:var(--admin-text); font-size:1.2rem;">✕</button>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label" style="display:block;margin-bottom:0.4rem;font-size:0.82rem;font-weight:600;color:var(--admin-text-muted);">Nom complet *</label>
+        <input type="text" id="new-client-name" class="form-control" placeholder="Ex: Marie Carmelle Jean" style="width:100%;padding:0.7rem;border-radius:8px;border:1px solid var(--admin-border);background:var(--surface-2);color:var(--admin-text);">
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label" style="display:block;margin-bottom:0.4rem;font-size:0.82rem;font-weight:600;color:var(--admin-text-muted);">Adresse Email *</label>
+        <input type="email" id="new-client-email" class="form-control" placeholder="marie@exemple.com" style="width:100%;padding:0.7rem;border-radius:8px;border:1px solid var(--admin-border);background:var(--surface-2);color:var(--admin-text);">
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label" style="display:block;margin-bottom:0.4rem;font-size:0.82rem;font-weight:600;color:var(--admin-text-muted);">Téléphone (WhatsApp)</label>
+        <input type="tel" id="new-client-phone" class="form-control" placeholder="+509 XXXX-XXXX" style="width:100%;padding:0.7rem;border-radius:8px;border:1px solid var(--admin-border);background:var(--surface-2);color:var(--admin-text);">
+      </div>
+      <div style="display:flex; gap:.6rem; justify-content:flex-end;margin-top:0.5rem;">
+        <button class="btn btn-secondary" onclick="closeCreateClientModal()">Annuler</button>
+        <button class="btn btn-primary" id="create-client-save-btn" onclick="saveNewClient()">
+          <i data-lucide="check" style="width:15px;height:15px;display:inline-block;vertical-align:middle;margin-right:4px;"></i>
+          Créer le client
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Modifier un client -->
+  <div id="edit-client-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:1000; justify-content:center; align-items:flex-start; overflow-y:auto; padding:1.5rem;" onclick="if(event.target === this) closeEditClientModal()">
+    <div style="background:var(--admin-card-bg); border:1px solid var(--admin-border); border-radius:14px; max-width:500px; width:100%; padding:1.75rem; margin:auto; display:flex; flex-direction:column; gap:1.2rem; box-shadow:0 20px 40px rgba(0,0,0,0.5);">
+      <div class="card-header" style="justify-content:space-between;border-bottom:1px solid var(--admin-border);padding-bottom:0.75rem;">
+        <h3 class="card-title" style="display:flex;align-items:center;gap:0.5rem;">
+          <i data-lucide="edit-3" style="width:18px;height:18px;color:var(--admin-accent);"></i>
+          Modifier le client
+        </h3>
+        <button class="header-btn" onclick="closeEditClientModal()" style="background:transparent; color:var(--admin-text); font-size:1.2rem;">✕</button>
+      </div>
+      <input type="hidden" id="edit-client-id">
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label" style="display:block;margin-bottom:0.4rem;font-size:0.82rem;font-weight:600;color:var(--admin-text-muted);">Nom complet *</label>
+        <input type="text" id="edit-client-name" class="form-control" placeholder="Nom du client" style="width:100%;padding:0.7rem;border-radius:8px;border:1px solid var(--admin-border);background:var(--surface-2);color:var(--admin-text);">
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label" style="display:block;margin-bottom:0.4rem;font-size:0.82rem;font-weight:600;color:var(--admin-text-muted);">Email *</label>
+        <input type="email" id="edit-client-email" class="form-control" placeholder="email@exemple.com" style="width:100%;padding:0.7rem;border-radius:8px;border:1px solid var(--admin-border);background:var(--surface-2);color:var(--admin-text);">
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label" style="display:block;margin-bottom:0.4rem;font-size:0.82rem;font-weight:600;color:var(--admin-text-muted);">Téléphone</label>
+        <input type="tel" id="edit-client-phone" class="form-control" placeholder="+509 ..." style="width:100%;padding:0.7rem;border-radius:8px;border:1px solid var(--admin-border);background:var(--surface-2);color:var(--admin-text);">
+      </div>
+      <div style="display:flex; gap:.6rem; justify-content:flex-end;margin-top:0.5rem;">
+        <button class="btn btn-secondary" onclick="closeEditClientModal()">Annuler</button>
+        <button class="btn btn-primary" id="edit-client-save-btn" onclick="saveClientEdit()">
+          <i data-lucide="save" style="width:15px;height:15px;display:inline-block;vertical-align:middle;margin-right:4px;"></i>
+          Enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Email groupé -->
+  <div id="bulk-email-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:1000; justify-content:center; align-items:flex-start; overflow-y:auto; padding:1.5rem;" onclick="if(event.target === this) closeBulkEmailModal()">
+    <div style="background:var(--admin-card-bg); border:1px solid var(--admin-border); border-radius:14px; max-width:760px; width:100%; max-height:90vh; overflow-y:auto; padding:1.75rem; margin:auto; display:flex; flex-direction:column; gap:1.2rem; box-shadow:0 20px 40px rgba(0,0,0,0.5);">
+      <div class="card-header" style="justify-content:space-between; flex-wrap:wrap; gap:.5rem;border-bottom:1px solid var(--admin-border);padding-bottom:0.75rem;">
+        <h3 class="card-title" style="display:flex;align-items:center;gap:0.5rem;">
+          <i data-lucide="mail" style="width:18px;height:18px;color:var(--admin-accent);"></i>
+          Envoyer un email groupé à tous les clients
+        </h3>
+        <button class="header-btn" onclick="closeBulkEmailModal()" style="background:transparent; color:var(--admin-text); font-size:1.2rem;">✕</button>
+      </div>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:0.75rem;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label style="display:block;margin-bottom:0.3rem;font-size:0.8rem;color:var(--admin-text-muted);">Modèle</label>
+          <select id="bulk-email-template" class="form-control" onchange="applyBulkTemplate()" style="width:100%;padding:0.65rem;border-radius:8px;border:1px solid var(--admin-border);background:var(--surface-2);color:var(--admin-text);">
+            <option value="welcome">Bienvenue chez DALIGHT</option>
+            <option value="reminder">Rappel bien-être</option>
+            <option value="promo">Offre promotionnelle exclusive</option>
+            <option value="custom">Message personnalisé</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label style="display:block;margin-bottom:0.3rem;font-size:0.8rem;color:var(--admin-text-muted);">Objet de l'email</label>
+          <input type="text" id="bulk-email-subject" class="form-control" value="" style="width:100%;padding:0.65rem;border-radius:8px;border:1px solid var(--admin-border);background:var(--surface-2);color:var(--admin-text);">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label style="display:block;margin-bottom:0.3rem;font-size:0.8rem;color:var(--admin-text-muted);">Message (utilisez <code>{name}</code> pour personnaliser avec le nom du client)</label>
+        <textarea id="bulk-email-body" class="form-control" rows="7" oninput="updateBulkPreview()" style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--admin-border);background:var(--surface-2);color:var(--admin-text);font-family:inherit;"></textarea>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label style="display:block;margin-bottom:0.3rem;font-size:0.8rem;color:var(--admin-text-muted);">Aperçu du rendu final</label>
+        <iframe id="bulk-email-preview" style="width:100%; height:260px; border:1px solid var(--admin-border); border-radius:10px; background:#fff;"></iframe>
+      </div>
+      <div style="display:flex; gap:.6rem; justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="closeBulkEmailModal()">Annuler</button>
+        <button class="btn btn-primary" id="bulk-email-send-btn" onclick="sendBulkEmail()">
+          <i data-lucide="send" style="width:15px;height:15px;display:inline-block;vertical-align:middle;margin-right:4px;"></i>
+          Envoyer à tous les clients
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script src="js/admin-core.js?v=202607081600"></script>
   <script>
     let allClients = [];
@@ -149,7 +368,7 @@
       const tbody = document.getElementById('clients-table');
       const countEl = document.getElementById('clients-count');
       const safe = String(msg).replace(/</g, '&lt;').replace(/&/g, '&amp;');
-      if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding:2rem; color:red;">' + safe + '</td></tr>';
+      if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding:2rem; color:#f87171;">' + safe + '</td></tr>';
       if (countEl) countEl.textContent = 'Erreur';
     }
 
@@ -171,31 +390,10 @@
         if (!session) return;
       }
       sb = getSupabase();
-      loadClients();
+      await loadClients();
       initSearch();
+      if (window.lucide) lucide.createIcons();
     });
-    
-    window.sendClientEmail = function(email, name, template) {
-      if (!email) return alert("Ce client n'a pas d'email.");
-      name = name || 'Cher(e) client(e)';
-      const phone = '+509 4747-7221';
-      const templates = {
-        welcome: {
-          subject: 'Bienvenue chez DALIGHT',
-          body: `Bonjour ${name},\n\nBienvenue dans la famille DALIGHT ! Nous sommes ravis de vous compter parmi nos clients.\n\nDécouvrez nos services signature : Head Spa, massages thérapeutiques, soins capillaires personnalisés et plus encore.\n\n🌐 Réservez en ligne : https://dalightspa.com\n📞 Ou appelez-nous : ${phone}\n\nÀ très bientôt,\nL'équipe DALIGHT`
-        },
-        promo: {
-          subject: '🎁 Offre spéciale DALIGHT - Pour vous !',
-          body: `Bonjour ${name},\n\nNous avons une offre spéciale rien que pour vous !\n\n[Décrivez votre offre ici]\n\nRéservez dès maintenant :\n📞 ${phone}\n📍 Delmas 65, Faustin Premier Durandise #10\n\nÀ très vite,\nL'équipe DALIGHT`
-        },
-        custom: {
-          subject: 'DALIGHT',
-          body: `Bonjour ${name},\n\n`
-        },
-      };
-      const t = templates[template] || templates.custom;
-      window.location.href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(t.subject)}&body=${encodeURIComponent(t.body)}`;
-    };
 
     function initSearch() {
       const input = document.getElementById('search-input');
@@ -238,9 +436,11 @@
         clientPhones = {};
         reservations.forEach(r => {
           const email = r.user_email;
-          reservationCounts[email] = (reservationCounts[email] || 0) + 1;
-          if (r.phone && !clientPhones[email]) {
-            clientPhones[email] = r.phone;
+          if (email) {
+            reservationCounts[email] = (reservationCounts[email] || 0) + 1;
+            if (r.phone && !clientPhones[email]) {
+              clientPhones[email] = r.phone;
+            }
           }
         });
 
@@ -249,9 +449,11 @@
         const now = new Date();
         const activeEmails = new Set();
         reservations.forEach(r => {
-          const date = new Date(r.created_at);
-          if (date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) {
-            activeEmails.add(r.user_email);
+          if (r.created_at) {
+            const date = new Date(r.created_at);
+            if (date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) {
+              if (r.user_email) activeEmails.add(r.user_email);
+            }
           }
         });
         document.getElementById('active-clients').textContent = activeEmails.size;
@@ -287,40 +489,152 @@
         return;
       }
       
-      tbody.innerHTML = filtered.map(c => `
+      tbody.innerHTML = filtered.map(c => {
+        const email = c.email || '';
+        const name = c.full_name || 'Client';
+        const escapedName = (name).replace(/'/g, "\\'");
+        const phone = c.phone || clientPhones[email] || '-';
+        const resCount = reservationCounts[email] || 0;
+
+        return `
         <tr>
           <td>
             <div class="user-cell">
-              <div class="user-avatar">${getInitials(c.full_name || c.email)}</div>
-              <div style="font-weight: 500;">${c.full_name || 'Non renseigné'}</div>
+              <div class="user-avatar">${getInitials(name || email)}</div>
+              <div style="font-weight: 500;">${name}</div>
             </div>
           </td>
-          <td>${c.email}</td>
-          <td>${c.phone || clientPhones[c.email] || '-'}</td>
-          <td><span class="status-badge ${reservationCounts[c.email] ? 'completed' : 'pending'}">${reservationCounts[c.email] || 0} réservation(s)</span></td>
+          <td><span style="color:var(--admin-text-muted);">${email}</span></td>
+          <td>${phone}</td>
+          <td><span class="status-badge ${resCount ? 'completed' : 'pending'}">${resCount} réservation(s)</span></td>
           <td>${formatDate(c.created_at)}</td>
           <td>
-            <div style="display:flex;gap:0.3rem;flex-wrap:wrap;">
-              <button class="btn btn-secondary btn-sm" onclick="openEditClientModal('${c.id}')" title="Modifier">✏️ Modifier</button>
-              <button class="btn btn-secondary btn-sm" onclick="sendClientEmail('${c.email}','${(c.full_name||'').replace(/'/g,"\\'")}','welcome')" title="Bienvenue">👋 Bienvenue</button>
-              <button class="btn btn-secondary btn-sm" onclick="sendClientEmail('${c.email}','${(c.full_name||'').replace(/'/g,"\\'")}','promo')" title="Promo">🎁 Promo</button>
-              <button class="btn btn-secondary btn-sm" onclick="sendClientEmail('${c.email}','${(c.full_name||'').replace(/'/g,"\\'")}','custom')" title="Écrire">✉️ Écrire</button>
-              <button class="btn btn-danger btn-sm" onclick="deleteClient('${c.id}','${(c.full_name||c.email||'').replace(/'/g,"\\'")}')" title="Supprimer">🗑️</button>
+            <div class="client-actions">
+              <button class="btn-action-icon" onclick="openEditClientModal('${c.id}')" title="Modifier le client">
+                <i data-lucide="edit-3"></i>
+                <span>Modifier</span>
+              </button>
+              <button class="btn-action-icon" onclick="sendClientEmail('${email}','${escapedName}','welcome')" title="Envoyer email de bienvenue">
+                <i data-lucide="sparkles" style="color:var(--admin-accent);"></i>
+                <span>Bienvenue</span>
+              </button>
+              <button class="btn-action-icon" onclick="sendClientEmail('${email}','${escapedName}','promo')" title="Envoyer offre spéciale">
+                <i data-lucide="tag"></i>
+                <span>Promo</span>
+              </button>
+              <button class="btn-action-icon" onclick="sendClientEmail('${email}','${escapedName}','custom')" title="Écrire un email direct">
+                <i data-lucide="mail"></i>
+                <span>Écrire</span>
+              </button>
+              <button class="btn-action-icon danger" onclick="deleteClient('${c.id}','${escapedName}')" title="Supprimer définitivement">
+                <i data-lucide="trash-2"></i>
+              </button>
             </div>
           </td>
-        </tr>
-      `).join('');
-    }
-    const BULK_TEMPLATES = { welcome: { subject: 'Bienvenue chez DALIGHT', body: `Bonjour {name},\n\nBienvenue dans la famille DALIGHT ! Nous sommes ravis de vous compter parmi nos clients.\n\nDécouvrez nos services signature : Head Spa, massages thérapeutiques, soins capillaires personnalisés et plus encore.\n\n🌐 Réservez en ligne : https://dalightbeauty.com\n📞 Ou appelez-nous : +509 4747-7221\n\nÀ très bientôt,\nL'équipe DALIGHT` }, reminder: { subject: 'Votre bien-être compte pour DALIGHT', body: `Bonjour {name},\n\nCela fait un moment que nous ne vous avons pas vu(e) chez DALIGHT. Nous tenons à vous rappeler que votre confort et votre bien-être sont notre priorité.\n\nPrenez rendez-vous dès maintenant pour un moment de détente et de soin.\n\n📞 +509 4747-7221\n🌐 https://dalightbeauty.com\n\nAu plaisir de vous accueillir,\nL'équipe DALIGHT` }, promo: { subject: '🎁 Offre spéciale DALIGHT - Pour vous !', body: `Bonjour {name},\n\nNous avons une offre spéciale rien que pour vous !\n\n[Décrivez votre offre ici]\n\nRéservez dès maintenant :\n📞 +509 4747-7221\n📍 Delmas 65, Faustin Premier Durandisse #10\n\nÀ très vite,\nL'équipe DALIGHT` }, custom: { subject: 'DALIGHT', body: `Bonjour {name},\n\n` } };
-    function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
-    function buildHtmlEmail(name, bodyText) { const escapedName = escapeHtml(name || 'Cher(e) client(e)'); const bodyHtml = escapeHtml(bodyText).replace(/\n/g, '<br>'); return `<!DOCTYPE html>\n<html>\n<head>\n<meta charset='utf-8'>\n<style>body { font-family: Montserrat, sans-serif; background: #f5f3f0; margin: 0; padding: 20px; } .container { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(74,55,40,0.1); } .header { background: linear-gradient(135deg, #4A3728 0%, #6B4F3B 100%); padding: 30px 40px; text-align: center; } .logo { max-width: 120px; height: auto; } .content { padding: 40px; color: #4A3728; } .greeting { font-size: 22px; font-weight: 600; margin-bottom: 20px; } .message { font-size: 16px; line-height: 1.7; color: #5a4a3a; margin-bottom: 25px; } .cta-button { display: inline-block; background: #D4AF37; color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; } .footer { background: #4A3728; padding: 25px 40px; text-align: center; color: #e8e0d8; font-size: 14px; }</style>\n</head>\n<body>\n<div class='container'>\n<div class='header'><img src='https://raw.githubusercontent.com/deviatiht-ctrl/DALIGHT2.0/main/assets/images/logodaligth.png' alt='DALIGHT' class='logo'></div>\n<div class='content'>\n<p class='greeting'>Bonjour ${escapedName},</p>\n<p class='message'>${bodyHtml}</p>\n</div>\n<div class='footer'>\n<p>DALIGHT · Delmas 65, Faustin Premier Durandisse #10, Haïti</p>\n<p>+509 4747-7221 · dalightbeauty15mai@gmail.com</p>\n<p>© ${new Date().getFullYear()} DALIGHT. Tous droits réservés.</p>\n</div>\n</div>\n</body>\n</html>`; }
-    function openBulkEmailModal() { const modal = document.getElementById('bulk-email-modal'); modal.style.display = 'flex'; if (!document.getElementById('bulk-email-subject').value) applyBulkTemplate(); else updateBulkPreview(); }
-    function closeBulkEmailModal() { document.getElementById('bulk-email-modal').style.display = 'none'; }
-    function applyBulkTemplate() { const key = document.getElementById('bulk-email-template').value; const t = BULK_TEMPLATES[key] || BULK_TEMPLATES.custom; document.getElementById('bulk-email-subject').value = t.subject; document.getElementById('bulk-email-body').value = t.body; updateBulkPreview(); }
-    function updateBulkPreview() { const subject = document.getElementById('bulk-email-subject').value; const body = document.getElementById('bulk-email-body').value; const previewName = 'Marie Exemple'; const personalized = body.replace(/{name}/g, previewName); const html = buildHtmlEmail(previewName, personalized); document.getElementById('bulk-email-preview').srcdoc = html; }
-    async function sendBulkEmail() { const subject = document.getElementById('bulk-email-subject').value.trim(); const body = document.getElementById('bulk-email-body').value; if (!subject || !body) { window.adminCore?.showToast?.('Objet et message obligatoires.', 'error'); return; } const clients = allClients.filter(c => c.email); if (!clients.length) { window.adminCore?.showToast?.('Aucun client avec email trouvé.', 'error'); return; } if (!sb) { window.adminCore?.showToast?.('Supabase non connecté.', 'error'); return; } const sendBtn = document.getElementById('bulk-email-send-btn'); sendBtn.disabled = true; sendBtn.textContent = 'Envoi en cours...'; let sent = 0, failed = 0; try { for (const c of clients) { const name = c.full_name || 'Cher(e) client(e)'; const personalized = body.replace(/{name}/g, name); const html = buildHtmlEmail(name, personalized); const { error } = await sb.functions.invoke('send-email', { body: { to: c.email, subject, html, isAdmin: true } }); if (error) { console.error('Email failed for', c.email, error); failed++; } else { sent++; } } window.adminCore?.showToast?.(`${sent} email(s) envoyé(s)${failed ? ', ' + failed + ' échec(s)' : ''}`, failed ? 'error' : 'success'); closeBulkEmailModal(); } catch (err) { console.error(err); window.adminCore?.showToast?.('Erreur envoi : ' + err.message, 'error'); } finally { sendBtn.disabled = false; sendBtn.textContent = 'Envoyer à tous'; } }
+        </tr>`;
+      }).join('');
 
-    // ─── Modifier / Supprimer un client ───────────────────────────
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+    }
+
+    // ─── Direct Emails ──────────────────────────────────────────
+    window.sendClientEmail = function(email, name, template) {
+      if (!email) return alert("Ce client n'a pas d'email.");
+      name = name || 'Cher(e) client(e)';
+      const phone = '+509 4747-7221';
+      const templates = {
+        welcome: {
+          subject: 'Bienvenue chez DALIGHT',
+          body: `Bonjour ${name},\n\nBienvenue dans la famille DALIGHT ! Nous sommes ravis de vous compter parmi nos clients.\n\nDécouvrez nos services signature : Head Spa, massages thérapeutiques, soins capillaires personnalisés et plus encore.\n\n🌐 Réservez en ligne : https://dalightbeauty.com\n📞 Ou appelez-nous : ${phone}\n\nÀ très bientôt,\nL'équipe DALIGHT`
+        },
+        promo: {
+          subject: 'Offre spéciale DALIGHT - Pour vous !',
+          body: `Bonjour ${name},\n\nNous avons une offre spéciale rien que pour vous !\n\nProfitez de nos soins d'exception avec un accompagnement sur-mesure.\n\nRéservez dès maintenant :\n📞 ${phone}\n📍 Delmas 65, Faustin Premier Durandisse #10\n\nÀ très vite,\nL'équipe DALIGHT`
+        },
+        custom: {
+          subject: 'DALIGHT — Message pour vous',
+          body: `Bonjour ${name},\n\n`
+        },
+      };
+      const t = templates[template] || templates.custom;
+      window.location.href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(t.subject)}&body=${encodeURIComponent(t.body)}`;
+    };
+
+    // ─── Modal Nouveau Client ─────────────────────────────────
+    window.openCreateClientModal = function() {
+      document.getElementById('new-client-name').value = '';
+      document.getElementById('new-client-email').value = '';
+      document.getElementById('new-client-phone').value = '';
+      document.getElementById('create-client-modal').style.display = 'flex';
+      if (window.lucide) lucide.createIcons();
+    };
+
+    window.closeCreateClientModal = function() {
+      document.getElementById('create-client-modal').style.display = 'none';
+    };
+
+    window.saveNewClient = async function() {
+      const full_name = document.getElementById('new-client-name').value.trim();
+      const email = document.getElementById('new-client-email').value.trim().toLowerCase();
+      const phone = document.getElementById('new-client-phone').value.trim();
+
+      if (!full_name || !email) {
+        window.adminCore?.showToast?.('Nom et email obligatoires.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('create-client-save-btn');
+      btn.disabled = true;
+      btn.textContent = 'Création...';
+
+      try {
+        const client = getSupabase();
+        if (!client) throw new Error('Supabase non disponible');
+
+        // Tente via edge function admin-create-client si dispo
+        try {
+          const { data: { session } } = await client.auth.getSession();
+          const { data, error } = await client.functions.invoke('admin-create-client', {
+            body: { full_name, email, phone },
+            headers: session?.access_token ? { Authorization: 'Bearer ' + session.access_token } : {},
+          });
+          if (!error && data?.success !== false) {
+            window.adminCore?.showToast?.('Client créé avec succès ✓');
+            closeCreateClientModal();
+            await loadClients();
+            return;
+          }
+        } catch (edgeErr) {
+          console.warn('Edge function creation fallback to direct insert:', edgeErr);
+        }
+
+        // Direct insert into profiles
+        const { error } = await client.from('profiles').insert([{
+          full_name,
+          email,
+          phone: phone || null,
+          role: 'client',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }]);
+
+        if (error) throw error;
+        window.adminCore?.showToast?.('Client ajouté ✓');
+        closeCreateClientModal();
+        await loadClients();
+      } catch (err) {
+        console.error('Error creating client:', err);
+        window.adminCore?.showToast?.('Erreur création client: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="check" style="width:15px;height:15px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Créer le client';
+        if (window.lucide) lucide.createIcons();
+      }
+    };
+
+    // ─── Modal Modifier Client ─────────────────────────────────
     window.openEditClientModal = function(clientId) {
       const c = allClients.find(x => x.id === clientId);
       if (!c) return;
@@ -329,6 +643,7 @@
       document.getElementById('edit-client-email').value = c.email || '';
       document.getElementById('edit-client-phone').value = c.phone || clientPhones[c.email] || '';
       document.getElementById('edit-client-modal').style.display = 'flex';
+      if (window.lucide) lucide.createIcons();
     };
 
     window.closeEditClientModal = function() {
@@ -363,32 +678,30 @@
         await loadClients();
       } catch (err) {
         console.error('update client error:', err);
-        // Fallback: mete ajou tab profiles la dirèkteman (pa chanje email login an)
         try {
           const client = getSupabase();
           const { error } = await client.from('profiles').update({ full_name, email, phone, updated_at: new Date().toISOString() }).eq('id', id);
           if (error) throw error;
-          window.adminCore?.showToast?.('Profil mis à jour ✓ (email de connexion inchangé — déployez la fonction admin-manage-client pour le changer aussi)', 'warning');
+          window.adminCore?.showToast?.('Profil mis à jour ✓', 'success');
           closeEditClientModal();
           await loadClients();
         } catch (e2) {
           window.adminCore?.showToast?.('Erreur: ' + (e2.message || err.message), 'error');
         }
       } finally {
-        btn.disabled = false; btn.textContent = 'Enregistrer';
+        btn.disabled = false; btn.innerHTML = '<i data-lucide="save" style="width:15px;height:15px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Enregistrer';
+        if (window.lucide) lucide.createIcons();
       }
     };
 
     window.deleteClient = async function(clientId, label) {
-      if (!confirm(`Supprimer définitivement le client "${label || ''}" ?\n\nCela supprime son compte et son profil. Ses réservations resteront dans l'historique.`)) return;
+      if (!confirm(`Supprimer définitivement le client "${label || ''}" ?\n\nCela supprime son profil. Ses réservations resteront dans l'historique.`)) return;
       try {
         await invokeManageClient({ action: 'delete', id: clientId });
         window.adminCore?.showToast?.('Client supprimé ✓');
         await loadClients();
       } catch (err) {
         console.error('delete client error:', err);
-        // Fallback: efase pwofil la sèlman
-        if (!confirm('La suppression du compte a échoué (' + err.message + ').\n\nVoulez-vous quand même supprimer le profil de la liste ?')) return;
         try {
           const client = getSupabase();
           const { error } = await client.from('profiles').delete().eq('id', clientId);
@@ -400,68 +713,87 @@
         }
       }
     };
-  </script>
-<div id='bulk-email-modal' style='display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1000; justify-content:center; align-items:flex-start; overflow-y:auto; padding:1rem;' onclick='if(event.target === this) closeBulkEmailModal()'>
-  <div style='background:var(--admin-card-bg); border:1px solid var(--admin-border); border-radius:12px; max-width:720px; width:100%; max-height:90vh; overflow-y:auto; padding:1.5rem; margin:auto; display:flex; flex-direction:column; gap:1rem;'>
-    <div class='card-header' style='justify-content:space-between; flex-wrap:wrap; gap:.5rem;'>
-      <h3 class='card-title'>Envoyer un email à tous les clients</h3>
-      <button class='header-btn' onclick='closeBulkEmailModal()' style='background:transparent; color:var(--admin-text); font-size:1.2rem;'>✕</button>
-    </div>
-    <div class='form-grid' style='grid-template-columns:1fr 1fr;'>
-      <div class='form-group'>
-        <label>Modèle</label>
-        <select id='bulk-email-template' class='form-control' onchange='applyBulkTemplate()'>
-          <option value='welcome'>Bienvenue</option>
-          <option value='reminder'>Rappel</option>
-          <option value='promo'>Promotion</option>
-          <option value='custom'>Personnalisé</option>
-        </select>
-      </div>
-      <div class='form-group'>
-        <label>Objet</label>
-        <input type='text' id='bulk-email-subject' class='form-control' value=''>
-      </div>
-    </div>
-    <div class='form-group'>
-      <label>Message (utilisez {name} pour le prénom du client)</label>
-      <textarea id='bulk-email-body' class='form-control' rows='8' oninput='updateBulkPreview()'></textarea>
-    </div>
-    <div class='form-group'>
-      <label>Aperçu email</label>
-      <iframe id='bulk-email-preview' style='width:100%; height:280px; border:1px solid var(--admin-border); border-radius:8px; background:#fff;'></iframe>
-    </div>
-    <div style='display:flex; gap:.5rem; justify-content:flex-end;'>
-      <button class='btn btn-secondary' onclick='closeBulkEmailModal()'>Annuler</button>
-      <button class='btn btn-primary' id='bulk-email-send-btn' onclick='sendBulkEmail()'>Envoyer à tous</button>
-    </div>
-  </div>
-</div>
 
-<!-- Modal: Modifier un client -->
-<div id="edit-client-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1000; justify-content:center; align-items:flex-start; overflow-y:auto; padding:1rem;" onclick="if(event.target === this) closeEditClientModal()">
-  <div style="background:var(--admin-card-bg); border:1px solid var(--admin-border); border-radius:12px; max-width:480px; width:100%; padding:1.5rem; margin:auto; display:flex; flex-direction:column; gap:1rem;">
-    <div class="card-header" style="justify-content:space-between;">
-      <h3 class="card-title">Modifier le client</h3>
-      <button class="header-btn" onclick="closeEditClientModal()" style="background:transparent; color:var(--admin-text); font-size:1.2rem;">✕</button>
-    </div>
-    <input type="hidden" id="edit-client-id">
-    <div class="form-group">
-      <label>Nom complet *</label>
-      <input type="text" id="edit-client-name" class="form-control" placeholder="Nom du client">
-    </div>
-    <div class="form-group">
-      <label>Email *</label>
-      <input type="email" id="edit-client-email" class="form-control" placeholder="email@exemple.com">
-    </div>
-    <div class="form-group">
-      <label>Téléphone</label>
-      <input type="tel" id="edit-client-phone" class="form-control" placeholder="+509 ...">
-    </div>
-    <div style="display:flex; gap:.5rem; justify-content:flex-end;">
-      <button class="btn btn-secondary" onclick="closeEditClientModal()">Annuler</button>
-      <button class="btn btn-primary" id="edit-client-save-btn" onclick="saveClientEdit()">Enregistrer</button>
-    </div>
-  </div>
-</div>
+    // ─── Bulk Email Modal ──────────────────────────────────────
+    const BULK_TEMPLATES = {
+      welcome: {
+        subject: 'Bienvenue chez DALIGHT',
+        body: `Bonjour {name},\n\nBienvenue dans la famille DALIGHT ! Nous sommes ravis de vous compter parmi nos clients privilégiés.\n\nDécouvrez nos rituels signature : Head Spa, massages thérapeutiques, soins capillaires personnalisés et plus encore.\n\n🌐 Réservez en ligne : https://dalightbeauty.com\n📞 Ou contactez-nous : +509 4747-7221\n\nÀ très bientôt,\nL'équipe DALIGHT`
+      },
+      reminder: {
+        subject: 'Votre bien-être compte pour DALIGHT',
+        body: `Bonjour {name},\n\nCela fait un moment que nous ne vous avons pas vu(e) chez DALIGHT. Nous tenons à vous rappeler que votre confort et votre bien-être sont notre priorité.\n\nPrenez rendez-vous dès maintenant pour un pur moment de détente et de soin.\n\n📞 +509 4747-7221\n🌐 https://dalightbeauty.com\n\nAu plaisir de vous accueillir,\nL'équipe DALIGHT`
+      },
+      promo: {
+        subject: 'Offre spéciale DALIGHT - Pour vous !',
+        body: `Bonjour {name},\n\nNous avons le plaisir de vous faire bénéficier d'une offre spéciale exclusive sur nos soins signatures.\n\nProfitez de nos rituels bien-être à tarif privilégié cette semaine.\n\nRéservez dès maintenant :\n📞 +509 4747-7221\n📍 Delmas 65, Faustin Premier Durandisse #10\n\nÀ très vite,\nL'équipe DALIGHT`
+      },
+      custom: {
+        subject: 'DALIGHT — Information importante',
+        body: `Bonjour {name},\n\n`
+      }
+    };
+
+    function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+    function buildHtmlEmail(name, bodyText) {
+      const escapedName = escapeHtml(name || 'Cher(e) client(e)');
+      const bodyHtml = escapeHtml(bodyText).replace(/\n/g, '<br>');
+      return `<!DOCTYPE html><html><head><meta charset='utf-8'><style>body { font-family: Montserrat, sans-serif; background: #0f1d15; margin: 0; padding: 20px; color: #f5f5f0; } .container { max-width: 600px; margin: 0 auto; background: #16291e; border-radius: 12px; overflow: hidden; border: 1px solid rgba(201,162,39,0.3); } .header { background: linear-gradient(135deg, #0f1d15 0%, #16291e 100%); padding: 30px 40px; text-align: center; border-bottom: 1px solid rgba(201,162,39,0.2); } .logo { max-width: 120px; height: auto; } .content { padding: 35px 40px; color: #f0eee8; line-height: 1.7; } .greeting { font-size: 20px; font-weight: 600; color: #c9a227; margin-bottom: 16px; } .cta-button { display: inline-block; background: #c9a227; color: #0f1d15; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 700; margin-top: 20px; } .footer { background: #0b140f; padding: 20px 40px; text-align: center; color: #8a9e90; font-size: 13px; }</style></head><body><div class='container'><div class='header'><img src='https://raw.githubusercontent.com/deviatiht-ctrl/DALIGHT2.0/main/assets/images/logodaligth.png' alt='DALIGHT' class='logo'></div><div class='content'><p class='greeting'>Bonjour ${escapedName},</p><p>${bodyHtml}</p></div><div class='footer'><p>DALIGHT · Delmas 65, Faustin Premier Durandisse #10, Haïti</p><p>+509 4747-7221 · dalightbeauty15mai@gmail.com</p><p>© ${new Date().getFullYear()} DALIGHT. Tous droits réservés.</p></div></div></body></html>`;
+    }
+
+    function openBulkEmailModal() {
+      const modal = document.getElementById('bulk-email-modal');
+      modal.style.display = 'flex';
+      if (!document.getElementById('bulk-email-subject').value) applyBulkTemplate();
+      else updateBulkPreview();
+      if (window.lucide) lucide.createIcons();
+    }
+    function closeBulkEmailModal() { document.getElementById('bulk-email-modal').style.display = 'none'; }
+    function applyBulkTemplate() {
+      const key = document.getElementById('bulk-email-template').value;
+      const t = BULK_TEMPLATES[key] || BULK_TEMPLATES.custom;
+      document.getElementById('bulk-email-subject').value = t.subject;
+      document.getElementById('bulk-email-body').value = t.body;
+      updateBulkPreview();
+    }
+    function updateBulkPreview() {
+      const subject = document.getElementById('bulk-email-subject').value;
+      const body = document.getElementById('bulk-email-body').value;
+      const previewName = 'Marie Exemple';
+      const personalized = body.replace(/{name}/g, previewName);
+      const html = buildHtmlEmail(previewName, personalized);
+      document.getElementById('bulk-email-preview').srcdoc = html;
+    }
+    async function sendBulkEmail() {
+      const subject = document.getElementById('bulk-email-subject').value.trim();
+      const body = document.getElementById('bulk-email-body').value;
+      if (!subject || !body) { window.adminCore?.showToast?.('Objet et message obligatoires.', 'error'); return; }
+      const clients = allClients.filter(c => c.email);
+      if (!clients.length) { window.adminCore?.showToast?.('Aucun client avec email trouvé.', 'error'); return; }
+      if (!sb) { window.adminCore?.showToast?.('Supabase non connecté.', 'error'); return; }
+      const sendBtn = document.getElementById('bulk-email-send-btn');
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Envoi en cours...';
+      let sent = 0, failed = 0;
+      try {
+        for (const c of clients) {
+          const name = c.full_name || 'Cher(e) client(e)';
+          const personalized = body.replace(/{name}/g, name);
+          const html = buildHtmlEmail(name, personalized);
+          const { error } = await sb.functions.invoke('send-email', { body: { to: c.email, subject, html, isAdmin: true } });
+          if (error) { console.error('Email failed for', c.email, error); failed++; } else { sent++; }
+        }
+        window.adminCore?.showToast?.(`${sent} email(s) envoyé(s)${failed ? ', ' + failed + ' échec(s)' : ''}`, failed ? 'error' : 'success');
+        closeBulkEmailModal();
+      } catch (err) {
+        console.error(err);
+        window.adminCore?.showToast?.('Erreur envoi : ' + err.message, 'error');
+      } finally {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<i data-lucide="send" style="width:15px;height:15px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Envoyer à tous les clients';
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+  </script>
 </body>
 </html>

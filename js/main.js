@@ -673,6 +673,8 @@ async function detectSessionRole() {
     } else {
       console.log('ℹ️ No active session');
       updateNavbarAuth(false);
+      document.body.classList.remove('is-admin');
+      document.querySelectorAll('.influencer-portal-btn, .mob-inf-link').forEach(el => el.remove());
     }
   } catch (error) {
     console.error('❌ Error detecting session role:', error);
@@ -1105,18 +1107,23 @@ if (typeof window !== 'undefined') {
 
 
 async function checkAndShowInfluencerLink(userEmail) {
-  if (!userEmail || !supabaseClient) return;
+  if (!userEmail || typeof userEmail !== 'string' || !userEmail.trim() || !supabaseClient) {
+    document.querySelectorAll('.influencer-portal-btn, .mob-inf-link').forEach(el => el.remove());
+    return;
+  }
+  const cleanEmail = userEmail.trim().toLowerCase();
   try {
     const { data: inf } = await supabaseClient
       .from('dalight_influencers')
       .select('id, assigned_code')
-      .ilike('email', userEmail)
+      .ilike('email', cleanEmail)
       .maybeSingle();
 
     const { data: promo } = await supabaseClient
       .from('dalight_promo_codes')
       .select('id, code')
-      .ilike('owner_email', userEmail)
+      .ilike('owner_email', cleanEmail)
+      .eq('owner_type', 'influencer')
       .maybeSingle();
 
     if (inf || promo) {

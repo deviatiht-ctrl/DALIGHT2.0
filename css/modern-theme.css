@@ -198,6 +198,25 @@ a {
   align-items: center;
 }
 
+/* Strict Admin Link Privacy: Never visible unless authenticated as admin */
+.admin-link,
+.top-nav .nav-links a.admin-link,
+.spa-nav-left a.admin-link,
+.spa-mobile-menu a.admin-link {
+  display: none !important;
+}
+
+body.is-admin .admin-link,
+body.is-admin .top-nav .nav-links a.admin-link,
+body.is-admin .spa-nav-left a.admin-link {
+  display: inline-flex !important;
+}
+
+body.is-admin .mobile-nav .admin-link,
+body.is-admin .spa-mobile-menu a.admin-link {
+  display: block !important;
+}
+
 .spa-nav-link::after,
 .top-nav .nav-links a::after {
   content: '';

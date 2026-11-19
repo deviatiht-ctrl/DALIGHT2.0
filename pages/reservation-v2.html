@@ -2484,6 +2484,34 @@
             .insert([payload]);
 
           if (insertErr) throw insertErr;
+
+          // Enregistrer l'utilisation du code promo et synchroniser les commissions
+          if (appliedPromo) {
+            try {
+              const commPct = Number(appliedPromo.commission_pct || 0);
+              const commAmt = appliedPromo.owner_type === 'influencer' && commPct > 0
+                ? (totalAmount * commPct) / 100
+                : 0;
+
+              await supabase.from('promo_code_uses').insert([{
+                promo_code_id: appliedPromo.id,
+                code: appliedPromo.code,
+                client_email: (currentUser?.email || clientEmail).toLowerCase(),
+                discount_amount: discount,
+                commission_amount: commAmt,
+                revenue_amount: totalAmount,
+                commission_paid: false,
+                created_at: new Date().toISOString()
+              }]);
+
+              await supabase.from('promo_codes').update({
+                uses_count: (Number(appliedPromo.uses_count) || 0) + 1,
+                updated_at: new Date().toISOString()
+              }).eq('id', appliedPromo.id);
+            } catch (promoRecordErr) {
+              console.warn('Erreur enregistrement utilisation code promo:', promoRecordErr);
+            }
+          }
         }
 
         // Show Success Overlay

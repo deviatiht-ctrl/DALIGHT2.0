@@ -3,352 +3,864 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Espace Influenceur — DALIGHT</title>
+  <title>Espace Influenceur &amp; Affiliation — DALIGHT</title>
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" href="../assets/images/logodaligth.png?v=2" type="image/png">
+  
   <!-- Fonts & Icons -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../vendor/fontawesome/css/all.min.css" />
-    <meta name="theme-color" content="#3E4A28">
-    <link href="../vendor/fonts/google-fonts.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../vendor/fontawesome/css/all.min.css" />
+  <meta name="theme-color" content="#0f1d15">
+  <link href="../vendor/fonts/google-fonts.css" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css?v=5.2.0">
   <link rel="stylesheet" href="../css/responsive.css?v=5.2.0">
-    <link rel="stylesheet" href="../css/modern-theme.css?v=2.5.0">
+  <link rel="stylesheet" href="../css/modern-theme.css?v=2.6.0">
   <script src="../vendor/supabase/supabase.min.js"></script>
+  <script src="../vendor/lucide/lucide.min.js"></script>
   <script type="module" src="../js/main.js?v=5.2.0"></script>
+  
   <style>
-    .inf-wrap { max-width: 900px; margin: 0 auto; padding: 1rem; }
-    .inf-card { background: #fff; border-radius: 14px; padding: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,.08); margin-bottom: 1.25rem; }
-    .inf-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
-    .inf-stat { background: linear-gradient(135deg, #4a3728, #6b5138); color: #fff; border-radius: 14px; padding: 1.25rem; }
-    .inf-stat .num { font-size: 1.6rem; font-weight: 800; }
-    .inf-stat .lbl { font-size: .78rem; opacity: .75; margin-top: .2rem; }
-    .inf-stat.gold { background: linear-gradient(135deg, #b8941f, #d9b53a); color: #1a1400; }
-    .inf-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
-    .inf-table th { text-align: left; padding: .6rem .75rem; border-bottom: 2px solid #eee; color: #6b7280; font-size: .75rem; text-transform: uppercase; letter-spacing: .5px; }
-    .inf-table td { padding: .65rem .75rem; border-bottom: 1px solid #f0f0f0; }
-    .inf-code { font-family: monospace; font-weight: 800; font-size: 1rem; letter-spacing: 1px; color: #4a3728; }
-    .pill { display: inline-block; padding: .2rem .7rem; border-radius: 20px; font-size: .72rem; font-weight: 700; }
-    .pill-pending { background: #fef3c7; color: #92400e; }
-    .pill-approved { background: #dbeafe; color: #1d4ed8; }
-    .pill-paid { background: #d1fae5; color: #065f46; }
-    .pill-rejected { background: #fee2e2; color: #991b1b; }
-    .inf-input { width: 100%; padding: .7rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: .95rem; margin-bottom: .6rem; }
-    .inf-label { font-size: .8rem; font-weight: 600; color: #374151; display: block; margin-bottom: .3rem; }
+    .inf-shell {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+    }
+    .inf-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    .inf-title {
+      font-family: var(--spa-font-serif, 'Cormorant Garamond', serif);
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: var(--spa-gold, #c9a227);
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.02em;
+    }
+    .inf-subtitle {
+      color: rgba(245, 245, 240, 0.7);
+      font-size: 0.95rem;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .inf-user-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.4rem 0.9rem;
+      background: rgba(201, 162, 39, 0.12);
+      border: 1px solid rgba(201, 162, 39, 0.3);
+      border-radius: 30px;
+      margin-top: 1rem;
+      font-size: 0.82rem;
+      color: var(--spa-gold, #c9a227);
+    }
+    .inf-logout-btn {
+      background: none;
+      border: none;
+      color: #f87171;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding-left: 0.4rem;
+      border-left: 1px solid rgba(201, 162, 39, 0.3);
+      transition: color 0.15s ease;
+    }
+    .inf-logout-btn:hover {
+      color: #ef4444;
+      text-decoration: underline;
+    }
+
+    .inf-card {
+      background: rgba(22, 41, 30, 0.75);
+      border: 1px solid rgba(201, 162, 39, 0.22);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 16px;
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+      color: #f5f5f0;
+    }
+    .inf-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      border-bottom: 1px solid rgba(201, 162, 39, 0.15);
+      padding-bottom: 0.85rem;
+    }
+    .inf-card-title {
+      font-family: var(--spa-font-serif, 'Cormorant Garamond', serif);
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--spa-gold, #c9a227);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .inf-card-title i {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Stats Grid */
+    .inf-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 1.75rem;
+    }
+    .inf-stat-box {
+      background: linear-gradient(145deg, rgba(22, 41, 30, 0.9), rgba(15, 29, 21, 0.95));
+      border: 1px solid rgba(201, 162, 39, 0.25);
+      border-radius: 14px;
+      padding: 1.4rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .inf-stat-box:hover {
+      transform: translateY(-2px);
+      border-color: rgba(201, 162, 39, 0.5);
+    }
+    .inf-stat-box.highlight {
+      background: linear-gradient(135deg, rgba(201, 162, 39, 0.2), rgba(22, 41, 30, 0.95));
+      border: 1px solid var(--spa-gold, #c9a227);
+      box-shadow: 0 8px 25px rgba(201, 162, 39, 0.15);
+    }
+    .inf-stat-icon {
+      position: absolute;
+      right: 1.25rem;
+      top: 1.25rem;
+      color: rgba(201, 162, 39, 0.3);
+      width: 28px;
+      height: 28px;
+    }
+    .inf-stat-box.highlight .inf-stat-icon {
+      color: var(--spa-gold, #c9a227);
+    }
+    .inf-stat-val {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #fff;
+      margin-top: 0.4rem;
+      letter-spacing: -0.01em;
+    }
+    .inf-stat-box.highlight .inf-stat-val {
+      color: var(--spa-gold, #c9a227);
+    }
+    .inf-stat-lbl {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: rgba(245, 245, 240, 0.65);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Codes list */
+    .inf-code-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      border-radius: 10px;
+      background: rgba(15, 29, 21, 0.6);
+      border: 1px solid rgba(201, 162, 39, 0.2);
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .inf-code-tag {
+      font-family: monospace;
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: var(--spa-gold, #c9a227);
+      letter-spacing: 0.08em;
+      padding: 0.3rem 0.75rem;
+      border-radius: 6px;
+      background: rgba(201, 162, 39, 0.12);
+      border: 1px solid rgba(201, 162, 39, 0.3);
+    }
+
+    /* Form controls */
+    .inf-form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .inf-form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: rgba(245, 245, 240, 0.8);
+      margin-bottom: 0.4rem;
+    }
+    .inf-input {
+      width: 100%;
+      padding: 0.75rem 0.9rem;
+      border-radius: 10px;
+      border: 1px solid rgba(201, 162, 39, 0.3);
+      background: rgba(15, 29, 21, 0.8);
+      color: #fff;
+      font-size: 0.9rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .inf-input:focus {
+      outline: none;
+      border-color: var(--spa-gold, #c9a227);
+      box-shadow: 0 0 10px rgba(201, 162, 39, 0.25);
+    }
+
+    /* Luxury Table */
+    .inf-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    .inf-table th {
+      text-align: left;
+      padding: 0.75rem 0.9rem;
+      border-bottom: 1px solid rgba(201, 162, 39, 0.25);
+      color: var(--spa-gold, #c9a227);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+    }
+    .inf-table td {
+      padding: 0.85rem 0.9rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      color: rgba(245, 245, 240, 0.85);
+    }
+    .inf-table tr:hover td {
+      background: rgba(201, 162, 39, 0.04);
+    }
+
+    /* Status Pills */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.74rem;
+      font-weight: 700;
+    }
+    .pill-pending { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .pill-approved { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .pill-paid { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+    .pill-rejected { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    .btn-gold {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, #c9a227, #e2c974);
+      color: #0f1d15;
+      font-weight: 700;
+      font-size: 0.92rem;
+      padding: 0.8rem 1.6rem;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 6px 18px rgba(201, 162, 39, 0.3);
+    }
+    .btn-gold:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(201, 162, 39, 0.45);
+    }
+    .btn-gold:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-outline-gold {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      border: 1px solid rgba(201, 162, 39, 0.4);
+      background: rgba(201, 162, 39, 0.1);
+      color: var(--spa-gold, #c9a227);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-outline-gold:hover {
+      background: var(--spa-gold, #c9a227);
+      color: #0f1d15;
+    }
+
+    #inf-msg {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    #inf-msg.success { background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.4); color: #4ade80; display: block; }
+    #inf-msg.error { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; display: block; }
   </style>
 </head>
 <body data-page="influencer">
-    <!-- Subtle Background Monogram Pattern & Glow -->
-    <div class="spa-bg-pattern" aria-hidden="true"></div>
-    <div class="spa-bg-glow" aria-hidden="true"></div>
-  <!-- ==========================================================================
-         MODERN LUXURY NAVBAR (EXACT DALIGHT MODEL)
-         ========================================================================== -->
-    <header class="spa-nav-wrapper" id="spa-navbar">
-      <nav class="spa-nav-container">
-        <!-- Left: Editorial Links -->
-        <div class="spa-nav-left nav-links">
-          <a href="../index.html" class="spa-nav-link">Accueil</a>
-          <a href="./about.html" class="spa-nav-link">À Propos</a>
-          <a href="./services.html" class="spa-nav-link">Services</a>
-          <a href="./formation.html" class="spa-nav-link">Formations</a>
-          <a href="./shop.html" class="spa-nav-link">Boutique</a>
-          <a href="../index.html#contact" class="spa-nav-link">Contact</a>
-          <a href="../admin/dashboard.html" class="admin-link">Admin</a>
-        </div>
+  <!-- Subtle Background Pattern & Glow -->
+  <div class="spa-bg-pattern" aria-hidden="true"></div>
+  <div class="spa-bg-glow" aria-hidden="true"></div>
 
-        <!-- Center: Circular Brand Seal -->
-        <a class="spa-brand-center" href="../index.html" aria-label="DALIGHT Accueil">
-          <div class="spa-seal-badge">
-            <div class="spa-seal-inner">
-              <img src="../assets/images/logodaligth.png?v=2" alt="DALIGHT Logo" />
-            </div>
-          </div>
-        </a>
-
-        <!-- Right: Actions & Reservation Pill Button -->
-        <div class="spa-nav-right nav-cta">
-          <a href="./services.html" class="spa-icon-btn" title="Rechercher un soin" aria-label="Recherche">
-            <i data-lucide="search"></i>
-          </a>
-          <a href="./cart.html" class="spa-icon-btn cart-btn" title="Panier" aria-label="Panier">
-            <i data-lucide="shopping-bag"></i>
-            <span class="cart-badge">0</span>
-          </a>
-          <a href="./services.html" class="spa-pill-btn">
-            Prendre Rendez-vous
-          </a>
-          <a href="./login.html" class="spa-icon-btn mobile-auth-link" title="Espace Membre" aria-label="Compte">
-            <i data-lucide="user"></i>
-          </a>
-          <button class="spa-hamburger-btn" id="spa-hamburger" aria-label="Menu Mobile">
-            <i data-lucide="menu"></i>
-          </button>
-        </div>
-      </nav>
-
-      <!-- Mobile Dropdown Menu -->
-      <div class="spa-mobile-menu" id="spa-mobile-menu">
-        <a href="../index.html">Accueil</a>
-        <a href="./services.html">Prendre Rendez-vous</a>
-        <a href="./services.html">Nos Services &amp; Tarifs</a>
-        <a href="./formation.html">DALIGHT School</a>
-        <a href="./shop.html">Boutique</a>
-        <a href="./cart.html">Panier</a>
-        <a href="./orders.html">Mes Réservations</a>
-        <a href="./loyalty.html">Programme Fidélité</a>
-        <a href="../index.html#contact">Delmas 65</a>
-        <a href="./login.html">Espace Client</a>
+  <!-- MODERN LUXURY NAVBAR -->
+  <header class="spa-nav-wrapper" id="spa-navbar">
+    <nav class="spa-nav-container">
+      <!-- Left: Navigation Links -->
+      <div class="spa-nav-left nav-links">
+        <a href="../index.html" class="spa-nav-link">Accueil</a>
+        <a href="./about.html" class="spa-nav-link">À Propos</a>
+        <a href="./services.html" class="spa-nav-link">Services</a>
+        <a href="./formation.html" class="spa-nav-link">Formations</a>
+        <a href="./shop.html" class="spa-nav-link">Boutique</a>
+        <a href="../index.html#contact" class="spa-nav-link">Contact</a>
       </div>
-    </header>
+
+      <!-- Center: Brand Seal -->
+      <a class="spa-brand-center" href="../index.html" aria-label="DALIGHT Accueil">
+        <div class="spa-seal-badge">
+          <div class="spa-seal-inner">
+            <img src="../assets/images/logodaligth.png?v=2" alt="DALIGHT Logo" />
+          </div>
+        </div>
+      </a>
+
+      <!-- Right: Action Buttons -->
+      <div class="spa-nav-right nav-cta">
+        <a href="./services.html" class="spa-pill-btn">Prendre Rendez-vous</a>
+        <a href="./login.html" class="spa-icon-btn mobile-auth-link" title="Espace Membre" aria-label="Compte">
+          <i data-lucide="user"></i>
+        </a>
+        <button class="spa-hamburger-btn" id="spa-hamburger" aria-label="Menu Mobile">
+          <i data-lucide="menu"></i>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Mobile Dropdown Menu -->
+    <div class="spa-mobile-menu" id="spa-mobile-menu">
+      <a href="../index.html">Accueil</a>
+      <a href="./services.html">Prendre Rendez-vous</a>
+      <a href="./formation.html">DALIGHT School</a>
+      <a href="./shop.html">Boutique</a>
+      <a href="./orders.html">Mes Rendez-vous</a>
+      <a href="./login.html">Espace Client</a>
+    </div>
+  </header>
 
   <main class="page-shell fade-in">
-    <div class="inf-wrap">
-      <h1 style="text-align:center;margin:1.5rem 0 .3rem;">Espace Influenceur</h1>
-      <p style="text-align:center;color:#6b7280;margin-bottom:1.5rem;">Swiv itilizasyon kòd ou yo, komisyon ou, epi mande retrè a chak fen mwa.</p>
-
-      <!-- Login prompt -->
-      <div id="inf-login" class="inf-card" style="text-align:center;" hidden>
-        <h3 style="margin-top:0;">Konekte pou wè espas ou</h3>
-        <p style="color:#6b7280;font-size:.9rem;">Itilize imèl + modpas admin DALIGHT te kreye pou ou a.</p>
-        <a class="btn" href="./login.html">Se connecter</a>
+    <div class="inf-shell">
+      
+      <!-- Top Title Header -->
+      <div class="inf-header">
+        <h1 class="inf-title">Espace Influenceur &amp; Partenaire</h1>
+        <p class="inf-subtitle">Suivez les réservations apportées par votre communauté, consultez vos gains en direct et formulez vos demandes de retrait.</p>
+        <div id="inf-badge-container" style="display:none;">
+          <div class="inf-user-badge">
+            <i data-lucide="award" style="width:16px;height:16px;"></i>
+            <span id="inf-user-name">Influenceur DALIGHT</span>
+            <span style="opacity:0.6;">·</span>
+            <span id="inf-user-email">email@exemple.com</span>
+            <button class="inf-logout-btn" onclick="influencerLogout()">Déconnexion</button>
+          </div>
+        </div>
       </div>
 
-      <!-- Dashboard -->
-      <div id="inf-dash" hidden>
-        <div class="inf-stats">
-          <div class="inf-stat">
-            <div class="num" id="stat-uses">0</div>
-            <div class="lbl">Itilizasyon kòd ou</div>
+      <!-- Login Required State -->
+      <div id="inf-login-prompt" class="inf-card" style="text-align:center;padding:3rem 1.5rem;display:none;">
+        <i data-lucide="lock" style="width:48px;height:48px;color:var(--spa-gold, #c9a227);margin-bottom:1rem;"></i>
+        <h2 style="font-size:1.6rem;margin-bottom:0.6rem;color:#fff;">Connexion requise</h2>
+        <p style="color:rgba(245,245,240,0.7);max-width:440px;margin:0 auto 1.75rem;font-size:0.95rem;">
+          Veuillez vous connecter avec l'adresse email et le mot de passe attribués par l'administration DALIGHT pour accéder à votre tableau de bord affilié.
+        </p>
+        <a href="./login.html" class="btn-gold" style="text-decoration:none;">
+          <i data-lucide="log-in" style="width:16px;height:16px;"></i>
+          Se connecter à l'espace membre
+        </a>
+      </div>
+
+      <!-- Dashboard View (Authenticated) -->
+      <div id="inf-dashboard" style="display:none;">
+        
+        <!-- Stats Summary Grid -->
+        <div class="inf-stats-grid">
+          <div class="inf-stat-box">
+            <i data-lucide="users" class="inf-stat-icon"></i>
+            <div class="inf-stat-lbl">Utilisations de vos codes</div>
+            <div class="inf-stat-val" id="stat-uses">0</div>
           </div>
-          <div class="inf-stat">
-            <div class="num" id="stat-total">0 HTG</div>
-            <div class="lbl">Komisyon total</div>
+          <div class="inf-stat-box">
+            <i data-lucide="trending-up" class="inf-stat-icon"></i>
+            <div class="inf-stat-lbl">Commission cumulée</div>
+            <div class="inf-stat-val" id="stat-total">0 HTG</div>
           </div>
-          <div class="inf-stat">
-            <div class="num" id="stat-paid">0 HTG</div>
-            <div class="lbl">Komisyon peye</div>
+          <div class="inf-stat-box">
+            <i data-lucide="check-circle-2" class="inf-stat-icon"></i>
+            <div class="inf-stat-lbl">Déjà versé</div>
+            <div class="inf-stat-val" id="stat-paid">0 HTG</div>
           </div>
-          <div class="inf-stat gold">
-            <div class="num" id="stat-available">0 HTG</div>
-            <div class="lbl">Disponib pou retrè</div>
+          <div class="inf-stat-box highlight">
+            <i data-lucide="wallet" class="inf-stat-icon"></i>
+            <div class="inf-stat-lbl">Disponible pour retrait</div>
+            <div class="inf-stat-val" id="stat-available">0 HTG</div>
           </div>
         </div>
 
-        <!-- Kòd mwen yo -->
+        <!-- Section: Codes Promo Affiliés -->
         <div class="inf-card">
-          <h3 style="margin-top:0;">Kòd promo mwen yo</h3>
-          <div id="inf-codes-list"><p style="color:#6b7280;">Chargement...</p></div>
+          <div class="inf-card-header">
+            <h3 class="inf-card-title">
+              <i data-lucide="tag"></i> Vos Codes Promo Actifs
+            </h3>
+          </div>
+          <div id="inf-codes-list">
+            <p style="color:rgba(245,245,240,0.6);font-size:0.9rem;">Chargement de vos codes...</p>
+          </div>
         </div>
 
-        <!-- Demann retrè -->
+        <!-- Section: Demande de Retrait -->
         <div class="inf-card" id="inf-withdraw-card">
-          <h3 style="margin-top:0;">💵 Mande retrè komisyon</h3>
-          <p style="font-size:.85rem;color:#6b7280;">Fen mwa a, ou ka mande retrè komisyon ki disponib la. Admin ap peye ou dapre metòd ou chwazi a.</p>
-          <div class="input-group">
-            <label class="inf-label" for="wd-month">Mwa a</label>
-            <input type="month" id="wd-month" class="inf-input">
+          <div class="inf-card-header">
+            <h3 class="inf-card-title">
+              <i data-lucide="banknote"></i> Demander un Virement de Commission
+            </h3>
           </div>
-          <div class="input-group">
-            <label class="inf-label" for="wd-amount">Montan (HTG)</label>
-            <input type="number" id="wd-amount" class="inf-input" min="1" step="1" placeholder="Ex: 5000">
+          <p style="font-size:0.88rem;color:rgba(245,245,240,0.7);margin-bottom:1.25rem;line-height:1.6;">
+            À la fin de chaque mois, formulez votre demande de retrait du solde disponible. Les paiements sont traités par l'administration sous 24h à 48h selon la méthode de votre choix.
+          </p>
+
+          <div id="inf-msg"></div>
+
+          <div class="inf-form-grid">
+            <div class="inf-form-group">
+              <label for="wd-month">Mois concerné</label>
+              <input type="month" id="wd-month" class="inf-input">
+            </div>
+            <div class="inf-form-group">
+              <label for="wd-amount">Montant à retirer (HTG)</label>
+              <input type="number" id="wd-amount" class="inf-input" min="1" step="100" placeholder="Ex: 5000">
+            </div>
+            <div class="inf-form-group">
+              <label for="wd-method">Mode de réception</label>
+              <select id="wd-method" class="inf-input">
+                <option value="moncash">MonCash</option>
+                <option value="natcash">NatCash</option>
+                <option value="bank_transfer">Virement bancaire (SOGEBANK / UNIBANK / BUH)</option>
+                <option value="cash">Paiement en espèces au Spa</option>
+              </select>
+            </div>
+            <div class="inf-form-group">
+              <label for="wd-account">Numéro de téléphone / Coordonnées</label>
+              <input type="text" id="wd-account" class="inf-input" placeholder="+509 XXXX-XXXX ou N° de compte">
+            </div>
           </div>
-          <div class="input-group">
-            <label class="inf-label" for="wd-method">Metòd peman</label>
-            <select id="wd-method" class="inf-input">
-              <option value="moncash">MonCash</option>
-              <option value="natcash">NatCash</option>
-              <option value="bank_transfer">Virement bancaire</option>
-              <option value="cash">Cash (nan spaa)</option>
-            </select>
-          </div>
-          <div class="input-group">
-            <label class="inf-label" for="wd-account">Nimewo / Kont peman an</label>
-            <input type="text" id="wd-account" class="inf-input" placeholder="Ex: +509 XXXX-XXXX ou kont labank">
-          </div>
-          <div id="wd-message" role="status"></div>
-          <button class="btn" id="wd-submit" onclick="requestPayout()">📤 Voye demann lan</button>
+
+          <button class="btn-gold" id="wd-submit" onclick="requestPayout()">
+            <i data-lucide="send" style="width:16px;height:16px;"></i>
+            Envoyer la demande de retrait
+          </button>
         </div>
 
-        <!-- Demann mwen yo -->
+        <!-- Section: Historique des Demandes de Retrait -->
         <div class="inf-card">
-          <h3 style="margin-top:0;">Demann retrè mwen yo</h3>
+          <div class="inf-card-header">
+            <h3 class="inf-card-title">
+              <i data-lucide="clock"></i> Historique de vos Demandes de Retrait
+            </h3>
+          </div>
           <div style="overflow-x:auto;">
             <table class="inf-table">
               <thead>
-                <tr><th>Dat</th><th>Mwa</th><th>Montan</th><th>Metòd</th><th>Stati</th></tr>
+                <tr>
+                  <th>Date demande</th>
+                  <th>Mois</th>
+                  <th>Montant</th>
+                  <th>Méthode</th>
+                  <th>Statut</th>
+                </tr>
               </thead>
-              <tbody id="inf-payouts"><tr><td colspan="5" style="color:#6b7280;">Chargement...</td></tr></tbody>
+              <tbody id="inf-payouts-table">
+                <tr><td colspan="5" style="color:rgba(245,245,240,0.6);text-align:center;padding:1.5rem;">Chargement des demandes...</td></tr>
+              </tbody>
             </table>
           </div>
         </div>
 
-        <!-- Detay pa mwa -->
+        <!-- Section: Détail des Ventes & Commissions -->
         <div class="inf-card">
-          <h3 style="margin-top:0;">Detay pa mwa</h3>
+          <div class="inf-card-header">
+            <h3 class="inf-card-title">
+              <i data-lucide="bar-chart-2"></i> Performance Mensuelle
+            </h3>
+          </div>
           <div style="overflow-x:auto;">
             <table class="inf-table">
               <thead>
-                <tr><th>Mwa</th><th>Kòd</th><th>Itilizasyon</th><th>Reveni (sèvis)</th><th>Komisyon</th></tr>
+                <tr>
+                  <th>Mois</th>
+                  <th>Code</th>
+                  <th>Rendez-vous apportés</th>
+                  <th>Chiffre d'affaires</th>
+                  <th>Votre commission</th>
+                </tr>
               </thead>
-              <tbody id="inf-monthly"><tr><td colspan="5" style="color:#6b7280;">Chargement...</td></tr></tbody>
+              <tbody id="inf-monthly-table">
+                <tr><td colspan="5" style="color:rgba(245,245,240,0.6);text-align:center;padding:1.5rem;">Chargement des statistiques...</td></tr>
+              </tbody>
             </table>
           </div>
         </div>
+
       </div>
+
     </div>
   </main>
 
-  <!-- ==========================================================================
-         MINIMALIST LUXURY FOOTER (DALIGHT MODEL)
-         ========================================================================== -->
-    <footer class="spa-footer">
-      <div class="spa-footer-container">
-        <div class="spa-footer-brand">
-          <img class="spa-footer-logo" src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" />
-          <p>Le premier espace Head Spa &amp; Bien-Être à Port-au-Prince. L'art de prendre soin de soi avec élégance.</p>
-        </div>
-
-        <div class="spa-footer-links">
-          <a href="../index.html">Accueil</a>
-          <a href="./services.html">Réservation</a>
-          <a href="./formation.html">DALIGHT School</a>
-          <a href="./shop.html">Boutique</a>
-          <a href="./loyalty.html">Programme Fidélité</a>
-          <a href="./orders.html">Mes Rendez-vous</a>
-          <a href="./login.html">Espace Membre</a>
-        </div>
-
-        <div class="spa-footer-bottom">
-          <span>&copy; <span id="year"></span> DALIGHT. Tous droits réservés.</span>
-          <span>Delmas 65, Rue Durandisse #10 · Téléphone : +509 4747-7221</span>
-          <span>Conçu avec soin par <a href="https://cvisualagency.org" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">Cvisual</a></span>
-        </div>
+  <!-- LUXURY FOOTER -->
+  <footer class="spa-footer">
+    <div class="spa-footer-container">
+      <div class="spa-footer-brand">
+        <img class="spa-footer-logo" src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" />
+        <p>Le premier espace Head Spa &amp; Bien-Être à Port-au-Prince. L'art de prendre soin de soi avec élégance.</p>
       </div>
-    </footer>
+
+      <div class="spa-footer-links">
+        <a href="../index.html">Accueil</a>
+        <a href="./services.html">Réservation</a>
+        <a href="./formation.html">DALIGHT School</a>
+        <a href="./shop.html">Boutique</a>
+        <a href="./orders.html">Mes Rendez-vous</a>
+        <a href="./login.html">Espace Membre</a>
+      </div>
+
+      <div class="spa-footer-bottom">
+        <span>&copy; <span id="year"></span> DALIGHT. Tous droits réservés.</span>
+        <span>Delmas 65, Rue Durandisse #10 · Téléphone : +509 4747-7221</span>
+        <span>Conçu avec soin par <a href="https://cvisualagency.org" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">Cvisual</a></span>
+      </div>
+    </div>
+  </footer>
 
   <script type="module">
     import { getSupabase } from '../js/main.js?v=5.2.0';
 
     let supabase = getSupabase();
-    let me = null;
-
-    async function waitSB() {
-      let n = 0;
-      while (!supabase && n < 50) { await new Promise(r => setTimeout(r, 100)); supabase = getSupabase(); n++; }
-      return !!supabase;
-    }
+    let currentInfluencer = null;
+    let influencerCodes = [];
 
     const fmt = n => Number(n || 0).toLocaleString() + ' HTG';
     const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     const pillClass = { pending: 'pill-pending', approved: 'pill-approved', paid: 'pill-paid', rejected: 'pill-rejected' };
     const pillTxt = { pending: 'En attente', approved: 'Approuvée', paid: 'Payée', rejected: 'Rejetée' };
 
+    async function waitSB() {
+      let n = 0;
+      while (!supabase && n < 50) {
+        await new Promise(r => setTimeout(r, 100));
+        supabase = getSupabase();
+        n++;
+      }
+      return !!supabase;
+    }
+
     async function init() {
-      if (!await waitSB()) { document.getElementById('inf-login').hidden = false; return; }
+      const yearEl = document.getElementById('year');
+      if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+      if (!await waitSB()) {
+        showLoginPrompt();
+        return;
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { document.getElementById('inf-login').hidden = false; return; }
-      me = session.user;
-      document.getElementById('inf-logout').style.display = '';
-      document.getElementById('inf-dash').hidden = false;
-      await Promise.all([loadSummary(), loadCodes(), loadMonthly(), loadPayouts()]);
+      if (!session || !session.user) {
+        showLoginPrompt();
+        return;
+      }
+
+      currentInfluencer = session.user;
+      showDashboard();
+
+      document.getElementById('inf-user-email').textContent = currentInfluencer.email;
       document.getElementById('wd-month').value = new Date().toISOString().substring(0, 7);
+
+      await Promise.all([
+        loadCodes(),
+        loadSummaryAndStats(),
+        loadPayouts()
+      ]);
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function showLoginPrompt() {
+      document.getElementById('inf-login-prompt').style.display = 'block';
+      document.getElementById('inf-dashboard').style.display = 'none';
+      document.getElementById('inf-badge-container').style.display = 'none';
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function showDashboard() {
+      document.getElementById('inf-login-prompt').style.display = 'none';
+      document.getElementById('inf-dashboard').style.display = 'block';
+      document.getElementById('inf-badge-container').style.display = 'inline-block';
+      if (window.lucide) lucide.createIcons();
     }
 
     window.influencerLogout = async function() {
-      await supabase.auth.signOut();
-      location.href = './login.html';
+      if (supabase) await supabase.auth.signOut();
+      window.location.href = './login.html';
     };
 
-    async function loadSummary() {
-      const { data } = await supabase.rpc('dalight_get_influencer_summary', { p_email: me.email });
-      if (!data?.success) return;
-      document.getElementById('stat-uses').textContent = data.total_uses;
-      document.getElementById('stat-total').textContent = fmt(data.commission_total);
-      document.getElementById('stat-paid').textContent = fmt(data.commission_paid);
-      document.getElementById('stat-available').textContent = fmt(data.commission_available);
-      document.getElementById('wd-amount').placeholder = 'Maks: ' + fmt(data.commission_available);
-      document.getElementById('wd-amount').max = data.commission_available;
-    }
-
+    // ─── CHARGER CODES PROMO ───────────────────────────────────────
     async function loadCodes() {
       const el = document.getElementById('inf-codes-list');
-      const { data, error } = await supabase.from('dalight_promo_codes').select('*')
-        .eq('owner_type', 'influencer')
-        .ilike('owner_email', me.email)
-        .order('created_at', { ascending: false });
-      if (error) { el.innerHTML = '<p style="color:#dc2626;">' + esc(error.message) + '</p>'; return; }
-      if (!data?.length) { el.innerHTML = '<p style="color:#6b7280;">Ou poko gen kòd promo — kontakte DALIGHT.</p>'; return; }
-      el.innerHTML = data.map(c => `
-        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;padding:.75rem 0;border-bottom:1px solid #f0f0f0;">
-          <span class="inf-code">${esc(c.code)}</span>
-          <span style="font-size:.85rem;color:#6b7280;">${c.discount_type === 'percentage' ? c.discount_value + '% rabè' : fmt(c.discount_value) + ' rabè'} · komisyon ${c.commission_pct}%</span>
-          <span class="pill ${c.is_active ? 'pill-paid' : 'pill-rejected'}">${c.is_active ? 'Actif' : 'Inactif'}</span>
-          <button class="btn ghost" style="padding:.3rem .8rem;font-size:.8rem;margin-left:auto;" onclick="navigator.clipboard.writeText('${esc(c.code)}').then(()=>alert('Kòd "${esc(c.code)}" kopye!'))">Copier</button>
-        </div>`).join('');
+      try {
+        const { data, error } = await supabase
+          .from('promo_codes')
+          .select('*')
+          .eq('owner_type', 'influencer')
+          .ilike('owner_email', currentInfluencer.email)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        influencerCodes = data || [];
+
+        if (influencerCodes.length > 0 && influencerCodes[0].owner_name) {
+          document.getElementById('inf-user-name').textContent = influencerCodes[0].owner_name;
+        }
+
+        if (!influencerCodes.length) {
+          el.innerHTML = '<p style="color:rgba(245,245,240,0.6);font-size:0.9rem;">Aucun code promo affilié actif pour l\'instant. Contactez la direction DALIGHT pour activer votre lien d\'affiliation.</p>';
+          return;
+        }
+
+        el.innerHTML = influencerCodes.map(c => `
+          <div class="inf-code-row">
+            <div>
+              <span class="inf-code-tag">${esc(c.code)}</span>
+              <span style="font-size:0.85rem;color:rgba(245,245,240,0.8);margin-left:0.75rem;">
+                ${c.discount_type === 'percentage' ? c.discount_value + '% de rabais client' : fmt(c.discount_value) + ' de rabais'}
+                · <strong>${c.commission_pct}% de commission pour vous</strong>
+              </span>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.6rem;">
+              <span class="pill ${c.is_active ? 'pill-paid' : 'pill-rejected'}">${c.is_active ? 'Actif' : 'Inactif'}</span>
+              <button class="btn-outline-gold" onclick="copyCode('${esc(c.code)}')">
+                <i data-lucide="copy" style="width:13px;height:13px;"></i> Copier le code
+              </button>
+            </div>
+          </div>
+        `).join('');
+
+        if (window.lucide) lucide.createIcons();
+      } catch (err) {
+        el.innerHTML = '<p style="color:#f87171;font-size:0.9rem;">Erreur: ' + esc(err.message) + '</p>';
+      }
     }
 
-    async function loadMonthly() {
-      const tb = document.getElementById('inf-monthly');
-      const { data, error } = await supabase.rpc('get_influencer_stats');
-      if (error) { tb.innerHTML = '<tr><td colspan="5" style="color:#dc2626;">' + esc(error.message) + '</td></tr>'; return; }
-      if (!data?.length) { tb.innerHTML = '<tr><td colspan="5" style="color:#6b7280;">Poko gen itilizasyon.</td></tr>'; return; }
-      tb.innerHTML = data.map(r => `<tr>
-        <td><strong>${esc(r.month)}</strong></td>
-        <td><code>${esc(r.code)}</code></td>
-        <td>${r.uses_count}</td>
-        <td>${fmt(r.revenue_htg)}</td>
-        <td style="color:#059669;font-weight:700;">${fmt(r.commission_htg)}</td>
-      </tr>`).join('');
+    window.copyCode = function(code) {
+      navigator.clipboard.writeText(code).then(() => {
+        alert('Code promo "' + code + '" copié avec succès !');
+      });
+    };
+
+    // ─── CHARGER STATS & PERFORMANCE ──────────────────────────────
+    async function loadSummaryAndStats() {
+      try {
+        const codes = influencerCodes.map(c => c.code.toUpperCase());
+
+        let allUses = [];
+        try {
+          const { data } = await supabase.from('promo_code_uses').select('*');
+          if (data) allUses = data.filter(u => u.code && codes.includes(u.code.toUpperCase()));
+        } catch(e) {}
+
+        let allRes = [];
+        try {
+          const { data } = await supabase.from('reservations').select('id,promo_code,total_amount,status,created_at');
+          if (data) allRes = data.filter(r => r.promo_code && codes.includes(r.promo_code.toUpperCase()));
+        } catch(e) {}
+
+        const totalUses = Math.max(allUses.length, allRes.length);
+
+        let totalRevenue = 0;
+        allRes.forEach(r => totalRevenue += Number(r.total_amount || 0));
+        allUses.forEach(u => {
+          if (!allRes.some(r => r.id === u.reservation_id)) {
+            totalRevenue += Number(u.revenue_amount || 0);
+          }
+        });
+
+        // Taux de commission
+        const commPct = influencerCodes.length > 0 ? Number(influencerCodes[0].commission_pct || 10) : 10;
+        const totalCommission = (totalRevenue * commPct) / 100;
+
+        let paidCommission = 0;
+        allUses.filter(u => u.commission_paid).forEach(u => paidCommission += Number(u.commission_amount || 0));
+
+        const available = Math.max(0, totalCommission - paidCommission);
+
+        document.getElementById('stat-uses').textContent = totalUses;
+        document.getElementById('stat-total').textContent = fmt(totalCommission);
+        document.getElementById('stat-paid').textContent = fmt(paidCommission);
+        document.getElementById('stat-available').textContent = fmt(available);
+
+        document.getElementById('wd-amount').placeholder = 'Disponible: ' + fmt(available);
+        document.getElementById('wd-amount').max = available;
+
+        // Détail par mois
+        const tbMonthly = document.getElementById('inf-monthly-table');
+        if (!allRes.length && !allUses.length) {
+          tbMonthly.innerHTML = '<tr><td colspan="5" style="color:rgba(245,245,240,0.6);text-align:center;padding:1.5rem;">Aucune utilisation pour l\'instant. Partagez votre code sur vos réseaux !</td></tr>';
+        } else {
+          const monthlyMap = {};
+          allRes.forEach(r => {
+            const m = r.created_at ? r.created_at.substring(0, 7) : '2026-11';
+            if (!monthlyMap[m]) monthlyMap[m] = { uses: 0, revenue: 0, code: r.promo_code };
+            monthlyMap[m].uses++;
+            monthlyMap[m].revenue += Number(r.total_amount || 0);
+          });
+
+          tbMonthly.innerHTML = Object.keys(monthlyMap).sort().reverse().map(m => {
+            const data = monthlyMap[m];
+            const comm = (data.revenue * commPct) / 100;
+            return `<tr>
+              <td><strong>${esc(m)}</strong></td>
+              <td><span class="inf-code-tag" style="font-size:0.85rem;padding:0.15rem 0.5rem;">${esc(data.code)}</span></td>
+              <td>${data.uses}</td>
+              <td>${fmt(data.revenue)}</td>
+              <td><strong style="color:var(--spa-gold, #c9a227);">${fmt(comm)}</strong></td>
+            </tr>`;
+          }).join('');
+        }
+
+        if (window.lucide) lucide.createIcons();
+      } catch (err) {
+        console.warn('loadSummaryAndStats error:', err);
+      }
     }
 
+    // ─── CHARGER HISTORIQUE DEMANDES DE RETRAIT ────────────────────
     async function loadPayouts() {
-      const tb = document.getElementById('inf-payouts');
-      const { data, error } = await supabase.from('dalight_influencer_payouts').select('*')
-        .order('created_at', { ascending: false }).limit(50);
-      if (error) { tb.innerHTML = '<tr><td colspan="5" style="color:#dc2626;">' + esc(error.message) + '</td></tr>'; return; }
-      if (!data?.length) { tb.innerHTML = '<tr><td colspan="5" style="color:#6b7280;">Okenn demann ankò.</td></tr>'; return; }
-      tb.innerHTML = data.map(r => `<tr>
-        <td>${new Date(r.created_at).toLocaleDateString('fr-FR')}</td>
-        <td><strong>${esc(r.month)}</strong></td>
-        <td>${fmt(r.amount_htg)}</td>
-        <td>${esc(r.payment_method || '—')}</td>
-        <td><span class="pill ${pillClass[r.status] || 'pill-pending'}">${pillTxt[r.status] || r.status}</span></td>
-      </tr>`).join('');
+      const tb = document.getElementById('inf-payouts-table');
+      try {
+        let rows = [];
+
+        try {
+          const { data } = await supabase
+            .from('payout_requests')
+            .select('*')
+            .ilike('owner_email', currentInfluencer.email)
+            .order('created_at', { ascending: false });
+          if (data?.length) rows = data;
+        } catch(e) {}
+
+        if (!rows.length) {
+          try {
+            const { data } = await supabase
+              .from('dalight_influencer_payouts')
+              .select('*')
+              .ilike('owner_email', currentInfluencer.email)
+              .order('created_at', { ascending: false });
+            if (data?.length) rows = data;
+          } catch(e) {}
+        }
+
+        if (!rows.length) {
+          tb.innerHTML = '<tr><td colspan="5" style="color:rgba(245,245,240,0.6);text-align:center;padding:1.5rem;">Aucune demande de retrait formulée à ce jour.</td></tr>';
+          return;
+        }
+
+        tb.innerHTML = rows.map(r => `<tr>
+          <td>${new Date(r.created_at).toLocaleDateString('fr-FR')}</td>
+          <td><strong>${esc(r.month)}</strong></td>
+          <td><strong style="color:var(--spa-gold, #c9a227);">${fmt(r.amount_htg)}</strong></td>
+          <td>${esc(r.payment_method || '—')}<div style="font-size:0.75rem;opacity:0.6;">${esc(r.account_info || '')}</div></td>
+          <td><span class="pill ${pillClass[r.status] || 'pill-pending'}">${pillTxt[r.status] || r.status}</span></td>
+        </tr>`).join('');
+
+        if (window.lucide) lucide.createIcons();
+      } catch (err) {
+        tb.innerHTML = '<tr><td colspan="5" style="color:#f87171;text-align:center;">' + esc(err.message) + '</td></tr>';
+      }
     }
 
+    // ─── FORMULER UNE DEMANDE DE RETRAIT ──────────────────────────
     window.requestPayout = async function() {
       const month = document.getElementById('wd-month').value;
       const amount = parseFloat(document.getElementById('wd-amount').value);
       const method = document.getElementById('wd-method').value;
       const account = document.getElementById('wd-account').value.trim();
-      const msg = document.getElementById('wd-message');
-      const setMsg = (ok, t) => { msg.className = 'alert ' + (ok ? 'success' : 'error'); msg.textContent = t; };
+      const msg = document.getElementById('inf-msg');
 
-      if (!month) { setMsg(false, 'Chwazi mwa a.'); return; }
-      if (!amount || amount <= 0) { setMsg(false, 'Antre montan an.'); return; }
-      if (!account) { setMsg(false, 'Antre nimewo/kont peman an.'); return; }
+      const setMsg = (ok, t) => {
+        msg.className = ok ? 'success' : 'error';
+        msg.textContent = t;
+      };
+
+      if (!month) { setMsg(false, 'Veuillez sélectionner le mois concerné.'); return; }
+      if (!amount || amount <= 0) { setMsg(false, 'Veuillez entrer un montant valide.'); return; }
+      if (!account) { setMsg(false, 'Veuillez indiquer vos coordonnées de paiement (MonCash, NatCash ou compte bancaire).'); return; }
 
       const btn = document.getElementById('wd-submit');
       btn.disabled = true;
+      btn.textContent = 'Envoi en cours...';
+
       try {
-        const { error } = await supabase.from('dalight_influencer_payouts').insert({
-          owner_email: me.email.toLowerCase(),
-          month, amount_htg: amount, payment_method: method, account_info: account,
-        });
-        if (error) throw error;
-        setMsg(true, '✓ Demann lan voye! Admin ap trete l.');
+        const payload = {
+          owner_email: currentInfluencer.email.toLowerCase(),
+          month,
+          amount_htg: amount,
+          payment_method: method,
+          account_info: account,
+          status: 'pending',
+          created_at: new Date().toISOString()
+        };
+
+        // Sauvegarde dans payout_requests et dalight_influencer_payouts pour cohérence totale
+        let saved = false;
+        try {
+          const { error: err1 } = await supabase.from('payout_requests').insert([payload]);
+          if (!err1) saved = true;
+        } catch(e) {}
+
+        try {
+          const { error: err2 } = await supabase.from('dalight_influencer_payouts').insert([payload]);
+          if (!err2) saved = true;
+        } catch(e) {}
+
+        if (!saved) throw new Error('Impossible d\'enregistrer la demande pour l\'instant.');
+
+        setMsg(true, '✓ Votre demande de retrait de ' + fmt(amount) + ' a été transmise à l\'administration avec succès !');
         document.getElementById('wd-amount').value = '';
         document.getElementById('wd-account').value = '';
-        await Promise.all([loadSummary(), loadPayouts()]);
-      } catch (e) {
-        setMsg(false, 'Erè: ' + e.message);
-      } finally { btn.disabled = false; }
+        await Promise.all([loadSummaryAndStats(), loadPayouts()]);
+      } catch (err) {
+        setMsg(false, 'Erreur: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="send" style="width:16px;height:16px;"></i> Envoyer la demande de retrait';
+        if (window.lucide) lucide.createIcons();
+      }
     };
 
-    init();
+    window.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 </html>
