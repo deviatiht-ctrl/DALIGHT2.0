@@ -3,71 +3,171 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contenu Vidéo - DALIGHT Admin</title>
+  <title>Contenu Vidéo & Production CVISUAL — DALIGHT Admin</title>
   <link rel="icon" href="../assets/images/logodaligth.png?v=2" type="image/png">
   
   <link href="../vendor/fonts/inter-fonts.css" rel="stylesheet">
-  <link rel="stylesheet" href="css/admin.css?v=202611190137">
+  <link rel="stylesheet" href="css/admin.css?v=202611190200">
   <script src="../vendor/supabase/supabase.min.js"></script>
   <script src="../vendor/lucide/lucide.min.js"></script>
   
   <style>
+    :root {
+      --cv-gold: #D4AF37;
+      --cv-gold-light: #F3E5AB;
+      --cv-emerald-dark: #0f1d15;
+      --cv-emerald-card: rgba(18, 29, 22, 0.92);
+      --cv-border-gold: rgba(212, 175, 55, 0.3);
+    }
+
     .badge-consent-public {
       background: rgba(34, 197, 94, 0.16);
       color: #4ade80;
       border: 1px solid rgba(34, 197, 94, 0.35);
-      padding: 0.3rem 0.75rem;
+      padding: 0.28rem 0.65rem;
       border-radius: 9999px;
-      font-size: 0.76rem;
+      font-size: 0.74rem;
       font-weight: 600;
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
       white-space: nowrap;
     }
+
     .badge-consent-private {
       background: rgba(245, 158, 11, 0.16);
       color: #fbbf24;
       border: 1px solid rgba(245, 158, 11, 0.35);
-      padding: 0.3rem 0.75rem;
+      padding: 0.28rem 0.65rem;
       border-radius: 9999px;
-      font-size: 0.76rem;
+      font-size: 0.74rem;
       font-weight: 600;
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
       white-space: nowrap;
     }
+
     .status-select {
-      background: rgba(18, 27, 18, 0.85);
+      background: rgba(10, 16, 12, 0.9);
       color: #FAF8F5;
       border: 1px solid rgba(194, 164, 144, 0.3);
       border-radius: 8px;
-      padding: 0.4rem 0.65rem;
-      font-size: 0.82rem;
+      padding: 0.4rem 0.6rem;
+      font-size: 0.8rem;
       outline: none;
       cursor: pointer;
-      transition: border-color 0.2s;
+      transition: all 0.2s;
     }
     .status-select:focus {
-      border-color: var(--admin-accent, #D4AF37);
+      border-color: var(--cv-gold);
+      box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
     }
-    .price-config-box {
+
+    .cadreur-select {
+      background: rgba(15, 23, 17, 0.95);
+      color: #FAF8F5;
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      border-radius: 8px;
+      padding: 0.4rem 0.6rem;
+      font-size: 0.8rem;
+      outline: none;
+      cursor: pointer;
+      font-weight: 500;
+      width: 100%;
+      min-width: 160px;
+    }
+    .cadreur-select:focus {
+      border-color: #4ade80;
+    }
+
+    .pay-badge-paid {
+      background: rgba(34, 197, 94, 0.18);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      padding: 0.25rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.73rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .pay-badge-paid:hover {
+      background: rgba(34, 197, 94, 0.3);
+    }
+
+    .pay-badge-pending {
+      background: rgba(245, 158, 11, 0.18);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      padding: 0.25rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.73rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .pay-badge-pending:hover {
+      background: rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-action-icon {
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #FAF8F5;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-action-icon:hover {
+      transform: translateY(-2px);
+      border-color: var(--cv-gold);
+      color: var(--cv-gold);
+    }
+
+    .team-chip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
       display: flex;
-      align-items: flex-end;
-      gap: 1.25rem;
-      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      transition: all 0.2s;
     }
-    @media (max-width: 768px) {
-      .price-config-box {
-        flex-direction: column;
-        align-items: stretch;
-      }
+    .team-chip:hover {
+      border-color: var(--cv-gold);
+      background: rgba(212, 175, 55, 0.05);
+    }
+
+    .cvisual-pill {
+      background: linear-gradient(135deg, rgba(212,175,55,0.25), rgba(153,101,21,0.25));
+      border: 1px solid rgba(212,175,55,0.5);
+      color: #F3E5AB;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      padding: 0.2rem 0.55rem;
+      border-radius: 9999px;
+      text-transform: uppercase;
     }
   </style>
 </head>
 <body>
-  <!-- Sidebar -->
+  <!-- Standard Sidebar Navigation -->
   <aside class="admin-sidebar" id="sidebar">
     <div class="sidebar-header">
       <a href="dashboard.html" class="sidebar-logo">
@@ -83,100 +183,92 @@
       <div class="nav-section">
         <div class="nav-section-title">Principal</div>
         <a href="dashboard.html" class="nav-item">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
           Dashboard
         </a>
         <a href="reservations.html" class="nav-item">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
           Réservations
         </a>
         <a href="pos.html" class="nav-item">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
           Caisse / POS
         </a>
-        <a href="retraits.html" class="nav-item">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          Retraits & Revenus
+        <a href="contenu-video.html" class="nav-item active">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          Contenu Vidéo
+          <span style="margin-left:auto; background:rgba(212,175,55,0.25); color:#D4AF37; font-size:0.65rem; padding:0.12rem 0.45rem; border-radius:9999px; font-weight:700; border:1px solid rgba(212,175,55,0.4);">CVISUAL</span>
+        </a>
+        <a href="employees.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+          Employés &amp; Présence
         </a>
       </div>
-      
+
       <div class="nav-section">
-        <div class="nav-section-title">Contenu</div>
-        <a href="contenu-video.html" class="nav-item active">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-          </svg>
-          Contenu Vidéo
+        <div class="nav-section-title">Communication</div>
+        <a href="whatsapp.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/></svg>
+          WhatsApp Gateway
         </a>
+        <a href="emails.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          Templates Email
+        </a>
+        <a href="messages.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          Messages
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Contenu &amp; Catalogue</div>
         <a href="posts.html" class="nav-item">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
-          </svg>
-          Posts & Vidéos
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+          Posts &amp; Vidéos
         </a>
         <a href="formations.html" class="nav-item">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
-          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
           Formations
         </a>
         <a href="services.html" class="nav-item">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
           Services
         </a>
         <a href="products.html" class="nav-item">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
           Produits
         </a>
       </div>
-      
+
       <div class="nav-section">
-        <div class="nav-section-title">Utilisateurs &amp; Communication</div>
+        <div class="nav-section-title">Utilisateurs &amp; Fidélité</div>
         <a href="clients.html" class="nav-item">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
           Clients
         </a>
-        <a href="whatsapp.html" class="nav-item">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/>
-          </svg>
-          WhatsApp Gateway
+        <a href="loyalty-cards.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          Cartes Fidélité
+        </a>
+        <a href="promo-codes.html" class="nav-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+          Codes Promo
         </a>
         <a href="influencers.html" class="nav-item">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
           Influenceurs
         </a>
       </div>
-      
+
       <div class="nav-section">
         <div class="nav-section-title">Système</div>
         <a href="settings.html" class="nav-item">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
           Paramètres
         </a>
         <a href="../index.html" class="nav-item">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
           Voir le site
         </a>
       </div>
@@ -184,10 +276,10 @@
     
     <div class="sidebar-footer">
       <div class="sidebar-user">
-        <div class="sidebar-user-avatar" id="user-avatar">A</div>
+        <div class="sidebar-user-avatar" id="user-avatar">C</div>
         <div class="sidebar-user-info">
-          <div class="sidebar-user-name" id="user-name">Admin</div>
-          <div class="sidebar-user-role">Super Admin</div>
+          <div class="sidebar-user-name" id="user-name">PDG CVISUAL</div>
+          <div class="sidebar-user-role">Super Admin &amp; Production</div>
         </div>
       </div>
     </div>
@@ -198,24 +290,35 @@
     <header class="admin-header">
       <div class="header-left">
         <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
           </svg>
         </button>
         <div>
-          <h1 class="page-title">Contenu Vidéo</h1>
-          <p style="font-size:0.8rem;color:var(--admin-text-muted);margin:0;">Suivi des tournages, autorisations de diffusion et tarification du service</p>
+          <div style="display:flex; align-items:center; gap:0.6rem;">
+            <h1 class="page-title" style="margin:0;">Contenu Vidéo &amp; Production</h1>
+            <span class="cvisual-pill">CVISUAL Studio</span>
+          </div>
+          <p style="font-size:0.8rem;color:var(--admin-text-muted);margin:0.2rem 0 0 0;">
+            Pilotage des tournages, alertes WhatsApp automatiques, assignation cadreurs &amp; calcul des gains
+          </p>
         </div>
       </div>
       <div class="header-right">
-        <button class="btn btn-secondary btn-sm" onclick="loadVideoData()" style="display:inline-flex;align-items:center;gap:.4rem;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <button class="btn btn-secondary btn-sm" onclick="scrollToConfig()" style="display:inline-flex;align-items:center;gap:.4rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+          Équipe &amp; Alertes
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="loadVideoData()" style="display:inline-flex;align-items:center;gap:.4rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
           </svg>
           Actualiser
         </button>
         <button class="header-btn" id="logout-btn" title="Déconnexion">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
           </svg>
         </button>
@@ -223,135 +326,244 @@
     </header>
 
     <div class="admin-content">
-      <!-- KPI Stats Grid (BÈL ESTATIK) -->
-      <div class="stats-grid mb-4">
+      <!-- KALKIL KÒB LA & KPI STATS (5 CARDS DE LUXE) -->
+      <div class="stats-grid mb-4" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));">
+        <!-- 1. Total Tournages -->
         <div class="stat-card">
           <div class="stat-icon gold">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
             </svg>
           </div>
           <div class="stat-info">
             <div class="stat-value" id="stat-total-videos">0</div>
-            <div class="stat-label">Vidéos Demandées</div>
-            <div class="stat-change positive">Souscriptions actives</div>
+            <div class="stat-label">Total Tournages Vidéo</div>
+            <div class="stat-change" style="color:var(--admin-text-muted);" id="stat-sub-videos">0 public · 0 privé</div>
           </div>
         </div>
 
+        <!-- 2. Chiffre d'Affaires Brut -->
         <div class="stat-card">
-          <div class="stat-icon green" style="background: rgba(34, 197, 94, 0.15); color: #4ade80;">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
-            </svg>
-          </div>
-          <div class="stat-info">
-            <div class="stat-value" id="stat-public-videos" style="color: #4ade80;">0</div>
-            <div class="stat-label">Autorisées Réseaux</div>
-            <div class="stat-change positive" style="color: #4ade80;">Instagram &amp; TikTok OK</div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon blue" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-            </svg>
-          </div>
-          <div class="stat-info">
-            <div class="stat-value" id="stat-private-videos" style="color: #fbbf24;">0</div>
-            <div class="stat-label">Usage Privé</div>
-            <div class="stat-change" style="color: #94a3b8;">Diffusion interdite</div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon gold">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <div class="stat-icon gold" style="background: rgba(212, 175, 55, 0.16); color: #D4AF37;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
           </div>
           <div class="stat-info">
-            <div class="stat-value" id="stat-revenue-videos">0 HTG</div>
-            <div class="stat-label">Revenus Vidéos</div>
-            <div class="stat-change positive">Total cumulé</div>
+            <div class="stat-value" id="stat-revenue-videos" style="color: #FAF8F5;">0 HTG</div>
+            <div class="stat-label">Chiffre d'Affaires Vidéo</div>
+            <div class="stat-change positive">Revenu brut collecté</div>
+          </div>
+        </div>
+
+        <!-- 3. Kòb Moun k'ap Filme yo (Part Cadreurs) -->
+        <div class="stat-card">
+          <div class="stat-icon blue" style="background: rgba(59, 130, 246, 0.16); color: #60a5fa;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-cadreurs-total" style="color: #60a5fa;">0 HTG</div>
+            <div class="stat-label">Kòb Moun k'ap Filme yo</div>
+            <div class="stat-change" style="color: #93c5fd;">Part totale due à l'équipe</div>
+          </div>
+        </div>
+
+        <!-- 4. Kòb CVISUAL (Bénéfice Agence) -->
+        <div class="stat-card">
+          <div class="stat-icon green" style="background: rgba(34, 197, 94, 0.16); color: #4ade80;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-cvisual-net" style="color: #4ade80;">0 HTG</div>
+            <div class="stat-label">Kòb CVISUAL (Bénéfice)</div>
+            <div class="stat-change positive">Marge nette conservée</div>
+          </div>
+        </div>
+
+        <!-- 5. Reste à Payer aux Cadreurs -->
+        <div class="stat-card">
+          <div class="stat-icon orange" style="background: rgba(245, 158, 11, 0.16); color: #fbbf24;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-cadreur-pending-pay" style="color: #fbbf24;">0 HTG</div>
+            <div class="stat-label">Reste à Verser aux Cadreurs</div>
+            <div class="stat-change" id="stat-cadreur-pending-count" style="color: #fbbf24;">0 séance à solder</div>
           </div>
         </div>
       </div>
 
-      <!-- Tarification & Paramètres de l'Option Vidéo -->
-      <div class="glass-card mb-4" style="padding: 1.5rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+      <!-- SECTION CONFIGURATION: RESPONSABLE CVISUAL, ÉQUIPE & ALERTES AUTOMATIQUES -->
+      <div class="glass-card mb-4" id="config-section" style="padding: 1.5rem; border: 1px solid var(--cv-border-gold); background: var(--cv-emerald-card);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;">
           <div>
-            <h2 style="font-size: 1.15rem; font-weight: 700; color: #FAF8F5; margin: 0 0 0.25rem 0; display: flex; align-items: center; gap: 0.5rem;">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-              Paramètres &amp; Prix de l'Option Vidéo
+            <h2 style="font-size: 1.2rem; font-weight: 700; color: #FAF8F5; margin: 0 0 0.3rem 0; display: flex; align-items: center; gap: 0.6rem;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Équipe Vidéo CVISUAL &amp; Alertes Automatiques WhatsApp
             </h2>
             <p style="font-size: 0.82rem; color: var(--admin-text-muted); margin: 0;">
-              Définissez le prix facturé au client lorsqu'il coche l'option vidéo lors de la réservation
+              En tant que <strong>PDG de CVISUAL</strong>, définissez qui reçoit les notifications de réservation en direct et gérez la liste de vos cadreurs.
             </p>
           </div>
-          <span class="status-badge confirmed" id="video-service-status-badge">Option Active</span>
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <span class="status-badge confirmed" id="cvisual-alert-status-badge">⚡ Alertes WhatsApp Actives</span>
+          </div>
         </div>
 
-        <form id="video-price-form" onsubmit="updateVideoPricing(event)" class="price-config-box">
-          <div class="form-group" style="margin-bottom: 0; min-width: 190px; flex: 1;">
-            <label class="form-label" style="font-weight: 600; color: #FAF8F5; font-size: 0.8rem;">
-              Prix Réseaux Publics (HTG) :
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+          <!-- 1. Numéro du Responsable CVISUAL -->
+          <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem;">
+            <label style="font-weight: 700; color: #FAF8F5; font-size: 0.88rem; display: block; margin-bottom: 0.35rem;">
+              📱 Numéro WhatsApp Responsable / PDG CVISUAL :
             </label>
-            <input type="number" id="setting-video-price-public" class="form-input" min="0" step="50" value="500" required style="font-size: 1.05rem; font-weight: 700; color: #4ade80;">
+            <p style="font-size: 0.78rem; color: var(--admin-text-muted); margin: 0 0 0.85rem 0;">
+              Reçoit automatiquement les infos de chaque client qui coche l'option vidéo (Nom, date, heure, soin, usage unique ou réseaux publics).
+            </p>
+            <div style="display:flex; gap:0.5rem;">
+              <input type="text" id="cfg-manager-phone" class="form-input" placeholder="+509 4747-7221" value="+509 4747-7221" style="font-weight:700; color:#FAF8F5; font-size:0.95rem;">
+              <button class="btn btn-secondary btn-sm" onclick="sendTestAlert()" title="Envoyer un test WhatsApp direct" style="white-space:nowrap; display:inline-flex; align-items:center; gap:0.3rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                Tester
+              </button>
+            </div>
+            <div style="margin-top: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
+              <input type="checkbox" id="cfg-auto-alerts" checked style="accent-color: #D4AF37; cursor:pointer;">
+              <label for="cfg-auto-alerts" style="font-size: 0.8rem; color: #FAF8F5; cursor:pointer;">
+                Déclencher l'alerte WhatsApp immédiatement lors de chaque réservation
+              </label>
+            </div>
           </div>
 
-          <div class="form-group" style="margin-bottom: 0; min-width: 190px; flex: 1;">
-            <label class="form-label" style="font-weight: 600; color: #FAF8F5; font-size: 0.8rem;">
-              Prix Usage Privé Exclusif (HTG) :
+          <!-- 2. Répartition Financière par Défaut (% Cadreur vs CVISUAL) -->
+          <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem;">
+            <label style="font-weight: 700; color: #FAF8F5; font-size: 0.88rem; display: block; margin-bottom: 0.35rem;">
+              💰 Répartition des Gains (Kalkil Kòb la) :
             </label>
-            <input type="number" id="setting-video-price-private" class="form-input" min="0" step="50" value="1000" required style="font-size: 1.05rem; font-weight: 700; color: #D4AF37;">
+            <p style="font-size: 0.78rem; color: var(--admin-text-muted); margin: 0 0 0.85rem 0;">
+              Part par défaut reversée au cadreur qui filme la session vs part nette agence CVISUAL.
+            </p>
+            <div style="display:flex; gap:0.75rem; align-items:center;">
+              <div style="flex:1;">
+                <label style="font-size:0.75rem; color:var(--admin-text-muted); display:block; margin-bottom:0.2rem;">Part Cadreur (%) :</label>
+                <input type="number" id="cfg-cadreur-pct" class="form-input" min="0" max="100" value="50" oninput="updateSplitPreview()" style="font-weight:700; color:#60a5fa;">
+              </div>
+              <div style="flex:1;">
+                <label style="font-size:0.75rem; color:var(--admin-text-muted); display:block; margin-bottom:0.2rem;">Part CVISUAL (%) :</label>
+                <input type="number" id="cfg-cvisual-pct" class="form-input" value="50" readonly style="font-weight:700; color:#4ade80; background:rgba(255,255,255,0.04);">
+              </div>
+            </div>
+            <div id="cfg-split-preview-text" style="margin-top:0.6rem; font-size:0.78rem; color:#F3E5AB;">
+              Sur 1,000 HTG (Privé) : 500 HTG Cadreur | 500 HTG CVISUAL
+            </div>
           </div>
 
-          <div class="form-group" style="margin-bottom: 0; min-width: 220px; flex: 1;">
-            <label class="form-label" style="font-weight: 600; color: #FAF8F5; font-size: 0.8rem;">Disponibilité sur le site :</label>
-            <select id="setting-video-active" class="form-select">
-              <option value="true" selected>Activé (Proposé lors de la réservation)</option>
-              <option value="false">Désactivé temporairement</option>
-            </select>
+          <!-- 3. Tarification Option Vidéo Client -->
+          <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem;">
+            <label style="font-weight: 700; color: #FAF8F5; font-size: 0.88rem; display: block; margin-bottom: 0.35rem;">
+              🏷️ Tarification Client (Réservation DALIGHT) :
+            </label>
+            <p style="font-size: 0.78rem; color: var(--admin-text-muted); margin: 0 0 0.85rem 0;">
+              Montants facturés au client selon son accord de diffusion d'image.
+            </p>
+            <div style="display:flex; gap:0.75rem;">
+              <div style="flex:1;">
+                <label style="font-size:0.75rem; color:var(--admin-text-muted); display:block; margin-bottom:0.2rem;">Réseaux Publics (HTG) :</label>
+                <input type="number" id="cfg-price-public" class="form-input" min="0" step="50" value="500" style="font-weight:700; color:#4ade80;">
+              </div>
+              <div style="flex:1;">
+                <label style="font-size:0.75rem; color:var(--admin-text-muted); display:block; margin-bottom:0.2rem;">Usage Privé (HTG) :</label>
+                <input type="number" id="cfg-price-private" class="form-input" min="0" step="50" value="1000" style="font-weight:700; color:#D4AF37;">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GESTION DE L'ÉQUIPE DES CADREURS CVISUAL -->
+        <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px; padding: 1.25rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.85rem; flex-wrap:wrap; gap:0.5rem;">
+            <div>
+              <strong style="color:#FAF8F5; font-size:0.92rem; display:flex; align-items:center; gap:0.4rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#D4AF37" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                Cadreurs de l'Équipe CVISUAL (Disponibles pour assignation) :
+              </strong>
+              <span style="font-size:0.76rem; color:var(--admin-text-muted);">
+                Vous pouvez assigner ces cadreurs à chaque tournage et leur envoyer des alertes WhatsApp directes.
+              </span>
+            </div>
           </div>
 
-          <button type="submit" class="btn btn-primary" id="save-price-btn" style="height: 42px; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+          <!-- Liste des Cadreurs -->
+          <div id="cvisual-team-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.75rem; margin-bottom: 1rem;">
+            <!-- Dynamically populated -->
+          </div>
+
+          <!-- Formulaire Ajout Rapide d'un Membre -->
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:flex-end; background:rgba(255,255,255,0.03); border:1px dashed rgba(212,175,55,0.3); border-radius:10px; padding:0.85rem;">
+            <div style="flex:2; min-width:180px;">
+              <label style="font-size:0.75rem; color:var(--admin-text-muted); display:block; margin-bottom:0.2rem;">Nom du Cadreur :</label>
+              <input type="text" id="new-cadreur-name" class="form-input" placeholder="ex: Marc (Cadreur CVISUAL)">
+            </div>
+            <div style="flex:2; min-width:180px;">
+              <label style="font-size:0.75rem; color:var(--admin-text-muted); display:block; margin-bottom:0.2rem;">Téléphone WhatsApp :</label>
+              <input type="text" id="new-cadreur-phone" class="form-input" placeholder="+509 3100-0000">
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="addCadreurToTeam()" style="height:38px; display:inline-flex; align-items:center; gap:0.35rem; font-weight:600; color:#FAF8F5;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Ajouter Cadreur
+            </button>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.25rem;">
+          <button class="btn btn-primary" onclick="saveCVISUALConfig()" id="btn-save-cfg" style="display:inline-flex; align-items:center; gap:0.5rem; font-weight:700; padding:0.6rem 1.4rem;">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
             </svg>
-            Enregistrer les tarifs
+            Enregistrer toute la Configuration CVISUAL
           </button>
-        </form>
+        </div>
       </div>
 
-      <!-- Table des Réservations avec Option Vidéo -->
-      <div class="glass-card" style="padding: 1.5rem;">
+      <!-- TABLE DES TOURNAGES VIDÉO & ASSIGNATIONS -->
+      <div class="glass-card" style="padding: 1.5rem; border: 1px solid rgba(255,255,255,0.08);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
           <div>
             <h2 style="font-size: 1.15rem; font-weight: 700; color: #FAF8F5; margin: 0 0 0.25rem 0;">
-              Réservations avec Contenu Vidéo
+              Tableau de Bord des Tournages Vidéo
             </h2>
             <p style="font-size: 0.82rem; color: var(--admin-text-muted); margin: 0;">
-              Gestion des consentements, statut de production et contact direct client
+              Assignez votre équipe, contrôlez les consentements de diffusion et suivez la paie de chaque tournage
             </p>
           </div>
 
           <!-- Filtres -->
-          <div style="display: flex; gap: 0.65rem; flex-wrap: wrap;">
-            <select id="filter-consent" class="form-select" style="padding: 0.45rem 0.8rem; font-size: 0.82rem; min-width: 170px;" onchange="applyFilters()">
-              <option value="all">Tous les consentements</option>
-              <option value="public">Réseaux Sociaux autorisés</option>
-              <option value="private">Usage Privé Uniquement</option>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items:center;">
+            <input type="text" id="filter-search" class="form-input" placeholder="🔍 Rechercher client, soin..." style="padding: 0.45rem 0.75rem; font-size: 0.82rem; width: 170px;" oninput="applyFilters()">
+
+            <select id="filter-consent" class="form-select" style="padding: 0.45rem 0.75rem; font-size: 0.82rem; min-width: 140px;" onchange="applyFilters()">
+              <option value="all">Tous consentements</option>
+              <option value="public">Réseaux Publics</option>
+              <option value="private">Usage Privé Unique</option>
             </select>
 
-            <select id="filter-status" class="form-select" style="padding: 0.45rem 0.8rem; font-size: 0.82rem; min-width: 170px;" onchange="applyFilters()">
+            <select id="filter-cadreur" class="form-select" style="padding: 0.45rem 0.75rem; font-size: 0.82rem; min-width: 140px;" onchange="applyFilters()">
+              <option value="all">Tous les cadreurs</option>
+              <option value="unassigned">Non assignés</option>
+            </select>
+
+            <select id="filter-status" class="form-select" style="padding: 0.45rem 0.75rem; font-size: 0.82rem; min-width: 140px;" onchange="applyFilters()">
               <option value="all">Tous les statuts</option>
-              <option value="pending">À filmer / En attente</option>
+              <option value="pending">À filmer</option>
               <option value="filmed">Filmée</option>
               <option value="editing">En montage</option>
-              <option value="delivered">Livrée au client</option>
-              <option value="published">Publiée sur réseaux</option>
+              <option value="delivered">Livrée 4K</option>
+              <option value="published">Publiée réseaux</option>
             </select>
           </div>
         </div>
@@ -360,20 +572,21 @@
           <table class="data-table" style="width: 100%;">
             <thead>
               <tr>
-                <th>Date &amp; Heure</th>
-                <th>Client</th>
-                <th>Téléphone</th>
-                <th>Soin / Prestation</th>
-                <th>Consentement</th>
-                <th>Montant</th>
-                <th>Statut Production</th>
-                <th style="text-align: right;">WhatsApp</th>
+                <th style="min-width: 120px;">Date &amp; Heure</th>
+                <th style="min-width: 160px;">Client</th>
+                <th style="min-width: 140px;">Soin</th>
+                <th style="min-width: 120px;">Droit à l'Image</th>
+                <th style="min-width: 90px;">Prix Client</th>
+                <th style="min-width: 170px;">Cadreur Assigné (CVISUAL)</th>
+                <th style="min-width: 150px;">Kalkil Kòb la</th>
+                <th style="min-width: 130px;">Statut Tournage</th>
+                <th style="text-align: right; min-width: 140px;">Actions CVISUAL</th>
               </tr>
             </thead>
             <tbody id="video-reservations-tbody">
               <tr>
-                <td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--admin-text-muted);">
-                  Chargement des données vidéo...
+                <td colspan="9" style="text-align: center; padding: 2.5rem; color: var(--admin-text-muted);">
+                  Chargement des tournages vidéo...
                 </td>
               </tr>
             </tbody>
@@ -381,70 +594,97 @@
         </div>
       </div>
     </div>
-  
-  <!-- Modal Upload Vidéo 4K & Envoi WhatsApp -->
-  <div class="modal-overlay" id="upload-video-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(8,12,8,0.85); backdrop-filter:blur(16px); z-index:9999; align-items:center; justify-content:center; padding:1rem;">
-    <div class="modal" style="max-width: 540px; width:100%; background: rgba(18, 27, 18, 0.98); border: 1px solid rgba(212,175,55,0.4); border-radius: 20px; padding: 1.5rem; box-shadow: 0 25px 60px rgba(0,0,0,0.8);">
-      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:0.75rem;">
-        <h3 style="margin:0; font-family:'Cormorant Garamond',serif; font-size:1.4rem; color:var(--admin-accent,#D4AF37); display:flex; align-items:center; gap:0.5rem;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-          Livraison Vidéo Souvenir 4K
-        </h3>
-        <button class="modal-close" onclick="closeUploadVideoModal()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:1.3rem;">✕</button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="upload-res-id">
-        <input type="hidden" id="upload-res-phone">
-        <input type="hidden" id="upload-res-name">
-        
-        <div id="upload-client-info" style="background:rgba(255,255,255,0.03); border:1px solid rgba(212,175,55,0.2); border-radius:10px; padding:0.85rem; margin-bottom:1rem; font-size:0.85rem;"></div>
 
-        <!-- File Drop Area -->
-        <div id="drop-video-zone" style="border:2px dashed rgba(212,175,55,0.4); border-radius:12px; padding:1.5rem; text-align:center; background:rgba(0,0,0,0.25); cursor:pointer; margin-bottom:1rem; transition:all 0.2s;" onclick="document.getElementById('video-file-input').click()">
-          <input type="file" id="video-file-input" accept="video/mp4,video/quicktime,video/x-matroska,video/*" style="display:none;" onchange="handleVideoFileSelected(this)">
-          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:0.4rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <div style="font-weight:600; color:#FAF8F5; font-size:0.95rem;">Cliquez pour sélectionner la vidéo (4K / HD)</div>
-          <div style="font-size:0.75rem; color:var(--admin-text-muted); margin-top:0.25rem;">Téléversement direct haute vitesse vers le stockage Cloud</div>
-          <div id="selected-video-filename" style="margin-top:0.5rem; font-size:0.82rem; color:#4ade80; font-weight:600; display:none;"></div>
+    <!-- MODAL: UPLOAD VIDÉO 4K & ENVOI AU CLIENT -->
+    <div class="modal-overlay" id="upload-video-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(8,12,8,0.88); backdrop-filter:blur(16px); z-index:9999; align-items:center; justify-content:center; padding:1rem;">
+      <div class="modal" style="max-width: 540px; width:100%; background: rgba(18, 27, 18, 0.98); border: 1px solid var(--cv-border-gold); border-radius: 20px; padding: 1.5rem; box-shadow: 0 25px 60px rgba(0,0,0,0.85);">
+        <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:0.75rem;">
+          <h3 style="margin:0; font-family:'Outfit',sans-serif; font-size:1.25rem; color:var(--cv-gold); display:flex; align-items:center; gap:0.5rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            Livraison Vidéo Souvenir 4K
+          </h3>
+          <button class="modal-close" onclick="closeUploadVideoModal()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:1.3rem;">✕</button>
         </div>
+        <div class="modal-body">
+          <input type="hidden" id="upload-res-id">
+          <input type="hidden" id="upload-res-phone">
+          <input type="hidden" id="upload-res-name">
+          
+          <div id="upload-client-info" style="background:rgba(255,255,255,0.03); border:1px solid rgba(212,175,55,0.2); border-radius:10px; padding:0.85rem; margin-bottom:1rem; font-size:0.85rem;"></div>
 
-        <!-- Direct URL input -->
-        <div class="form-group" style="margin-bottom:1rem;">
-          <label style="font-size:0.78rem; color:var(--admin-text-muted); display:block; margin-bottom:0.25rem;">Ou collez directement un lien vidéo externe (Google Drive, Cloudinary, etc.) :</label>
-          <input type="url" id="video-direct-url" class="form-input" placeholder="https://..." style="font-size:0.85rem;" oninput="updateWhatsAppPreview()">
-        </div>
-
-        <!-- Upload Progress Bar -->
-        <div id="upload-progress-wrapper" style="display:none; margin-bottom:1rem;">
-          <div style="display:flex; justify-content:space-between; font-size:0.78rem; margin-bottom:0.3rem;">
-            <span id="upload-progress-label" style="color:var(--admin-accent);">Téléversement ultra-rapide...</span>
-            <span id="upload-progress-pct" style="font-weight:700; color:#FAF8F5;">0%</span>
+          <!-- Drop zone -->
+          <div id="drop-video-zone" style="border:2px dashed rgba(212,175,55,0.4); border-radius:12px; padding:1.5rem; text-align:center; background:rgba(0,0,0,0.25); cursor:pointer; margin-bottom:1rem; transition:all 0.2s;" onclick="document.getElementById('video-file-input').click()">
+            <input type="file" id="video-file-input" accept="video/mp4,video/quicktime,video/x-matroska,video/*" style="display:none;" onchange="handleVideoFileSelected(this)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:0.4rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <div style="font-weight:600; color:#FAF8F5; font-size:0.95rem;">Cliquez pour sélectionner la vidéo (4K / HD)</div>
+            <div style="font-size:0.75rem; color:var(--admin-text-muted); margin-top:0.25rem;">Téléversement direct ultra-rapide sur le Cloud</div>
+            <div id="selected-video-filename" style="margin-top:0.5rem; font-size:0.82rem; color:#4ade80; font-weight:600; display:none;"></div>
           </div>
-          <div style="width:100%; height:8px; background:rgba(255,255,255,0.1); border-radius:4px; overflow:hidden;">
-            <div id="upload-progress-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #d4af37, #4ade80); transition:width 0.2s;"></div>
+
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label style="font-size:0.78rem; color:var(--admin-text-muted); display:block; margin-bottom:0.25rem;">Ou lien vidéo direct externe (Google Drive, Cloudinary, etc.) :</label>
+            <input type="url" id="video-direct-url" class="form-input" placeholder="https://..." style="font-size:0.85rem;" oninput="updateWhatsAppPreview()">
+          </div>
+
+          <div id="upload-progress-wrapper" style="display:none; margin-bottom:1rem;">
+            <div style="display:flex; justify-content:space-between; font-size:0.78rem; margin-bottom:0.3rem;">
+              <span id="upload-progress-label" style="color:var(--cv-gold);">Téléversement en cours...</span>
+              <span id="upload-progress-pct" style="font-weight:700; color:#FAF8F5;">0%</span>
+            </div>
+            <div style="width:100%; height:8px; background:rgba(255,255,255,0.1); border-radius:4px; overflow:hidden;">
+              <div id="upload-progress-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #d4af37, #4ade80); transition:width 0.2s;"></div>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom:0.5rem;">
+            <label style="font-size:0.78rem; color:var(--admin-text-muted); display:block; margin-bottom:0.25rem;">Message WhatsApp pour le client :</label>
+            <textarea id="video-whatsapp-msg" class="form-textarea" rows="3" style="font-size:0.82rem;"></textarea>
           </div>
         </div>
 
-        <!-- WhatsApp Preview -->
-        <div class="form-group" style="margin-bottom:0.5rem;">
-          <label style="font-size:0.78rem; color:var(--admin-text-muted); display:block; margin-bottom:0.25rem;">Message WhatsApp (Ligne #3 DALIGHT) :</label>
-          <textarea id="video-whatsapp-msg" class="form-textarea" rows="3" style="font-size:0.82rem;"></textarea>
+        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:0.5rem; border-top:1px solid rgba(255,255,255,0.1); padding-top:0.75rem; margin-top:1rem;">
+          <button class="btn btn-secondary btn-sm" onclick="closeUploadVideoModal()">Annuler</button>
+          <button class="btn btn-primary btn-sm" id="btn-start-upload" onclick="startVideoUploadAndDispatch()" style="display:inline-flex; align-items:center; gap:0.4rem; font-weight:600; background:linear-gradient(135deg,#d4af37,#996515); border:none; color:#fff;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Uploader &amp; Livrer sur WhatsApp
+          </button>
         </div>
-      </div>
-
-      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:0.5rem; border-top:1px solid rgba(255,255,255,0.1); padding-top:0.75rem; margin-top:1rem;">
-        <button class="btn btn-secondary btn-sm" onclick="closeUploadVideoModal()">Annuler</button>
-        <button class="btn btn-primary btn-sm" id="btn-start-upload" onclick="startVideoUploadAndDispatch()" style="display:inline-flex; align-items:center; gap:0.4rem; font-weight:600; background:linear-gradient(135deg,#d4af37,#996515); border:none; color:#fff;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          Uploader &amp; Livrer sur WhatsApp
-        </button>
       </div>
     </div>
-  </div>
 
-</main>
+    <!-- MODAL: ALERT RAPIDE CADREUR (WHATSAPP) -->
+    <div class="modal-overlay" id="cadreur-alert-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(8,12,8,0.88); backdrop-filter:blur(16px); z-index:9999; align-items:center; justify-content:center; padding:1rem;">
+      <div class="modal" style="max-width: 500px; width:100%; background: rgba(18, 27, 18, 0.98); border: 1px solid var(--cv-border-gold); border-radius: 18px; padding: 1.5rem; box-shadow: 0 25px 60px rgba(0,0,0,0.85);">
+        <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:0.75rem;">
+          <h3 style="margin:0; font-family:'Outfit',sans-serif; font-size:1.15rem; color:var(--cv-gold); display:flex; align-items:center; gap:0.5rem;" id="cadreur-modal-title">
+            📲 Alerter le Cadreur (WhatsApp)
+          </h3>
+          <button class="modal-close" onclick="closeCadreurAlertModal()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:1.3rem;">✕</button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="alert-target-phone">
+          <div id="alert-cadreur-recipient-info" style="font-size:0.85rem; color:#FAF8F5; margin-bottom:0.75rem; background:rgba(255,255,255,0.04); padding:0.6rem 0.8rem; border-radius:8px;"></div>
+          <div class="form-group" style="margin-bottom:0.5rem;">
+            <label style="font-size:0.78rem; color:var(--admin-text-muted); display:block; margin-bottom:0.35rem;">Message qui sera transmis au cadreur :</label>
+            <textarea id="alert-cadreur-text" class="form-textarea" rows="6" style="font-size:0.82rem; font-family:monospace; line-height:1.4;"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:0.5rem; border-top:1px solid rgba(255,255,255,0.1); padding-top:0.75rem; margin-top:1rem;">
+          <button class="btn btn-secondary btn-sm" onclick="closeCadreurAlertModal()">Fermer</button>
+          <a id="btn-wa-native" href="#" target="_blank" class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:0.35rem; color:#4ade80;">
+            Ouvrir WhatsApp Web
+          </a>
+          <button class="btn btn-primary btn-sm" id="btn-send-gateway-alert" onclick="dispatchCadreurAlertViaGateway()" style="display:inline-flex; align-items:center; gap:0.4rem; font-weight:600; background:linear-gradient(135deg,#d4af37,#996515); border:none; color:#fff;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Envoyer via Gateway
+          </button>
+        </div>
+      </div>
+    </div>
 
-  <script src="js/admin-core.js?v=20261117"></script>
+  </main>
+
+  <script src="js/admin-core.js?v=202611190200"></script>
   <script>
     const CVISUAL_GATEWAY = {
       baseUrl: 'https://cvisual-whatsapp-gateway.onrender.com',
@@ -452,7 +692,37 @@
       accountIndex: 3
     };
 
-    // Helper to extract video URL from notes
+    let allVideoReservations = [];
+    let currentSelectedVideoFile = null;
+
+    // Default Configuration Object
+    let cvisualConfig = {
+      manager_phone: '+509 4747-7221',
+      auto_alerts_enabled: true,
+      default_cadreur_split_pct: 50,
+      price_public_htg: 500,
+      price_private_htg: 1000,
+      team_members: [
+        { id: 'cadreur_clarens', name: 'Clarens (PDG CVISUAL)', phone: '+509 4747-7221', rate_pct: 50 },
+        { id: 'cadreur_dalight1', name: 'Cadreur 1 (Équipe CVISUAL)', phone: '+509 3161-5567', rate_pct: 50 }
+      ]
+    };
+
+    // Helper: Supabase client
+    async function getClient() {
+      if (window.adminCore?.supabase) return window.adminCore.supabase;
+      if (window.dalightAdminSupabase) return window.dalightAdminSupabase;
+      if (window.supabaseClient) return window.supabaseClient;
+      if (typeof supabase !== 'undefined' && supabase.createClient) {
+        return supabase.createClient(
+          'https://rbwoiejztrkghfkpxquo.supabase.co',
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U'
+        );
+      }
+      return null;
+    }
+
+    // Helper: Video URL extraction from notes
     function extractVideoUrl(r) {
       if (r.video_url) return r.video_url;
       const combined = (r.notes || '') + ' ' + (r.therapist_notes || '');
@@ -460,126 +730,795 @@
       return match ? match[1].trim() : null;
     }
 
-    async function loadVideoSettings() {
-      try {
-        // First try local cache for immediate display
-        try {
-          const cached = localStorage.getItem('dalight_video_settings');
-          if (cached) {
-            const val = JSON.parse(cached);
-            if (val.price_public_htg) document.getElementById('setting-video-price-public').value = val.price_public_htg;
-            if (val.price_private_htg) document.getElementById('setting-video-price-private').value = val.price_private_htg;
-            if (val.is_active !== undefined) document.getElementById('setting-video-active').value = String(val.is_active !== false);
-          }
-        } catch(e){}
+    // Helper: Parse or compute video metadata & financial splits
+    function getReservationVideoMeta(r) {
+      const notes = (r.notes || '') + ' ' + (r.therapist_notes || '');
+      const match = notes.match(/\[VIDEO_META:\s*({[^\]]+})\]/i);
+      let meta = {};
+      if (match) {
+        try { meta = JSON.parse(match[1]); } catch(e){}
+      }
 
-        const sb = await getClient();
-        if (!sb) return;
+      const isPublic = (r.video_consent || 'public').toLowerCase() === 'public';
+      const totalPrice = Number(r.video_price) || (isPublic ? (cvisualConfig.price_public_htg || 500) : (cvisualConfig.price_private_htg || 1000));
+      
+      const cadreurId = r.video_cadreur_id || meta.cadreur_id || '';
+      let cadreurName = r.video_cadreur_name || meta.cadreur_name || '';
+      let cadreurPhone = r.video_cadreur_phone || meta.cadreur_phone || '';
 
-        const { data } = await sb
-          .from('settings')
-          .select('*')
-          .or('key.eq.video_service,id.eq.video_service')
-          .maybeSingle();
-
-        if (data && data.value) {
-          let val = data.value;
-          if (typeof val === 'string') {
-            try { val = JSON.parse(val); } catch(e){}
-          }
-          const pricePublic = val.price_public_htg || val.price_htg || 500;
-          const pricePrivate = val.price_private_htg || 1000;
-          
-          document.getElementById('setting-video-price-public').value = pricePublic;
-          document.getElementById('setting-video-price-private').value = pricePrivate;
-          
-          if (val.is_active !== undefined) {
-            document.getElementById('setting-video-active').value = String(val.is_active !== false);
-          }
-          try { localStorage.setItem('dalight_video_settings', JSON.stringify(val)); } catch(e){}
+      // If matched with team member, fill details
+      if (cadreurId && !cadreurPhone) {
+        const found = cvisualConfig.team_members.find(m => m.id === cadreurId);
+        if (found) {
+          cadreurPhone = found.phone;
+          if (!cadreurName) cadreurName = found.name;
         }
-      } catch (e) {
-        console.warn('Could not load video settings:', e);
+      }
+
+      const isPaid = (r.video_cadreur_paid !== undefined)
+        ? Boolean(r.video_cadreur_paid)
+        : Boolean(meta.cadreur_paid);
+
+      const splitPct = Number(meta.cadreur_rate_pct !== undefined ? meta.cadreur_rate_pct : (cvisualConfig.default_cadreur_split_pct || 50));
+      const cadreurPay = meta.cadreur_pay !== undefined
+        ? Number(meta.cadreur_pay)
+        : Math.round((totalPrice * splitPct) / 100);
+
+      const cvisualShare = totalPrice - cadreurPay;
+
+      return {
+        cadreur_id: cadreurId,
+        cadreur_name: cadreurName || 'Non assigné',
+        cadreur_phone: cadreurPhone,
+        cadreur_paid: isPaid,
+        cadreur_pay: cadreurPay,
+        cadreur_rate_pct: splitPct,
+        cvisual_share: cvisualShare,
+        total_price: totalPrice
+      };
+    }
+
+    // Initialize Page
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Mobile sidebar toggle
+      const mobileBtn = document.getElementById('mobile-menu-btn');
+      const sidebar = document.getElementById('sidebar');
+      if (mobileBtn && sidebar) {
+        mobileBtn.addEventListener('click', () => {
+          sidebar.classList.toggle('open');
+        });
+      }
+
+      await loadCVISUALConfig();
+      await loadVideoData();
+    });
+
+    function scrollToConfig() {
+      const el = document.getElementById('config-section');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function updateSplitPreview() {
+      const pct = Math.max(0, Math.min(100, Number(document.getElementById('cfg-cadreur-pct').value) || 0));
+      document.getElementById('cfg-cvisual-pct').value = 100 - pct;
+      const privTotal = Number(document.getElementById('cfg-price-private').value) || 1000;
+      const cadShare = Math.round((privTotal * pct) / 100);
+      const cvShare = privTotal - cadShare;
+      document.getElementById('cfg-split-preview-text').textContent = 
+        `Sur ${privTotal.toLocaleString()} HTG (Privé) : ${cadShare.toLocaleString()} HTG Cadreur | ${cvShare.toLocaleString()} HTG CVISUAL`;
+    }
+
+    // Load CVISUAL Video Configuration
+    async function loadCVISUALConfig() {
+      // Try local cache first
+      try {
+        const cached = localStorage.getItem('dalight_cvisual_video_config');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          cvisualConfig = { ...cvisualConfig, ...parsed };
+        }
+      } catch(e){}
+
+      try {
+        const sb = await getClient();
+        if (sb) {
+          const { data } = await sb
+            .from('settings')
+            .select('*')
+            .eq('key', 'cvisual_video_config')
+            .maybeSingle();
+
+          if (data && data.value) {
+            let val = data.value;
+            if (typeof val === 'string') {
+              try { val = JSON.parse(val); } catch(e){}
+            }
+            cvisualConfig = { ...cvisualConfig, ...val };
+            localStorage.setItem('dalight_cvisual_video_config', JSON.stringify(cvisualConfig));
+          }
+        }
+      } catch(e) {
+        console.warn('Could not fetch cvisual_video_config from Supabase:', e);
+      }
+
+      // Populate UI
+      document.getElementById('cfg-manager-phone').value = cvisualConfig.manager_phone || '+509 4747-7221';
+      document.getElementById('cfg-auto-alerts').checked = cvisualConfig.auto_alerts_enabled !== false;
+      document.getElementById('cfg-cadreur-pct').value = cvisualConfig.default_cadreur_split_pct || 50;
+      document.getElementById('cfg-cvisual-pct').value = 100 - (cvisualConfig.default_cadreur_split_pct || 50);
+      document.getElementById('cfg-price-public').value = cvisualConfig.price_public_htg || 500;
+      document.getElementById('cfg-price-private').value = cvisualConfig.price_private_htg || 1000;
+
+      updateSplitPreview();
+      renderTeamList();
+      updateCadreurFilterDropdown();
+    }
+
+    function renderTeamList() {
+      const container = document.getElementById('cvisual-team-list');
+      if (!cvisualConfig.team_members || !cvisualConfig.team_members.length) {
+        container.innerHTML = `<div style="grid-column:1/-1; color:var(--admin-text-muted); font-size:0.8rem;">Aucun cadreur configuré. Ajoutez votre premier membre ci-dessous.</div>`;
+        return;
+      }
+
+      container.innerHTML = cvisualConfig.team_members.map((m, idx) => `
+        <div class="team-chip">
+          <div>
+            <div style="font-weight:700; color:#FAF8F5; font-size:0.85rem; display:flex; align-items:center; gap:0.4rem;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+              ${escapeHtml(m.name)}
+            </div>
+            <div style="font-size:0.75rem; color:#60a5fa; font-family:monospace; margin-top:0.15rem;">
+              ${escapeHtml(m.phone || 'Pas de numéro')}
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.4rem;">
+            <a href="https://wa.me/${String(m.phone).replace(/\D/g, '')}" target="_blank" rel="noopener" class="btn-action-icon" title="Ouvrir WhatsApp direct">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/></svg>
+            </a>
+            ${cvisualConfig.team_members.length > 1 ? `
+              <button class="btn-action-icon" onclick="removeCadreurFromTeam(${idx})" style="color:#ef4444;" title="Retirer ce cadreur">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateCadreurFilterDropdown() {
+      const select = document.getElementById('filter-cadreur');
+      if (!select) return;
+      const currentVal = select.value;
+      let opts = `
+        <option value="all">Tous les cadreurs</option>
+        <option value="unassigned">Non assignés</option>
+      `;
+      (cvisualConfig.team_members || []).forEach(m => {
+        opts += `<option value="${escapeHtml(m.id)}">${escapeHtml(m.name)}</option>`;
+      });
+      select.innerHTML = opts;
+      select.value = currentVal || 'all';
+    }
+
+    function addCadreurToTeam() {
+      const name = document.getElementById('new-cadreur-name').value.trim();
+      const phone = document.getElementById('new-cadreur-phone').value.trim();
+
+      if (!name) {
+        alert("Veuillez renseigner le nom du cadreur.");
+        return;
+      }
+
+      const id = 'cadreur_' + Date.now().toString(36);
+      cvisualConfig.team_members = cvisualConfig.team_members || [];
+      cvisualConfig.team_members.push({
+        id: id,
+        name: name,
+        phone: phone,
+        rate_pct: Number(document.getElementById('cfg-cadreur-pct').value) || 50
+      });
+
+      document.getElementById('new-cadreur-name').value = '';
+      document.getElementById('new-cadreur-phone').value = '';
+
+      renderTeamList();
+      updateCadreurFilterDropdown();
+      renderTable(allVideoReservations);
+
+      if (window.adminCore?.showToast) {
+        window.adminCore.showToast(`Cadreur "${name}" ajouté à l'équipe. N'oubliez pas d'enregistrer !`, 'info');
       }
     }
 
-    async function updateVideoPricing(e) {
-      if (e && e.preventDefault) e.preventDefault();
-      const btn = document.getElementById('save-price-btn');
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = 'Enregistrement...';
-      }
+    function removeCadreurFromTeam(index) {
+      if (!confirm("Retirer ce membre de l'équipe CVISUAL ?")) return;
+      cvisualConfig.team_members.splice(index, 1);
+      renderTeamList();
+      updateCadreurFilterDropdown();
+      renderTable(allVideoReservations);
+    }
+
+    // Save Entire Configuration
+    async function saveCVISUALConfig() {
+      const btn = document.getElementById('btn-save-cfg');
+      btn.disabled = true;
+      btn.textContent = 'Enregistrement en cours...';
 
       try {
+        const mgrPhone = document.getElementById('cfg-manager-phone').value.trim();
+        const autoAlerts = document.getElementById('cfg-auto-alerts').checked;
+        const cadPct = Number(document.getElementById('cfg-cadreur-pct').value) || 50;
+        const pricePub = Number(document.getElementById('cfg-price-public').value) || 500;
+        const pricePriv = Number(document.getElementById('cfg-price-private').value) || 1000;
+
+        cvisualConfig.manager_phone = mgrPhone;
+        cvisualConfig.auto_alerts_enabled = autoAlerts;
+        cvisualConfig.default_cadreur_split_pct = cadPct;
+        cvisualConfig.price_public_htg = pricePub;
+        cvisualConfig.price_private_htg = pricePriv;
+
+        // Cache locally
+        localStorage.setItem('dalight_cvisual_video_config', JSON.stringify(cvisualConfig));
+
+        // Save in Supabase settings
         const sb = await getClient();
-        const pricePublic = Number(document.getElementById('setting-video-price-public').value) || 500;
-        const pricePrivate = Number(document.getElementById('setting-video-price-private').value) || 1000;
-        const isActive = document.getElementById('setting-video-active').value === 'true';
-
-        const payload = {
-          id: 'video_service',
-          key: 'video_service',
-          value: {
-            price_public_htg: pricePublic,
-            price_private_htg: pricePrivate,
-            price_htg: pricePublic,
-            is_active: isActive,
-            title: "Option Vidéo Souvenir",
-            description: "Captation vidéo professionnelle et montage 4K"
-          },
-          description: "Configuration service vidéo DALIGHT",
-          updated_at: new Date().toISOString()
-        };
-
-        // Cache locally first
-        try { localStorage.setItem('dalight_video_settings', JSON.stringify(payload.value)); } catch(e){}
-
         if (sb) {
-          const { error: upsertErr } = await sb
-            .from('settings')
-            .upsert(payload, { onConflict: 'id' });
+          const payload = {
+            id: 'cvisual_video_config',
+            key: 'cvisual_video_config',
+            value: cvisualConfig,
+            description: 'Configuration CVISUAL Video Team, Alertes WhatsApp & Partage des Revenus',
+            updated_at: new Date().toISOString()
+          };
 
+          const { error: upsertErr } = await sb.from('settings').upsert(payload, { onConflict: 'id' });
           if (upsertErr) {
-            console.warn('Upsert failed, trying update...', upsertErr);
-            const { error: updateErr } = await sb
-              .from('settings')
-              .update({
-                value: payload.value,
-                description: payload.description,
-                updated_at: payload.updated_at
-              })
-              .eq('id', 'video_service');
-
-            if (updateErr) throw (upsertErr || updateErr);
+            await sb.from('settings').update({ value: payload.value, updated_at: payload.updated_at }).eq('key', 'cvisual_video_config');
           }
-        }
 
-        const badge = document.getElementById('video-service-status-badge');
-        if (badge) {
-          badge.textContent = isActive ? 'Option Active' : 'Option Désactivée';
-          badge.className = isActive ? 'status-badge confirmed' : 'status-badge cancelled';
+          // Also keep legacy 'video_service' synced
+          try {
+            await sb.from('settings').upsert({
+              id: 'video_service',
+              key: 'video_service',
+              value: {
+                price_public_htg: pricePub,
+                price_private_htg: pricePriv,
+                price_htg: pricePub,
+                is_active: true
+              },
+              updated_at: new Date().toISOString()
+            }, { onConflict: 'id' });
+          } catch(e){}
         }
 
         if (window.adminCore?.showToast) {
-          window.adminCore.showToast(`Tarifs enregistrés : Public ${pricePublic} HTG | Privé ${pricePrivate} HTG`, 'success');
+          window.adminCore.showToast('Configuration CVISUAL enregistrée avec succès !', 'success');
         } else {
-          alert(`Tarifs enregistrés avec succès : Public ${pricePublic} HTG | Privé ${pricePrivate} HTG`);
+          alert('Configuration CVISUAL enregistrée avec succès !');
         }
+
+        updateHUD(allVideoReservations);
+        renderTable(allVideoReservations);
+
       } catch (err) {
-        console.error('Error saving video settings:', err);
-        alert('Erreur lors de la mise à jour : ' + (err.message || err));
+        console.error('Error saving config:', err);
+        alert('Erreur lors de la sauvegarde : ' + err.message);
       } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Enregistrer les tarifs';
-        }
+        btn.disabled = false;
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Enregistrer toute la Configuration CVISUAL';
       }
     }
 
-    // Modal & Upload Handlers
-    let currentSelectedVideoFile = null;
+    // Send Test Alert via WhatsApp Gateway
+    async function sendTestAlert() {
+      const phone = document.getElementById('cfg-manager-phone').value.trim();
+      const cleanPhone = phone.replace(/\D/g, '');
+      if (!cleanPhone) {
+        alert("Veuillez renseigner un numéro WhatsApp valide.");
+        return;
+      }
 
+      const formatted = cleanPhone.length === 8 ? ('509' + cleanPhone) : cleanPhone;
+      const testMsg = `🎬 *TEST CONNEXION CVISUAL WHATSAPP GATEWAY*\n━━━━━━━━━━━━━━━━━━━━\nBonjour PDG CVISUAL ! Votre numéro est parfaitement configuré pour recevoir les alertes instantanées de réservations vidéo DALIGHT.\n━━━━━━━━━━━━━━━━━━━━\n⚡ _Ligne active : DALIGHT Pro_`;
+
+      try {
+        if (window.adminCore?.showToast) window.adminCore.showToast('Envoi du message test en cours...', 'info');
+
+        const res = await fetch(`${CVISUAL_GATEWAY.baseUrl}/api/v1/messages/send`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${CVISUAL_GATEWAY.apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            to: formatted,
+            message: testMsg,
+            kind: 'test_alert',
+            mode: 'async',
+            account_index: CVISUAL_GATEWAY.accountIndex
+          })
+        });
+
+        const json = await res.json();
+        if (res.ok || json.success) {
+          alert(`Message test envoyé avec succès sur ${phone} !`);
+        } else {
+          alert(`Erreur gateway : ` + (json.error || 'Vérifiez la ligne'));
+        }
+      } catch (err) {
+        console.error('Test alert error:', err);
+        // Fallback wa.me
+        window.open(`https://wa.me/${formatted}?text=${encodeURIComponent(testMsg)}`, '_blank');
+      }
+    }
+
+    // Load All Video Reservations from DB
+    async function loadVideoData() {
+      const tbody = document.getElementById('video-reservations-tbody');
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 2.5rem; color: var(--admin-text-muted);">Chargement des tournages vidéo...</td></tr>';
+
+      try {
+        const sb = await getClient();
+        if (!sb) {
+          tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #ef4444; padding: 2rem;">Supabase non disponible.</td></tr>';
+          return;
+        }
+
+        const { data, error } = await sb
+          .from('reservations')
+          .select('*')
+          .or('wants_video.eq.true,video_requested.eq.true')
+          .order('date', { ascending: false });
+
+        if (error) throw error;
+
+        allVideoReservations = data || [];
+        updateHUD(allVideoReservations);
+        applyFilters();
+
+      } catch (err) {
+        console.error('Error loading video reservations:', err);
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #ef4444; padding: 2rem;">Erreur : ${err.message}</td></tr>`;
+      }
+    }
+
+    // Update HUD Stats & Financial Calculation
+    function updateHUD(list) {
+      const total = list.length;
+      let publicCount = 0;
+      let privateCount = 0;
+      let totalRevenue = 0;
+      let totalCadreurs = 0;
+      let totalCVISUAL = 0;
+      let cadreurPendingPay = 0;
+      let cadreurPendingCount = 0;
+
+      list.forEach(r => {
+        const meta = getReservationVideoMeta(r);
+        const isPublic = (r.video_consent || 'public').toLowerCase() === 'public';
+        if (isPublic) publicCount++;
+        else privateCount++;
+
+        totalRevenue += meta.total_price;
+        totalCadreurs += meta.cadreur_pay;
+        totalCVISUAL += meta.cvisual_share;
+
+        if (!meta.cadreur_paid) {
+          cadreurPendingPay += meta.cadreur_pay;
+          cadreurPendingCount++;
+        }
+      });
+
+      document.getElementById('stat-total-videos').textContent = total;
+      document.getElementById('stat-sub-videos').textContent = `${publicCount} public(s) · ${privateCount} privé(s)`;
+      document.getElementById('stat-revenue-videos').textContent = totalRevenue.toLocaleString() + ' HTG';
+      document.getElementById('stat-cadreurs-total').textContent = totalCadreurs.toLocaleString() + ' HTG';
+      document.getElementById('stat-cvisual-net').textContent = totalCVISUAL.toLocaleString() + ' HTG';
+      document.getElementById('stat-cadreur-pending-pay').textContent = cadreurPendingPay.toLocaleString() + ' HTG';
+      document.getElementById('stat-cadreur-pending-count').textContent = 
+        cadreurPendingCount === 0 ? 'Toutes les séances soldées' : `${cadreurPendingCount} tournage(s) à solder`;
+    }
+
+    // Filter Logic
+    function applyFilters() {
+      const search = (document.getElementById('filter-search')?.value || '').toLowerCase().trim();
+      const consentFilter = document.getElementById('filter-consent')?.value || 'all';
+      const cadreurFilter = document.getElementById('filter-cadreur')?.value || 'all';
+      const statusFilter = document.getElementById('filter-status')?.value || 'all';
+
+      let filtered = [...allVideoReservations];
+
+      if (search) {
+        filtered = filtered.filter(r => {
+          const name = (r.user_name || r.client_name || '').toLowerCase();
+          const phone = (r.phone || r.client_phone || '').toLowerCase();
+          const srv = (r.service || r.service_name || '').toLowerCase();
+          return name.includes(search) || phone.includes(search) || srv.includes(search);
+        });
+      }
+
+      if (consentFilter !== 'all') {
+        filtered = filtered.filter(r => (r.video_consent || 'public').toLowerCase() === consentFilter);
+      }
+
+      if (cadreurFilter !== 'all') {
+        filtered = filtered.filter(r => {
+          const meta = getReservationVideoMeta(r);
+          if (cadreurFilter === 'unassigned') {
+            return !meta.cadreur_id || meta.cadreur_name === 'Non assigné';
+          }
+          return meta.cadreur_id === cadreurFilter;
+        });
+      }
+
+      if (statusFilter !== 'all') {
+        filtered = filtered.filter(r => (r.video_status || 'pending') === statusFilter);
+      }
+
+      renderTable(filtered);
+    }
+
+    // Render Table Rows
+    function renderTable(list) {
+      const tbody = document.getElementById('video-reservations-tbody');
+      if (!list.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 3rem; color: var(--admin-text-muted);">
+              Aucun tournage vidéo trouvé avec les filtres sélectionnés.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = list.map(r => {
+        const meta = getReservationVideoMeta(r);
+        const isPublic = (r.video_consent || 'public').toLowerCase() === 'public';
+        const consentBadge = isPublic
+          ? `<span class="badge-consent-public">🌐 Réseaux Publics</span>`
+          : `<span class="badge-consent-private">🔒 Usage Privé Unique</span>`;
+
+        const clientName = r.user_name || r.client_name || 'Client';
+        const clientEmail = r.user_email || r.client_email || '';
+        const clientPhone = r.phone || r.client_phone || '—';
+        const serviceName = r.service || r.service_name || 'Head Spa';
+        const status = r.video_status || 'pending';
+        const videoUrl = extractVideoUrl(r);
+
+        const cleanPhone = String(clientPhone).replace(/\D/g, '');
+        const waLink = cleanPhone.length >= 8
+          ? `https://wa.me/${cleanPhone.length === 8 ? ('509' + cleanPhone) : cleanPhone}?text=${encodeURIComponent('Bonjour ' + clientName + ', concernant votre vidéo souvenir DALIGHT :')}`
+          : null;
+
+        // Build Cadreur Dropdown Options
+        let cadreurOptions = `<option value="">-- Non assigné --</option>`;
+        (cvisualConfig.team_members || []).forEach(m => {
+          const selected = (meta.cadreur_id === m.id || meta.cadreur_name === m.name) ? 'selected' : '';
+          cadreurOptions += `<option value="${escapeHtml(m.id)}" ${selected}>${escapeHtml(m.name)}</option>`;
+        });
+
+        // Payment status badge
+        const payBadge = meta.cadreur_paid
+          ? `<span class="pay-badge-paid" onclick="toggleCadreurPaid('${r.id}')" title="Cliquer pour marquer NON PAYÉ">✅ Payé</span>`
+          : `<span class="pay-badge-pending" onclick="toggleCadreurPaid('${r.id}')" title="Cliquer pour marquer PAYÉ">⏳ À solder</span>`;
+
+        return `
+          <tr>
+            <!-- 1. Date & Heure -->
+            <td>
+              <div style="font-weight: 700; color: #FAF8F5;">${r.date || '—'}</div>
+              <div style="font-size: 0.78rem; color: var(--cv-gold); font-weight:600;">${r.time || '—'}</div>
+            </td>
+
+            <!-- 2. Client -->
+            <td>
+              <div style="font-weight: 700; color: #FAF8F5;">${escapeHtml(clientName)}</div>
+              <div style="font-size: 0.78rem; color: #94a3b8; font-family:monospace;">${escapeHtml(clientPhone)}</div>
+            </td>
+
+            <!-- 3. Prestation -->
+            <td>
+              <span style="font-weight: 600; color: #FAF8F5;">${escapeHtml(serviceName)}</span>
+            </td>
+
+            <!-- 4. Consentement -->
+            <td>
+              ${consentBadge}
+            </td>
+
+            <!-- 5. Prix Client -->
+            <td>
+              <strong style="color: #D4AF37; font-size: 0.95rem;">${meta.total_price.toLocaleString()} HTG</strong>
+            </td>
+
+            <!-- 6. Cadreur Assigné (PDG CVISUAL) -->
+            <td>
+              <select class="cadreur-select" onchange="assignCadreur('${r.id}', this.value)">
+                ${cadreurOptions}
+              </select>
+              ${meta.cadreur_phone ? `
+                <div style="font-size:0.72rem; color:#60a5fa; margin-top:0.2rem; font-family:monospace;">
+                  📞 ${escapeHtml(meta.cadreur_phone)}
+                </div>
+              ` : ''}
+            </td>
+
+            <!-- 7. Kalkil Kòb la -->
+            <td>
+              <div style="font-size: 0.82rem; margin-bottom: 0.2rem;">
+                <span style="color:#60a5fa; font-weight:600;">Cadreur: ${meta.cadreur_pay.toLocaleString()} HTG</span>
+              </div>
+              <div style="font-size: 0.76rem; color:#4ade80; margin-bottom: 0.3rem;">
+                CVISUAL: ${meta.cvisual_share.toLocaleString()} HTG
+              </div>
+              <div>
+                ${payBadge}
+              </div>
+            </td>
+
+            <!-- 8. Statut Tournage -->
+            <td>
+              <select class="status-select" onchange="updateVideoStatus('${r.id}', this.value)">
+                <option value="pending" ${status === 'pending' ? 'selected' : ''}>⏳ À filmer</option>
+                <option value="filmed" ${status === 'filmed' ? 'selected' : ''}>🎥 Filmée</option>
+                <option value="editing" ${status === 'editing' ? 'selected' : ''}>✂️ En montage</option>
+                <option value="delivered" ${status === 'delivered' ? 'selected' : ''}>📦 Livrée 4K</option>
+                <option value="published" ${status === 'published' ? 'selected' : ''}>🚀 Publiée réseaux</option>
+              </select>
+            </td>
+
+            <!-- 9. Actions CVISUAL -->
+            <td style="text-align: right;">
+              <div style="display:inline-flex; align-items:center; gap:0.35rem; justify-content:flex-end; flex-wrap:wrap;">
+                
+                <!-- Alerter le Cadreur (Brief WhatsApp) -->
+                <button class="btn-action-icon" onclick="openCadreurAlertModal('${r.id}', 'brief')" title="Envoyer le brief tournage au cadreur (WhatsApp)" style="color:#60a5fa;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </button>
+
+                <!-- Rappel Client Arrivé -->
+                <button class="btn-action-icon" onclick="openCadreurAlertModal('${r.id}', 'arrival')" title="Alerte : Le client vient d'arriver au salon !" style="color:#fbbf24;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                </button>
+
+                <!-- Livrer 4K -->
+                <button class="btn-action-icon" onclick="openUploadVideoModal('${r.id}')" title="Uploader &amp; Livrer la vidéo 4K sur WhatsApp" style="color:#D4AF37;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </button>
+
+                <!-- WhatsApp Client Direct -->
+                ${waLink ? `
+                  <a href="${waLink}" target="_blank" rel="noopener" class="btn-action-icon" title="Contacter directement le client" style="color:#4ade80;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/></svg>
+                  </a>
+                ` : ''}
+
+                <!-- Visionner Vidéo si existante -->
+                ${videoUrl ? `
+                  <a href="${videoUrl}" target="_blank" rel="noopener" class="btn-action-icon" title="Visionner la vidéo livrée" style="color:#4ade80;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </a>
+                  <button class="btn-action-icon" onclick="deleteVideo('${r.id}')" title="Supprimer la vidéo du Cloud" style="color:#ef4444;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                ` : ''}
+
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Assign Cadreur by PDG CVISUAL
+    async function assignCadreur(resId, cadreurId) {
+      const r = allVideoReservations.find(x => x.id === resId);
+      if (!r) return;
+
+      const cadreur = (cvisualConfig.team_members || []).find(m => m.id === cadreurId);
+      const newMeta = {
+        cadreur_id: cadreur ? cadreur.id : '',
+        cadreur_name: cadreur ? cadreur.name : 'Non assigné',
+        cadreur_phone: cadreur ? cadreur.phone : '',
+        cadreur_rate_pct: cadreur?.rate_pct || cvisualConfig.default_cadreur_split_pct || 50
+      };
+
+      await persistVideoMeta(resId, newMeta);
+      if (window.adminCore?.showToast) {
+        window.adminCore.showToast(`Tournage assigné à ${newMeta.cadreur_name}`, 'success');
+      }
+    }
+
+    // Toggle Cadreur Payment (Non payé / Payé)
+    async function toggleCadreurPaid(resId) {
+      const r = allVideoReservations.find(x => x.id === resId);
+      if (!r) return;
+
+      const current = getReservationVideoMeta(r);
+      const updatedPaid = !current.cadreur_paid;
+
+      await persistVideoMeta(resId, { cadreur_paid: updatedPaid });
+      if (window.adminCore?.showToast) {
+        window.adminCore.showToast(updatedPaid ? 'Paiement cadreur validé !' : 'Paiement cadreur remis en attente.', 'info');
+      }
+    }
+
+    // Persist Video Metadata in DB (using notes tag + direct column fallbacks)
+    async function persistVideoMeta(resId, changes) {
+      const r = allVideoReservations.find(x => x.id === resId);
+      if (!r) return;
+
+      const sb = await getClient();
+      const currentMeta = getReservationVideoMeta(r);
+      const merged = { ...currentMeta, ...changes };
+
+      let notes = (r.notes || '');
+      notes = notes.replace(/\[VIDEO_META:\s*{[^\]]+}\]/gi, '').trim();
+      notes = notes ? `${notes}\n[VIDEO_META: ${JSON.stringify(merged)}]` : `[VIDEO_META: ${JSON.stringify(merged)}]`;
+
+      r.notes = notes;
+
+      if (sb) {
+        try {
+          const updatePayload = { notes: notes, updated_at: new Date().toISOString() };
+          if (changes.cadreur_name !== undefined) updatePayload.video_cadreur_name = changes.cadreur_name;
+          if (changes.cadreur_paid !== undefined) updatePayload.video_cadreur_paid = changes.cadreur_paid;
+
+          const { error } = await sb.from('reservations').update(updatePayload).eq('id', resId);
+          if (error) {
+            // Missing columns fallback
+            await sb.from('reservations').update({ notes: notes, updated_at: new Date().toISOString() }).eq('id', resId);
+          }
+        } catch(e) {
+          console.warn('Persist video meta warning:', e);
+        }
+      }
+
+      updateHUD(allVideoReservations);
+      applyFilters();
+    }
+
+    // Update Status of Tournage
+    async function updateVideoStatus(resId, newStatus) {
+      try {
+        const sb = await getClient();
+        if (sb) {
+          await sb.from('reservations').update({
+            video_status: newStatus,
+            updated_at: new Date().toISOString()
+          }).eq('id', resId);
+        }
+
+        const r = allVideoReservations.find(x => x.id === resId);
+        if (r) r.video_status = newStatus;
+
+        if (window.adminCore?.showToast) {
+          window.adminCore.showToast('Statut de tournage mis à jour !', 'success');
+        }
+      } catch (err) {
+        console.error('Update status error:', err);
+        alert('Erreur: ' + err.message);
+      }
+    }
+
+    // Cadreur WhatsApp Alerts (Brief & Client Arrival)
+    function openCadreurAlertModal(resId, mode) {
+      const r = allVideoReservations.find(x => x.id === resId);
+      if (!r) return;
+
+      const meta = getReservationVideoMeta(r);
+      const isPublic = (r.video_consent || 'public').toLowerCase() === 'public';
+      const clientName = r.user_name || r.client_name || 'Client';
+      const clientPhone = r.phone || r.client_phone || '—';
+      const serviceName = r.service || r.service_name || 'Head Spa';
+
+      const targetPhone = meta.cadreur_phone || cvisualConfig.manager_phone;
+      const cleanPhone = String(targetPhone).replace(/\D/g, '');
+      const formattedPhone = cleanPhone.length === 8 ? ('509' + cleanPhone) : cleanPhone;
+
+      document.getElementById('alert-target-phone').value = formattedPhone;
+
+      const titleEl = document.getElementById('cadreur-modal-title');
+      const textEl = document.getElementById('alert-cadreur-text');
+      const infoEl = document.getElementById('alert-cadreur-recipient-info');
+
+      infoEl.innerHTML = `
+        Destinataire : <strong>${escapeHtml(meta.cadreur_name || 'Cadreur')}</strong> 
+        (${escapeHtml(targetPhone || 'Numéro non renseigné')})
+      `;
+
+      if (mode === 'arrival') {
+        titleEl.textContent = "🔔 Alerte : Client Arrivé au Salon !";
+        textEl.value = 
+`🚨 *ALERTE TOURNAGE EN DIRECT - CVISUAL*
+━━━━━━━━━━━━━━━━━━━━
+Bonjour ${meta.cadreur_name} !
+Le client *${clientName}* vient d'arriver au salon DALIGHT Beauty pour son soin : *${serviceName}* !
+
+🎥 Merci de vous installer immédiatement en cabine de soin avec le matériel 4K.
+Date & Heure : ${r.date} à ${r.time}
+Option : ${isPublic ? '🌐 Réseaux Publics' : '🔒 Usage Privé Unique'}`;
+
+      } else {
+        titleEl.textContent = "📲 Brief Tournage Vidéo (Cadreur)";
+        textEl.value = 
+`🎬 *BRIEF DE TOURNAGE CVISUAL - DALIGHT*
+━━━━━━━━━━━━━━━━━━━━
+Bonjour ${meta.cadreur_name} ! Voici les détails de votre session vidéo assignée :
+
+👤 *Client :* ${clientName}
+📞 *Téléphone Client :* ${clientPhone}
+💆‍♀️ *Soin / Prestation :* ${serviceName}
+📅 *Date & Heure :* ${r.date} à ${r.time}
+🔒 *Droit à l'image :* ${isPublic ? '🌐 RÉSEAUX PUBLICS (Instagram & TikTok)' : '🔒 USAGE PRIVÉ EXCLUSIF (Diffusion strictement interdite)'}
+💰 *Votre Rémunération :* ${meta.cadreur_pay.toLocaleString()} HTG
+━━━━━━━━━━━━━━━━━━━━
+📍 Lieu : DALIGHT Beauty Salon. Préparez la caméra 4K, micros sans fil et stabilisateur !`;
+      }
+
+      document.getElementById('btn-wa-native').href = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(textEl.value)}`;
+      document.getElementById('cadreur-alert-modal').style.display = 'flex';
+    }
+
+    function closeCadreurAlertModal() {
+      document.getElementById('cadreur-alert-modal').style.display = 'none';
+    }
+
+    async function dispatchCadreurAlertViaGateway() {
+      const targetPhone = document.getElementById('alert-target-phone').value;
+      const message = document.getElementById('alert-cadreur-text').value.trim();
+
+      if (!targetPhone || !message) {
+        alert("Destinataire ou message manquant.");
+        return;
+      }
+
+      const btn = document.getElementById('btn-send-gateway-alert');
+      btn.disabled = true;
+      btn.textContent = 'Envoi Gateway...';
+
+      try {
+        const res = await fetch(`${CVISUAL_GATEWAY.baseUrl}/api/v1/messages/send`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${CVISUAL_GATEWAY.apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            to: targetPhone,
+            message: message,
+            kind: 'cadreur_alert',
+            mode: 'async',
+            account_index: CVISUAL_GATEWAY.accountIndex
+          })
+        });
+
+        const json = await res.json();
+        if (res.ok || json.success) {
+          if (window.adminCore?.showToast) {
+            window.adminCore.showToast('Alerte transmise au cadreur par WhatsApp !', 'success');
+          } else {
+            alert('Alerte transmise au cadreur par WhatsApp avec succès !');
+          }
+          closeCadreurAlertModal();
+        } else {
+          alert('Erreur gateway : ' + (json.error || 'Veuillez utiliser WhatsApp Web'));
+        }
+      } catch (err) {
+        console.error('Dispatch error:', err);
+        // Fallback open wa.me
+        window.open(`https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`, '_blank');
+        closeCadreurAlertModal();
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Envoyer via Gateway';
+      }
+    }
+
+    // Modal Upload 4K & Delivery Handlers
     function openUploadVideoModal(resId) {
       const r = allVideoReservations.find(x => x.id === resId);
       if (!r) return;
@@ -591,21 +1530,21 @@
       document.getElementById('upload-progress-wrapper').style.display = 'none';
 
       document.getElementById('upload-res-id').value = r.id;
-      document.getElementById('upload-res-phone').value = r.phone || '';
-      document.getElementById('upload-res-name').value = r.user_name || 'Client(e)';
+      document.getElementById('upload-res-phone').value = r.phone || r.client_phone || '';
+      document.getElementById('upload-res-name').value = r.user_name || r.client_name || 'Client(e)';
 
       const isPublic = (r.video_consent || 'public').toLowerCase() === 'public';
       const consentHtml = isPublic
-        ? '<span class="badge-consent-public">Autorisé Réseaux</span>'
-        : '<span class="badge-consent-private">Usage Privé Uniquement</span>';
+        ? '<span class="badge-consent-public">🌐 Réseaux Publics</span>'
+        : '<span class="badge-consent-private">🔒 Usage Privé Unique</span>';
 
       document.getElementById('upload-client-info').innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
-          <strong>${escapeHtml(r.user_name || 'Client')}</strong>
+          <strong style="color:#FAF8F5;">${escapeHtml(r.user_name || r.client_name || 'Client')}</strong>
           ${consentHtml}
         </div>
         <div style="color:var(--admin-text-muted); font-size:0.8rem;">
-          Téléphone : <strong style="color:var(--admin-accent);">${escapeHtml(r.phone || 'Non renseigné')}</strong> | Soin : ${escapeHtml(r.service || 'Head Spa')}
+          Téléphone : <strong style="color:var(--cv-gold);">${escapeHtml(r.phone || r.client_phone || 'Non renseigné')}</strong> | Soin : ${escapeHtml(r.service || r.service_name || 'Head Spa')}
         </div>
       `;
 
@@ -615,8 +1554,7 @@
       }
 
       updateWhatsAppPreview();
-      const modal = document.getElementById('upload-video-modal');
-      modal.style.display = 'flex';
+      document.getElementById('upload-video-modal').style.display = 'flex';
     }
 
     function closeUploadVideoModal() {
@@ -630,7 +1568,7 @@
 
       const nameEl = document.getElementById('selected-video-filename');
       const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
-      nameEl.textContent = `Fichier sélectionné : ${file.name} (${sizeMB} MB)`;
+      nameEl.textContent = `Fichier prêt : ${file.name} (${sizeMB} MB)`;
       nameEl.style.display = 'block';
 
       updateWhatsAppPreview();
@@ -639,15 +1577,14 @@
     function updateWhatsAppPreview() {
       const name = document.getElementById('upload-res-name').value || 'cher(e) client(e)';
       const directUrl = document.getElementById('video-direct-url').value.trim();
-      const file = currentSelectedVideoFile;
       const urlText = directUrl || '[Lien Vidéo 4K Généré]';
 
       document.getElementById('video-whatsapp-msg').value = 
 `Bonjour ${name} ! ✨
 
-Votre vidéo souvenir professionnelle DALIGHT est prête en haute définition 4K ! 🎥
+Votre vidéo souvenir professionnelle DALIGHT est prête en qualité 4K ! 🎥
 
-Vous pouvez visionner et télécharger votre vidéo en qualité originale via ce lien :
+Vous pouvez visionner et télécharger votre film en haute définition originale via ce lien :
 ${urlText}
 
 Merci de votre confiance et au plaisir de vous choyer à nouveau chez DALIGHT ! 🌿`;
@@ -656,7 +1593,6 @@ Merci de votre confiance et au plaisir de vous choyer à nouveau chez DALIGHT ! 
     async function startVideoUploadAndDispatch() {
       const resId = document.getElementById('upload-res-id').value;
       const phone = document.getElementById('upload-res-phone').value;
-      const name = document.getElementById('upload-res-name').value;
       const directUrl = document.getElementById('video-direct-url').value.trim();
       const msgTemplate = document.getElementById('video-whatsapp-msg').value.trim();
 
@@ -675,25 +1611,23 @@ Merci de votre confiance et au plaisir de vous choyer à nouveau chez DALIGHT ! 
       const progressLabel = document.getElementById('upload-progress-label');
 
       progressWrapper.style.display = 'block';
-      progressBar.style.width = '10%';
-      progressPct.textContent = '10%';
+      progressBar.style.width = '15%';
+      progressPct.textContent = '15%';
 
       let finalVideoUrl = directUrl;
 
       try {
         const sb = await getClient();
 
-        // If a file was selected, upload directly to Supabase storage bucket 'videos'
         if (currentSelectedVideoFile && sb) {
-          progressLabel.textContent = 'Téléversement vers le Cloud DALIGHT...';
-          progressBar.style.width = '40%';
-          progressPct.textContent = '40%';
+          progressLabel.textContent = 'Upload vers le Cloud DALIGHT...';
+          progressBar.style.width = '45%';
+          progressPct.textContent = '45%';
 
           const fileExt = currentSelectedVideoFile.name.split('.').pop() || 'mp4';
           const filePath = `souvenirs/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
 
-          // Direct cloud upload
-          const { data: upData, error: upErr } = await sb.storage
+          const { error: upErr } = await sb.storage
             .from('videos')
             .upload(filePath, currentSelectedVideoFile, {
               cacheControl: '3600',
@@ -711,25 +1645,27 @@ Merci de votre confiance et au plaisir de vous choyer à nouveau chez DALIGHT ! 
 
         if (!finalVideoUrl) throw new Error("Impossible d'obtenir l'URL de la vidéo.");
 
-        // Update reservation record with [VIDEO_URL: ...] and set status to 'delivered'
+        // Update reservation notes and status to delivered
         const r = allVideoReservations.find(x => x.id === resId);
         let existingNotes = r?.notes || '';
         existingNotes = existingNotes.replace(/\[VIDEO_URL:\s*[^\]]+\]/gi, '').trim();
         const updatedNotes = existingNotes ? `${existingNotes}\n[VIDEO_URL: ${finalVideoUrl}]` : `[VIDEO_URL: ${finalVideoUrl}]`;
 
-        const { error: dbErr } = await sb
-          .from('reservations')
-          .update({
+        if (sb) {
+          await sb.from('reservations').update({
             video_status: 'delivered',
             notes: updatedNotes,
             updated_at: new Date().toISOString()
-          })
-          .eq('id', resId);
+          }).eq('id', resId);
+        }
 
-        if (dbErr) console.warn("DB update error:", dbErr);
+        if (r) {
+          r.notes = updatedNotes;
+          r.video_status = 'delivered';
+        }
 
-        // Send via WhatsApp Gateway Ligne #3
-        progressLabel.textContent = 'Envoi sur WhatsApp Ligne #3...';
+        // WhatsApp Gateway Dispatch
+        progressLabel.textContent = 'Envoi sur WhatsApp DALIGHT...';
         progressBar.style.width = '90%';
         progressPct.textContent = '90%';
 
@@ -751,12 +1687,12 @@ Merci de votre confiance et au plaisir de vous choyer à nouveau chez DALIGHT ! 
               mode: 'sync',
               account_index: CVISUAL_GATEWAY.accountIndex
             })
-          }).catch(e => console.warn('WhatsApp gateway send warning:', e));
+          }).catch(e => console.warn('Gateway dispatch warning:', e));
         }
 
         progressBar.style.width = '100%';
         progressPct.textContent = '100%';
-        progressLabel.textContent = 'Livré avec succès !';
+        progressLabel.textContent = 'Vidéo 4K livrée !';
 
         if (window.adminCore?.showToast) {
           window.adminCore.showToast('Vidéo livrée au client par WhatsApp avec succès !', 'success');
@@ -768,21 +1704,21 @@ Merci de votre confiance et au plaisir de vous choyer à nouveau chez DALIGHT ! 
         await loadVideoData();
 
       } catch (err) {
-        console.error("Upload error:", err);
-        alert("Erreur lors de l'envoi : " + err.message);
+        console.error('Upload error:', err);
+        alert('Erreur lors de la livraison : ' + err.message);
       } finally {
         btn.disabled = false;
         btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Uploader &amp; Livrer sur WhatsApp';
       }
     }
 
-    // Delete video from storage and database to free up space
+    // Delete Video from Storage to Free Space
     async function deleteVideo(resId) {
       const r = allVideoReservations.find(x => x.id === resId);
       if (!r) return;
 
       const videoLink = extractVideoUrl(r);
-      if (!confirm("Voulez-vous supprimer définitivement ce fichier vidéo pour libérer de l'espace de stockage ?\n\nLe statut de la réservation sera conservé.")) {
+      if (!confirm("Voulez-vous supprimer ce fichier vidéo du stockage Cloud pour libérer de l'espace ?\n\nLe dossier de réservation sera conservé.")) {
         return;
       }
 
@@ -795,227 +1731,23 @@ Merci de votre confiance et au plaisir de vous choyer à nouveau chez DALIGHT ! 
           }
         }
 
-        // Clean [VIDEO_URL: ...] from notes
         let updatedNotes = (r.notes || '').replace(/\[VIDEO_URL:\s*[^\]]+\]/gi, '').trim();
-        await sb
-          .from('reservations')
-          .update({
+        if (sb) {
+          await sb.from('reservations').update({
             notes: updatedNotes || null,
             updated_at: new Date().toISOString()
-          })
-          .eq('id', resId);
+          }).eq('id', resId);
+        }
 
         if (window.adminCore?.showToast) {
-          window.adminCore.showToast("Vidéo supprimée avec succès. Espace libéré !", "success");
-        } else {
-          alert("Vidéo supprimée avec succès. Espace libéré !");
+          window.adminCore.showToast('Vidéo supprimée. Espace de stockage libéré !', 'success');
         }
 
         await loadVideoData();
       } catch (err) {
-        console.error("Delete video error:", err);
-        alert("Erreur lors de la suppression : " + err.message);
+        console.error('Delete error:', err);
+        alert('Erreur lors de la suppression : ' + err.message);
       }
-    }
-  
-    let allVideoReservations = [];
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      // Mobile sidebar menu toggle
-      const mobileBtn = document.getElementById('mobile-menu-btn');
-      const sidebar = document.getElementById('sidebar');
-      if (mobileBtn && sidebar) {
-        mobileBtn.addEventListener('click', () => {
-          sidebar.classList.toggle('active');
-        });
-      }
-
-      await loadVideoSettings();
-      await loadVideoData();
-    });
-
-    async function getClient() {
-      if (window.adminCore?.supabase) return window.adminCore.supabase;
-      if (window.dalightAdminSupabase) return window.dalightAdminSupabase;
-      if (window.supabaseClient) return window.supabaseClient;
-      if (typeof supabase !== 'undefined' && supabase.createClient) {
-        return supabase.createClient('https://rbwoiejztrkghfkpxquo.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U');
-      }
-      return null;
-    }
-
-    async function loadVideoData() {
-      const tbody = document.getElementById('video-reservations-tbody');
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--admin-text-muted);">Chargement...</td></tr>';
-
-      try {
-        const sb = await getClient();
-        if (!sb) {
-          tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #ef4444; padding: 2rem;">Supabase non connecté.</td></tr>';
-          return;
-        }
-
-        // Query reservations where video was requested
-        const { data, error } = await sb
-          .from('reservations')
-          .select('*')
-          .or('wants_video.eq.true,video_requested.eq.true')
-          .order('date', { ascending: false });
-
-        if (error) throw error;
-
-        allVideoReservations = data || [];
-        updateHUD(allVideoReservations);
-        renderTable(allVideoReservations);
-      } catch (err) {
-        console.error('Error loading video reservations:', err);
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #ef4444; padding: 2rem;">Erreur : ${err.message}</td></tr>`;
-      }
-    }
-
-    function updateHUD(list) {
-      const total = list.length;
-      let publicCount = 0;
-      let privateCount = 0;
-      let revenue = 0;
-
-      list.forEach(r => {
-        const consent = (r.video_consent || 'public').toLowerCase();
-        if (consent === 'public') publicCount++;
-        else privateCount++;
-        revenue += Number(r.video_price || 500);
-      });
-
-      document.getElementById('stat-total-videos').textContent = total;
-      document.getElementById('stat-public-videos').textContent = publicCount;
-      document.getElementById('stat-private-videos').textContent = privateCount;
-      document.getElementById('stat-revenue-videos').textContent = revenue.toLocaleString() + ' HTG';
-    }
-
-    function renderTable(list) {
-      const tbody = document.getElementById('video-reservations-tbody');
-      if (!list.length) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="8" style="text-align: center; padding: 3rem; color: var(--admin-text-muted);">
-              Aucune réservation avec option vidéo pour l'instant.
-            </td>
-          </tr>
-        `;
-        return;
-      }
-
-      tbody.innerHTML = list.map(r => {
-        const isPublic = (r.video_consent || 'public').toLowerCase() === 'public';
-        const consentBadge = isPublic
-          ? `<span class="badge-consent-public">Autorisé Réseaux</span>`
-          : `<span class="badge-consent-private">Usage Privé</span>`;
-
-        const clientName = r.user_name || r.client_name || 'Client';
-        const clientEmail = r.user_email || r.client_email || '';
-        const clientPhone = r.phone || r.client_phone || '—';
-        const serviceName = r.service || r.service_name || 'Head Spa';
-        const price = (Number(r.video_price) || (isPublic ? 500 : 1000)).toLocaleString() + ' HTG';
-        const status = r.video_status || 'pending';
-        const videoUrl = extractVideoUrl(r);
-
-        const cleanPhone = String(clientPhone).replace(/\D/g, '');
-        const waLink = cleanPhone.length >= 8
-          ? `https://wa.me/${cleanPhone.length === 8 ? ('509' + cleanPhone) : cleanPhone}?text=${encodeURIComponent('Bonjour ' + clientName + ', concernant votre vidéo souvenir DALIGHT :')}`
-          : null;
-
-        return `
-          <tr>
-            <td>
-              <div style="font-weight: 600; color: #FAF8F5;">${r.date || '—'}</div>
-              <div style="font-size: 0.78rem; color: var(--admin-text-muted);">${r.time || '—'}</div>
-            </td>
-            <td>
-              <div style="font-weight: 600; color: #FAF8F5;">${escapeHtml(clientName)}</div>
-              <div style="font-size: 0.78rem; color: var(--admin-text-muted);">${escapeHtml(clientEmail)}</div>
-            </td>
-            <td>
-              <span style="font-family: monospace; font-size: 0.85rem;">${escapeHtml(clientPhone)}</span>
-            </td>
-            <td>
-              <span style="font-weight: 500;">${escapeHtml(serviceName)}</span>
-            </td>
-            <td>
-              ${consentBadge}
-            </td>
-            <td>
-              <strong style="color: #D4AF37;">${price}</strong>
-            </td>
-            <td>
-              <select class="status-select" onchange="updateVideoStatus('${r.id}', this.value)">
-                <option value="pending" ${status === 'pending' ? 'selected' : ''}>À filmer</option>
-                <option value="filmed" ${status === 'filmed' ? 'selected' : ''}>Filmée</option>
-                <option value="editing" ${status === 'editing' ? 'selected' : ''}>En montage</option>
-                <option value="delivered" ${status === 'delivered' ? 'selected' : ''}>Livrée au client</option>
-                <option value="published" ${status === 'published' ? 'selected' : ''}>Publiée sur réseaux</option>
-              </select>
-            </td>
-            <td style="text-align: right;">
-              <div style="display:inline-flex; align-items:center; gap:0.4rem; justify-content:flex-end; flex-wrap:wrap;">
-                ${videoUrl ? `
-                  <a href="${videoUrl}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="padding:0.35rem 0.55rem; color:#4ade80;" title="Visionner la vidéo">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  </a>
-                  <button class="btn btn-secondary btn-sm" onclick="openUploadVideoModal('${r.id}')" style="padding:0.35rem 0.65rem;" title="Renvoyer / Remplacer vidéo">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-                  </button>
-                  <button class="btn btn-danger btn-sm" onclick="deleteVideo('${r.id}')" style="padding:0.35rem 0.55rem; background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#ef4444;" title="Supprimer la vidéo pour libérer de l'espace">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                  </button>
-                ` : `
-                  <button class="btn btn-primary btn-sm" onclick="openUploadVideoModal('${r.id}')" style="padding:0.35rem 0.65rem; font-weight:600; display:inline-flex; align-items:center; gap:0.3rem;" title="Uploader & Livrer la vidéo">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    Livrer 4K
-                  </button>
-                `}
-                ${waLink ? `
-                  <a href="${waLink}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="padding: 0.35rem 0.55rem;" title="Discuter sur WhatsApp">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/></svg>
-                  </a>
-                ` : ''}
-              </div>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    async function updateVideoStatus(resId, newStatus) {
-      try {
-        const sb = await getClient();
-        const { error } = await sb
-          .from('reservations')
-          .update({ video_status: newStatus, updated_at: new Date().toISOString() })
-          .eq('id', resId);
-
-        if (error) throw error;
-        if (window.adminCore?.showToast) {
-          window.adminCore.showToast('Statut vidéo mis à jour avec succès !', 'success');
-        }
-      } catch (err) {
-        console.error('Error updating status:', err);
-        alert('Erreur lors de la mise à jour : ' + err.message);
-      }
-    }
-
-    function applyFilters() {
-      const consentFilter = document.getElementById('filter-consent').value;
-      const statusFilter = document.getElementById('filter-status').value;
-
-      let filtered = [...allVideoReservations];
-      if (consentFilter !== 'all') {
-        filtered = filtered.filter(r => (r.video_consent || 'public').toLowerCase() === consentFilter);
-      }
-      if (statusFilter !== 'all') {
-        filtered = filtered.filter(r => (r.video_status || 'pending') === statusFilter);
-      }
-
-      renderTable(filtered);
     }
 
     function escapeHtml(str) {

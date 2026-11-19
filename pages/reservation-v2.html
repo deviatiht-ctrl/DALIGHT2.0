@@ -2512,6 +2512,74 @@
               console.warn('Erreur enregistrement utilisation code promo:', promoRecordErr);
             }
           }
+
+          // ALERTE AUTOMATIQUE WHATSAPP CVISUAL LORSQU'UN CLIENT DEMANDE UNE VIDÉO
+          if (wantsVideo) {
+            try {
+              let cvisualPhone = '+509 4747-7221';
+              let autoAlertsEnabled = true;
+
+              try {
+                if (supabase) {
+                  const { data: cfgRow } = await supabase
+                    .from('settings')
+                    .select('value')
+                    .eq('key', 'cvisual_video_config')
+                    .maybeSingle();
+
+                  if (cfgRow && cfgRow.value) {
+                    const parsed = typeof cfgRow.value === 'string' ? JSON.parse(cfgRow.value) : cfgRow.value;
+                    if (parsed.manager_phone) cvisualPhone = parsed.manager_phone;
+                    if (parsed.auto_alerts_enabled !== undefined) autoAlertsEnabled = Boolean(parsed.auto_alerts_enabled);
+                  }
+                }
+              } catch (cfgErr) {
+                console.warn('Erreur lecture config CVISUAL vidéo:', cfgErr);
+              }
+
+              if (autoAlertsEnabled) {
+                const cleanPhone = String(cvisualPhone).replace(/\D/g, '');
+                const targetPhone = cleanPhone.length === 8 ? ('509' + cleanPhone) : cleanPhone;
+
+                const isPublicConsent = videoConsentChoice === 'public';
+                const consentLabel = isPublicConsent
+                  ? '🌐 RÉSEAUX PUBLICS AUTORISÉS (Instagram & TikTok)'
+                  : '🔒 USAGE PRIVÉ EXCLUSIF (Diffusion strictement interdite)';
+
+                const videoPriceFormatted = (payload.video_price || (isPublicConsent ? 500 : 1000)).toLocaleString() + ' HTG';
+
+                const alertMsg = 
+`🎬 *NOUVELLE RÉSERVATION VIDÉO CVISUAL / DALIGHT*
+━━━━━━━━━━━━━━━━━━━━
+👤 *Client :* ${clientName}
+📞 *Téléphone :* ${clientPhone}
+📅 *Date & Heure :* ${payload.date} à ${payload.time}
+💆‍♀️ *Soin / Prestation :* ${activeService.name}
+🔒 *Droit à l'Image :* ${consentLabel}
+💰 *Tarif Vidéo :* ${videoPriceFormatted}
+🔖 *N° Demande :* #${reservationNumber}
+━━━━━━━━━━━━━━━━━━━━
+👉 *Action PDG CVISUAL :* Connectez-vous sur dalightbeauty.com/admin/contenu-video.html pour assigner un cadreur et piloter le tournage.`;
+
+                fetch('https://cvisual-whatsapp-gateway.onrender.com/api/v1/messages/send', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': 'Bearer cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c',
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    to: targetPhone,
+                    message: alertMsg,
+                    kind: 'video_booking_alert',
+                    mode: 'async',
+                    account_index: 3
+                  })
+                }).catch(waErr => console.warn('Alerte vidéo WhatsApp warning:', waErr));
+              }
+            } catch (alertErr) {
+              console.warn('Erreur alerte vidéo CVISUAL:', alertErr);
+            }
+          }
         }
 
         // Show Success Overlay
