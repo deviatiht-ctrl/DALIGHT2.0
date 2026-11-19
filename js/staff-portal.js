@@ -20,13 +20,13 @@ function getPortalCountdownBadge(r) {
 
   if (r.status === 'COMPLETED') return '<span class="badge badge-muted">Terminé</span>';
   if (diffMin > 0) {
-    if (diffMin <= 60) return '<span class="badge badge-gold" style="font-weight:700;border:1px solid #d4af3760;">⏳ Dans ' + diffMin + 'm</span>';
+    if (diffMin <= 60) return '<span class="badge badge-gold" style="font-weight:700;border:1px solid #d4af3760;">Dans ' + diffMin + 'm</span>';
     if (diffMin <= 1440) {
       const hrs = Math.floor(diffMin / 60);
       const rem = diffMin % 60;
-      return '<span class="badge badge-gold" style="border:1px solid #d4af3740;">⏳ Dans ' + hrs + 'h ' + (rem > 0 ? rem + 'm' : '') + '</span>';
+      return '<span class="badge badge-gold" style="border:1px solid #d4af3740;">Dans ' + hrs + 'h ' + (rem > 0 ? rem + 'm' : '') + '</span>';
     }
-    return '<span class="badge badge-muted">📅 Dans ' + Math.round(diffMin / 1440) + 'j</span>';
+    return '<span class="badge badge-muted">Dans ' + Math.round(diffMin / 1440) + 'j</span>';
   }
   if (diffMin <= 0 && diffMin >= -dur) {
     const rem = dur + diffMin;
@@ -421,7 +421,7 @@ function renderOnlineBannerContent(isOnline) {
           </div>
         </div>
         <button class="btn btn-primary btn-sm" onclick="toggleMyOnlineStatus(true)" style="background:linear-gradient(135deg,#22c55e,#15803d); border:none; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
-          🟢 Me mettre EN LIGNE (Je suis au salon)
+          <span class="live-status-dot online"></span> Me mettre EN LIGNE (Je suis au salon)
         </button>
       </div>
     `;
@@ -466,8 +466,8 @@ async function toggleMyOnlineStatus(forceState) {
     updateOnlineUI(newState);
     toast(
       newState
-        ? '🟢 Vous êtes maintenant EN LIGNE. Vos assignations sont activées !'
-        : '⚪ Vous êtes maintenant HORS LIGNE.',
+        ? 'Vous êtes maintenant EN LIGNE. Vos assignations sont activées !'
+        : 'Vous êtes maintenant HORS LIGNE.',
       newState ? 'success' : 'warning'
     );
   } catch (err) {
@@ -555,8 +555,14 @@ async function renderHome(c) {
       ${isCadreur ? `<div class="card"><div class="card-title">Espace CVISUAL Studio</div>
         <div style="color:var(--muted);font-size:.88rem;margin-bottom:.8rem;">Gérez vos captations vidéo 4K et suivez vos gains.</div>
         <div class="row-actions" style="justify-content:flex-start;">
-          <button class="btn btn-gold btn-sm" onclick="showSection('video_shoots')">🎬 Voir mes tournages</button>
-          <button class="btn btn-green btn-sm" onclick="showSection('video_earnings')">💰 Mes revenus (Kòb)</button>
+          <button class="btn btn-gold btn-sm" onclick="showSection('video_shoots')" style="display:inline-flex;align-items:center;gap:0.4rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
+            Voir mes tournages
+          </button>
+          <button class="btn btn-green btn-sm" onclick="showSection('video_earnings')" style="display:inline-flex;align-items:center;gap:0.4rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
+            Mes revenus (Kòb)
+          </button>
         </div></div>` : ''}
       <div class="card"><div class="card-title">Rapports</div>
         <div style="color:var(--muted);font-size:.88rem;margin-bottom:.8rem;">Soumettez votre rapport d'activité.</div>
@@ -690,7 +696,7 @@ function apptCard(r) {
       </div>
       <div style="color:var(--admin-text);font-size:.86rem;margin-top:.15rem;font-weight:500;">${svc}</div>
       <div style="color:var(--admin-text-muted);font-size:.78rem;margin-top:.1rem;">
-        📅 ${fmtDate(r.date)} · ⏰ <strong>${fmtTime(r.time)} → ${endTime}</strong> (${dur} min)
+        Date : ${fmtDate(r.date)} · Horaire : <strong>${fmtTime(r.time)} → ${endTime}</strong> (${dur} min)
       </div>
     </div>
     <div style="display:flex;gap:.4rem;align-items:center;" onclick="event.stopPropagation()">
@@ -1282,13 +1288,13 @@ async function renderVideoShoots(c) {
     if (myShoots.length === 0) {
       c.innerHTML = `
         <div class="card" style="text-align:center; padding:3rem 1.5rem;">
-          <div style="font-size:2.8rem; margin-bottom:1rem;">🎬</div>
+          <div style="display:flex;justify-content:center;margin-bottom:1rem;"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg></div>
           <div style="font-size:1.2rem; font-weight:700; color:#FAF8F5; margin-bottom:0.5rem;">Aucun tournage assigné pour le moment</div>
           <p style="color:var(--muted); font-size:0.88rem; max-width:440px; margin:0 auto 1.5rem;">
             Assurez-vous d'être <strong>EN LIGNE</strong> afin que le PDG de CVISUAL ou le système d'assignation puisse vous attribuer les captations vidéo au salon.
           </p>
-          <button class="btn btn-primary btn-sm" onclick="toggleMyOnlineStatus(true)" style="background:linear-gradient(135deg,#22c55e,#15803d); border:none; font-weight:700;">
-            🟢 Me mettre EN LIGNE
+          <button class="btn btn-primary btn-sm" onclick="toggleMyOnlineStatus(true)" style="background:linear-gradient(135deg,#22c55e,#15803d); border:none; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
+            <span class="live-status-dot online"></span> Me mettre EN LIGNE
           </button>
         </div>
       `;
@@ -1305,9 +1311,9 @@ async function renderVideoShoots(c) {
 
       // Status calculation
       const videoStatus = meta.video_status || r.video_status || 'assigned';
-      let statusBadge = '<span class="badge badge-gold">⏳ En attente de tournage</span>';
-      if (videoStatus === 'shot') statusBadge = '<span class="badge badge-blue">🎞️ Tourné - En montage</span>';
-      if (videoStatus === 'delivered') statusBadge = '<span class="badge badge-green">✅ Vidéo 4K Livrée</span>';
+      let statusBadge = '<span class="badge badge-gold">En attente de tournage</span>';
+      if (videoStatus === 'shot') statusBadge = '<span class="badge badge-blue">Tourné - En montage</span>';
+      if (videoStatus === 'delivered') statusBadge = '<span class="badge badge-green">Vidéo 4K Livrée</span>';
 
       const consentBadge = isPrivate
         ? '<span class="badge badge-purple" style="border:1px solid rgba(168,85,247,0.4);"><i data-lucide="lock" style="width:12px;height:12px;margin-right:3px;"></i> Usage Privé (Floutage requis)</span>'
@@ -1320,8 +1326,8 @@ async function renderVideoShoots(c) {
 
       const isPaid = meta.cadreur_paid === true;
       const paymentBadge = isPaid
-        ? '<span class="badge badge-green" style="font-size:0.75rem;">💰 Payé par CVISUAL</span>'
-        : '<span class="badge badge-gold" style="font-size:0.75rem;">⏳ Paiement en attente</span>';
+        ? '<span class="badge badge-green" style="font-size:0.75rem;">Payé par CVISUAL</span>'
+        : '<span class="badge badge-gold" style="font-size:0.75rem;">Paiement en attente</span>';
 
       return `
         <div class="card" style="border:1px solid rgba(212,175,55,0.25); background:rgba(20,28,20,0.7); position:relative; overflow:hidden; margin-bottom:1rem;">
@@ -1337,15 +1343,15 @@ async function renderVideoShoots(c) {
           </div>
 
           <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:0.6rem; padding:0.75rem; background:rgba(0,0,0,0.25); border-radius:10px; margin-bottom:1rem; font-size:0.82rem;">
-            <div><span style="color:var(--muted);">Date & Heure :</span><br><strong>📅 ${fmtDate(r.date)} à ${fmtTime(r.time)}</strong></div>
-            <div><span style="color:var(--muted);">Téléphone :</span><br><strong>📞 ${esc(phone)}</strong></div>
+            <div><span style="color:var(--muted);">Date & Heure :</span><br><strong>${fmtDate(r.date)} à ${fmtTime(r.time)}</strong></div>
+            <div><span style="color:var(--muted);">Téléphone :</span><br><strong>${esc(phone)}</strong></div>
             <div><span style="color:var(--muted);">Votre Part (Kòb ou) :</span><br><strong style="color:#4ade80; font-size:0.95rem;">${cadreurCut.toLocaleString()} HTG</strong> (${splitPct}%)</div>
             <div><span style="color:var(--muted);">Statut Paiement :</span><br>${paymentBadge}</div>
           </div>
 
           ${meta.video_url ? `
             <div style="padding:0.55rem 0.75rem; background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.25); border-radius:8px; margin-bottom:0.9rem; font-size:0.8rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
-              <span style="color:#4ade80;">🔗 <strong>Vidéo Livrée :</strong> ${esc(meta.video_url).slice(0, 40)}...</span>
+              <span style="color:#4ade80;"><strong>Vidéo Livrée :</strong> ${esc(meta.video_url).slice(0, 40)}...</span>
               <a href="${esc(meta.video_url)}" target="_blank" class="btn btn-secondary btn-sm" style="padding:0.2rem 0.6rem; font-size:0.75rem;">Voir la vidéo</a>
             </div>
           ` : ''}
@@ -1372,8 +1378,9 @@ async function renderVideoShoots(c) {
           <h2 style="font-size:1.25rem; font-weight:700; color:#FAF8F5; margin:0;">Vos Tournages Vidéo CVISUAL</h2>
           <div style="color:var(--muted); font-size:0.82rem;">${myShoots.length} captation${myShoots.length > 1 ? 's' : ''} assignée${myShoots.length > 1 ? 's' : ''}</div>
         </div>
-        <button class="btn btn-gold btn-sm" onclick="renderVideoShoots(document.getElementById('section-content'))">
-          🔄 Actualiser
+        <button class="btn btn-gold btn-sm" onclick="renderVideoShoots(document.getElementById('section-content'))" style="display:inline-flex;align-items:center;gap:0.35rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+          Actualiser
         </button>
       </div>
       <div>
@@ -1451,8 +1458,8 @@ async function renderVideoEarnings(c) {
           <td><strong style="color:#4ade80;">${cut.toLocaleString()} HTG</strong> (${splitPct}%)</td>
           <td>
             ${meta.cadreur_paid === true 
-              ? '<span class="badge badge-green">✅ Payé</span>' 
-              : '<span class="badge badge-gold">⏳ En attente</span>'}
+              ? '<span class="badge badge-green">Payé</span>' 
+              : '<span class="badge badge-gold">En attente</span>'}
           </td>
         </tr>
       `;
@@ -1540,7 +1547,7 @@ window.openStaffVideoModal = async function(resId) {
       clientInfoBox.innerHTML = `
         <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
           <strong style="color:#FAF8F5;">${esc(r.user_name || 'Client')}</strong>
-          <span style="color:var(--gold);">📅 ${fmtDate(r.date)} à ${fmtTime(r.time)}</span>
+          <span style="color:var(--gold);">${fmtDate(r.date)} à ${fmtTime(r.time)}</span>
         </div>
         <div style="color:var(--muted); font-size:0.8rem;">
           Prestation : ${esc(r.service || '—')} • Tél : ${esc(r.phone || '—')}
@@ -1587,7 +1594,7 @@ window.updateStaffWhatsAppPreview = function() {
   const urlVal = document.getElementById('staff-video-direct-url')?.value || '{LIEN_VIDEO}';
   const cadreurName = currentEmployee ? currentEmployee.full_name : 'Équipe CVISUAL';
 
-  const defaultMsg = `Bonjour ${name} ! ✨\n\nVotre souvenir vidéo exclusif 4K chez DALIGHT Beauty Bar est fin prêt !\n\nCliquez sur le lien ci-dessous pour visionner et télécharger votre vidéo en haute définition :\n🔗 ${urlVal}\n\nMerci de votre confiance et à très bientôt pour un nouveau moment de détente chez DALIGHT !\n\n— Réalisé par ${cadreurName} (CVISUAL Studio)`;
+  const defaultMsg = `Bonjour ${name} !\n\nVotre souvenir vidéo exclusif 4K chez DALIGHT Beauty Bar est fin prêt !\n\nCliquez sur le lien ci-dessous pour visionner et télécharger votre vidéo en haute définition :\n${urlVal}\n\nMerci de votre confiance et à très bientôt pour un nouveau moment de détente chez DALIGHT !\n\n— Réalisé par ${cadreurName} (CVISUAL Studio)`;
 
   const msgBox = document.getElementById('staff-video-whatsapp-msg');
   if (msgBox) msgBox.value = defaultMsg;
@@ -1711,8 +1718,8 @@ window.startStaffVideoUploadAndDispatch = async function() {
     closeStaffVideoModal();
     toast(
       waSent
-        ? '✅ Vidéo 4K livrée et message WhatsApp envoyé au client !'
-        : '✅ Vidéo 4K enregistrée dans le système !',
+        ? 'Vidéo 4K livrée et message WhatsApp envoyé au client !'
+        : 'Vidéo 4K enregistrée dans le système !',
       'success'
     );
 

@@ -30,7 +30,7 @@ function populatePostesDropdown() {
   const currentVal = select.value;
   select.innerHTML = '<option value="">-- Sélectionner un poste officiel --</option>' +
     allPostes.map(p => '<option value="' + esc(p.title) + '">' + esc(p.title) + ' (' + esc(p.category) + ')</option>').join('') +
-    '<option value="__custom__">➕ Autre / Saisie personnalisée...</option>';
+    '<option value="__custom__">+ Autre / Saisie personnalisée...</option>';
   if (currentVal) select.value = currentVal;
 }
 
@@ -328,7 +328,7 @@ window.toggleEmployeeOnlineAdmin = async function(empId) {
 
     staffLiveOnlineState = map;
     renderEmployees();
-    showToast(`${emp?.full_name || 'Employé'} marqué ${newState ? 'EN LIGNE 🟢' : 'HORS LIGNE ⚪'}`, 'info');
+    showToast(`${emp?.full_name || 'Employé'} marqué ${newState ? 'En Ligne (Présent au salon)' : 'Hors Ligne'}`, 'info');
   } catch(err) {
     console.error('toggleEmployeeOnlineAdmin error:', err);
     showToast('Erreur: ' + (err.message || err), 'error');
@@ -449,6 +449,23 @@ async function loadEmployees() {
   }
 }
 
+function getLucideSvg(name, size = 14, color = 'currentColor') {
+  const icons = {
+    calendar: `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+    clock: `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+    key: `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>`,
+    palmtree: `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8c0-2.76-2.46-5-5.5-5S2 5.24 2 8h11Z"/><path d="M13 7.14A5.82 5.82 0 0 1 16.5 6c3.04 0 5.5 2.24 5.5 5h-8.5"/><path d="M5.8 14a8 8 0 0 0 6.2 6"/><path d="M11 11v10"/></svg>`,
+    user: `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg>`,
+    copy: `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`,
+    shield: `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+    qr: `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>`,
+    edit: `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>`,
+    trash: `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>`,
+    'bar-chart': `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>`
+  };
+  return icons[name] || '';
+}
+
 window.renderEmployees = function() {
   const grid = document.getElementById('employees-grid');
   const countEl = document.getElementById('employees-count');
@@ -480,17 +497,14 @@ window.renderEmployees = function() {
 
   grid.innerHTML = filtered.map(e => {
     const isOnline = isEmployeeLiveOnline(e.id);
-    const onlinePill = isOnline
-      ? '<span style="display:inline-flex;align-items:center;gap:0.3rem;background:rgba(34,197,94,0.12);color:#22c55e;border:1px solid rgba(34,197,94,0.3);padding:0.12rem 0.5rem;border-radius:999px;font-size:0.68rem;font-weight:700;"><span class="live-status-dot online"></span> En Ligne</span>'
-      : '<span style="display:inline-flex;align-items:center;gap:0.3rem;background:rgba(148,163,184,0.1);color:#94a3b8;border:1px solid rgba(148,163,184,0.25);padding:0.12rem 0.5rem;border-radius:999px;font-size:0.68rem;font-weight:600;"><span class="live-status-dot offline"></span> Hors Ligne</span>';
-
     const todayCount = todayAppointmentsByEmp[e.id] || 0;
-    const todayBadge = todayCount > 0
-      ? `<span style="display:inline-block;background:rgba(59,130,246,0.12);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);padding:0.1rem 0.4rem;border-radius:4px;font-size:0.65rem;font-weight:700;">📅 ${todayCount} soin${todayCount > 1 ? 's' : ''} aujourd'hui</span>`
-      : '<span style="display:inline-block;background:rgba(255,255,255,0.04);color:var(--admin-text-muted);padding:0.1rem 0.4rem;border-radius:4px;font-size:0.65rem;">📅 0 soin aujourd\'hui</span>';
+
+    const matchedPoste = allPostes.find(p => p.title.toLowerCase() === (e.position || '').toLowerCase());
+    const posteColor = matchedPoste ? (matchedPoste.color || '#d4af37') : '#d4af37';
+    const posteBadge = '<span style="display:inline-block;background:rgba(212,175,55,0.12);color:' + posteColor + ';border:1px solid ' + posteColor + '40;padding:0.15rem 0.5rem;border-radius:6px;font-size:0.7rem;font-weight:700;">' + esc(e.position || 'Employé') + '</span>';
 
     const accessCodeBadge = e.access_code
-      ? `<span style="display:inline-block;background:rgba(212,175,55,0.15);color:#d4af37;border:1px solid rgba(212,175,55,0.35);padding:0.1rem 0.45rem;border-radius:4px;font-size:0.68rem;font-weight:800;letter-spacing:1px;font-family:monospace;" title="Code PIN portail employé">🔑 ${esc(e.access_code)}</span>`
+      ? `<span style="display:inline-flex;align-items:center;gap:0.3rem;background:rgba(212,175,55,0.15);color:#d4af37;border:1px solid rgba(212,175,55,0.35);padding:0.12rem 0.45rem;border-radius:6px;font-size:0.7rem;font-weight:800;letter-spacing:1px;font-family:monospace;" title="Code PIN d'accès staff">${getLucideSvg('key', 12, '#d4af37')} ${esc(e.access_code)}</span>`
       : '';
 
     const qrModifierBadge = e.qr_modifier 
@@ -500,73 +514,95 @@ window.renderEmployees = function() {
     let roles = e.roles || [];
     if (typeof roles === 'string') { try { roles = JSON.parse(roles); } catch { roles = []; } }
     if (!Array.isArray(roles)) roles = [];
-    const rolesBadges = roles.map(r => `<span style="display:inline-block;background:var(--admin-accent-light);color:var(--admin-accent);padding:0.1rem 0.4rem;border-radius:4px;font-size:0.62rem;font-weight:700;margin:0.1rem 0.15rem 0 0;">${esc(ROLE_LABELS[r] || r)}</span>`).join('');
+    const rolesBadges = roles.map(r => `<span style="display:inline-block;background:var(--admin-accent-light);color:var(--admin-accent);padding:0.12rem 0.45rem;border-radius:5px;font-size:0.64rem;font-weight:700;margin:0.1rem 0.15rem 0 0;">${esc(ROLE_LABELS[r] || r)}</span>`).join('');
+
     const portalBadge = e.portal_enabled && e.username
-      ? `<span style="display:inline-block;background:#10b981;color:white;padding:0.1rem 0.4rem;border-radius:4px;font-size:0.62rem;font-weight:700;">Portail: ${esc(e.username)}</span>`
+      ? `<span style="display:inline-flex;align-items:center;gap:0.25rem;background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);padding:0.12rem 0.45rem;border-radius:5px;font-size:0.64rem;font-weight:700;">${getLucideSvg('user', 11, '#34d399')} ${esc(e.username)}</span>`
       : '';
 
-    // Extract schedule info
+    // Schedule info
     let sched = {};
     if (e.bio) {
       try { sched = JSON.parse(e.bio); } catch(err){}
     }
-    const daysOffList = (sched.days_off || ['dimanche']).map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ');
     const isLeave = sched.is_on_leave || (sched.leave_start && sched.leave_end && (new Date().toISOString().split('T')[0] >= sched.leave_start && new Date().toISOString().split('T')[0] <= sched.leave_end));
-    const leaveBadge = isLeave
-      ? '<span style="display:inline-block;background:#fee2e2;color:#ef4444;border:1px solid #fca5a5;padding:0.12rem 0.45rem;border-radius:4px;font-size:0.65rem;font-weight:700;margin-top:0.2rem;">🏖️ En congé (' + esc(sched.leave_reason || 'Absent') + ')</span>'
-      : '';
-    const scheduleBadge = sched.work_start
-      ? '<div style="margin-top:0.25rem;font-size:0.72rem;color:var(--admin-text-muted);display:flex;align-items:center;gap:0.35rem;"><span>⏰ ' + sched.work_start + ' - ' + (sched.work_end || '18:00') + '</span></div>'
-      : '';
 
-    const matchedPoste = allPostes.find(p => p.title.toLowerCase() === (e.position || '').toLowerCase());
-    const posteColor = matchedPoste ? (matchedPoste.color || '#d4af37') : '#d4af37';
-    const posteBadge = '<span style="display:inline-block;background:rgba(212,175,55,0.12);color:' + posteColor + ';border:1px solid ' + posteColor + '40;padding:0.12rem 0.45rem;border-radius:4px;font-size:0.68rem;font-weight:700;">' + esc(e.position || 'Employé') + '</span>';
-    
+    // Avatar rendering: sharp, large 58px avatar
+    const avatarHtml = e.photo_url 
+      ? `<img src="${esc(e.photo_url)}" alt="${esc(e.full_name)}" onerror="this.onerror=null;this.parentNode.innerHTML='${getInitials(e.full_name)}';">`
+      : getInitials(e.full_name);
+
     return `
-      <div class="emp-card" style="border:1px solid ${isOnline ? 'rgba(34,197,94,0.35)' : 'var(--admin-border)'};">
-        <div class="emp-avatar">
-          ${e.photo_url ? `<img src="${e.photo_url}" alt="${esc(e.full_name)}">` : getInitials(e.full_name)}
+      <div class="emp-card" style="border: 1px solid ${isOnline ? 'rgba(34,197,94,0.45)' : 'rgba(212,175,55,0.22)'};">
+        <!-- Card Top Header -->
+        <div class="emp-card-header">
+          <div class="emp-avatar">
+            ${avatarHtml}
+          </div>
+          <div class="emp-info">
+            <div class="emp-name">${esc(e.full_name)}${qrModifierBadge}</div>
+            <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap; margin-top:0.2rem;">
+              ${posteBadge}
+              ${accessCodeBadge}
+            </div>
+            <div class="emp-meta" style="margin-top:0.25rem;">
+              <span>#${esc(e.employee_number || 'S/N')}</span>
+              ${e.nif ? ` • NIF: ${esc(e.nif)}` : ''}
+            </div>
+          </div>
         </div>
-        <div class="emp-info">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.2rem;">
-            <div class="emp-name" style="margin:0;">${esc(e.full_name)}${qrModifierBadge}</div>
-            ${onlinePill}
+
+        <!-- Card Body Info -->
+        <div class="emp-card-body">
+          <div class="emp-meta-item">
+            ${getLucideSvg('calendar', 14, '#60a5fa')}
+            <span>Rendez-vous aujourd'hui : <strong style="color:${todayCount > 0 ? '#4ade80' : 'var(--admin-text-muted)'};">${todayCount} prestation${todayCount > 1 ? 's' : ''}</strong></span>
           </div>
-          <div style="margin-top:0.2rem;display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
-            ${posteBadge}
-            ${accessCodeBadge}
-            <span class="emp-meta">• ${esc(e.employee_number || '')}</span>
-          </div>
-          <div style="margin-top:0.3rem;display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
-            ${todayBadge}
-          </div>
-          ${scheduleBadge}
-          ${leaveBadge}
-          ${e.nif ? `<div class="emp-meta">NIF: ${esc(e.nif)}</div>` : ''}
-          <div class="emp-meta">${e.is_active ? 'Compte Actif' : 'Compte Inactif'}</div>
-          ${rolesBadges ? `<div style="margin-top:.3rem;">${rolesBadges}</div>` : ''}
-          ${portalBadge ? `<div style="margin-top:.3rem;">${portalBadge}</div>` : ''}
+
+          ${isLeave ? `
+            <div class="emp-meta-item" style="color:#f87171;">
+              ${getLucideSvg('palmtree', 14, '#f87171')}
+              <span>En congé (${esc(sched.leave_reason || 'Absent')})</span>
+            </div>
+          ` : (sched.work_start ? `
+            <div class="emp-meta-item">
+              ${getLucideSvg('clock', 14, '#fbbf24')}
+              <span>Horaire : ${esc(sched.work_start)} - ${esc(sched.work_end || '18:00')}</span>
+            </div>
+          ` : '')}
+
+          ${(rolesBadges || portalBadge) ? `
+            <div style="margin-top:0.3rem; display:flex; flex-wrap:wrap; gap:0.3rem; align-items:center;">
+              ${rolesBadges}
+              ${portalBadge}
+            </div>
+          ` : ''}
         </div>
-        <div class="d-flex gap-1" style="flex-wrap:wrap; justify-content:flex-end;">
-          <button class="btn btn-icon btn-sm" onclick="toggleEmployeeOnlineAdmin('${e.id}')" title="${isOnline ? 'Passer Hors Ligne' : 'Passer En Ligne (Présent au salon)'}" style="background:rgba(255,255,255,0.05);border:1px solid ${isOnline ? '#22c55e' : 'rgba(255,255,255,0.15)'};">
-            ${isOnline ? '🟢' : '⚪'}
+
+        <!-- Card Bottom Footer Toolbar -->
+        <div class="emp-card-footer">
+          <button class="btn-presence-toggle ${isOnline ? 'online' : 'offline'}" onclick="toggleEmployeeOnlineAdmin('${e.id}')" title="Cliquer pour changer le statut En Ligne">
+            <span class="live-status-dot ${isOnline ? 'online' : 'offline'}"></span>
+            ${isOnline ? 'En Ligne (Au salon)' : 'Hors Ligne'}
           </button>
-          <button class="btn btn-icon btn-secondary btn-sm" onclick="copyStaffDirectLink('${e.access_code || e.username || ''}')" title="Copier le lien direct du portail avec code PIN">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-          </button>
-          <button class="btn btn-icon btn-secondary btn-sm" onclick="openPortalModal('${e.id}')" title="Configuration Portail">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-          </button>
-          <button class="btn btn-icon btn-secondary btn-sm" onclick="viewBadge('${e.id}')" title="Badge QR">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-          </button>
-          <button class="btn btn-icon btn-secondary btn-sm" onclick="editEmployee('${e.id}')" title="Modifier">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-          </button>
-          <button class="btn btn-icon btn-danger btn-sm" onclick="deleteEmployee('${e.id}')" title="Supprimer">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-          </button>
+
+          <div class="emp-actions-group">
+            <button class="btn btn-icon btn-secondary btn-sm" onclick="copyStaffDirectLink('${e.access_code || e.username || ''}')" title="Copier le lien direct staff.html avec code PIN">
+              ${getLucideSvg('copy', 15)}
+            </button>
+            <button class="btn btn-icon btn-secondary btn-sm" onclick="openPortalModal('${e.id}')" title="Gestion du compte portail">
+              ${getLucideSvg('shield', 15)}
+            </button>
+            <button class="btn btn-icon btn-secondary btn-sm" onclick="viewBadge('${e.id}')" title="Badge QR">
+              ${getLucideSvg('qr', 15)}
+            </button>
+            <button class="btn btn-icon btn-secondary btn-sm" onclick="editEmployee('${e.id}')" title="Modifier employé">
+              ${getLucideSvg('edit', 15)}
+            </button>
+            <button class="btn btn-icon btn-danger btn-sm" onclick="deleteEmployee('${e.id}')" title="Supprimer">
+              ${getLucideSvg('trash', 15)}
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -1303,7 +1339,7 @@ async function processAttendance(employee) {
         </div>
         <div style="text-align:left;">
           <div style="font-weight:700;font-size:1.1rem;">${esc(employee.full_name)}</div>
-          <div style="font-size:.85rem;color:#6b7280;">${action === 'entrée' ? '✅ Entrée enregistrée' : '✅ Sortie enregistrée'} à ${time}</div>
+          <div style="font-size:.85rem;color:#6b7280;">${action === 'entrée' ? 'Entrée enregistrée' : 'Sortie enregistrée'} à ${time}</div>
         </div>
       </div>
     `;
@@ -1319,7 +1355,7 @@ async function processAttendance(employee) {
           </div>
           <div style="text-align:left;">
             <div style="font-weight:700;font-size:1.1rem;">${esc(employee.full_name)}</div>
-            <div style="font-size:.85rem;color:#6b7280;">⚠️ ${esc(err.message)}</div>
+            <div style="font-size:.85rem;color:#6b7280;">${esc(err.message)}</div>
           </div>
         </div>
       `;
@@ -1456,8 +1492,14 @@ function showScanResultPopup(type, employee, title, message, time) {
     `;
   }
 
+  const popupIcon = isSuccess
+    ? `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`
+    : isWarning
+      ? `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`
+      : `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
+
   popup.innerHTML = `
-    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">${isSuccess ? '👋' : isWarning ? '⚠️' : '❌'}</div>
+    <div style="display:flex; justify-content:center; margin-bottom: 0.5rem;">${popupIcon}</div>
     <div style="font-weight:800;font-size:1.8rem;margin-bottom:0.5rem;">${esc(title)}</div>
     ${bodyHtml}
     <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.3);">
@@ -2030,7 +2072,7 @@ async function onReassignScanSuccess(qrData) {
 
   if (employeesWithThisQR.length > 1) {
     const result = document.getElementById('reassign-scan-result');
-    result.innerHTML = `<div class="alert alert-warning">⚠️ DOUBLON DÉTECTÉ: ${employeesWithThisQR.length} employés ont ce même QR code!</div>`;
+    result.innerHTML = `<div class="alert alert-warning">DOUBLON DÉTECTÉ: ${employeesWithThisQR.length} employés ont ce même QR code!</div>`;
   }
 
   currentOwnerOfQR = employeesWithThisQR[0];
@@ -2049,7 +2091,7 @@ window.openQRReassignModal = function() {
   if (employeesWithThisQR.length > 1) {
     ownerDiv.innerHTML = `
       <div class="alert alert-error" style="margin-bottom:1rem;">
-        <strong>⚠️ PROBLÈME DE DOUBLON DÉTECTÉ!</strong><br>
+        <strong>PROBLÈME DE DOUBLON DÉTECTÉ!</strong><br>
         ${employeesWithThisQR.length} employés ont le même code QR. Tous sauf un recevront un nouveau code QR.
       </div>
       <div style="font-weight:600;margin-bottom:0.5rem;">Employés concernés par ce doublon:</div>
@@ -2153,7 +2195,7 @@ window.selectNewOwner = function(id) {
         ${selectedNewOwner.photo_url ? `<img src="${selectedNewOwner.photo_url}" alt="${esc(selectedNewOwner.full_name)}">` : getInitials(selectedNewOwner.full_name)}
       </div>
       <div class="emp-info">
-        <div style="font-weight:600;margin-bottom:0.25rem;color:#065f46;">✓ Sélectionné</div>
+        <div style="font-weight:600;margin-bottom:0.25rem;color:#065f46;display:flex;align-items:center;gap:0.3rem;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Sélectionné</div>
         <div class="emp-name">${esc(selectedNewOwner.full_name)}</div>
         <div class="emp-meta">${esc(selectedNewOwner.position)} • ${esc(selectedNewOwner.employee_number || '')}</div>
         ${selectedNewOwner.nif ? `<div class="emp-meta">NIF: ${esc(selectedNewOwner.nif)}</div>` : ''}
@@ -2171,7 +2213,7 @@ window.confirmQRReassignment = async function() {
   let confirmMsg = `Confirmer la réattribution?\n\nVers: ${selectedNewOwner.full_name}\n\n`;
   
   if (employeesWithThisQR.length > 1) {
-    confirmMsg += `⚠️ ATTENTION: ${employeesWithThisQR.length} employés ont ce QR code!\n`;
+    confirmMsg += `ATTENTION: ${employeesWithThisQR.length} employés ont ce QR code!\n`;
     confirmMsg += `Tous sauf ${selectedNewOwner.full_name} recevront un nouveau QR code.\n\n`;
     confirmMsg += `Employés concernés:\n${employeesWithThisQR.map(e => `- ${e.full_name}`).join('\n')}`;
   } else {
@@ -2394,7 +2436,7 @@ window.selectEmployeeForAssignment = function(id) {
         ${selectedEmployeeForAssignment.photo_url ? `<img src="${selectedEmployeeForAssignment.photo_url}" alt="${esc(selectedEmployeeForAssignment.full_name)}">` : getInitials(selectedEmployeeForAssignment.full_name)}
       </div>
       <div class="emp-info">
-        <div style="font-weight:600;margin-bottom:0.25rem;color:#065f46;">✓ Sélectionné</div>
+        <div style="font-weight:600;margin-bottom:0.25rem;color:#065f46;display:flex;align-items:center;gap:0.3rem;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Sélectionné</div>
         <div class="emp-name">${esc(selectedEmployeeForAssignment.full_name)}</div>
         <div class="emp-meta">${esc(selectedEmployeeForAssignment.position)} • ${esc(selectedEmployeeForAssignment.employee_number || '')}</div>
       </div>
@@ -3033,7 +3075,7 @@ async function loadEmployeeReports() {
         <div style="display:flex;justify-content:space-between;"><strong>${esc(r.title)}</strong><span class="badge badge-secondary">${esc(r.report_type)}</span></div>
         <div class="text-muted" style="font-size:.8rem;margin:.2rem 0;">${new Date(r.created_at).toLocaleString('fr-FR')}</div>
         ${r.content ? `<div style="font-size:.85rem;line-height:1.5;">${esc(r.content)}</div>` : ''}
-        ${mstr ? `<div class="text-muted" style="font-size:.8rem;margin-top:.2rem;">📊 ${esc(mstr)}</div>` : ''}
+        ${mstr ? `<div class="text-muted" style="font-size:.8rem;margin-top:.2rem;display:flex;align-items:center;gap:0.35rem;">${getLucideSvg('bar-chart', 13)} <span>${esc(mstr)}</span></div>` : ''}
         <div style="margin-top:.5rem;display:flex;gap:.4rem;">
           <input type="text" class="form-input" id="fb-${r.id}" placeholder="Retour admin..." value="${esc(r.admin_feedback || '')}" style="font-size:.82rem;">
           <button class="btn btn-secondary btn-sm" onclick="saveReportFeedback('${r.id}')">Envoyer</button>

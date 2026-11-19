@@ -145,20 +145,20 @@ function getLiveCountdownBadge(r) {
   const diffMin = Math.round(diffMs / (60 * 1000));
   
   if (r.status === 'COMPLETED') {
-    return '<span class="badge badge-secondary" style="font-size:0.75rem;">✅ Soin terminé</span>';
+    return '<span class="badge badge-secondary" style="font-size:0.75rem;">Soin terminé</span>';
   }
   
   // Future / upcoming
   if (diffMin > 0) {
     if (diffMin <= 60) {
-      return '<span class="badge badge-warning" style="background:rgba(245,158,11,0.18);color:#f59e0b;font-weight:700;font-size:0.75rem;border:1px solid #f59e0b50;">⏳ Dans ' + diffMin + 'm</span>';
+      return '<span class="badge badge-warning" style="background:rgba(245,158,11,0.18);color:#f59e0b;font-weight:700;font-size:0.75rem;border:1px solid #f59e0b50;">Dans ' + diffMin + 'm</span>';
     } else if (diffMin <= 1440) {
       const hours = Math.floor(diffMin / 60);
       const remMin = diffMin % 60;
-      return '<span class="badge badge-secondary" style="background:rgba(212,175,55,0.12);color:#d4af37;font-weight:600;font-size:0.75rem;border:1px solid #d4af3740;">⏳ Dans ' + hours + 'h ' + (remMin > 0 ? remMin + 'm' : '') + '</span>';
+      return '<span class="badge badge-secondary" style="background:rgba(212,175,55,0.12);color:#d4af37;font-weight:600;font-size:0.75rem;border:1px solid #d4af3740;">Dans ' + hours + 'h ' + (remMin > 0 ? remMin + 'm' : '') + '</span>';
     } else {
       const days = Math.round(diffMin / 1440);
-      return '<span class="badge badge-secondary" style="font-size:0.75rem;">📅 Dans ' + days + 'j</span>';
+      return '<span class="badge badge-secondary" style="font-size:0.75rem;">Dans ' + days + 'j</span>';
     }
   }
   
@@ -350,7 +350,7 @@ async function loadEmployees() {
   const sel = document.getElementById('assign-filter-emp');
   if (sel) {
     sel.innerHTML = '<option value="">Tous les employés</option>' +
-      allEmployees.map(e => '<option value="' + e.id + '">' + (isEmployeeLiveOnline(e.id) ? '🟢 ' : '⚪ ') + esc(e.full_name) + '</option>').join('');
+      allEmployees.map(e => '<option value="' + e.id + '">' + (isEmployeeLiveOnline(e.id) ? '[En Ligne] ' : '[Hors Ligne] ') + esc(e.full_name) + '</option>').join('');
   }
   updateOnlineBadgeCount();
 }
@@ -641,7 +641,7 @@ function evaluateEmployeeForReservation(emp, res, allDayReservations) {
   // 1. STATUT EN LIGNE (PRÉSENCE AU SALON EN DIRECT)
   const isOnline = isEmployeeLiveOnline(emp.id);
   if (!isOnline) {
-    return { eligible: false, score: -100, reason: '⚪ Hors Ligne (Pas au salon actuellement)' };
+    return { eligible: false, score: -100, reason: 'Hors Ligne (Pas au salon actuellement)' };
   }
 
   const sched = getEmployeeSchedule(emp);
@@ -679,7 +679,7 @@ function evaluateEmployeeForReservation(emp, res, allDayReservations) {
 
   // 4. CALCUL DU SCORE D'AFFINITÉ & COMPÉTENCE
   let score = 20; // score de base pour un employé en ligne sans conflit
-  let matchFactors = ['🟢 En Ligne au salon'];
+  let matchFactors = ['En Ligne au salon'];
 
   const empPos = (emp.position || '').toLowerCase();
   const empRoles = normalizeRoles(emp);
@@ -781,7 +781,7 @@ window.executeAutoAssignOnlineStaff = async function() {
   }
 
   if (assignedCount > 0) {
-    toast(`⚡ ${assignedCount} réservation(s) assignée(s) avec succès aux employés En Ligne !`, 'success');
+    toast(`${assignedCount} réservation(s) assignée(s) avec succès aux employés En Ligne !`, 'success');
     await loadAssignments();
   } else {
     toast('Impossible d\'assigner automatiquement : conflits d\'horaires pour les employés actuellement en ligne.', 'warning');
@@ -814,7 +814,7 @@ window.openSmartAssignModal = async function() {
   if (!unassigned.length) {
     listBox.innerHTML = 
       '<div style="text-align:center;padding:3rem 1rem;color:var(--admin-text-muted);">' +
-        '<div style="font-size:2.5rem;margin-bottom:0.5rem;">🎉</div>' +
+        '<div style="display:flex;justify-content:center;margin-bottom:0.75rem;"><svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>' +
         '<div style="font-size:1rem;font-weight:600;color:#FAF8F5;">Toutes les réservations sont déjà assignées !</div>' +
         '<div style="font-size:0.82rem;margin-top:0.25rem;">Aucun rendez-vous en attente de personnel pour le moment.</div>' +
       '</div>';
@@ -869,7 +869,7 @@ window.openSmartAssignModal = async function() {
           '</button>' +
         '</div>'
       : '<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:0.6rem 0.85rem;color:#f87171;font-size:0.8rem;margin-top:0.5rem;">' +
-          '⚠️ Aucun employé disponible sans conflit sur ce créneau horaire.' +
+          'Aucun employé disponible sans conflit sur ce créneau horaire.' +
         '</div>';
 
     return '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:0.85rem;">' +
@@ -877,7 +877,7 @@ window.openSmartAssignModal = async function() {
         '<div>' +
           '<div style="font-weight:600;font-size:0.92rem;color:#FAF8F5;">' + esc(r.service) + '</div>' +
           '<div style="font-size:0.78rem;color:var(--admin-text-muted);margin-top:0.15rem;">' +
-            '👤 <strong>' + esc(r.user_name || 'Client') + '</strong> · 📅 ' + fmtDate(r.date) + ' · ⏰ <strong>' + fmtTime(r.time) + ' → ' + item.endTime + '</strong> (' + item.duration + ' min)' +
+            'Client : <strong>' + esc(r.user_name || 'Client') + '</strong> · Date : ' + fmtDate(r.date) + ' · Horaire : <strong>' + fmtTime(r.time) + ' → ' + item.endTime + '</strong> (' + item.duration + ' min)' +
           '</div>' +
         '</div>' +
         '<span class="badge badge-warning" style="font-size:0.7rem;">Non assigné</span>' +
@@ -941,7 +941,7 @@ window.applyAllSmartAssignments = async function() {
   }
 
   btn.disabled = false;
-  btn.textContent = '⚡ Appliquer toutes les assignations IA';
+  btn.textContent = 'Appliquer toutes les assignations IA';
   closeSmartAssignModal();
   await loadAssignments();
   toast(successCount + ' réservations assignées intelligemment !', 'success');
@@ -1005,18 +1005,18 @@ function buildEmployeeWhatsAppMessage(r, emp) {
   }
 
   return (
-    '✨ *DALIGHT — NOUVEAU SOIN ASSIGNÉ* ✨\n\n' +
-    'Bonjour *' + emp.full_name + '* 👋,\n' +
+    '*DALIGHT — NOUVEAU SOIN ASSIGNÉ*\n\n' +
+    'Bonjour *' + emp.full_name + '*,\n' +
     'Un nouveau rendez-vous vous a été attribué sur votre planning :\n\n' +
-    '👤 *Client :* ' + (r.user_name || 'Client') + '\n' +
-    (r.phone ? ('📞 *Téléphone :* ' + r.phone + '\n') : '') +
-    '💆‍♀️ *Soin / Service :* ' + (r.service || 'Head Spa Japonais') + '\n' +
-    '📅 *Date :* ' + fmtDate(r.date) + '\n' +
-    '⏰ *Début :* ' + fmtTime(r.time) + ' | *Fin estimée :* ' + endTime + ' (' + duration + ' min)\n' +
-    '⏳ *Compte à rebours :* ' + countdownStr + '\n' +
-    (r.notes ? ('📝 *Notes / Préférences :* ' + r.notes + '\n') : '') +
-    '📍 *Lieu :* Sanctuaire DALIGHT, Delmas 65 #10\n\n' +
-    '📲 *Accéder à votre espace employé :*\n' +
+    '*Client :* ' + (r.user_name || 'Client') + '\n' +
+    (r.phone ? ('*Téléphone :* ' + r.phone + '\n') : '') +
+    '*Soin / Service :* ' + (r.service || 'Head Spa Japonais') + '\n' +
+    '*Date :* ' + fmtDate(r.date) + '\n' +
+    '*Début :* ' + fmtTime(r.time) + ' | *Fin estimée :* ' + endTime + ' (' + duration + ' min)\n' +
+    '*Compte à rebours :* ' + countdownStr + '\n' +
+    (r.notes ? ('*Notes / Préférences :* ' + r.notes + '\n') : '') +
+    '*Lieu :* Sanctuaire DALIGHT, Delmas 65 #10\n\n' +
+    '*Accéder à votre espace employé :*\n' +
     getPortalBaseUrl() + '\n\n' +
     '_Merci de vous préparer 10 min avant le début du soin pour accueillir votre client(e) dans les meilleures conditions._'
   );
@@ -1113,7 +1113,7 @@ window.dispatchDirectWhatsAppNotification = async function() {
     openInWhatsAppWeb();
   } finally {
     btn.disabled = false;
-    btn.textContent = '🚀 Envoyer via Passerelle DALIGHT';
+    btn.textContent = 'Envoyer via Passerelle DALIGHT';
   }
 };
 
@@ -1259,7 +1259,7 @@ window.renderReports = function () {
         '<div class="text-muted" style="font-size:.8rem;">' + esc(r.employee_name) + ' · ' + new Date(r.created_at).toLocaleString('fr-FR') + '</div>' +
       '</div>' +
       (r.content ? '<div style="font-size:.88rem;line-height:1.5;margin-top:.4rem;">' + esc(r.content) + '</div>' : '') +
-      (mstr ? '<div class="text-muted" style="font-size:.8rem;margin-top:.3rem;">📊 ' + esc(mstr) + '</div>' : '') +
+      (mstr ? '<div class="text-muted" style="font-size:.8rem;margin-top:.3rem;display:flex;align-items:center;gap:0.35rem;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg> <span>' + esc(mstr) + '</span></div>' : '') +
       '<div style="margin-top:.6rem;display:flex;gap:.4rem;">' +
         '<input type="text" class="form-input" id="mfb-' + r.id + '" placeholder="Retour à l\'employé..." value="' + esc(r.admin_feedback || '') + '" style="font-size:.82rem;">' +
         '<button class="btn btn-secondary btn-sm" onclick="saveReportFeedback(\'' + r.id + '\')">Envoyer</button>' +
