@@ -8,23 +8,55 @@ const ROLE_LABELS = {
   masseuse: 'Masseur/Masseuse',
   coiffure: 'Coiffure',
   onglerie: 'Onglerie',
+  cadreur_video: 'Cadreur Vidéo CVISUAL',
+  cadreur_cvisual: 'Cadreur CVISUAL',
   community_manager: 'Community Manager',
   adm_manager: 'ADM / Manager',
   receptionniste: 'Réceptionniste',
   caissier: 'Caissier/Caisse',
   formateur: 'Formateur',
 };
-const PROVIDER_ROLES = ['estheticienne', 'masseuse', 'coiffure', 'onglerie'];
+const PROVIDER_ROLES = ['estheticienne', 'masseuse', 'coiffure', 'onglerie', 'cadreur_video', 'cadreur_cvisual'];
 
 let allEmployees = [];
 let allPostes = [];
 let assignReservations = [];
+let staffLiveOnlineState = {};
 let sessionsData = [];
 let reportsData = [];
 let evalsData = [];
 let assignModalState = null;
 let countdownTimerInterval = null;
 let currentSmartRecommendations = [];
+
+function isEmployeeLiveOnline(empId) {
+  return !!(staffLiveOnlineState && staffLiveOnlineState[empId] && staffLiveOnlineState[empId].is_online);
+}
+
+async function loadLiveOnlineState() {
+  try {
+    const { data } = await sb()
+      .from('settings')
+      .select('value')
+      .eq('key', 'staff_live_online_state')
+      .maybeSingle();
+
+    if (data && data.value && typeof data.value === 'object') {
+      staffLiveOnlineState = data.value;
+    }
+    updateOnlineBadgeCount();
+  } catch(e) {
+    console.warn('loadLiveOnlineState warning:', e);
+  }
+}
+
+function updateOnlineBadgeCount() {
+  const countEl = document.getElementById('live-online-staff-count');
+  if (countEl && allEmployees.length) {
+    const onlineCount = allEmployees.filter(e => isEmployeeLiveOnline(e.id)).length;
+    countEl.textContent = onlineCount;
+  }
+}
 
 function sb() {
   return window.adminCore?.supabase || window.dalightAdminSupabase || window.supabaseClient;
@@ -313,12 +345,14 @@ async function loadEmployees() {
   const { data, error } = await sb().from('presence_employees').select('*').order('full_name', { ascending: true });
   if (error) { console.error(error); return; }
   allEmployees = data || [];
+  await loadLiveOnlineState();
 
   const sel = document.getElementById('assign-filter-emp');
   if (sel) {
     sel.innerHTML = '<option value="">Tous les employés</option>' +
-      allEmployees.map(e => '<option value="' + e.id + '">' + esc(e.full_name) + '</option>').join('');
+      allEmployees.map(e => '<option value="' + e.id + '">' + (isEmployeeLiveOnline(e.id) ? '🟢 ' : '⚪ ') + esc(e.full_name) + '</option>').join('');
   }
+  updateOnlineBadgeCount();
 }
 
 async function loadStats() {
@@ -333,6 +367,7 @@ async function loadStats() {
   const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
   const { data: reps } = await sb().from('staff_reports').select('id').gte('created_at', weekAgo.toISOString());
   document.getElementById('stat-reports').textContent = (reps || []).length;
+  updateOnlineBadgeCount();
 }
 
 // ============================================
@@ -342,6 +377,8 @@ async function loadAssignments() {
   const date = document.getElementById('assign-date').value;
   const tbody = document.getElementById('assign-table');
   tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted" style="padding:2rem;">Chargement...</td></tr>';
+
+  await loadLiveOnlineState();
 
   let query = sb().from('reservations').select('*, reservation_employees(*)');
   if (date) {
@@ -592,43 +629,38 @@ window.saveAssignModal = async function () {
 
 /**
  * Calcule l'éligibilité et le score d'un employé pour une réservation donnée.
+ * Règle DALIGHT : les congés n'ont pas de jours fixes. La disponibilité est conditionnée
+ * par le statut "En Ligne" de l'employé (connecté au salon), l'absence de chevauchement horaire,
+ * et le nombre de services déjà réalisés aujourd'hui (équilibrage équitable de charge).
  */
 function evaluateEmployeeForReservation(emp, res, allDayReservations) {
   if (!emp.is_active) {
     return { eligible: false, score: 0, reason: 'Employé inactif' };
   }
 
-  const sched = getEmployeeSchedule(emp);
-  const dayOfWeek = getDayOfWeekName(res.date);
-
-  // 1. Vérification des jours de repos hebdomadaires (congé)
-  const daysOff = (sched.days_off || ['dimanche']).map(d => d.toLowerCase());
-  if (daysOff.includes(dayOfWeek)) {
-    return { eligible: false, score: -100, reason: 'En congé régulier ce jour (' + dayOfWeek + ')' };
+  // 1. STATUT EN LIGNE (PRÉSENCE AU SALON EN DIRECT)
+  const isOnline = isEmployeeLiveOnline(emp.id);
+  if (!isOnline) {
+    return { eligible: false, score: -100, reason: '⚪ Hors Ligne (Pas au salon actuellement)' };
   }
 
-  // 2. Vérification des congés exceptionnels et vacances
+  const sched = getEmployeeSchedule(emp);
+
+  // 2. Vérification des congés exceptionnels marqués
   if (sched.is_on_leave) {
-    return { eligible: false, score: -100, reason: 'Actuellement en congé exceptionnel' };
+    return { eligible: false, score: -100, reason: 'En congé exceptionnel (' + (sched.leave_reason || 'Absent') + ')' };
   }
   if (sched.leave_start && sched.leave_end) {
     if (res.date >= sched.leave_start && res.date <= sched.leave_end) {
-      return { eligible: false, score: -100, reason: 'En vacances/absence planifiée du ' + sched.leave_start + ' au ' + sched.leave_end };
+      return { eligible: false, score: -100, reason: 'En congé planifié du ' + sched.leave_start + ' au ' + sched.leave_end };
     }
   }
 
-  // 3. Vérification des horaires de travail (Shift)
+  // 3. VÉRIFICATION DES CONFLITS HORAIRES / CHEVAUCHEMENT (EN FONCTION DE L'HEURE)
   const resDuration = Number(res.duration_minutes) || (res.service && res.service.includes('Royale') ? 90 : (res.service && res.service.includes('Express') ? 45 : 60));
   const resStartMin = timeToMinutes(res.time);
   const resEndMin = resStartMin + resDuration;
-  const workStartMin = timeToMinutes(sched.work_start || '08:00');
-  const workEndMin = timeToMinutes(sched.work_end || '18:00');
 
-  if (resStartMin < workStartMin || resEndMin > workEndMin) {
-    return { eligible: false, score: -50, reason: 'Hors shift de travail (' + (sched.work_start || '08:00') + ' - ' + (sched.work_end || '18:00') + ')' };
-  }
-
-  // 4. Détection des conflits de chevauchement sur la même journée
   const existingEmpReservations = allDayReservations.filter(r => 
     r.id !== res.id &&
     (r.assigned_employee_id === emp.id || (r.reservation_employees || []).some(re => re.employee_id === emp.id))
@@ -641,57 +673,64 @@ function evaluateEmployeeForReservation(emp, res, allDayReservations) {
 
     // Check overlap
     if (!(resEndMin <= oStartMin || resStartMin >= oEndMin)) {
-      return { eligible: false, score: -80, reason: 'Chevauchement avec un autre soin (' + other.time + ' - ' + minutesToTime(oEndMin) + ')' };
+      return { eligible: false, score: -80, reason: 'Chevauchement horaire (' + other.time + ' - ' + minutesToTime(oEndMin) + ')' };
     }
   }
 
-  // 5. Calcul du Score d'Affinité (0 à 100)
-  let score = 30; // base score for fully available staff
-  let matchFactors = [];
+  // 4. CALCUL DU SCORE D'AFFINITÉ & COMPÉTENCE
+  let score = 20; // score de base pour un employé en ligne sans conflit
+  let matchFactors = ['🟢 En Ligne au salon'];
 
-  // Match Poste / Compétence
   const empPos = (emp.position || '').toLowerCase();
+  const empRoles = normalizeRoles(emp);
   const resSrv = (res.service || '').toLowerCase();
 
+  const isVideoRes = res.wants_video === true || res.video_requested === true || (Number(res.video_price) > 0) || resSrv.includes('vidéo') || resSrv.includes('video') || (res.notes || '').includes('[VIDEO_META:');
   const isHeadSpaService = resSrv.includes('head spa') || resSrv.includes('cascade') || resSrv.includes('rituel') || resSrv.includes('cuir chevelu');
   const isMassageService = resSrv.includes('massage') || resSrv.includes('shiatsu') || resSrv.includes('pierres');
   const isFacialService = resSrv.includes('visage') || resSrv.includes('soin') || resSrv.includes('éclat') || resSrv.includes('hydrafacial');
   const isHairService = resSrv.includes('coiffure') || resSrv.includes('brushing') || resSrv.includes('capillaire');
 
-  if (isHeadSpaService && (empPos.includes('head spa') || empPos.includes('praticienne'))) {
+  if (isVideoRes && (empPos.includes('cadreur') || empRoles.includes('cadreur_video') || empRoles.includes('cadreur_cvisual'))) {
     score += 50;
+    matchFactors.push('Cadreur Vidéo CVISUAL qualifié');
+  } else if (isHeadSpaService && (empPos.includes('head spa') || empPos.includes('praticienne') || empRoles.includes('estheticienne'))) {
+    score += 45;
     matchFactors.push('Spécialiste Head Spa certifiée');
-  } else if (isMassageService && (empPos.includes('mass') || empPos.includes('thérapeute'))) {
-    score += 50;
+  } else if (isMassageService && (empPos.includes('mass') || empPos.includes('thérapeute') || empRoles.includes('masseuse'))) {
+    score += 45;
     matchFactors.push('Massothérapeute qualifiée');
-  } else if (isFacialService && empPos.includes('esthétic')) {
-    score += 50;
+  } else if (isFacialService && (empPos.includes('esthétic') || empRoles.includes('estheticienne'))) {
+    score += 45;
     matchFactors.push('Esthéticienne soins visage');
-  } else if (isHairService && (empPos.includes('coiff') || empPos.includes('capillaire'))) {
-    score += 50;
-    matchFactors.push('Experte capillaire');
-  } else if (empPos.includes('esthéticienne / masseuse') || empPos.includes('masseuse / esthéticienne')) {
-    score += 40;
-    matchFactors.push('Polyvalente Soins & Massages');
+  } else if (isHairService && (empPos.includes('coiff') || empRoles.includes('coiffure'))) {
+    score += 45;
+    matchFactors.push('Experte coiffure & capillaire');
+  } else if (empRoles.includes('estheticienne') || empRoles.includes('masseuse')) {
+    score += 35;
+    matchFactors.push('Polyvalente Soins');
   } else {
-    score += 15;
+    score += 10;
     matchFactors.push('Compétences générales');
   }
 
-  // Équilibrage de la charge journalière
+  // 5. ÉQUILIBRAGE DE CHARGE (EN FONCTION DE COMBIEN SERVICES LI GEN BAY DÉJÀ)
   const currentCount = existingEmpReservations.length;
   if (currentCount === 0) {
-    score += 20;
-    matchFactors.push('1er soin de la journée (reposée)');
+    score += 40;
+    matchFactors.push('Priorité maximale: 0 soin aujourd\'hui');
   } else if (currentCount === 1) {
-    score += 15;
-    matchFactors.push('2e soin de la journée');
+    score += 25;
+    matchFactors.push('1 soin déjà planifié');
   } else if (currentCount === 2) {
-    score += 10;
-    matchFactors.push('3e soin de la journée');
+    score += 15;
+    matchFactors.push('2 soins déjà planifiés');
+  } else if (currentCount === 3) {
+    score += 5;
+    matchFactors.push('3 soins déjà planifiés');
   } else {
-    score += 2;
-    matchFactors.push(currentCount + ' soins déjà planifiés');
+    score += 0;
+    matchFactors.push(currentCount + ' soins déjà planifiés (charge saturée)');
   }
 
   return {
@@ -700,6 +739,54 @@ function evaluateEmployeeForReservation(emp, res, allDayReservations) {
     reason: matchFactors.join(' · ')
   };
 }
+
+// Auto-assignation rapide en 1 clic pour les employés actuellement En Ligne
+window.executeAutoAssignOnlineStaff = async function() {
+  const date = document.getElementById('assign-date')?.value || todayStr();
+  const unassigned = assignReservations.filter(r => !r.assigned_employee_id && !(r.reservation_employees && r.reservation_employees.length));
+
+  if (!unassigned.length) {
+    toast('Toutes les réservations du ' + date + ' sont déjà assignées !', 'info');
+    return;
+  }
+
+  await loadLiveOnlineState();
+
+  const onlineEmps = allEmployees.filter(e => e.is_active && isEmployeeLiveOnline(e.id));
+  if (!onlineEmps.length) {
+    toast('Aucun employé n\'est actuellement EN LIGNE au salon. Demandez à l\'équipe de se connecter sur staff.html', 'warning');
+    return;
+  }
+
+  toast('Auto-assignation des employés En Ligne en cours...', 'info');
+  let assignedCount = 0;
+
+  for (const r of unassigned) {
+    const sameDay = assignReservations.filter(x => x.date === r.date);
+    let bestScore = -1;
+    let bestCandidate = null;
+
+    for (const emp of onlineEmps) {
+      const evalRes = evaluateEmployeeForReservation(emp, r, sameDay);
+      if (evalRes.eligible && evalRes.score > bestScore) {
+        bestScore = evalRes.score;
+        bestCandidate = emp;
+      }
+    }
+
+    if (bestCandidate) {
+      await assignEmployeeToReservation(r.id, bestCandidate, r.duration_minutes || 60);
+      assignedCount++;
+    }
+  }
+
+  if (assignedCount > 0) {
+    toast(`⚡ ${assignedCount} réservation(s) assignée(s) avec succès aux employés En Ligne !`, 'success');
+    await loadAssignments();
+  } else {
+    toast('Impossible d\'assigner automatiquement : conflits d\'horaires pour les employés actuellement en ligne.', 'warning');
+  }
+};
 
 window.openSmartAssignModal = async function() {
   const modal = document.getElementById('smart-assign-modal');

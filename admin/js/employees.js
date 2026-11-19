@@ -202,6 +202,8 @@ const ROLE_LABELS = {
   masseuse: 'Masseur/Masseuse',
   coiffure: 'Coiffure',
   onglerie: 'Onglerie',
+  cadreur_video: 'Cadreur Vidéo CVISUAL',
+  cadreur_cvisual: 'Cadreur CVISUAL',
   community_manager: 'Community Manager',
   adm_manager: 'ADM / Manager',
   receptionniste: 'Réceptionniste',
@@ -210,6 +212,137 @@ const ROLE_LABELS = {
 };
 const ALL_ROLES = Object.keys(ROLE_LABELS);
 let currentPortalEmployee = null;
+let staffLiveOnlineState = {};
+let todayAppointmentsByEmp = {};
+
+function isEmployeeLiveOnline(empId) {
+  return !!(staffLiveOnlineState && staffLiveOnlineState[empId] && staffLiveOnlineState[empId].is_online);
+}
+
+async function loadLiveOnlineState() {
+  const supabase = getSupabaseClient();
+  if (!supabase) return;
+  try {
+    const { data } = await supabase
+      .from('settings')
+      .select('value')
+      .eq('key', 'staff_live_online_state')
+      .maybeSingle();
+
+    if (data && data.value && typeof data.value === 'object') {
+      staffLiveOnlineState = data.value;
+    }
+  } catch(e) {
+    console.warn('loadLiveOnlineState warning:', e);
+  }
+}
+
+async function loadTodayBookingsCount() {
+  const supabase = getSupabaseClient();
+  if (!supabase) return;
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const { data } = await supabase
+      .from('reservations')
+      .select('assigned_employee_id')
+      .eq('date', today)
+      .neq('status', 'CANCELLED');
+
+    todayAppointmentsByEmp = {};
+    (data || []).forEach(r => {
+      if (r.assigned_employee_id) {
+        todayAppointmentsByEmp[r.assigned_employee_id] = (todayAppointmentsByEmp[r.assigned_employee_id] || 0) + 1;
+      }
+    });
+  } catch(e) {
+    console.warn('loadTodayBookingsCount warning:', e);
+  }
+}
+
+async function syncCadreursFromCVISUAL() {
+  const supabase = getSupabaseClient();
+  if (!supabase) return;
+  try {
+    const { data } = await supabase.from('settings').select('value').eq('key', 'cvisual_video_config').maybeSingle();
+    const config = data?.value;
+    if (config && Array.isArray(config.team_members) && config.team_members.length) {
+      for (const m of config.team_members) {
+        const exists = allEmployees.find(e => 
+          (e.phone && m.phone && e.phone.replace(/[^0-9]/g, '') === m.phone.replace(/[^0-9]/g, '')) ||
+          (e.full_name && m.name && e.full_name.trim().toLowerCase() === m.name.trim().toLowerCase())
+        );
+        if (!exists) {
+          const code = 'CAD' + Math.floor(100 + Math.random() * 900);
+          const newEmp = {
+            full_name: m.name,
+            phone: m.phone || null,
+            position: 'Cadreur Vidéo CVISUAL',
+            roles: ['cadreur_video'],
+            access_code: code,
+            portal_enabled: true,
+            is_active: true
+          };
+          const { data: created } = await supabase.from('presence_employees').insert(newEmp).select().single();
+          if (created) allEmployees.unshift(created);
+        }
+      }
+    }
+  } catch(e) {
+    console.warn('syncCadreursFromCVISUAL warning:', e);
+  }
+}
+
+window.toggleEmployeeOnlineAdmin = async function(empId) {
+  const supabase = getSupabaseClient();
+  if (!supabase) return;
+  const current = !!(staffLiveOnlineState && staffLiveOnlineState[empId] && staffLiveOnlineState[empId].is_online);
+  const newState = !current;
+
+  try {
+    const { data } = await supabase
+      .from('settings')
+      .select('value')
+      .eq('key', 'staff_live_online_state')
+      .maybeSingle();
+
+    let map = (data && data.value && typeof data.value === 'object') ? data.value : {};
+    const emp = allEmployees.find(e => e.id === empId);
+    map[empId] = {
+      is_online: newState,
+      name: emp?.full_name || '',
+      updated_at: new Date().toISOString()
+    };
+
+    const { error: upsertErr } = await supabase
+      .from('settings')
+      .upsert({
+        id: 'staff_live_online_state',
+        key: 'staff_live_online_state',
+        value: map,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'id' });
+
+    if (upsertErr) {
+      await supabase.from('settings').update({ value: map, updated_at: new Date().toISOString() }).eq('key', 'staff_live_online_state');
+    }
+
+    staffLiveOnlineState = map;
+    renderEmployees();
+    showToast(`${emp?.full_name || 'Employé'} marqué ${newState ? 'EN LIGNE 🟢' : 'HORS LIGNE ⚪'}`, 'info');
+  } catch(err) {
+    console.error('toggleEmployeeOnlineAdmin error:', err);
+    showToast('Erreur: ' + (err.message || err), 'error');
+  }
+};
+
+window.copyStaffDirectLink = function(codeOrUsername) {
+  const code = (codeOrUsername || '').trim();
+  const url = code ? `https://dalightbeauty.com/staff.html?code=${encodeURIComponent(code)}` : 'https://dalightbeauty.com/staff.html';
+  navigator.clipboard.writeText(url).then(
+    () => showToast(`Lien copié: ${url}`, 'success'),
+    () => showToast('Impossible de copier le lien', 'error')
+  );
+};
 
 function getSupabaseClient() {
   if (window.adminCore?.supabase) return window.adminCore.supabase;
@@ -300,6 +433,14 @@ async function loadEmployees() {
 
     if (error) throw error;
     allEmployees = data || [];
+
+    await Promise.all([
+      loadLiveOnlineState(),
+      loadTodayBookingsCount()
+    ]);
+
+    await syncCadreursFromCVISUAL();
+
     renderEmployees();
     updateStats();
   } catch (err) {
@@ -318,7 +459,8 @@ window.renderEmployees = function() {
     filtered = filtered.filter(e =>
       (e.full_name && e.full_name.toLowerCase().includes(search)) ||
       (e.position && e.position.toLowerCase().includes(search)) ||
-      (e.employee_number && e.employee_number.toLowerCase().includes(search))
+      (e.employee_number && e.employee_number.toLowerCase().includes(search)) ||
+      (e.access_code && e.access_code.toLowerCase().includes(search))
     );
   }
 
@@ -337,6 +479,20 @@ window.renderEmployees = function() {
   }
 
   grid.innerHTML = filtered.map(e => {
+    const isOnline = isEmployeeLiveOnline(e.id);
+    const onlinePill = isOnline
+      ? '<span style="display:inline-flex;align-items:center;gap:0.3rem;background:rgba(34,197,94,0.12);color:#22c55e;border:1px solid rgba(34,197,94,0.3);padding:0.12rem 0.5rem;border-radius:999px;font-size:0.68rem;font-weight:700;"><span class="live-status-dot online"></span> En Ligne</span>'
+      : '<span style="display:inline-flex;align-items:center;gap:0.3rem;background:rgba(148,163,184,0.1);color:#94a3b8;border:1px solid rgba(148,163,184,0.25);padding:0.12rem 0.5rem;border-radius:999px;font-size:0.68rem;font-weight:600;"><span class="live-status-dot offline"></span> Hors Ligne</span>';
+
+    const todayCount = todayAppointmentsByEmp[e.id] || 0;
+    const todayBadge = todayCount > 0
+      ? `<span style="display:inline-block;background:rgba(59,130,246,0.12);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);padding:0.1rem 0.4rem;border-radius:4px;font-size:0.65rem;font-weight:700;">📅 ${todayCount} soin${todayCount > 1 ? 's' : ''} aujourd'hui</span>`
+      : '<span style="display:inline-block;background:rgba(255,255,255,0.04);color:var(--admin-text-muted);padding:0.1rem 0.4rem;border-radius:4px;font-size:0.65rem;">📅 0 soin aujourd\'hui</span>';
+
+    const accessCodeBadge = e.access_code
+      ? `<span style="display:inline-block;background:rgba(212,175,55,0.15);color:#d4af37;border:1px solid rgba(212,175,55,0.35);padding:0.1rem 0.45rem;border-radius:4px;font-size:0.68rem;font-weight:800;letter-spacing:1px;font-family:monospace;" title="Code PIN portail employé">🔑 ${esc(e.access_code)}</span>`
+      : '';
+
     const qrModifierBadge = e.qr_modifier 
       ? `<span style="display:inline-block;background:#3b82f6;color:white;padding:0.15rem 0.4rem;border-radius:4px;font-size:0.65rem;font-weight:600;margin-left:0.35rem;">QR-${e.qr_modifier}</span>`
       : '';
@@ -360,34 +516,46 @@ window.renderEmployees = function() {
       ? '<span style="display:inline-block;background:#fee2e2;color:#ef4444;border:1px solid #fca5a5;padding:0.12rem 0.45rem;border-radius:4px;font-size:0.65rem;font-weight:700;margin-top:0.2rem;">🏖️ En congé (' + esc(sched.leave_reason || 'Absent') + ')</span>'
       : '';
     const scheduleBadge = sched.work_start
-      ? '<div style="margin-top:0.25rem;font-size:0.72rem;color:var(--admin-text-muted);display:flex;align-items:center;gap:0.35rem;"><span>⏰ ' + sched.work_start + ' - ' + (sched.work_end || '18:00') + '</span> • <span>Repos: <strong>' + daysOffList + '</strong></span></div>'
+      ? '<div style="margin-top:0.25rem;font-size:0.72rem;color:var(--admin-text-muted);display:flex;align-items:center;gap:0.35rem;"><span>⏰ ' + sched.work_start + ' - ' + (sched.work_end || '18:00') + '</span></div>'
       : '';
 
     const matchedPoste = allPostes.find(p => p.title.toLowerCase() === (e.position || '').toLowerCase());
     const posteColor = matchedPoste ? (matchedPoste.color || '#d4af37') : '#d4af37';
-    const posteBadge = '<span style="display:inline-block;background:rgba(212,175,55,0.12);color:' + posteColor + ';border:1px solid ' + posteColor + '40;padding:0.12rem 0.45rem;border-radius:4px;font-size:0.68rem;font-weight:700;">' + esc(e.position) + '</span>';
+    const posteBadge = '<span style="display:inline-block;background:rgba(212,175,55,0.12);color:' + posteColor + ';border:1px solid ' + posteColor + '40;padding:0.12rem 0.45rem;border-radius:4px;font-size:0.68rem;font-weight:700;">' + esc(e.position || 'Employé') + '</span>';
     
     return `
-      <div class="emp-card">
+      <div class="emp-card" style="border:1px solid ${isOnline ? 'rgba(34,197,94,0.35)' : 'var(--admin-border)'};">
         <div class="emp-avatar">
           ${e.photo_url ? `<img src="${e.photo_url}" alt="${esc(e.full_name)}">` : getInitials(e.full_name)}
         </div>
         <div class="emp-info">
-          <div class="emp-name">${esc(e.full_name)}${qrModifierBadge}</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.2rem;">
+            <div class="emp-name" style="margin:0;">${esc(e.full_name)}${qrModifierBadge}</div>
+            ${onlinePill}
+          </div>
           <div style="margin-top:0.2rem;display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
             ${posteBadge}
+            ${accessCodeBadge}
             <span class="emp-meta">• ${esc(e.employee_number || '')}</span>
+          </div>
+          <div style="margin-top:0.3rem;display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+            ${todayBadge}
           </div>
           ${scheduleBadge}
           ${leaveBadge}
           ${e.nif ? `<div class="emp-meta">NIF: ${esc(e.nif)}</div>` : ''}
-          <div class="emp-meta">${e.is_active ? 'Actif' : 'Inactif'}</div>
+          <div class="emp-meta">${e.is_active ? 'Compte Actif' : 'Compte Inactif'}</div>
           ${rolesBadges ? `<div style="margin-top:.3rem;">${rolesBadges}</div>` : ''}
           ${portalBadge ? `<div style="margin-top:.3rem;">${portalBadge}</div>` : ''}
         </div>
-        <div class="emp-status ${e.is_active ? '' : 'inactive'}"></div>
-        <div class="d-flex gap-1">
-          <button class="btn btn-icon btn-secondary btn-sm" onclick="openPortalModal('${e.id}')" title="Portail employé">
+        <div class="d-flex gap-1" style="flex-wrap:wrap; justify-content:flex-end;">
+          <button class="btn btn-icon btn-sm" onclick="toggleEmployeeOnlineAdmin('${e.id}')" title="${isOnline ? 'Passer Hors Ligne' : 'Passer En Ligne (Présent au salon)'}" style="background:rgba(255,255,255,0.05);border:1px solid ${isOnline ? '#22c55e' : 'rgba(255,255,255,0.15)'};">
+            ${isOnline ? '🟢' : '⚪'}
+          </button>
+          <button class="btn btn-icon btn-secondary btn-sm" onclick="copyStaffDirectLink('${e.access_code || e.username || ''}')" title="Copier le lien direct du portail avec code PIN">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          </button>
+          <button class="btn btn-icon btn-secondary btn-sm" onclick="openPortalModal('${e.id}')" title="Configuration Portail">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
           </button>
           <button class="btn btn-icon btn-secondary btn-sm" onclick="viewBadge('${e.id}')" title="Badge QR">

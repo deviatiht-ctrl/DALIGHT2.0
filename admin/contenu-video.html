@@ -862,17 +862,23 @@
       }
 
       container.innerHTML = cvisualConfig.team_members.map((m, idx) => `
-        <div class="team-chip">
+        <div class="team-chip" style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0.85rem; border-radius:12px; background:rgba(0,0,0,0.35); border:1px solid rgba(212,175,55,0.25);">
           <div>
             <div style="font-weight:700; color:#FAF8F5; font-size:0.85rem; display:flex; align-items:center; gap:0.4rem;">
               <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
               ${escapeHtml(m.name)}
+              ${m.access_code ? `<span style="background:rgba(212,175,55,0.18); color:#d4af37; padding:0.1rem 0.35rem; border-radius:4px; font-size:0.65rem; font-family:monospace; letter-spacing:1px; font-weight:800;">PIN: ${escapeHtml(m.access_code)}</span>` : ''}
             </div>
             <div style="font-size:0.75rem; color:#60a5fa; font-family:monospace; margin-top:0.15rem;">
               ${escapeHtml(m.phone || 'Pas de numéro')}
             </div>
           </div>
           <div style="display:flex; align-items:center; gap:0.4rem;">
+            ${m.access_code ? `
+              <button class="btn-action-icon" onclick="navigator.clipboard.writeText('https://dalightbeauty.com/staff.html?code=${encodeURIComponent(m.access_code)}').then(() => alert('Lien direct copié pour ' + '${escapeHtml(m.name)}'))" title="Copier lien direct staff.html?code=...">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              </button>
+            ` : ''}
             <a href="https://wa.me/${String(m.phone).replace(/\D/g, '')}" target="_blank" rel="noopener" class="btn-action-icon" title="Ouvrir WhatsApp direct">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/></svg>
             </a>
@@ -964,6 +970,43 @@
         // Save in Supabase settings
         const sb = await getClient();
         if (sb) {
+          // Sync cadreurs into presence_employees as registered staff with PIN access code
+          if (Array.isArray(cvisualConfig.team_members)) {
+            for (const m of cvisualConfig.team_members) {
+              try {
+                const { data: existing } = await sb
+                  .from('presence_employees')
+                  .select('id, access_code')
+                  .or(`full_name.eq.${m.name},phone.eq.${m.phone}`)
+                  .maybeSingle();
+
+                if (existing) {
+                  if (!existing.access_code) {
+                    const code = 'CAD' + Math.floor(100 + Math.random() * 900);
+                    await sb.from('presence_employees').update({ access_code: code, portal_enabled: true }).eq('id', existing.id);
+                    m.access_code = code;
+                  } else {
+                    m.access_code = existing.access_code;
+                  }
+                } else {
+                  const code = 'CAD' + Math.floor(100 + Math.random() * 900);
+                  await sb.from('presence_employees').insert({
+                    full_name: m.name,
+                    phone: m.phone || null,
+                    position: 'Cadreur Vidéo CVISUAL',
+                    roles: ['cadreur_video'],
+                    access_code: code,
+                    portal_enabled: true,
+                    is_active: true
+                  });
+                  m.access_code = code;
+                }
+              } catch (cadErr) {
+                console.warn('Cadreur presence sync warning:', cadErr);
+              }
+            }
+          }
+
           const payload = {
             id: 'cvisual_video_config',
             key: 'cvisual_video_config',

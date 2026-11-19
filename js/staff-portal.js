@@ -51,6 +51,8 @@ const ROLE_META = {
   masseuse:          { label: 'Masseur/Masseuse',  icon: 'hand', provider: true },
   coiffure:          { label: 'Coiffure',          icon: 'scissors', provider: true },
   onglerie:          { label: 'Onglerie',          icon: 'gem', provider: true },
+  cadreur_video:     { label: 'Cadreur Vidéo CVISUAL', icon: 'video', provider: false, isCadreur: true },
+  cadreur_cvisual:   { label: 'Cadreur CVISUAL',   icon: 'video', provider: false, isCadreur: true },
   community_manager: { label: 'Community Manager',  icon: 'smartphone', provider: false },
   adm_manager:       { label: 'ADM / Manager',      icon: 'briefcase', provider: false },
   receptionniste:    { label: 'Réceptionniste',     icon: 'phone', provider: false },
@@ -60,6 +62,7 @@ const ROLE_META = {
 function lucideIcon(name, size = 16) { return `<i data-lucide="${name}" style="width:${size}px;height:${size}px;vertical-align:-3px;"></i>`; }
 function roleLabel(r) { return ROLE_META[r]?.label || r; }
 function isProviderRole(r) { return !!ROLE_META[r]?.provider; }
+function isCadreurRole(r) { return !!ROLE_META[r]?.isCadreur || r === 'cadreur_video' || r === 'cadreur_cvisual'; }
 
 let currentEmployee = null;
 let chronoTimer = null;
@@ -74,6 +77,7 @@ function fmtTime(t) { return t ? String(t).slice(0, 5) : '—'; }
 
 function toast(msg, type = 'success') {
   const box = document.getElementById('toast-box');
+  if (!box) return;
   const el = document.createElement('div');
   el.className = `toast ${type}`;
   el.textContent = msg;
@@ -81,15 +85,78 @@ function toast(msg, type = 'success') {
   setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(() => el.remove(), 300); }, 3200);
 }
 
-// ---- Auth (username / password) --------------------------------------
-async function staffLogin() {
+// ---- Auth & Modes ----------------------------------------------------
+window.switchLoginMode = function(mode) {
+  const isCode = mode === 'code';
+  const tabCode = document.getElementById('tab-btn-code');
+  const tabUser = document.getElementById('tab-btn-user');
+  const paneCode = document.getElementById('login-mode-code');
+  const paneUser = document.getElementById('login-mode-user');
+  const errEl = document.getElementById('login-error');
+  if (tabCode) tabCode.classList.toggle('active', isCode);
+  if (tabUser) tabUser.classList.toggle('active', !isCode);
+  if (paneCode) paneCode.style.display = isCode ? 'block' : 'none';
+  if (paneUser) paneUser.style.display = !isCode ? 'block' : 'none';
+  if (errEl) errEl.textContent = '';
+  if (isCode) {
+    document.getElementById('access-code-input')?.focus();
+  } else {
+    document.getElementById('username-input')?.focus();
+  }
+};
+
+async function staffLoginWithCode(optionalCode) {
+  const inputEl = document.getElementById('access-code-input');
+  const errEl = document.getElementById('login-error');
+  const rawCode = (optionalCode || (inputEl ? inputEl.value : '')).trim();
+  if (errEl) errEl.textContent = '';
+  if (!rawCode) {
+    if (errEl) errEl.textContent = 'Veuillez saisir votre code d\'accès.';
+    return;
+  }
+  const cleanCode = rawCode.toUpperCase();
+  try {
+    const { data, error } = await sb
+      .from('presence_employees')
+      .select('*')
+      .or(`access_code.eq.${cleanCode},employee_number.eq.${cleanCode},username.eq.${rawCode.toLowerCase()}`)
+      .limit(1);
+
+    if (error) throw error;
+    const emp = data && data[0];
+    if (!emp) {
+      if (errEl) errEl.textContent = 'Code d\'accès introuvable (' + cleanCode + '). Vérifiez avec l\'administration.';
+      return;
+    }
+    if (emp.portal_enabled === false) {
+      if (errEl) errEl.textContent = 'Accès à ce portail désactivé. Contactez l\'administration.';
+      return;
+    }
+
+    currentEmployee = emp;
+    sessionStorage.setItem('dalight_staff_code', cleanCode);
+    localStorage.setItem('dalight_staff_code', cleanCode);
+    if (emp.username) sessionStorage.setItem('dalight_staff_username', emp.username);
+    if (emp.password) sessionStorage.setItem('dalight_staff_password', emp.password);
+
+    enterPortal();
+  } catch (err) {
+    console.error('Error in staffLoginWithCode:', err);
+    if (errEl) errEl.textContent = 'Erreur: ' + (err?.message || err);
+  }
+}
+
+async function staffLoginWithUser() {
   const userInput = document.getElementById('username-input');
   const passInput = document.getElementById('password-input');
   const errEl = document.getElementById('login-error');
-  const username = (userInput.value || '').trim().toLowerCase();
-  const password = (passInput.value || '').trim();
-  errEl.textContent = '';
-  if (!username || !password) { errEl.textContent = 'Entrez votre nom d\'utilisateur et votre mot de passe.'; return; }
+  const username = (userInput ? userInput.value : '').trim().toLowerCase();
+  const password = (passInput ? passInput.value : '').trim();
+  if (errEl) errEl.textContent = '';
+  if (!username || !password) {
+    if (errEl) errEl.textContent = 'Entrez votre nom d\'utilisateur et votre mot de passe.';
+    return;
+  }
 
   try {
     const { data, error } = await sb
@@ -99,37 +166,81 @@ async function staffLogin() {
       .maybeSingle();
 
     if (error) throw error;
-    if (!data || data.password !== password) { errEl.textContent = 'Identifiants invalides.'; return; }
-    if (data.portal_enabled === false) { errEl.textContent = 'Accès désactivé. Contactez l\'administration.'; return; }
+    if (!data || data.password !== password) {
+      if (errEl) errEl.textContent = 'Identifiants invalides.';
+      return;
+    }
+    if (data.portal_enabled === false) {
+      if (errEl) errEl.textContent = 'Accès désactivé. Contactez l\'administration.';
+      return;
+    }
 
     currentEmployee = data;
     sessionStorage.setItem('dalight_staff_username', username);
     sessionStorage.setItem('dalight_staff_password', password);
+    if (data.access_code) {
+      sessionStorage.setItem('dalight_staff_code', data.access_code);
+      localStorage.setItem('dalight_staff_code', data.access_code);
+    }
     enterPortal();
   } catch (err) {
     console.error(err);
-    errEl.textContent = 'Erreur: ' + (err?.message || err);
+    if (errEl) errEl.textContent = 'Erreur: ' + (err?.message || err);
   }
+}
+
+async function staffLogin() {
+  const codeVal = (document.getElementById('access-code-input')?.value || '').trim();
+  const userVal = (document.getElementById('username-input')?.value || '').trim();
+  if (codeVal) return staffLoginWithCode(codeVal);
+  if (userVal) return staffLoginWithUser();
+  const paneCode = document.getElementById('login-mode-code');
+  if (paneCode && paneCode.style.display !== 'none') {
+    return staffLoginWithCode();
+  }
+  return staffLoginWithUser();
 }
 
 function staffLogout() {
   sessionStorage.removeItem('dalight_staff_username');
   sessionStorage.removeItem('dalight_staff_password');
+  sessionStorage.removeItem('dalight_staff_code');
+  localStorage.removeItem('dalight_staff_code');
   currentEmployee = null;
   if (chronoTimer) clearInterval(chronoTimer);
   document.getElementById('portal-shell').classList.add('hidden');
   document.getElementById('login-screen').classList.remove('hidden');
-  document.getElementById('username-input').value = '';
-  document.getElementById('password-input').value = '';
+  if (document.getElementById('username-input')) document.getElementById('username-input').value = '';
+  if (document.getElementById('password-input')) document.getElementById('password-input').value = '';
+  if (document.getElementById('access-code-input')) document.getElementById('access-code-input').value = '';
 }
 
 async function tryAutoLogin() {
+  // 1. URL Query param ?code=XXXXXX
+  const urlParams = new URLSearchParams(window.location.search);
+  const codeParam = urlParams.get('code');
+  if (codeParam) {
+    if (document.getElementById('access-code-input')) document.getElementById('access-code-input').value = codeParam;
+    await staffLoginWithCode(codeParam);
+    return;
+  }
+
+  // 2. Stored Code
+  const savedCode = sessionStorage.getItem('dalight_staff_code') || localStorage.getItem('dalight_staff_code');
+  if (savedCode) {
+    if (document.getElementById('access-code-input')) document.getElementById('access-code-input').value = savedCode;
+    await staffLoginWithCode(savedCode);
+    return;
+  }
+
+  // 3. Stored username & password
   const username = sessionStorage.getItem('dalight_staff_username');
   const password = sessionStorage.getItem('dalight_staff_password');
-  if (!username || !password) return;
-  document.getElementById('username-input').value = username;
-  document.getElementById('password-input').value = password;
-  await staffLogin();
+  if (username && password) {
+    if (document.getElementById('username-input')) document.getElementById('username-input').value = username;
+    if (document.getElementById('password-input')) document.getElementById('password-input').value = password;
+    await staffLoginWithUser();
+  }
 }
 
 // ---- Portal shell ---------------------------------------------------
@@ -143,6 +254,7 @@ function employeeRoles() {
 function buildNav() {
   const roles = employeeRoles();
   const hasProvider = roles.some(isProviderRole);
+  const isCadreur = roles.some(isCadreurRole) || (currentEmployee?.position || '').toLowerCase().includes('cadreur');
   const isCM = roles.includes('community_manager');
   const isManager = roles.includes('adm_manager');
 
@@ -155,6 +267,10 @@ function buildNav() {
   if (hasProvider) {
     items.push({ id: 'service', label: 'Service en cours', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' });
     items.push({ id: 'clients', label: 'Suivi clients', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' });
+  }
+  if (isCadreur || isCM || isManager) {
+    items.push({ id: 'video_shoots', label: 'Mes Tournages Vidéo', icon: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' });
+    items.push({ id: 'video_earnings', label: 'Mes Revenus Vidéo', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' });
   }
   if (isCM || isManager) {
     items.push({ id: 'stats', label: 'Statistiques', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' });
@@ -187,18 +303,24 @@ function enterPortal() {
   showSection('home');
   loadNotifications();
   setInterval(loadNotifications, 30000);
+
+  // Sync Live Online State
+  syncOnlineStatus();
+  setInterval(syncOnlineStatus, 20000);
 }
 
 const SECTION_META = {
-  home:        { title: 'Accueil', sub: 'Vue d\'ensemble de votre journée' },
-  appointments:{ title: 'Rendez-vous', sub: 'Vos clients et prestations' },
-  service:     { title: 'Service en cours', sub: 'Chronomètre de prestation' },
-  clients:     { title: 'Suivi clients', sub: 'Historique, mesures et progression de vos clients' },
-  stats:       { title: 'Statistiques', sub: 'Performance et engagement' },
-  reports:     { title: 'Mes rapports', sub: 'Soumettre et consulter vos rapports' },
-  attendance:  { title: 'Mes présences', sub: 'Historique de vos entrées / sorties' },
-  evaluations: { title: 'Mes évaluations', sub: 'Retours de l\'administration' },
-  profile:     { title: 'Mon profil', sub: 'Vos informations personnelles' },
+  home:          { title: 'Accueil', sub: 'Vue d\'ensemble de votre journée' },
+  appointments:  { title: 'Rendez-vous', sub: 'Vos clients et prestations' },
+  service:       { title: 'Service en cours', sub: 'Chronomètre de prestation' },
+  clients:       { title: 'Suivi clients', sub: 'Historique, mesures et progression de vos clients' },
+  video_shoots:  { title: 'Mes Tournages Vidéo', sub: 'Planning des captations, statut & consentements image' },
+  video_earnings:{ title: 'Mes Revenus Vidéo', sub: 'Kalkil Kòb ou — Total gagné, payé et en attente' },
+  stats:         { title: 'Statistiques', sub: 'Performance et engagement' },
+  reports:       { title: 'Mes rapports', sub: 'Soumettre et consulter vos rapports' },
+  attendance:    { title: 'Mes présences', sub: 'Historique de vos entrées / sorties' },
+  evaluations:   { title: 'Mes évaluations', sub: 'Retours de l\'administration' },
+  profile:       { title: 'Mon profil', sub: 'Vos informations personnelles' },
 };
 
 function showSection(id) {
@@ -211,12 +333,147 @@ function showSection(id) {
   c.innerHTML = '<div class="empty">Chargement…</div>';
 
   const map = {
-    home: renderHome, appointments: renderAppointments, service: renderService,
+    home: renderHome,
+    appointments: renderAppointments,
+    service: renderService,
     clients: (el) => (window.renderClientTracking ? window.renderClientTracking(el) : (el.innerHTML = '<div class="empty">Module suivi clients non chargé.</div>')),
-    stats: renderStats, reports: renderReports, attendance: renderAttendance,
-    evaluations: renderEvaluations, profile: renderProfile,
+    video_shoots: renderVideoShoots,
+    video_earnings: renderVideoEarnings,
+    stats: renderStats,
+    reports: renderReports,
+    attendance: renderAttendance,
+    evaluations: renderEvaluations,
+    profile: renderProfile,
   };
   Promise.resolve((map[id] || renderHome)(c)).then(() => { if (window.lucide) lucide.createIcons(); });
+}
+
+// ---- LIVE ONLINE PRESENCE --------------------------------------------
+let currentLiveOnline = false;
+
+async function syncOnlineStatus() {
+  if (!currentEmployee) return;
+  try {
+    const { data, error } = await sb
+      .from('settings')
+      .select('value')
+      .eq('key', 'staff_live_online_state')
+      .maybeSingle();
+
+    if (!error && data && data.value) {
+      const stateObj = data.value[currentEmployee.id];
+      currentLiveOnline = !!(stateObj && stateObj.is_online);
+    } else {
+      currentLiveOnline = false;
+    }
+    updateOnlineUI(currentLiveOnline);
+  } catch (e) {
+    console.warn('syncOnlineStatus warning:', e);
+  }
+}
+
+function updateOnlineUI(isOnline) {
+  const dot = document.getElementById('staff-online-dot');
+  const label = document.getElementById('staff-online-label');
+  const toggleWrap = document.getElementById('staff-online-toggle-wrap');
+  if (dot) {
+    dot.className = isOnline ? 'live-status-dot online' : 'live-status-dot offline';
+  }
+  if (label) {
+    label.textContent = isOnline ? 'EN LIGNE (Au salon)' : 'HORS LIGNE';
+    label.style.color = isOnline ? '#4ade80' : '#94a3b8';
+  }
+  if (toggleWrap) {
+    toggleWrap.style.borderColor = isOnline ? 'rgba(74,222,128,0.4)' : 'rgba(255,255,255,0.1)';
+    toggleWrap.style.background = isOnline ? 'rgba(34,197,94,0.12)' : 'rgba(255,255,255,0.04)';
+  }
+
+  const homeBanner = document.getElementById('home-online-status-banner');
+  if (homeBanner) {
+    homeBanner.innerHTML = renderOnlineBannerContent(isOnline);
+  }
+}
+
+function renderOnlineBannerContent(isOnline) {
+  if (isOnline) {
+    return `
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+          <span class="live-status-dot online" style="width:14px; height:14px;"></span>
+          <div>
+            <div style="font-weight:700; color:#4ade80; font-size:1rem;">Vous êtes actuellement EN LIGNE (Au salon)</div>
+            <div style="color:var(--muted); font-size:0.82rem;">Le système d'assignation intelligent de DALIGHT peut vous attribuer des rendez-vous &amp; captations vidéo.</div>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="toggleMyOnlineStatus(false)" style="border-color:rgba(239,68,68,0.4); color:#fca5a5; display:inline-flex; align-items:center; gap:0.4rem;">
+          Passer Hors Ligne
+        </button>
+      </div>
+    `;
+  } else {
+    return `
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+          <span class="live-status-dot offline" style="width:14px; height:14px;"></span>
+          <div>
+            <div style="font-weight:700; color:#cbd5e1; font-size:1rem;">Vous êtes actuellement HORS LIGNE</div>
+            <div style="color:var(--muted); font-size:0.82rem;">Vous n'êtes pas marqué(e) présent(e) au salon. Activez votre présence dès votre arrivée pour recevoir vos assignations.</div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="toggleMyOnlineStatus(true)" style="background:linear-gradient(135deg,#22c55e,#15803d); border:none; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
+          🟢 Me mettre EN LIGNE (Je suis au salon)
+        </button>
+      </div>
+    `;
+  }
+}
+
+async function toggleMyOnlineStatus(forceState) {
+  if (!currentEmployee) return;
+  const newState = forceState !== undefined ? Boolean(forceState) : !currentLiveOnline;
+
+  try {
+    const { data } = await sb
+      .from('settings')
+      .select('value')
+      .eq('key', 'staff_live_online_state')
+      .maybeSingle();
+
+    let currentMap = (data && data.value && typeof data.value === 'object') ? data.value : {};
+    currentMap[currentEmployee.id] = {
+      is_online: newState,
+      name: currentEmployee.full_name || '',
+      updated_at: new Date().toISOString()
+    };
+
+    const { error: upsertErr } = await sb
+      .from('settings')
+      .upsert({
+        id: 'staff_live_online_state',
+        key: 'staff_live_online_state',
+        value: currentMap,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'id' });
+
+    if (upsertErr) {
+      await sb.from('settings').update({
+        value: currentMap,
+        updated_at: new Date().toISOString()
+      }).eq('key', 'staff_live_online_state');
+    }
+
+    currentLiveOnline = newState;
+    updateOnlineUI(newState);
+    toast(
+      newState
+        ? '🟢 Vous êtes maintenant EN LIGNE. Vos assignations sont activées !'
+        : '⚪ Vous êtes maintenant HORS LIGNE.',
+      newState ? 'success' : 'warning'
+    );
+  } catch (err) {
+    console.error('toggleMyOnlineStatus error:', err);
+    toast('Erreur mise à jour statut: ' + (err?.message || err), 'error');
+  }
 }
 
 // ---- HOME -----------------------------------------------------------
@@ -224,14 +481,18 @@ async function renderHome(c) {
   const roles = employeeRoles();
   const empId = currentEmployee.id;
   const today = todayStr();
+  const isCadreur = roles.some(isCadreurRole) || (currentEmployee.position || '').toLowerCase().includes('cadreur');
 
-  const [sessRes, apptRes, evalRes, attRes] = await Promise.all([
+  const [sessRes, apptRes, evalRes, attRes, videoRes] = await Promise.all([
     sb.from('service_sessions').select('*').eq('employee_id', empId).gte('started_at', today + 'T00:00:00'),
     roles.some(isProviderRole) || roles.includes('receptionniste') || roles.includes('adm_manager')
       ? sb.from('reservations').select('id,status,assigned_employee_id').eq('date', today)
       : Promise.resolve({ data: [] }),
     sb.from('staff_evaluations').select('overall_score').eq('employee_id', empId).eq('visible_to_employee', true),
     sb.from('attendance_logs').select('*').eq('employee_id', empId).eq('log_date', today).maybeSingle(),
+    isCadreur || roles.includes('adm_manager') || roles.includes('community_manager')
+      ? sb.from('reservations').select('id,date,notes,wants_video,video_requested,video_price,assigned_employee_id').eq('date', today)
+      : Promise.resolve({ data: [] }),
   ]);
 
   const sessions = sessRes.data || [];
@@ -242,6 +503,15 @@ async function renderHome(c) {
   const avgScore = evals.length ? (evals.reduce((s, e) => s + (Number(e.overall_score) || 0), 0) / evals.length).toFixed(1) : '—';
   const att = attRes.data;
 
+  // Video shoots today
+  const myVideoToday = (videoRes.data || []).filter(r => {
+    const isVid = r.wants_video || r.video_requested || (Number(r.video_price) > 0) || (r.notes || '').includes('[VIDEO_META:');
+    if (!isVid) return false;
+    if (seesAll) return true;
+    const meta = parseReservationVideoMeta(r);
+    return r.assigned_employee_id === empId || meta.cadreur_id === empId || (meta.cadreur_name && meta.cadreur_name.toLowerCase() === (currentEmployee.full_name || '').toLowerCase());
+  });
+
   const totalSecs = completed.reduce((s, x) => s + (x.duration_seconds || 0), 0);
   const hrs = Math.floor(totalSecs / 3600), mins = Math.floor((totalSecs % 3600) / 60);
 
@@ -250,6 +520,9 @@ async function renderHome(c) {
     cards.push(statCard('#22c55e', 'rgba(34,197,94,.16)', appts.length, 'RDV aujourd\'hui', 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'));
     cards.push(statCard('#3b82f6', 'rgba(59,130,246,.16)', completed.length, 'Services terminés', 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'));
     cards.push(statCard('#8b5cf6', 'rgba(139,92,246,.16)', `${hrs}h${String(mins).padStart(2, '0')}`, 'Temps de service', 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'));
+  } else if (isCadreur) {
+    cards.push(statCard('#d4af37', 'rgba(212,175,55,.16)', myVideoToday.length, 'Tournages aujourd\'hui', 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z'));
+    cards.push(statCard('#22c55e', 'rgba(34,197,94,.16)', 'CVISUAL', 'Studio Vidéo DALIGHT', 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'));
   } else {
     cards.push(statCard('#22c55e', 'rgba(34,197,94,.16)', appts.length, 'RDV aujourd\'hui', 'M8 7V3m8 4V3'));
   }
@@ -260,6 +533,11 @@ async function renderHome(c) {
     : '<span class="badge badge-red">Al scanner</span>';
 
   c.innerHTML = `
+    <!-- Live Status Banner -->
+    <div id="home-online-status-banner" class="card" style="margin-bottom:1.3rem; border:1px solid rgba(212,175,55,0.3); background:rgba(20,28,20,0.85); box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+      ${renderOnlineBannerContent(currentLiveOnline)}
+    </div>
+
     <div class="grid cards-4" style="margin-bottom:1.3rem;">${cards.join('')}</div>
     <div class="card" style="margin-bottom:1.3rem;">
       <div class="card-title">Bonjour, ${esc((currentEmployee.full_name || '').split(' ')[0] || 'vous')}</div>
@@ -273,6 +551,12 @@ async function renderHome(c) {
         <div class="row-actions" style="justify-content:flex-start;">
           <button class="btn btn-gold btn-sm" style="width:auto;margin:0;" onclick="showSection('appointments')">Voir mes RDV</button>
           <button class="btn btn-green btn-sm" onclick="showSection('service')">Démarrer un service</button>
+        </div></div>` : ''}
+      ${isCadreur ? `<div class="card"><div class="card-title">Espace CVISUAL Studio</div>
+        <div style="color:var(--muted);font-size:.88rem;margin-bottom:.8rem;">Gérez vos captations vidéo 4K et suivez vos gains.</div>
+        <div class="row-actions" style="justify-content:flex-start;">
+          <button class="btn btn-gold btn-sm" onclick="showSection('video_shoots')">🎬 Voir mes tournages</button>
+          <button class="btn btn-green btn-sm" onclick="showSection('video_earnings')">💰 Mes revenus (Kòb)</button>
         </div></div>` : ''}
       <div class="card"><div class="card-title">Rapports</div>
         <div style="color:var(--muted);font-size:.88rem;margin-bottom:.8rem;">Soumettez votre rapport d'activité.</div>
@@ -946,9 +1230,511 @@ window.toggleBellPanel = async function () {
   }
 };
 
+// ---- CADREUR CVISUAL VIDEO MODULE -----------------------------------
+function parseReservationVideoMeta(r) {
+  let meta = {};
+  if (r.notes) {
+    const match = r.notes.match(/\[VIDEO_META:\s*({[^\]]+})\]/i);
+    if (match) {
+      try { meta = JSON.parse(match[1]); } catch(e){}
+    }
+  }
+  return meta;
+}
+
+async function renderVideoShoots(c) {
+  const roles = employeeRoles();
+  const empId = currentEmployee.id;
+  const empName = (currentEmployee.full_name || '').toLowerCase();
+  const seesAll = roles.includes('adm_manager') || roles.includes('community_manager');
+
+  c.innerHTML = '<div class="empty">Chargement des tournages vidéo...</div>';
+
+  try {
+    const { data, error } = await sb
+      .from('reservations')
+      .select('*')
+      .neq('status', 'CANCELLED')
+      .order('date', { ascending: false });
+
+    if (error) throw error;
+
+    // Filter video reservations
+    const allVideo = (data || []).filter(r => {
+      const isVideoFlag = r.wants_video === true || r.video_requested === true || (Number(r.video_price) > 0);
+      const isVideoService = (r.service || '').toLowerCase().includes('vidéo') || (r.service || '').toLowerCase().includes('video');
+      const hasMeta = (r.notes || '').includes('[VIDEO_META:');
+      return isVideoFlag || isVideoService || hasMeta;
+    });
+
+    // Filter for current cadreur
+    const myShoots = allVideo.filter(r => {
+      if (seesAll) return true;
+      const meta = parseReservationVideoMeta(r);
+      return (
+        r.assigned_employee_id === empId ||
+        meta.cadreur_id === empId ||
+        (meta.cadreur_name && meta.cadreur_name.toLowerCase() === empName) ||
+        (r.cadreur_id && r.cadreur_id === empId)
+      );
+    });
+
+    if (myShoots.length === 0) {
+      c.innerHTML = `
+        <div class="card" style="text-align:center; padding:3rem 1.5rem;">
+          <div style="font-size:2.8rem; margin-bottom:1rem;">🎬</div>
+          <div style="font-size:1.2rem; font-weight:700; color:#FAF8F5; margin-bottom:0.5rem;">Aucun tournage assigné pour le moment</div>
+          <p style="color:var(--muted); font-size:0.88rem; max-width:440px; margin:0 auto 1.5rem;">
+            Assurez-vous d'être <strong>EN LIGNE</strong> afin que le PDG de CVISUAL ou le système d'assignation puisse vous attribuer les captations vidéo au salon.
+          </p>
+          <button class="btn btn-primary btn-sm" onclick="toggleMyOnlineStatus(true)" style="background:linear-gradient(135deg,#22c55e,#15803d); border:none; font-weight:700;">
+            🟢 Me mettre EN LIGNE
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    const cardsHtml = myShoots.map(r => {
+      const meta = parseReservationVideoMeta(r);
+      const isPrivate = (r.video_consent === 'private' || r.video_consent === 'oui_prive' || meta.consent === 'private');
+      const clientName = r.user_name || 'Client DALIGHT';
+      const phone = r.phone || '—';
+      const cleanPhone = phone.replace(/[^0-9]/g, '');
+      const waLink = cleanPhone ? `https://wa.me/${cleanPhone.startsWith('509') ? cleanPhone : '509' + cleanPhone}` : '#';
+
+      // Status calculation
+      const videoStatus = meta.video_status || r.video_status || 'assigned';
+      let statusBadge = '<span class="badge badge-gold">⏳ En attente de tournage</span>';
+      if (videoStatus === 'shot') statusBadge = '<span class="badge badge-blue">🎞️ Tourné - En montage</span>';
+      if (videoStatus === 'delivered') statusBadge = '<span class="badge badge-green">✅ Vidéo 4K Livrée</span>';
+
+      const consentBadge = isPrivate
+        ? '<span class="badge badge-purple" style="border:1px solid rgba(168,85,247,0.4);"><i data-lucide="lock" style="width:12px;height:12px;margin-right:3px;"></i> Usage Privé (Floutage requis)</span>'
+        : '<span class="badge badge-green" style="border:1px solid rgba(34,197,94,0.4);"><i data-lucide="globe" style="width:12px;height:12px;margin-right:3px;"></i> DALIGHT & CVISUAL (Public)</span>';
+
+      // Payout cut
+      const totalPrice = Number(r.video_price) || (isPrivate ? 1000 : 500);
+      const splitPct = Number(meta.cadreur_rate_pct !== undefined ? meta.cadreur_rate_pct : 50);
+      const cadreurCut = Math.round(totalPrice * (splitPct / 100));
+
+      const isPaid = meta.cadreur_paid === true;
+      const paymentBadge = isPaid
+        ? '<span class="badge badge-green" style="font-size:0.75rem;">💰 Payé par CVISUAL</span>'
+        : '<span class="badge badge-gold" style="font-size:0.75rem;">⏳ Paiement en attente</span>';
+
+      return `
+        <div class="card" style="border:1px solid rgba(212,175,55,0.25); background:rgba(20,28,20,0.7); position:relative; overflow:hidden; margin-bottom:1rem;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.8rem;">
+            <div>
+              <div style="font-size:1.1rem; font-weight:700; color:#FAF8F5;">${esc(clientName)}</div>
+              <div style="font-size:0.8rem; color:var(--muted);">${esc(r.service || 'Soin DALIGHT')}</div>
+            </div>
+            <div style="display:flex; gap:0.4rem; flex-wrap:wrap; align-items:center;">
+              ${statusBadge}
+              ${consentBadge}
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:0.6rem; padding:0.75rem; background:rgba(0,0,0,0.25); border-radius:10px; margin-bottom:1rem; font-size:0.82rem;">
+            <div><span style="color:var(--muted);">Date & Heure :</span><br><strong>📅 ${fmtDate(r.date)} à ${fmtTime(r.time)}</strong></div>
+            <div><span style="color:var(--muted);">Téléphone :</span><br><strong>📞 ${esc(phone)}</strong></div>
+            <div><span style="color:var(--muted);">Votre Part (Kòb ou) :</span><br><strong style="color:#4ade80; font-size:0.95rem;">${cadreurCut.toLocaleString()} HTG</strong> (${splitPct}%)</div>
+            <div><span style="color:var(--muted);">Statut Paiement :</span><br>${paymentBadge}</div>
+          </div>
+
+          ${meta.video_url ? `
+            <div style="padding:0.55rem 0.75rem; background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.25); border-radius:8px; margin-bottom:0.9rem; font-size:0.8rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+              <span style="color:#4ade80;">🔗 <strong>Vidéo Livrée :</strong> ${esc(meta.video_url).slice(0, 40)}...</span>
+              <a href="${esc(meta.video_url)}" target="_blank" class="btn btn-secondary btn-sm" style="padding:0.2rem 0.6rem; font-size:0.75rem;">Voir la vidéo</a>
+            </div>
+          ` : ''}
+
+          <div class="row-actions" style="justify-content:flex-end;">
+            ${cleanPhone ? `
+              <a href="${waLink}" target="_blank" class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:0.35rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                WhatsApp Client
+              </a>
+            ` : ''}
+            <button class="btn btn-primary btn-sm" onclick="openStaffVideoModal('${r.id}')" style="background:linear-gradient(135deg,#d4af37,#996515); border:none; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              ${meta.video_url ? 'Re-livrer / Màj Vidéo 4K' : 'Uploader & Livrer Vidéo 4K'}
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    c.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; flex-wrap:wrap; gap:0.8rem;">
+        <div>
+          <h2 style="font-size:1.25rem; font-weight:700; color:#FAF8F5; margin:0;">Vos Tournages Vidéo CVISUAL</h2>
+          <div style="color:var(--muted); font-size:0.82rem;">${myShoots.length} captation${myShoots.length > 1 ? 's' : ''} assignée${myShoots.length > 1 ? 's' : ''}</div>
+        </div>
+        <button class="btn btn-gold btn-sm" onclick="renderVideoShoots(document.getElementById('section-content'))">
+          🔄 Actualiser
+        </button>
+      </div>
+      <div>
+        ${cardsHtml}
+      </div>
+    `;
+
+    if (window.lucide) lucide.createIcons();
+  } catch (err) {
+    console.error('renderVideoShoots error:', err);
+    c.innerHTML = '<div class="card alert alert-danger">Erreur chargement des tournages: ' + esc(err.message || err) + '</div>';
+  }
+}
+
+async function renderVideoEarnings(c) {
+  const roles = employeeRoles();
+  const empId = currentEmployee.id;
+  const empName = (currentEmployee.full_name || '').toLowerCase();
+  const seesAll = roles.includes('adm_manager') || roles.includes('community_manager');
+
+  c.innerHTML = '<div class="empty">Calcul de vos revenus en cours...</div>';
+
+  try {
+    const { data, error } = await sb
+      .from('reservations')
+      .select('*')
+      .neq('status', 'CANCELLED')
+      .order('date', { ascending: false });
+
+    if (error) throw error;
+
+    const allVideo = (data || []).filter(r => {
+      const isVideoFlag = r.wants_video === true || r.video_requested === true || (Number(r.video_price) > 0);
+      const isVideoService = (r.service || '').toLowerCase().includes('vidéo') || (r.service || '').toLowerCase().includes('video');
+      const hasMeta = (r.notes || '').includes('[VIDEO_META:');
+      return isVideoFlag || isVideoService || hasMeta;
+    });
+
+    const myShoots = allVideo.filter(r => {
+      if (seesAll) return true;
+      const meta = parseReservationVideoMeta(r);
+      return (
+        r.assigned_employee_id === empId ||
+        meta.cadreur_id === empId ||
+        (meta.cadreur_name && meta.cadreur_name.toLowerCase() === empName) ||
+        (r.cadreur_id && r.cadreur_id === empId)
+      );
+    });
+
+    let totalShoots = myShoots.length;
+    let totalEarned = 0;
+    let totalPaid = 0;
+    let totalPending = 0;
+
+    const rows = myShoots.map(r => {
+      const meta = parseReservationVideoMeta(r);
+      const isPrivate = (r.video_consent === 'private' || r.video_consent === 'oui_prive' || meta.consent === 'private');
+      const totalPrice = Number(r.video_price) || (isPrivate ? 1000 : 500);
+      const splitPct = Number(meta.cadreur_rate_pct !== undefined ? meta.cadreur_rate_pct : 50);
+      const cut = Math.round(totalPrice * (splitPct / 100));
+
+      totalEarned += cut;
+      if (meta.cadreur_paid === true) {
+        totalPaid += cut;
+      } else {
+        totalPending += cut;
+      }
+
+      return `
+        <tr>
+          <td><strong>${fmtDate(r.date)}</strong></td>
+          <td>${esc(r.user_name || 'Client')}</td>
+          <td><span style="font-size:0.8rem; color:var(--muted);">${esc(r.service || 'Prestation')}</span></td>
+          <td><strong style="color:#FAF8F5;">${totalPrice.toLocaleString()} HTG</strong></td>
+          <td><strong style="color:#4ade80;">${cut.toLocaleString()} HTG</strong> (${splitPct}%)</td>
+          <td>
+            ${meta.cadreur_paid === true 
+              ? '<span class="badge badge-green">✅ Payé</span>' 
+              : '<span class="badge badge-gold">⏳ En attente</span>'}
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    c.innerHTML = `
+      <div class="grid cards-4" style="margin-bottom:1.5rem;">
+        <div class="card stat-card">
+          <div class="stat-icon" style="background:rgba(212,175,55,0.15);color:#d4af37;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          </div>
+          <div class="stat-value">${totalShoots}</div>
+          <div class="stat-label">Tournages Vidéo</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-icon" style="background:rgba(34,197,94,0.15);color:#22c55e;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div class="stat-value" style="color:#4ade80;">${totalEarned.toLocaleString()} <span style="font-size:1rem;">HTG</span></div>
+          <div class="stat-label">Total Gains (Kòb ou)</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-icon" style="background:rgba(59,130,246,0.15);color:#3b82f6;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div class="stat-value" style="color:#60a5fa;">${totalPaid.toLocaleString()} <span style="font-size:1rem;">HTG</span></div>
+          <div class="stat-label">Déjà Payé par CVISUAL</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-icon" style="background:rgba(234,179,8,0.15);color:#eab308;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div class="stat-value" style="color:#fde047;">${totalPending.toLocaleString()} <span style="font-size:1rem;">HTG</span></div>
+          <div class="stat-label">En Attente de Versement</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>Historique détaillé de vos rémunérations</span>
+          <span style="font-size:0.8rem; font-weight:normal; color:var(--muted);">Géré par la direction CVISUAL</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Client</th>
+                <th>Prestation</th>
+                <th>Prix Total</th>
+                <th>Votre Part</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.length ? rows : '<tr><td colspan="6" class="empty">Aucune prestation vidéo enregistrée pour le moment.</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    if (window.lucide) lucide.createIcons();
+  } catch (err) {
+    console.error('renderVideoEarnings error:', err);
+    c.innerHTML = '<div class="card alert alert-danger">Erreur calcul revenus: ' + esc(err.message || err) + '</div>';
+  }
+}
+
+// Video Modal upload & delivery handler
+let currentUploadFile = null;
+
+window.openStaffVideoModal = async function(resId) {
+  try {
+    const { data: r, error } = await sb.from('reservations').select('*').eq('id', resId).single();
+    if (error || !r) throw new Error('Réservation introuvable');
+
+    document.getElementById('staff-video-res-id').value = r.id;
+    document.getElementById('staff-video-res-phone').value = r.phone || '';
+    document.getElementById('staff-video-res-name').value = r.user_name || 'Client';
+
+    const meta = parseReservationVideoMeta(r);
+    const clientInfoBox = document.getElementById('staff-video-client-info');
+    if (clientInfoBox) {
+      clientInfoBox.innerHTML = `
+        <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+          <strong style="color:#FAF8F5;">${esc(r.user_name || 'Client')}</strong>
+          <span style="color:var(--gold);">📅 ${fmtDate(r.date)} à ${fmtTime(r.time)}</span>
+        </div>
+        <div style="color:var(--muted); font-size:0.8rem;">
+          Prestation : ${esc(r.service || '—')} • Tél : ${esc(r.phone || '—')}
+        </div>
+      `;
+    }
+
+    const directUrlInput = document.getElementById('staff-video-direct-url');
+    if (directUrlInput) directUrlInput.value = meta.video_url || r.video_url || '';
+
+    currentUploadFile = null;
+    const filenameBox = document.getElementById('staff-selected-filename');
+    if (filenameBox) { filenameBox.style.display = 'none'; filenameBox.textContent = ''; }
+    const progressWrapper = document.getElementById('staff-upload-progress-wrapper');
+    if (progressWrapper) progressWrapper.style.display = 'none';
+
+    updateStaffWhatsAppPreview();
+
+    const modal = document.getElementById('staff-video-upload-modal');
+    if (modal) modal.style.display = 'flex';
+  } catch (err) {
+    toast('Erreur: ' + (err.message || err), 'error');
+  }
+};
+
+window.closeStaffVideoModal = function() {
+  const modal = document.getElementById('staff-video-upload-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+window.handleStaffVideoFileSelected = function(input) {
+  if (input.files && input.files[0]) {
+    currentUploadFile = input.files[0];
+    const filenameBox = document.getElementById('staff-selected-filename');
+    if (filenameBox) {
+      filenameBox.textContent = `Fichier sélectionné : ${currentUploadFile.name} (${(currentUploadFile.size / (1024 * 1024)).toFixed(1)} MB)`;
+      filenameBox.style.display = 'block';
+    }
+  }
+};
+
+window.updateStaffWhatsAppPreview = function() {
+  const name = document.getElementById('staff-video-res-name')?.value || 'Client';
+  const urlVal = document.getElementById('staff-video-direct-url')?.value || '{LIEN_VIDEO}';
+  const cadreurName = currentEmployee ? currentEmployee.full_name : 'Équipe CVISUAL';
+
+  const defaultMsg = `Bonjour ${name} ! ✨\n\nVotre souvenir vidéo exclusif 4K chez DALIGHT Beauty Bar est fin prêt !\n\nCliquez sur le lien ci-dessous pour visionner et télécharger votre vidéo en haute définition :\n🔗 ${urlVal}\n\nMerci de votre confiance et à très bientôt pour un nouveau moment de détente chez DALIGHT !\n\n— Réalisé par ${cadreurName} (CVISUAL Studio)`;
+
+  const msgBox = document.getElementById('staff-video-whatsapp-msg');
+  if (msgBox) msgBox.value = defaultMsg;
+};
+
+window.startStaffVideoUploadAndDispatch = async function() {
+  const resId = document.getElementById('staff-video-res-id')?.value;
+  const rawPhone = document.getElementById('staff-video-res-phone')?.value;
+  const directUrl = (document.getElementById('staff-video-direct-url')?.value || '').trim();
+  const whatsappMsg = (document.getElementById('staff-video-whatsapp-msg')?.value || '').trim();
+  const btn = document.getElementById('btn-staff-start-upload');
+
+  if (!resId) return;
+
+  if (!currentUploadFile && !directUrl) {
+    toast('Veuillez sélectionner un fichier vidéo ou coller un lien direct.', 'warning');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Téléversement & Traitement...';
+
+  const progressWrapper = document.getElementById('staff-upload-progress-wrapper');
+  const progressBar = document.getElementById('staff-upload-progress-bar');
+  const progressPct = document.getElementById('staff-upload-progress-pct');
+
+  let finalVideoUrl = directUrl;
+
+  try {
+    if (currentUploadFile) {
+      if (progressWrapper) progressWrapper.style.display = 'block';
+      if (progressBar) progressBar.style.width = '25%';
+      if (progressPct) progressPct.textContent = '25%';
+
+      const fileExt = currentUploadFile.name.split('.').pop() || 'mp4';
+      const fileName = `shoot_${resId}_${Date.now()}.${fileExt}`;
+      const filePath = `shoots/${fileName}`;
+
+      const { data: uploadData, error: uploadErr } = await sb.storage
+        .from('service-videos')
+        .upload(filePath, currentUploadFile, { cacheControl: '3600', upsert: true });
+
+      if (uploadErr) {
+        console.warn('Storage upload error, trying fallback:', uploadErr);
+        const { data: fallbackData, error: fbErr } = await sb.storage
+          .from('videos')
+          .upload(filePath, currentUploadFile, { cacheControl: '3600', upsert: true });
+
+        if (fbErr) {
+          throw new Error('Échec upload stockage cloud (' + (fbErr.message || uploadErr.message) + '). Vous pouvez héberger la vidéo (Drive/Cloudinary) et coller le lien direct ci-dessus.');
+        }
+        const { data: pUrl } = sb.storage.from('videos').getPublicUrl(filePath);
+        finalVideoUrl = pUrl?.publicUrl || '';
+      } else {
+        const { data: pUrl } = sb.storage.from('service-videos').getPublicUrl(filePath);
+        finalVideoUrl = pUrl?.publicUrl || '';
+      }
+
+      if (progressBar) progressBar.style.width = '70%';
+      if (progressPct) progressPct.textContent = '70%';
+    }
+
+    if (!finalVideoUrl) throw new Error('Aucun lien vidéo valide');
+
+    // 1. Update reservation in Supabase
+    const { data: rData } = await sb.from('reservations').select('notes').eq('id', resId).single();
+    let notes = (rData?.notes || '');
+    let existingMeta = {};
+    const match = notes.match(/\[VIDEO_META:\s*({[^\]]+})\]/i);
+    if (match) { try { existingMeta = JSON.parse(match[1]); } catch(e){} }
+
+    const updatedMeta = {
+      ...existingMeta,
+      video_url: finalVideoUrl,
+      video_status: 'delivered',
+      delivered_by: currentEmployee?.full_name || 'Cadreur',
+      delivered_at: new Date().toISOString()
+    };
+
+    notes = notes.replace(/\[VIDEO_META:\s*{[^\]]+}\]/gi, '').trim();
+    notes = notes ? `${notes}\n[VIDEO_META: ${JSON.stringify(updatedMeta)}]` : `[VIDEO_META: ${JSON.stringify(updatedMeta)}]`;
+
+    await sb.from('reservations').update({
+      notes: notes,
+      video_status: 'delivered'
+    }).eq('id', resId);
+
+    if (progressBar) progressBar.style.width = '85%';
+    if (progressPct) progressPct.textContent = '85%';
+
+    // 2. Dispatch WhatsApp message to client if phone is valid
+    const cleanPhone = (rawPhone || '').replace(/[^0-9]/g, '');
+    let waSent = false;
+    if (cleanPhone) {
+      const targetPhone = cleanPhone.startsWith('509') ? cleanPhone : ('509' + cleanPhone);
+      const msgToSend = whatsappMsg.replace('{LIEN_VIDEO}', finalVideoUrl);
+
+      try {
+        const res = await fetch('https://cvisual-whatsapp-gateway.onrender.com/api/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': 'cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c'
+          },
+          body: JSON.stringify({
+            to: targetPhone,
+            message: msgToSend,
+            priority: 'fast'
+          })
+        });
+        const resJson = await res.json().catch(() => ({}));
+        if (resJson.success) waSent = true;
+      } catch (waErr) {
+        console.warn('WhatsApp gateway send warning:', waErr);
+      }
+    }
+
+    if (progressBar) progressBar.style.width = '100%';
+    if (progressPct) progressPct.textContent = '100%';
+
+    closeStaffVideoModal();
+    toast(
+      waSent
+        ? '✅ Vidéo 4K livrée et message WhatsApp envoyé au client !'
+        : '✅ Vidéo 4K enregistrée dans le système !',
+      'success'
+    );
+
+    const sectionContent = document.getElementById('section-content');
+    if (sectionContent) renderVideoShoots(sectionContent);
+
+  } catch (err) {
+    console.error('startStaffVideoUploadAndDispatch error:', err);
+    toast('Erreur: ' + (err.message || err), 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Uploader & Livrer 4K';
+  }
+};
+
 // expose globally
 window.staffLogin = staffLogin;
+window.staffLoginWithCode = staffLoginWithCode;
+window.staffLoginWithUser = staffLoginWithUser;
 window.staffLogout = staffLogout;
+window.toggleMyOnlineStatus = toggleMyOnlineStatus;
+window.syncOnlineStatus = syncOnlineStatus;
 window.showSection = showSection;
 window.toggleBellPanel = toggleBellPanel;
 window.getCurrentEmployee = function () { return currentEmployee; };

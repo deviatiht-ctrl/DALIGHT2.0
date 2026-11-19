@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -220,18 +220,51 @@
     .row-actions { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; }
     .chart-wrap { position:relative; height:260px; }
     .rating-stars { color:var(--admin-accent); font-size:1.1rem; letter-spacing:2px; }
+
+    /* Live status indicator */
+    .live-status-dot { width:9px; height:9px; border-radius:50%; display:inline-block; }
+    .live-status-dot.online { background:#22c55e; box-shadow:0 0 8px #22c55e; animation:pulse-online 1.6s infinite; }
+    .live-status-dot.offline { background:#94a3b8; }
+    @keyframes pulse-online { 0%,100%{opacity:1; transform:scale(1);} 50%{opacity:.4; transform:scale(1.2);} }
+
+    .login-tab-btn { flex:1; padding:0.6rem 0.5rem; background:transparent; border:none; border-bottom:2px solid transparent; color:var(--admin-text-muted); font-size:0.85rem; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s; }
+    .login-tab-btn.active { color:var(--admin-accent); border-bottom-color:var(--admin-accent); font-weight:700; }
   </style>
 </head>
 <body>
   <!-- LOGIN SCREEN -->
   <div id="login-screen">
-    <div class="glass-card" style="width:100%; max-width:420px; text-align:center; padding:2.5rem 2rem;">
+    <div class="glass-card" style="width:100%; max-width:440px; text-align:center; padding:2.5rem 2rem; border:1px solid rgba(212,175,55,0.3); border-radius:24px; box-shadow:0 25px 60px rgba(0,0,0,0.6);">
       <img src="assets/images/logodaligth.png" alt="DALIGHT" style="max-width:180px; max-height:80px; object-fit:contain; margin-bottom:.5rem;">
-      <div class="login-logo" style="font-size:1.5rem;">DA<span>LIGHT</span></div>
-      <div style="color:var(--admin-text-muted); font-size:.85rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:2rem;">Espace Employé</div>
-      <input type="text" id="username-input" class="form-input" style="margin-bottom:.8rem; text-align:center;" placeholder="Nom d'utilisateur" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('password-input').focus()">
-      <input type="password" id="password-input" class="form-input" style="text-align:center;" placeholder="Mot de passe" autocomplete="current-password" onkeydown="if(event.key==='Enter')staffLogin()">
-      <button class="btn btn-primary" style="width:100%; margin-top:1.2rem;" onclick="staffLogin()">Se connecter</button>
+      <div class="login-logo" style="font-size:1.5rem; margin-bottom:0.15rem;">DA<span>LIGHT</span></div>
+      <div style="color:var(--admin-text-muted); font-size:.8rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:1.5rem;">Espace Employé &amp; CVISUAL</div>
+
+      <!-- Login Tabs: Code d'accès (PIN) vs Identifiants -->
+      <div style="display:flex; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:1.5rem;">
+        <button type="button" class="login-tab-btn active" id="tab-btn-code" onclick="switchLoginMode('code')">🔑 Code d'Accès (PIN)</button>
+        <button type="button" class="login-tab-btn" id="tab-btn-user" onclick="switchLoginMode('user')">👤 Identifiants</button>
+      </div>
+
+      <!-- Mode 1: Code d'accès (PIN) -->
+      <div id="login-mode-code">
+        <p style="font-size:0.82rem; color:var(--admin-text-muted); margin-bottom:1rem;">
+          Entrez votre code personnel à 6 caractères (ex: <strong>ZXFNPN</strong>)
+        </p>
+        <input type="text" id="access-code-input" class="form-input" style="margin-bottom:.8rem; text-align:center; font-size:1.3rem; font-weight:800; letter-spacing:4px; text-transform:uppercase; color:#D4AF37;" placeholder="CODE PIN" maxlength="12" autocomplete="off" onkeydown="if(event.key==='Enter')staffLoginWithCode()">
+        <button class="btn btn-primary" style="width:100%; margin-top:0.8rem; font-weight:700; background:linear-gradient(135deg,#d4af37,#996515); border:none;" onclick="staffLoginWithCode()">
+          Accéder à mon Espace
+        </button>
+      </div>
+
+      <!-- Mode 2: Username / Password -->
+      <div id="login-mode-user" style="display:none;">
+        <input type="text" id="username-input" class="form-input" style="margin-bottom:.8rem; text-align:center;" placeholder="Nom d'utilisateur" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('password-input').focus()">
+        <input type="password" id="password-input" class="form-input" style="text-align:center;" placeholder="Mot de passe" autocomplete="current-password" onkeydown="if(event.key==='Enter')staffLoginWithUser()">
+        <button class="btn btn-primary" style="width:100%; margin-top:1.2rem; font-weight:700; background:linear-gradient(135deg,#d4af37,#996515); border:none;" onclick="staffLoginWithUser()">
+          Se connecter
+        </button>
+      </div>
+
       <div id="login-error" style="color:var(--admin-danger); font-size:.85rem; margin-top:1rem; min-height:1.2rem;"></div>
     </div>
   </div>
@@ -274,7 +307,13 @@
             <div class="admin-header-subtitle" id="section-sub"></div>
           </div>
         </div>
-        <div class="header-right">
+        <div class="header-right" style="display:flex; align-items:center; gap:0.75rem;">
+          <!-- Live Online Status Toggle Widget -->
+          <div id="staff-online-toggle-wrap" style="display:flex; align-items:center; gap:0.45rem; padding:0.35rem 0.85rem; border-radius:9999px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; background:rgba(255,255,255,0.04); transition:all 0.2s;" onclick="toggleMyOnlineStatus()" title="Cliquer pour changer votre statut de présence">
+            <span id="staff-online-dot" class="live-status-dot offline"></span>
+            <span id="staff-online-label" style="font-size:0.78rem; font-weight:700; color:#94a3b8; letter-spacing:0.04em;">HORS LIGNE</span>
+          </div>
+
           <div style="position:relative;" id="bell-wrap">
             <button class="header-btn" id="bell-btn" onclick="toggleBellPanel()" aria-label="Notifications">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
@@ -289,6 +328,60 @@
         <div id="section-content"></div>
       </div>
     </main>
+  </div>
+
+  <!-- MODAL: UPLOAD & LIVRAISON VIDÉO 4K (ESPACE CADREUR) -->
+  <div class="modal-overlay" id="staff-video-upload-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(8,12,8,0.88); backdrop-filter:blur(16px); z-index:9999; align-items:center; justify-content:center; padding:1rem;">
+    <div class="modal" style="max-width:520px; width:100%; background:rgba(23,26,35,0.98); border:1px solid rgba(212,175,55,0.4); border-radius:20px; padding:1.5rem; box-shadow:0 25px 60px rgba(0,0,0,0.85);">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:0.75rem;">
+        <h3 style="margin:0; font-size:1.2rem; color:var(--gold); display:flex; align-items:center; gap:0.5rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          Livraison Vidéo 4K Client
+        </h3>
+        <button class="modal-close" onclick="closeStaffVideoModal()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:1.3rem;">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="staff-video-res-id">
+        <input type="hidden" id="staff-video-res-phone">
+        <input type="hidden" id="staff-video-res-name">
+
+        <div id="staff-video-client-info" style="background:rgba(255,255,255,0.03); border:1px solid rgba(212,175,55,0.2); border-radius:10px; padding:0.75rem; margin-bottom:1rem; font-size:0.85rem;"></div>
+
+        <div id="staff-drop-video-zone" style="border:2px dashed rgba(212,175,55,0.4); border-radius:12px; padding:1.5rem; text-align:center; background:rgba(0,0,0,0.25); cursor:pointer; margin-bottom:1rem;" onclick="document.getElementById('staff-video-file-input').click()">
+          <input type="file" id="staff-video-file-input" accept="video/mp4,video/quicktime,video/x-matroska,video/*" style="display:none;" onchange="handleStaffVideoFileSelected(this)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:0.4rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <div style="font-weight:600; color:#FAF8F5; font-size:0.95rem;">Sélectionner le fichier vidéo 4K</div>
+          <div style="font-size:0.75rem; color:var(--muted); margin-top:0.25rem;">Téléversement direct depuis votre téléphone ou PC</div>
+          <div id="staff-selected-filename" style="margin-top:0.5rem; font-size:0.82rem; color:#4ade80; font-weight:600; display:none;"></div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0.85rem;">
+          <label style="font-size:0.78rem; color:var(--muted); display:block; margin-bottom:0.25rem;">Ou collez un lien vidéo direct (Google Drive, Cloudinary) :</label>
+          <input type="url" id="staff-video-direct-url" class="form-input" placeholder="https://..." style="font-size:0.85rem;" oninput="updateStaffWhatsAppPreview()">
+        </div>
+
+        <div id="staff-upload-progress-wrapper" style="display:none; margin-bottom:1rem;">
+          <div style="display:flex; justify-content:space-between; font-size:0.78rem; margin-bottom:0.3rem;">
+            <span id="staff-upload-progress-label" style="color:var(--gold);">Upload en cours...</span>
+            <span id="staff-upload-progress-pct" style="font-weight:700; color:#FAF8F5;">0%</span>
+          </div>
+          <div style="width:100%; height:8px; background:rgba(255,255,255,0.1); border-radius:4px; overflow:hidden;">
+            <div id="staff-upload-progress-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #d4af37, #4ade80); transition:width 0.2s;"></div>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0.5rem;">
+          <label style="font-size:0.78rem; color:var(--muted); display:block; margin-bottom:0.25rem;">Message WhatsApp pour le client :</label>
+          <textarea id="staff-video-whatsapp-msg" class="form-textarea" rows="3" style="font-size:0.82rem;"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:0.5rem; border-top:1px solid rgba(255,255,255,0.1); padding-top:0.75rem; margin-top:1rem;">
+        <button class="btn btn-secondary btn-sm" onclick="closeStaffVideoModal()">Annuler</button>
+        <button class="btn btn-primary btn-sm" id="btn-staff-start-upload" onclick="startStaffVideoUploadAndDispatch()" style="font-weight:700; background:linear-gradient(135deg,#d4af37,#996515); border:none;">
+          Uploader &amp; Livrer 4K
+        </button>
+      </div>
+    </div>
   </div>
 
   <div class="toast-box" id="toast-box"></div>
