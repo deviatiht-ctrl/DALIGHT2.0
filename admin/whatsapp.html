@@ -14,6 +14,7 @@
   <!-- jsPDF for direct client-side receipt generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="../vendor/supabase/supabase.min.js"></script>
+  <script src="../vendor/lucide/lucide.min.js"></script>
 
   <style>
     /* WhatsApp Gateway Specific Luxury Glass Styles */
@@ -462,9 +463,14 @@
           <p class="admin-header-subtitle">Automatisation des messages clients, reçus PDF certifiés et protection Anti-Ban Meta Dual-Lane</p>
         </div>
       </div>
-      <div class="header-right">
-        <button class="btn btn-secondary" id="btn-refresh-status" title="Rafraîchir statut Gateway">
-          🔄 Actualiser
+      <div class="header-right" style="display:flex; align-items:center; gap:0.6rem;">
+        <button class="btn btn-sm" id="btn-toggle-ai-header" onclick="toggleGlobalAiStatus()" style="display:inline-flex; align-items:center; gap:0.45rem; font-weight:700; transition:all 0.2s; padding:0.4rem 0.85rem; border-radius:999px; border:1px solid;" title="Cliquer pour activer ou désactiver les réponses automatiques du Concierge IA">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+          <span id="btn-toggle-ai-header-text">Chargement IA...</span>
+        </button>
+        <button class="btn btn-secondary btn-sm" id="btn-refresh-status" title="Rafraîchir statut Gateway" style="display:inline-flex; align-items:center; gap:0.4rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+          Actualiser
         </button>
       </div>
     </header>
@@ -515,6 +521,11 @@
             <span>Rappels &amp; Relances (Max 25/j/SIM)</span>
           </div>
         </div>
+      </div>
+
+      <!-- Banner Statut IA & Interrupteur Direct -->
+      <div id="ai-status-global-banner" style="margin-bottom:1.5rem; padding:0.9rem 1.25rem; border-radius:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; transition:all 0.3s;">
+        <!-- Filled dynamically by updateAiUiState() -->
       </div>
 
       <!-- Navigation Tabs -->
@@ -1762,6 +1773,122 @@
     // ══════ CONCIERGE IA GEMINI CLIENT-SIDE ENGINE ══════
     let lastGeneratedAiReply = "";
 
+    window.globalAiAutoreplyState = true;
+
+    function updateAiUiState(isEnabled) {
+      window.globalAiAutoreplyState = isEnabled;
+
+      const headerBtn = document.getElementById('btn-toggle-ai-header');
+      const headerText = document.getElementById('btn-toggle-ai-header-text');
+      const banner = document.getElementById('ai-status-global-banner');
+      const aiBadge = document.getElementById('ai-status-badge');
+      const toggleCheckbox = document.getElementById('ai-autoreply-toggle');
+
+      if (toggleCheckbox) toggleCheckbox.checked = isEnabled;
+
+      if (isEnabled) {
+        // AI is Active / ON
+        if (headerBtn) {
+          headerBtn.style.background = 'rgba(34, 197, 94, 0.15)';
+          headerBtn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+          headerBtn.style.color = '#4ade80';
+          headerBtn.title = "L'IA répond automatiquement sur WhatsApp. Cliquez pour ÉTEINDRE.";
+        }
+        if (headerText) headerText.textContent = 'IA: ACTIVE (Auto-Réponse ON)';
+
+        if (aiBadge) {
+          aiBadge.className = 'status-badge confirmed';
+          aiBadge.textContent = 'IA Active';
+        }
+
+        if (banner) {
+          banner.style.background = 'linear-gradient(135deg, rgba(34,197,94,0.12), rgba(12,16,12,0.85))';
+          banner.style.border = '1px solid rgba(34,197,94,0.35)';
+          banner.innerHTML = `
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+              <span class="live-status-dot online" style="width:12px; height:12px; background:#22c55e; border-radius:50%; box-shadow:0 0 10px #22c55e; flex-shrink:0;"></span>
+              <div>
+                <strong style="color:#FAF8F5; font-size:0.92rem;">Concierge IA en ligne : Les réponses automatiques sont ACTIVÉES</strong>
+                <div style="color:var(--admin-text-muted); font-size:0.78rem; margin-top:0.15rem;">
+                  L'IA répond 24/7 aux clients et prévient l'équipe par alerte WhatsApp dès qu'un rendez-vous est demandé.
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-sm" onclick="toggleGlobalAiStatus(false)" style="background:rgba(239,68,68,0.2); border:1px solid rgba(239,68,68,0.45); color:#fca5a5; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem; padding:0.4rem 0.85rem; border-radius:8px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+              Éteindre l'IA (Couper les réponses)
+            </button>
+          `;
+        }
+      } else {
+        // AI is Turned OFF / Disabled
+        if (headerBtn) {
+          headerBtn.style.background = 'rgba(239, 68, 68, 0.2)';
+          headerBtn.style.borderColor = 'rgba(239, 68, 68, 0.45)';
+          headerBtn.style.color = '#fca5a5';
+          headerBtn.title = "L'IA est éteinte. Aucun message automatique n'est envoyé. Cliquez pour ALLUMER.";
+        }
+        if (headerText) headerText.textContent = 'IA: ÉTEINTE (Réponses Coupées)';
+
+        if (aiBadge) {
+          aiBadge.className = 'status-badge cancelled';
+          aiBadge.textContent = 'IA Éteinte';
+        }
+
+        if (banner) {
+          banner.style.background = 'linear-gradient(135deg, rgba(239,68,68,0.15), rgba(20,12,12,0.9))';
+          banner.style.border = '1px solid rgba(239,68,68,0.4)';
+          banner.innerHTML = `
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+              <span style="width:12px; height:12px; background:#ef4444; border-radius:50%; box-shadow:0 0 10px #ef4444; flex-shrink:0;"></span>
+              <div>
+                <strong style="color:#FAF8F5; font-size:0.92rem;">Concierge IA ÉTEINT : Réponses automatiques DÉSACTIVÉES</strong>
+                <div style="color:var(--admin-text-muted); font-size:0.78rem; margin-top:0.15rem;">
+                  L'IA ne répondra à aucun client sur WhatsApp. Vous ou votre équipe gérez les conversations manuellement.
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-sm" onclick="toggleGlobalAiStatus(true)" style="background:rgba(34,197,94,0.2); border:1px solid rgba(34,197,94,0.45); color:#86efac; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem; padding:0.4rem 0.85rem; border-radius:8px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Allumer le Concierge IA
+            </button>
+          `;
+        }
+      }
+    }
+
+    window.toggleGlobalAiStatus = async function(forceState) {
+      const nextState = (forceState !== undefined) ? Boolean(forceState) : !window.globalAiAutoreplyState;
+      updateAiUiState(nextState);
+
+      try {
+        const sb = window.supabaseClient || window.dalightAdminSupabase;
+        if (!sb) return;
+
+        const { data } = await sb.from('settings').select('*').eq('key', 'gemini_config').maybeSingle();
+        let val = (data && data.value) ? (typeof data.value === 'string' ? JSON.parse(data.value) : data.value) : {};
+        val.autoreply = nextState;
+        val.enabled = nextState;
+
+        await sb.from('settings').upsert({
+          id: 'gemini_config',
+          key: 'gemini_config',
+          value: val,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'id' });
+
+        if (window.adminCore?.showToast) {
+          window.adminCore.showToast(
+            nextState ? 'Concierge IA activé (réponses automatiques en ligne)' : 'Concierge IA éteint (réponses automatiques coupées)',
+            nextState ? 'success' : 'warning'
+          );
+        }
+      } catch (err) {
+        console.error('Error toggling AI status:', err);
+        alert('Erreur: ' + (err.message || err));
+      }
+    };
+
     async function loadGeminiConfig() {
       try {
         const sb = window.supabaseClient || window.dalightAdminSupabase;
@@ -1775,12 +1902,14 @@
           if (val.api_key) {
             document.getElementById('gemini-api-key-input').value = val.api_key;
           }
-          if (val.autoreply !== undefined) {
-            document.getElementById('ai-autoreply-toggle').checked = val.autoreply;
-          }
+          const isEnabled = (val.autoreply !== undefined) ? Boolean(val.autoreply) : (val.enabled !== undefined ? Boolean(val.enabled) : true);
+          updateAiUiState(isEnabled);
+        } else {
+          updateAiUiState(true);
         }
       } catch(e) {
         console.warn("Could not load gemini config:", e);
+        updateAiUiState(true);
       }
     }
 

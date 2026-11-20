@@ -150,8 +150,8 @@ async function handleWhatsAppRequest(req, res) {
       const { handleIncomingWhatsAppMessage } = require('../api/whatsapp-ai-concierge');
       const result = await handleIncomingWhatsAppMessage(phone, message);
 
-      // Auto-dispatch reply back to client if phone is provided
-      if (body.dispatch_reply !== false && phone && result.reply) {
+      // Auto-dispatch reply back to client ONLY if AI is enabled and reply generated
+      if (body.dispatch_reply !== false && phone && result.reply && !result.aiDisabled) {
         let cleanTo = String(phone).replace(/\D/g, '');
         if (cleanTo.length === 8) cleanTo = '509' + cleanTo;
         await defaultClient.sendMessage({

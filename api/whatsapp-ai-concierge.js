@@ -321,26 +321,80 @@ async function dispatchBookingAlertToDalight(clientPhone, clientMessage, dalight
 }
 
 // --------------------------------------------
+// VÉRIFICATION DU STATUT DE L'IA (ACTIVÉ / ÉTEINT)
+// --------------------------------------------
+let lastAutoreplyCheck = 0;
+let cachedAutoreplyStatus = true;
+
+async function isAiAutoReplyEnabled() {
+  const now = Date.now();
+  if (now - lastAutoreplyCheck < 10000) {
+    return cachedAutoreplyStatus;
+  }
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/settings?key=eq.gemini_config', {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: 'Bearer ' + SUPABASE_KEY
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data[0] && data[0].value) {
+        const val = data[0].value;
+        if (val.autoreply === false || val.enabled === false) {
+          cachedAutoreplyStatus = false;
+          lastAutoreplyCheck = now;
+          return false;
+        }
+      }
+    }
+    cachedAutoreplyStatus = true;
+    lastAutoreplyCheck = now;
+    return true;
+  } catch (err) {
+    console.warn('[Concierge IA] Settings check error:', err.message);
+    return cachedAutoreplyStatus;
+  }
+}
+
+// --------------------------------------------
 // GESTIONNAIRE COMPLET DE MESSAGE ENTRANT
 // --------------------------------------------
 async function handleIncomingWhatsAppMessage(senderPhone, messageText, options = {}) {
+  const isEnabled = (options.autoreply !== undefined) ? Boolean(options.autoreply) : await isAiAutoReplyEnabled();
   const isBooking = detectBookingIntent(messageText);
-  let reply = await generateGeminiConciergeResponse(senderPhone, messageText, options.geminiApiKey || null);
 
   let alertResult = null;
   if (isBooking) {
     const dalightNumber = options.dalightAlertPhone || "50947477221";
     alertResult = await dispatchBookingAlertToDalight(senderPhone, messageText, dalightNumber);
+  }
 
-    // Ajoute une mention élégante informant le client que l'équipe est prévenue
-    reply += "\n\n🔔 *Information :* Notre responsable a également reçu votre demande en direct et peut prendre le relais ici même d'un instant à l'autre.";
+  // Si l'IA est éteinte par l'administrateur, AUCUN message automatique n'est envoyé au client !
+  if (!isEnabled) {
+    console.log(`[Concierge IA] Réponse automatique ÉTEINTE par l'administrateur pour ${senderPhone}.`);
+    return {
+      reply: null,
+      isBookingIntent: isBooking,
+      alertSent: isBooking && (alertResult?.success || false),
+      alertDetails: alertResult,
+      aiDisabled: true
+    };
+  }
+
+  let reply = await generateGeminiConciergeResponse(senderPhone, messageText, options.geminiApiKey || null);
+
+  if (isBooking) {
+    reply += "\n\nInformation : Notre responsable a également reçu votre demande en direct et peut prendre le relais ici même d'un instant à l'autre.";
   }
 
   return {
     reply,
     isBookingIntent: isBooking,
     alertSent: isBooking && (alertResult?.success || false),
-    alertDetails: alertResult
+    alertDetails: alertResult,
+    aiDisabled: false
   };
 }
 
@@ -353,6 +407,7 @@ if (typeof module !== 'undefined') {
     generateSmartLocalResponse,
     detectBookingIntent,
     dispatchBookingAlertToDalight,
+    isAiAutoReplyEnabled,
     handleIncomingWhatsAppMessage
   };
 }

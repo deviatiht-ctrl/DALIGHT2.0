@@ -841,6 +841,60 @@
         console.warn('Could not fetch cvisual_video_config from Supabase:', e);
       }
 
+      // Synchroniser automatiquement tous les Community Managers, Cadreurs et Staff Média depuis presence_employees
+      try {
+        const sb = await getClient();
+        if (sb) {
+          const { data: dbEmps } = await sb
+            .from('presence_employees')
+            .select('id, full_name, phone, position, roles, access_code, is_active')
+            .eq('is_active', true);
+
+          if (dbEmps && Array.isArray(dbEmps)) {
+            if (!Array.isArray(cvisualConfig.team_members)) cvisualConfig.team_members = [];
+
+            dbEmps.forEach(emp => {
+              const pos = (emp.position || '').toLowerCase();
+              const roles = Array.isArray(emp.roles) ? emp.roles : [];
+              const isMediaStaff = roles.includes('cadreur_video') || 
+                                  roles.includes('cadreur_cvisual') || 
+                                  roles.includes('community_manager') ||
+                                  pos.includes('cadreur') || 
+                                  pos.includes('vidéo') || 
+                                  pos.includes('video') || 
+                                  pos.includes('community') || 
+                                  pos.includes('manager') ||
+                                  pos.includes('production');
+
+              if (isMediaStaff) {
+                const existing = cvisualConfig.team_members.find(m => 
+                  (m.id && m.id === emp.id) || 
+                  (m.name && m.name.toLowerCase() === emp.full_name.toLowerCase()) ||
+                  (m.phone && emp.phone && m.phone.replace(/D/g, '') === emp.phone.replace(/D/g, ''))
+                );
+
+                if (existing) {
+                  existing.id = emp.id;
+                  existing.name = emp.full_name;
+                  if (emp.phone) existing.phone = emp.phone;
+                  if (emp.access_code) existing.access_code = emp.access_code;
+                } else {
+                  cvisualConfig.team_members.push({
+                    id: emp.id,
+                    name: emp.full_name,
+                    phone: emp.phone || '',
+                    access_code: emp.access_code || '',
+                    rate_pct: cvisualConfig.default_cadreur_split_pct || 50
+                  });
+                }
+              }
+            });
+          }
+        }
+      } catch (empErr) {
+        console.warn('Error loading media staff into CVISUAL team:', empErr);
+      }
+
       // Populate UI
       document.getElementById('cfg-manager-phone').value = cvisualConfig.manager_phone || '+509 4747-7221';
       document.getElementById('cfg-auto-alerts').checked = cvisualConfig.auto_alerts_enabled !== false;
