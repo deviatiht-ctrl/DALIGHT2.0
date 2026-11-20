@@ -305,6 +305,10 @@
         </div>
       </div>
       <div class="header-right">
+        <div id="cvisual-auto-status" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.35rem 0.75rem;border-radius:20px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);color:#4ade80;font-size:0.75rem;font-weight:600;">
+          <span style="width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e;display:inline-block;"></span>
+          Auto-Assignation IA : <span id="cvisual-online-count">0</span> cadreur(s) En Ligne
+        </div>
         <button class="btn btn-secondary btn-sm" onclick="scrollToConfig()" style="display:inline-flex;align-items:center;gap:.4rem;">
           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/>
@@ -791,6 +795,8 @@
 
       await loadCVISUALConfig();
       await loadVideoData();
+      await runAutoVideoAssignment();
+      setInterval(runAutoVideoAssignment, 20000);
     });
 
     function scrollToConfig() {
@@ -1174,6 +1180,7 @@
         allVideoReservations = data || [];
         updateHUD(allVideoReservations);
         applyFilters();
+        await runAutoVideoAssignment();
 
       } catch (err) {
         console.error('Error loading video reservations:', err);
@@ -1476,6 +1483,162 @@
 
       updateHUD(allVideoReservations);
       applyFilters();
+    }
+
+    let liveOnlineCadreursState = {};
+    let isAutoAssignRunning = false;
+
+    // Charger l'état En Ligne en temps réel des membres CVISUAL
+    async function fetchLiveOnlineCadreurs() {
+      try {
+        const sb = await getClient();
+        if (!sb) return [];
+        const { data } = await sb.from('settings').select('value').eq('key', 'staff_live_online_state').maybeSingle();
+        if (data && data.value && typeof data.value === 'object') {
+          liveOnlineCadreursState = data.value;
+        }
+      } catch(e) {
+        console.warn('Could not fetch staff_live_online_state:', e);
+      }
+
+      const team = cvisualConfig.team_members || [];
+      const online = team.filter(m => {
+        return liveOnlineCadreursState && liveOnlineCadreursState[m.id] && liveOnlineCadreursState[m.id].is_online === true;
+      });
+
+      const countEl = document.getElementById('cvisual-online-count');
+      if (countEl) countEl.textContent = online.length;
+      return online;
+    }
+
+    // Auto-Assignation IA CVISUAL : 100% Automatique & Intelligente pour les cadreurs En Ligne
+    async function runAutoVideoAssignment() {
+      if (isAutoAssignRunning) return;
+      isAutoAssignRunning = true;
+
+      try {
+        const onlineCadreurs = await fetchLiveOnlineCadreurs();
+        if (!onlineCadreurs.length || !allVideoReservations.length) {
+          isAutoAssignRunning = false;
+          return;
+        }
+
+        // Trouver les tournages vidéo non encore assignés
+        const unassigned = allVideoReservations.filter(r => {
+          const meta = getReservationVideoMeta(r);
+          return !meta.cadreur_id || meta.cadreur_name === 'Non assigné';
+        });
+
+        if (!unassigned.length) {
+          isAutoAssignRunning = false;
+          return;
+        }
+
+        console.log(`[CVISUAL AUTO-ASSIGN] ${unassigned.length} tournage(s) à assigner automatiquement. ${onlineCadreurs.length} cadreur(s) En Ligne.`);
+
+        let newlyAssignedCount = 0;
+
+        for (const r of unassigned) {
+          // Équilibrage intelligent de la charge : choisir le cadreur en ligne avec le moins de tournages pour cette date
+          onlineCadreurs.sort((a, b) => {
+            const countA = allVideoReservations.filter(x => {
+              const m = getReservationVideoMeta(x);
+              return m.cadreur_id === a.id && x.date === r.date;
+            }).length;
+            const countB = allVideoReservations.filter(x => {
+              const m = getReservationVideoMeta(x);
+              return m.cadreur_id === b.id && x.date === r.date;
+            }).length;
+            return countA - countB;
+          });
+
+          const bestCadreur = onlineCadreurs[0];
+          const isPrivate = (r.video_consent || 'public').toLowerCase() === 'private';
+          const totalPrice = Number(r.video_price) || (isPrivate ? 1000 : 500);
+          const splitPct = Number(bestCadreur.rate_pct || cvisualConfig.default_cadreur_split_pct || 50);
+          const cadreurPay = Math.round((totalPrice * splitPct) / 100);
+
+          const newMeta = {
+            cadreur_id: bestCadreur.id,
+            cadreur_name: bestCadreur.name,
+            cadreur_phone: bestCadreur.phone || '',
+            cadreur_rate_pct: splitPct,
+            cadreur_pay: cadreurPay,
+            video_status: 'assigned',
+            auto_assigned: true,
+            assigned_at: new Date().toISOString()
+          };
+
+          await persistVideoMeta(r.id, newMeta);
+          newlyAssignedCount++;
+
+          // 1. Notification staff interne
+          try {
+            const sb = await getClient();
+            if (sb) {
+              await sb.from('staff_notifications').insert({
+                employee_id: bestCadreur.id,
+                type: 'video_assignment',
+                title: 'Tournage Vidéo 4K CVISUAL assigné automatiquement',
+                body: `Nouveau tournage pour ${r.user_name || 'Client'} le ${fmtDate(r.date)} à ${fmtTime(r.time)} (${r.service || 'Soin'}).`,
+                data: { reservation_id: r.id, is_video: true },
+                read: false
+              });
+            }
+          } catch(notifErr) {
+            console.warn('staff notification error:', notifErr);
+          }
+
+          // 2. Alerte WhatsApp automatique au cadreur
+          if (cvisualConfig.auto_alerts_enabled !== false && bestCadreur.phone) {
+            let cleanPhone = String(bestCadreur.phone).replace(/\D/g, '');
+            if (cleanPhone.length === 8) cleanPhone = '509' + cleanPhone;
+
+            const autoMsg = 
+              `*DALIGHT & CVISUAL — NOUVEAU TOURNAGE 4K AUTO-ASSIGNÉ*\n\n` +
+              `Bonjour *${bestCadreur.name}*,\n` +
+              `Vous êtes actuellement *EN LIGNE*. Un nouveau tournage vidéo 4K vous a été attribué automatiquement :\n\n` +
+              `*Client(e) :* ${r.user_name || 'Client'}\n` +
+              (r.phone ? `*Téléphone :* ${r.phone}\n` : '') +
+              `*Prestation filmée :* ${r.service || 'Soin Sanctuaire'}\n` +
+              `*Date :* ${fmtDate(r.date)}\n` +
+              `*Heure :* ${fmtTime(r.time)}\n` +
+              `*Usage :* ${isPrivate ? '🔒 Usage Privé (Floutage client)' : '✨ DALIGHT & CVISUAL (Public)'}\n` +
+              `*Votre part (Kòb ou) :* ${cadreurPay.toLocaleString()} HTG (${splitPct}%)\n\n` +
+              `Accédez à votre espace pour gérer la séance & uploader la vidéo 4K :\n` +
+              `https://dalightbeauty.com/staff.html\n\n` +
+              `_Préparez votre équipement et stabilisateurs 10 min à l'avance._`;
+
+            try {
+              fetch(`${CVISUAL_GATEWAY.baseUrl}/api/v1/messages/send`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${CVISUAL_GATEWAY.apiKey}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  to: cleanPhone,
+                  message: autoMsg,
+                  kind: 'auto_cadreur_assignment',
+                  mode: 'async',
+                  account_index: CVISUAL_GATEWAY.accountIndex
+                })
+              }).catch(e => console.warn('WhatsApp gateway auto-alert error:', e));
+            } catch(waErr){}
+          }
+        }
+
+        if (newlyAssignedCount > 0) {
+          if (window.adminCore?.showToast) {
+            window.adminCore.showToast(`${newlyAssignedCount} tournage(s) vidéo auto-assigné(s) aux cadreurs En Ligne !`, 'success');
+          }
+          applyFilters();
+        }
+      } catch(err) {
+        console.warn('runAutoVideoAssignment error:', err);
+      } finally {
+        isAutoAssignRunning = false;
+      }
     }
 
     // Update Status of Tournage

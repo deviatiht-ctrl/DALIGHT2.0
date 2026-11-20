@@ -1402,6 +1402,8 @@ function parseReservationVideoMeta(r) {
   return meta;
 }
 
+let currentCadreurShootTab = 'all';
+
 async function renderVideoShoots(c) {
   const roles = employeeRoles();
   const empId = currentEmployee.id;
@@ -1435,8 +1437,43 @@ async function renderVideoShoots(c) {
         r.assigned_employee_id === empId ||
         meta.cadreur_id === empId ||
         (meta.cadreur_name && meta.cadreur_name.toLowerCase() === empName) ||
-        (r.cadreur_id && r.cadreur_id === empId)
+        (r.cadreur_id && r.cadreur_id === empId) ||
+        (r.notes && r.notes.includes(empId))
       );
+    });
+
+    const toShoot = myShoots.filter(r => {
+      const meta = parseReservationVideoMeta(r);
+      const s = meta.video_status || r.video_status || 'assigned';
+      return s === 'assigned' || s === 'pending';
+    });
+
+    const toDeliver = myShoots.filter(r => {
+      const meta = parseReservationVideoMeta(r);
+      const s = meta.video_status || r.video_status || 'assigned';
+      return s === 'shot' || (!meta.video_url && s !== 'delivered');
+    });
+
+    const delivered = myShoots.filter(r => {
+      const meta = parseReservationVideoMeta(r);
+      const s = meta.video_status || r.video_status || 'assigned';
+      return s === 'delivered' || !!meta.video_url;
+    });
+
+    // Calculate earnings summary
+    let totalEarned = 0;
+    let totalPaid = 0;
+    let totalPending = 0;
+
+    myShoots.forEach(r => {
+      const meta = parseReservationVideoMeta(r);
+      const isPrivate = (r.video_consent === 'private' || r.video_consent === 'oui_prive' || meta.consent === 'private');
+      const totalPrice = Number(r.video_price) || (isPrivate ? 1000 : 500);
+      const splitPct = Number(meta.cadreur_rate_pct !== undefined ? meta.cadreur_rate_pct : 50);
+      const cut = Math.round(totalPrice * (splitPct / 100));
+      totalEarned += cut;
+      if (meta.cadreur_paid === true) totalPaid += cut;
+      else totalPending += cut;
     });
 
     if (myShoots.length === 0) {
@@ -1445,7 +1482,7 @@ async function renderVideoShoots(c) {
           <div style="display:flex;justify-content:center;margin-bottom:1rem;"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg></div>
           <div style="font-size:1.2rem; font-weight:700; color:#FAF8F5; margin-bottom:0.5rem;">Aucun tournage assigné pour le moment</div>
           <p style="color:var(--muted); font-size:0.88rem; max-width:440px; margin:0 auto 1.5rem;">
-            Assurez-vous d'être <strong>EN LIGNE</strong> afin que le PDG de CVISUAL ou le système d'assignation puisse vous attribuer les captations vidéo au salon.
+            Assurez-vous d'être <strong>EN LIGNE</strong> afin que le système CVISUAL puisse vous attribuer automatiquement les captations vidéo au salon dès qu'une réservation est effectuée.
           </p>
           <button class="btn btn-primary btn-sm" onclick="toggleMyOnlineStatus(true)" style="background:linear-gradient(135deg,#22c55e,#15803d); border:none; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
             <span class="live-status-dot online"></span> Me mettre EN LIGNE
@@ -1455,7 +1492,13 @@ async function renderVideoShoots(c) {
       return;
     }
 
-    const cardsHtml = myShoots.map(r => {
+    // Determine which list to show based on active tab
+    let displayList = myShoots;
+    if (currentCadreurShootTab === 'to_shoot') displayList = toShoot;
+    else if (currentCadreurShootTab === 'to_deliver') displayList = toDeliver;
+    else if (currentCadreurShootTab === 'delivered') displayList = delivered;
+
+    const cardsHtml = displayList.map(r => {
       const meta = parseReservationVideoMeta(r);
       const isPrivate = (r.video_consent === 'private' || r.video_consent === 'oui_prive' || meta.consent === 'private');
       const clientName = r.user_name || 'Client DALIGHT';
@@ -1465,13 +1508,13 @@ async function renderVideoShoots(c) {
 
       // Status calculation
       const videoStatus = meta.video_status || r.video_status || 'assigned';
-      let statusBadge = '<span class="badge badge-gold">En attente de tournage</span>';
-      if (videoStatus === 'shot') statusBadge = '<span class="badge badge-blue">Tourné - En montage</span>';
-      if (videoStatus === 'delivered') statusBadge = '<span class="badge badge-green">Vidéo 4K Livrée</span>';
+      let statusBadge = '<span class="badge badge-gold"><i data-lucide="video" style="width:11px;height:11px;vertical-align:-1px;"></i> À réaliser</span>';
+      if (videoStatus === 'shot') statusBadge = '<span class="badge badge-blue"><i data-lucide="scissors" style="width:11px;height:11px;vertical-align:-1px;"></i> Tourné - En montage</span>';
+      if (videoStatus === 'delivered') statusBadge = '<span class="badge badge-green"><i data-lucide="check" style="width:11px;height:11px;vertical-align:-1px;"></i> Vidéo 4K Livrée</span>';
 
       const consentBadge = isPrivate
-        ? '<span class="badge badge-purple" style="border:1px solid rgba(168,85,247,0.4);"><i data-lucide="lock" style="width:12px;height:12px;margin-right:3px;"></i> Usage Privé (Floutage requis)</span>'
-        : '<span class="badge badge-green" style="border:1px solid rgba(34,197,94,0.4);"><i data-lucide="globe" style="width:12px;height:12px;margin-right:3px;"></i> DALIGHT & CVISUAL (Public)</span>';
+        ? '<span class="badge badge-purple" style="border:1px solid rgba(168,85,247,0.4);"><i data-lucide="lock" style="width:12px;height:12px;margin-right:3px;"></i> Usage Privé (Floutage)</span>'
+        : '<span class="badge badge-green" style="border:1px solid rgba(34,197,94,0.4);"><i data-lucide="globe" style="width:12px;height:12px;margin-right:3px;"></i> Public CVISUAL</span>';
 
       // Payout cut
       const totalPrice = Number(r.video_price) || (isPrivate ? 1000 : 500);
@@ -1480,15 +1523,18 @@ async function renderVideoShoots(c) {
 
       const isPaid = meta.cadreur_paid === true;
       const paymentBadge = isPaid
-        ? '<span class="badge badge-green" style="font-size:0.75rem;">Payé par CVISUAL</span>'
-        : '<span class="badge badge-gold" style="font-size:0.75rem;">Paiement en attente</span>';
+        ? '<span class="badge badge-green" style="font-size:0.75rem;">Payé</span>'
+        : '<span class="badge badge-gold" style="font-size:0.75rem;">En attente versement</span>';
 
       return `
         <div class="card" style="border:1px solid rgba(212,175,55,0.25); background:rgba(20,28,20,0.7); position:relative; overflow:hidden; margin-bottom:1rem;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.8rem;">
             <div>
               <div style="font-size:1.1rem; font-weight:700; color:#FAF8F5;">${esc(clientName)}</div>
-              <div style="font-size:0.8rem; color:var(--muted);">${esc(r.service || 'Soin DALIGHT')}</div>
+              <div style="font-size:0.82rem; color:var(--muted); margin-top:0.15rem;">
+                Prestation : <strong style="color:#d4af37;">${esc(r.service || 'Soin DALIGHT')}</strong>
+                ${r.assigned_employee_name ? ` · Praticienne : <strong>${esc(r.assigned_employee_name)}</strong>` : ''}
+              </div>
             </div>
             <div style="display:flex; gap:0.4rem; flex-wrap:wrap; align-items:center;">
               ${statusBadge}
@@ -1500,12 +1546,12 @@ async function renderVideoShoots(c) {
             <div><span style="color:var(--muted);">Date & Heure :</span><br><strong>${fmtDate(r.date)} à ${fmtTime(r.time)}</strong></div>
             <div><span style="color:var(--muted);">Téléphone :</span><br><strong>${esc(phone)}</strong></div>
             <div><span style="color:var(--muted);">Votre Part (Kòb ou) :</span><br><strong style="color:#4ade80; font-size:0.95rem;">${cadreurCut.toLocaleString()} HTG</strong> (${splitPct}%)</div>
-            <div><span style="color:var(--muted);">Statut Paiement :</span><br>${paymentBadge}</div>
+            <div><span style="color:var(--muted);">Paiement CVISUAL :</span><br>${paymentBadge}</div>
           </div>
 
           ${meta.video_url ? `
             <div style="padding:0.55rem 0.75rem; background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.25); border-radius:8px; margin-bottom:0.9rem; font-size:0.8rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
-              <span style="color:#4ade80;"><strong>Vidéo Livrée :</strong> ${esc(meta.video_url).slice(0, 40)}...</span>
+              <span style="color:#4ade80;"><strong>Vidéo Livrée :</strong> ${esc(meta.video_url).slice(0, 42)}...</span>
               <a href="${esc(meta.video_url)}" target="_blank" class="btn btn-secondary btn-sm" style="padding:0.2rem 0.6rem; font-size:0.75rem;">Voir la vidéo</a>
             </div>
           ` : ''}
@@ -1519,7 +1565,7 @@ async function renderVideoShoots(c) {
             ` : ''}
             <button class="btn btn-primary btn-sm" onclick="openStaffVideoModal('${r.id}')" style="background:linear-gradient(135deg,#d4af37,#996515); border:none; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
               <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              ${meta.video_url ? 'Re-livrer / Màj Vidéo 4K' : 'Uploader & Livrer Vidéo 4K'}
+              ${meta.video_url ? 'Mettre à jour la vidéo 4K' : 'Uploader & Livrer Vidéo 4K'}
             </button>
           </div>
         </div>
@@ -1527,18 +1573,52 @@ async function renderVideoShoots(c) {
     }).join('');
 
     c.innerHTML = `
+      <!-- En-tête avec KPI et Tabs -->
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; flex-wrap:wrap; gap:0.8rem;">
         <div>
           <h2 style="font-size:1.25rem; font-weight:700; color:#FAF8F5; margin:0;">Vos Tournages Vidéo CVISUAL</h2>
-          <div style="color:var(--muted); font-size:0.82rem;">${myShoots.length} captation${myShoots.length > 1 ? 's' : ''} assignée${myShoots.length > 1 ? 's' : ''}</div>
+          <div style="color:var(--muted); font-size:0.82rem;">Espace Cadreur & Livraisons 4K</div>
         </div>
         <button class="btn btn-gold btn-sm" onclick="renderVideoShoots(document.getElementById('section-content'))" style="display:inline-flex;align-items:center;gap:0.35rem;">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
           Actualiser
         </button>
       </div>
+
+      <!-- 3 KPI Cards -->
+      <div class="grid cards-3" style="margin-bottom:1.2rem;">
+        <div class="card" style="padding:0.9rem;border-color:rgba(212,175,55,0.3);">
+          <div style="font-size:0.75rem;color:var(--muted);">À Réaliser / Tourner</div>
+          <div style="font-size:1.5rem;font-weight:700;color:#d4af37;">${toShoot.length}</div>
+        </div>
+        <div class="card" style="padding:0.9rem;border-color:rgba(59,130,246,0.3);">
+          <div style="font-size:0.75rem;color:var(--muted);">À Livrer / En Montage</div>
+          <div style="font-size:1.5rem;font-weight:700;color:#60a5fa;">${toDeliver.length}</div>
+        </div>
+        <div class="card" style="padding:0.9rem;border-color:rgba(34,197,94,0.3);">
+          <div style="font-size:0.75rem;color:var(--muted);">Vidéos Livrées</div>
+          <div style="font-size:1.5rem;font-weight:700;color:#4ade80;">${delivered.length}</div>
+        </div>
+      </div>
+
+      <!-- Filter Tabs -->
+      <div style="display:flex; gap:0.4rem; margin-bottom:1.2rem; flex-wrap:wrap; border-bottom:1px solid rgba(212,175,55,0.2); padding-bottom:0.75rem;">
+        <button class="btn btn-sm ${currentCadreurShootTab === 'all' ? 'btn-gold' : 'btn-ghost'}" onclick="setCadreurShootTab('all')">
+          Toutes (${myShoots.length})
+        </button>
+        <button class="btn btn-sm ${currentCadreurShootTab === 'to_shoot' ? 'btn-gold' : 'btn-ghost'}" onclick="setCadreurShootTab('to_shoot')">
+          À Tourner (${toShoot.length})
+        </button>
+        <button class="btn btn-sm ${currentCadreurShootTab === 'to_deliver' ? 'btn-gold' : 'btn-ghost'}" onclick="setCadreurShootTab('to_deliver')">
+          À Livrer (${toDeliver.length})
+        </button>
+        <button class="btn btn-sm ${currentCadreurShootTab === 'delivered' ? 'btn-gold' : 'btn-ghost'}" onclick="setCadreurShootTab('delivered')">
+          Livrées (${delivered.length})
+        </button>
+      </div>
+
       <div>
-        ${cardsHtml}
+        ${displayList.length ? cardsHtml : '<div class="card" style="text-align:center;padding:2rem;color:var(--muted);">Aucun tournage dans cette catégorie.</div>'}
       </div>
     `;
 
@@ -1548,6 +1628,12 @@ async function renderVideoShoots(c) {
     c.innerHTML = '<div class="card alert alert-danger">Erreur chargement des tournages: ' + esc(err.message || err) + '</div>';
   }
 }
+
+window.setCadreurShootTab = function(tab) {
+  currentCadreurShootTab = tab;
+  const content = document.getElementById('section-content');
+  if (content) renderVideoShoots(content);
+};
 
 async function renderVideoEarnings(c) {
   const roles = employeeRoles();
