@@ -627,11 +627,42 @@ window.saveAssignModal = async function () {
 // MOTEUR D'ASSIGNATION INTELLIGENTE IA
 // ============================================
 
+// Helper to parse Video Metadata from reservation notes
+function parseReservationVideoMeta(r) {
+  let meta = {};
+  if (r && r.notes) {
+    const match = r.notes.match(/\[VIDEO_META:\s*({[^\]]+})\]/i);
+    if (match) {
+      try { meta = JSON.parse(match[1]); } catch(e){}
+    }
+  }
+  return meta;
+}
+
+function isMediaStaffMember(emp) {
+  if (!emp) return false;
+  const pos = (emp.position || '').toLowerCase();
+  const roles = normalizeRoles(emp);
+  return roles.includes('cadreur_video') || roles.includes('cadreur_cvisual') || roles.includes('community_manager') ||
+    pos.includes('cadreur') || pos.includes('community') || pos.includes('cvisual') || pos.includes('média');
+}
+
+function isCarePractitionerMember(emp) {
+  if (!emp) return false;
+  const pos = (emp.position || '').toLowerCase();
+  const roles = normalizeRoles(emp);
+  return roles.includes('masseuse') || roles.includes('estheticienne') || roles.includes('coiffure') || roles.includes('onglerie') ||
+    pos.includes('mass') || pos.includes('head spa') || pos.includes('praticienne') || pos.includes('esthét') || pos.includes('thérapeute') || pos.includes('coiff') || pos.includes('ongl') || pos.includes('manucure') || pos.includes('pédicure');
+}
+
 /**
  * Calcule l'éligibilité et le score d'un employé pour une réservation donnée.
- * Règle DALIGHT : les congés n'ont pas de jours fixes. La disponibilité est conditionnée
- * par le statut "En Ligne" de l'employé (connecté au salon), l'absence de chevauchement horaire,
- * et le nombre de services déjà réalisés aujourd'hui (équilibrage équitable de charge).
+ * Règle DALIGHT & CVISUAL :
+ * 1. La disponibilité est conditionnée par le statut "En Ligne" de l'employé (présence au salon en direct).
+ * 2. Un Community Manager / Cadreur CVISUAL qui n'a pas de formation de praticienne NE PEUT JAMAIS être assigné à un soin corporel (Massage, Head Spa, Onglerie, etc.).
+ * 3. Les soins physiques exigent impérativement la spécialité requise (Massothérapeute pour massage, Esthéticienne pour Head Spa/Facial, Onglerie pour manucure).
+ * 4. Les réservations avec option vidéo 4K attribuent la captation vidéo au Cadreur / Community Manager En Ligne.
+ * 5. Équilibrage équitable de la charge en fonction du nombre de soins déjà planifiés aujourd'hui.
  */
 function evaluateEmployeeForReservation(emp, res, allDayReservations) {
   if (!emp.is_active) {
@@ -677,10 +708,7 @@ function evaluateEmployeeForReservation(emp, res, allDayReservations) {
     }
   }
 
-  // 4. CALCUL DU SCORE D'AFFINITÉ & COMPÉTENCE
-  let score = 20; // score de base pour un employé en ligne sans conflit
-  let matchFactors = ['En Ligne au salon'];
-
+  // 4. ANALYSE DU SERVICE ET DES QUALIFICATIONS (RÈGLES MÉTIER DALIGHT & CVISUAL)
   const empPos = (emp.position || '').toLowerCase();
   const empRoles = normalizeRoles(emp);
   const resSrv = (res.service || '').toLowerCase();
@@ -690,40 +718,93 @@ function evaluateEmployeeForReservation(emp, res, allDayReservations) {
   const isMassageService = resSrv.includes('massage') || resSrv.includes('shiatsu') || resSrv.includes('pierres');
   const isFacialService = resSrv.includes('visage') || resSrv.includes('soin') || resSrv.includes('éclat') || resSrv.includes('hydrafacial');
   const isHairService = resSrv.includes('coiffure') || resSrv.includes('brushing') || resSrv.includes('capillaire');
+  const isNailService = resSrv.includes('ongle') || resSrv.includes('manucure') || resSrv.includes('pedicure') || resSrv.includes('pédicure') || resSrv.includes('gel') || resSrv.includes('vernis');
+  const isPureVideoService = (resSrv.includes('vidéo') || resSrv.includes('video') || resSrv.includes('cvisual') || resSrv.includes('shooting')) && !isMassageService && !isHeadSpaService && !isFacialService && !isHairService && !isNailService;
 
-  if (isVideoRes && (empPos.includes('cadreur') || empRoles.includes('cadreur_video') || empRoles.includes('cadreur_cvisual'))) {
+  const isMedia = isMediaStaffMember(emp);
+  const isCare = isCarePractitionerMember(emp);
+
+  // RÈGLE ABSOLUE 1 : Un Community Manager / Cadreur CVISUAL qui n'est pas praticienne NE PEUT PAS être assigné à un soin corporel (Massage, Head Spa, Onglerie...)
+  if (isMedia && !isCare && !isPureVideoService) {
+    return {
+      eligible: false,
+      score: -100,
+      reason: 'Rôle Community Manager / Média CVISUAL uniquement — Non qualifié(e) pour les soins corporels'
+    };
+  }
+
+  // RÈGLE ABSOLUE 2 : Vérification stricte des compétences selon le soin requis
+  if (isMassageService) {
+    const canMassage = empRoles.includes('masseuse') || empPos.includes('mass') || empPos.includes('thérapeute');
+    if (!canMassage) {
+      return { eligible: false, score: -80, reason: 'Non qualifié(e) en massothérapie corporelle' };
+    }
+  } else if (isHeadSpaService) {
+    const canHeadSpa = empRoles.includes('estheticienne') || empRoles.includes('masseuse') || empPos.includes('head spa') || empPos.includes('praticienne');
+    if (!canHeadSpa) {
+      return { eligible: false, score: -80, reason: 'Non qualifié(e) pour le rituel Head Spa Japonais' };
+    }
+  } else if (isFacialService) {
+    const canFacial = empRoles.includes('estheticienne') || empPos.includes('esthét');
+    if (!canFacial) {
+      return { eligible: false, score: -80, reason: 'Non qualifié(e) pour les soins du visage / esthétique' };
+    }
+  } else if (isHairService) {
+    const canHair = empRoles.includes('coiffure') || empPos.includes('coiff');
+    if (!canHair) {
+      return { eligible: false, score: -80, reason: 'Non qualifié(e) en coiffure & capillaire' };
+    }
+  } else if (isNailService) {
+    const canNails = empRoles.includes('onglerie') || empPos.includes('ongl') || empPos.includes('manucure') || empPos.includes('pédicure');
+    if (!canNails) {
+      return { eligible: false, score: -80, reason: 'Non qualifié(e) en onglerie & manucure' };
+    }
+  } else if (isPureVideoService) {
+    if (!isMedia) {
+      return { eligible: false, score: -80, reason: 'Non qualifié(e) pour la réalisation vidéo CVISUAL' };
+    }
+  }
+
+  // 5. CALCUL DU SCORE D'AFFINITÉ & COMPÉTENCE
+  let score = 25; // score de base pour un praticien en ligne sans conflit et qualifié
+  let matchFactors = ['En Ligne au salon'];
+
+  if (isPureVideoService && isMedia) {
+    score += 55;
+    matchFactors.push('Cadreur / Community Manager CVISUAL qualifié');
+  } else if (isMassageService && (empRoles.includes('masseuse') || empPos.includes('mass') || empPos.includes('thérapeute'))) {
     score += 50;
-    matchFactors.push('Cadreur Vidéo CVISUAL qualifié');
-  } else if (isHeadSpaService && (empPos.includes('head spa') || empPos.includes('praticienne') || empRoles.includes('estheticienne'))) {
-    score += 45;
+    matchFactors.push('Massothérapeute certifiée');
+  } else if (isHeadSpaService && (empPos.includes('head spa') || empPos.includes('praticienne'))) {
+    score += 50;
     matchFactors.push('Spécialiste Head Spa certifiée');
-  } else if (isMassageService && (empPos.includes('mass') || empPos.includes('thérapeute') || empRoles.includes('masseuse'))) {
-    score += 45;
-    matchFactors.push('Massothérapeute qualifiée');
-  } else if (isFacialService && (empPos.includes('esthétic') || empRoles.includes('estheticienne'))) {
-    score += 45;
+  } else if (isFacialService && (empRoles.includes('estheticienne') || empPos.includes('esthét'))) {
+    score += 50;
     matchFactors.push('Esthéticienne soins visage');
-  } else if (isHairService && (empPos.includes('coiff') || empRoles.includes('coiffure'))) {
-    score += 45;
+  } else if (isHairService && (empRoles.includes('coiffure') || empPos.includes('coiff'))) {
+    score += 50;
     matchFactors.push('Experte coiffure & capillaire');
+  } else if (isNailService && (empRoles.includes('onglerie') || empPos.includes('ongl') || empPos.includes('manucure') || empPos.includes('pédicure'))) {
+    score += 50;
+    matchFactors.push('Prothésiste ongulaire qualifiée');
   } else if (empRoles.includes('estheticienne') || empRoles.includes('masseuse')) {
-    score += 35;
+    score += 30;
     matchFactors.push('Polyvalente Soins');
   } else {
     score += 10;
     matchFactors.push('Compétences générales');
   }
 
-  // 5. ÉQUILIBRAGE DE CHARGE (EN FONCTION DE COMBIEN SERVICES LI GEN BAY DÉJÀ)
+  // 6. ÉQUILIBRAGE DE CHARGE (EN FONCTION DE COMBIEN SERVICES LI GEN BAY DÉJÀ)
   const currentCount = existingEmpReservations.length;
   if (currentCount === 0) {
-    score += 40;
-    matchFactors.push('Priorité maximale: 0 soin aujourd\'hui');
+    score += 35;
+    matchFactors.push('Priorité maximale : 0 soin aujourd\'hui');
   } else if (currentCount === 1) {
-    score += 25;
+    score += 20;
     matchFactors.push('1 soin déjà planifié');
   } else if (currentCount === 2) {
-    score += 15;
+    score += 10;
     matchFactors.push('2 soins déjà planifiés');
   } else if (currentCount === 3) {
     score += 5;
@@ -740,16 +821,48 @@ function evaluateEmployeeForReservation(emp, res, allDayReservations) {
   };
 }
 
+// Assigner un tournage vidéo 4K à un Cadreur / Community Manager CVISUAL
+async function assignCadreurToVideoReservation(resId, cadreurEmployee) {
+  const r = assignReservations.find(x => x.id === resId);
+  const currentMeta = parseReservationVideoMeta(r || {});
+  const mergedMeta = {
+    ...currentMeta,
+    cadreur_id: cadreurEmployee.id,
+    cadreur_name: cadreurEmployee.full_name,
+    cadreur_phone: cadreurEmployee.phone || '',
+    cadreur_rate_pct: 50,
+    video_status: currentMeta.video_status || 'assigned'
+  };
+
+  let notes = (r?.notes || '');
+  notes = notes.replace(/\[VIDEO_META:\s*{[^\]]+}\]/gi, '').trim();
+  notes = notes ? `${notes}\n[VIDEO_META: ${JSON.stringify(mergedMeta)}]` : `[VIDEO_META: ${JSON.stringify(mergedMeta)}]`;
+
+  if (r) r.notes = notes;
+
+  await sb().from('reservations').update({
+    notes: notes,
+    updated_at: new Date().toISOString()
+  }).eq('id', resId);
+
+  // Notification staff interne
+  try {
+    await sb().from('staff_notifications').insert({
+      employee_id: cadreurEmployee.id,
+      type: 'video_assignment',
+      title: 'Tournage Vidéo 4K CVISUAL assigné',
+      body: 'Captation vidéo 4K pour ' + (r?.user_name || 'Client') + ' le ' + fmtDate(r?.date) + ' à ' + fmtTime(r?.time) + ' (' + (r?.service || 'Soin') + ')',
+      data: { reservation_id: resId, is_video: true },
+      read: false
+    });
+  } catch(e) {
+    console.warn('staff_notifications insert warning:', e);
+  }
+}
+
 // Auto-assignation rapide en 1 clic pour les employés actuellement En Ligne
 window.executeAutoAssignOnlineStaff = async function() {
   const date = document.getElementById('assign-date')?.value || todayStr();
-  const unassigned = assignReservations.filter(r => !r.assigned_employee_id && !(r.reservation_employees && r.reservation_employees.length));
-
-  if (!unassigned.length) {
-    toast('Toutes les réservations du ' + date + ' sont déjà assignées !', 'info');
-    return;
-  }
-
   await loadLiveOnlineState();
 
   const onlineEmps = allEmployees.filter(e => e.is_active && isEmployeeLiveOnline(e.id));
@@ -758,10 +871,28 @@ window.executeAutoAssignOnlineStaff = async function() {
     return;
   }
 
-  toast('Auto-assignation des employés En Ligne en cours...', 'info');
-  let assignedCount = 0;
+  // 1. Réservations de soins non assignées
+  const unassignedCare = assignReservations.filter(r => !r.assigned_employee_id && !(r.reservation_employees && r.reservation_employees.length));
 
-  for (const r of unassigned) {
+  // 2. Réservations avec vidéo demandée dont le cadreur n'est pas encore assigné
+  const unassignedVideoRes = assignReservations.filter(r => {
+    const isVid = r.wants_video === true || r.video_requested === true || (Number(r.video_price) > 0) || (r.service || '').toLowerCase().includes('vidéo') || (r.notes || '').includes('[VIDEO_META:');
+    if (!isVid) return false;
+    const meta = parseReservationVideoMeta(r);
+    return !meta.cadreur_id || meta.cadreur_name === 'Non assigné';
+  });
+
+  if (!unassignedCare.length && !unassignedVideoRes.length) {
+    toast('Toutes les réservations de soins et tournages vidéo du ' + date + ' sont déjà assignés !', 'info');
+    return;
+  }
+
+  toast('Auto-assignation des employés En Ligne en cours...', 'info');
+  let assignedCareCount = 0;
+  let assignedVideoCount = 0;
+
+  // 1. Assignation des soins physiques aux praticiennes qualifiées en ligne
+  for (const r of unassignedCare) {
     const sameDay = assignReservations.filter(x => x.date === r.date);
     let bestScore = -1;
     let bestCandidate = null;
@@ -776,15 +907,36 @@ window.executeAutoAssignOnlineStaff = async function() {
 
     if (bestCandidate) {
       await assignEmployeeToReservation(r.id, bestCandidate, r.duration_minutes || 60);
-      assignedCount++;
+      r.assigned_employee_id = bestCandidate.id;
+      r.assigned_employee_name = bestCandidate.full_name;
+      assignedCareCount++;
     }
   }
 
-  if (assignedCount > 0) {
-    toast(`${assignedCount} réservation(s) assignée(s) avec succès aux employés En Ligne !`, 'success');
+  // 2. Assignation des tournages vidéo aux Cadreurs / Community Managers CVISUAL en ligne
+  const onlineCadreurs = onlineEmps.filter(e => isMediaStaffMember(e));
+  if (onlineCadreurs.length > 0 && unassignedVideoRes.length > 0) {
+    for (const r of unassignedVideoRes) {
+      // Équilibrage des tournages vidéo par cadreur
+      onlineCadreurs.sort((a, b) => {
+        const countA = assignReservations.filter(x => (x.notes || '').includes(a.id)).length;
+        const countB = assignReservations.filter(x => (x.notes || '').includes(b.id)).length;
+        return countA - countB;
+      });
+      const chosenCadreur = onlineCadreurs[0];
+      await assignCadreurToVideoReservation(r.id, chosenCadreur);
+      assignedVideoCount++;
+    }
+  }
+
+  if (assignedCareCount > 0 || assignedVideoCount > 0) {
+    const parts = [];
+    if (assignedCareCount > 0) parts.push(`${assignedCareCount} soin(s)`);
+    if (assignedVideoCount > 0) parts.push(`${assignedVideoCount} tournage(s) vidéo 4K CVISUAL`);
+    toast(`${parts.join(' et ')} assigné(s) avec succès aux membres En Ligne !`, 'success');
     await loadAssignments();
   } else {
-    toast('Impossible d\'assigner automatiquement : conflits d\'horaires pour les employés actuellement en ligne.', 'warning');
+    toast('Impossible d\'assigner automatiquement : les employés en ligne ne correspondent pas aux compétences requises pour ces prestations.', 'warning');
   }
 };
 
@@ -872,10 +1024,14 @@ window.openSmartAssignModal = async function() {
           'Aucun employé disponible sans conflit sur ce créneau horaire.' +
         '</div>';
 
+    const isVid = r.wants_video === true || r.video_requested === true || (Number(r.video_price) > 0) || (r.notes || '').includes('[VIDEO_META:');
     return '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:0.85rem;">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem;">' +
         '<div>' +
-          '<div style="font-weight:600;font-size:0.92rem;color:#FAF8F5;">' + esc(r.service) + '</div>' +
+          '<div style="font-weight:600;font-size:0.92rem;color:#FAF8F5;display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">' +
+            esc(r.service) +
+            (isVid ? '<span class="badge badge-purple" style="font-size:0.68rem;padding:0.15rem 0.45rem;">Option Vidéo 4K CVISUAL</span>' : '') +
+          '</div>' +
           '<div style="font-size:0.78rem;color:var(--admin-text-muted);margin-top:0.15rem;">' +
             'Client : <strong>' + esc(r.user_name || 'Client') + '</strong> · Date : ' + fmtDate(r.date) + ' · Horaire : <strong>' + fmtTime(r.time) + ' → ' + item.endTime + '</strong> (' + item.duration + ' min)' +
           '</div>' +
@@ -999,9 +1155,38 @@ function buildEmployeeWhatsAppMessage(r, emp) {
       countdownStr = 'Commence dans ' + hours + 'h ' + (rem > 0 ? rem + 'm' : '');
     }
   } else if (diffMin <= 0 && diffMin >= -duration) {
-    countdownStr = 'SOIN EN COURS ACTUELLEMENT';
+    countdownStr = 'EN COURS ACTUELLEMENT';
   } else {
     countdownStr = 'Rendez-vous passé';
+  }
+
+  const meta = parseReservationVideoMeta(r);
+  const isVideoMsg = isMediaStaffMember(emp) && (
+    meta.cadreur_id === emp.id ||
+    (meta.cadreur_name && meta.cadreur_name.toLowerCase() === (emp.full_name || '').toLowerCase()) ||
+    !isCarePractitionerMember(emp)
+  );
+
+  if (isVideoMsg) {
+    const isPrivate = (r.video_consent === 'private' || r.video_consent === 'oui_prive' || meta.consent === 'private');
+    return (
+      '*DALIGHT & CVISUAL — TOURNAGE VIDÉO 4K ASSIGNÉ*\n\n' +
+      'Bonjour *' + emp.full_name + '*,\n' +
+      'Une captation vidéo 4K vous a été attribuée sur votre planning :\n\n' +
+      '*Client(e) :* ' + (r.user_name || 'Client') + '\n' +
+      (r.phone ? ('*Téléphone :* ' + r.phone + '\n') : '') +
+      '*Prestation filmée :* ' + (r.service || 'Head Spa / Massage') + '\n' +
+      '*Praticien(ne) du soin :* ' + (r.assigned_employee_name || 'Équipe Soins') + '\n' +
+      '*Date :* ' + fmtDate(r.date) + '\n' +
+      '*Horaire :* ' + fmtTime(r.time) + ' → ' + endTime + ' (' + duration + ' min)\n' +
+      '*Compte à rebours :* ' + countdownStr + '\n' +
+      '*Type d\'usage :* ' + (isPrivate ? '🔒 Usage Privé (Floutage client)' : '✨ DALIGHT & CVISUAL (Public)') + '\n' +
+      (r.notes ? ('*Notes :* ' + r.notes.replace(/\[VIDEO_META:[^\]]+\]/g, '').trim() + '\n') : '') +
+      '*Lieu :* Sanctuaire DALIGHT, Delmas 65 #10\n\n' +
+      '*Accéder à votre espace cadrage & upload 4K :*\n' +
+      getPortalBaseUrl() + '\n\n' +
+      '_Préparez votre matériel et stabilisateurs 10 min avant le début du tournage._'
+    );
   }
 
   return (
@@ -1014,7 +1199,7 @@ function buildEmployeeWhatsAppMessage(r, emp) {
     '*Date :* ' + fmtDate(r.date) + '\n' +
     '*Début :* ' + fmtTime(r.time) + ' | *Fin estimée :* ' + endTime + ' (' + duration + ' min)\n' +
     '*Compte à rebours :* ' + countdownStr + '\n' +
-    (r.notes ? ('*Notes / Préférences :* ' + r.notes + '\n') : '') +
+    (r.notes ? ('*Notes / Préférences :* ' + r.notes.replace(/\[VIDEO_META:[^\]]+\]/g, '').trim() + '\n') : '') +
     '*Lieu :* Sanctuaire DALIGHT, Delmas 65 #10\n\n' +
     '*Accéder à votre espace employé :*\n' +
     getPortalBaseUrl() + '\n\n' +

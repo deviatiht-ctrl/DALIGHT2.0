@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dalight-spa-v8.1';
+const CACHE_NAME = 'dalight-spa-v8.2';
 
 // Core resources to pre-cache during install
 const urlsToCache = [

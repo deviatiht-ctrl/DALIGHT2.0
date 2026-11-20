@@ -53,7 +53,7 @@ const ROLE_META = {
   onglerie:          { label: 'Onglerie',          icon: 'gem', provider: true },
   cadreur_video:     { label: 'Cadreur Vidéo CVISUAL', icon: 'video', provider: false, isCadreur: true },
   cadreur_cvisual:   { label: 'Cadreur CVISUAL',   icon: 'video', provider: false, isCadreur: true },
-  community_manager: { label: 'Community Manager',  icon: 'smartphone', provider: false },
+  community_manager: { label: 'Community Manager & Vidéo', icon: 'camera', provider: false, isCadreur: true },
   adm_manager:       { label: 'ADM / Manager',      icon: 'briefcase', provider: false },
   receptionniste:    { label: 'Réceptionniste',     icon: 'phone', provider: false },
   caissier:          { label: 'Caissier/Caisse',   icon: 'banknote', provider: false },
@@ -61,8 +61,14 @@ const ROLE_META = {
 };
 function lucideIcon(name, size = 16) { return `<i data-lucide="${name}" style="width:${size}px;height:${size}px;vertical-align:-3px;"></i>`; }
 function roleLabel(r) { return ROLE_META[r]?.label || r; }
-function isProviderRole(r) { return !!ROLE_META[r]?.provider; }
-function isCadreurRole(r) { return !!ROLE_META[r]?.isCadreur || r === 'cadreur_video' || r === 'cadreur_cvisual'; }
+function isProviderRole(r) { return typeof r === 'string' ? !!ROLE_META[r]?.provider : (Array.isArray(r?.roles) && r.roles.some(x => !!ROLE_META[x]?.provider)); }
+function isCadreurRole(r) { return !!ROLE_META[r]?.isCadreur || r === 'cadreur_video' || r === 'cadreur_cvisual' || r === 'community_manager'; }
+function checkIsCadreur(emp) {
+  if (!emp) return false;
+  const roles = Array.isArray(emp.roles) ? emp.roles : [];
+  const pos = (emp.position || '').toLowerCase();
+  return roles.some(isCadreurRole) || pos.includes('cadreur') || pos.includes('community') || pos.includes('cvisual') || roles.includes('community_manager');
+}
 
 let currentEmployee = null;
 let chronoTimer = null;
@@ -254,14 +260,14 @@ function employeeRoles() {
 function buildNav() {
   const roles = employeeRoles();
   const hasProvider = roles.some(isProviderRole);
-  const isCadreur = roles.some(isCadreurRole) || (currentEmployee?.position || '').toLowerCase().includes('cadreur');
+  const isCadreur = checkIsCadreur(currentEmployee);
   const isCM = roles.includes('community_manager');
   const isManager = roles.includes('adm_manager');
 
   const items = [
     { id: 'home', label: 'Accueil', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
   ];
-  if (hasProvider || isManager || roles.includes('receptionniste')) {
+  if (hasProvider || isManager || roles.includes('receptionniste') || isCadreur || isCM) {
     items.push({ id: 'appointments', label: 'Rendez-vous', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' });
   }
   if (hasProvider) {
@@ -481,7 +487,7 @@ async function renderHome(c) {
   const roles = employeeRoles();
   const empId = currentEmployee.id;
   const today = todayStr();
-  const isCadreur = roles.some(isCadreurRole) || (currentEmployee.position || '').toLowerCase().includes('cadreur');
+  const isCadreur = checkIsCadreur(currentEmployee);
 
   const [sessRes, apptRes, evalRes, attRes, videoRes] = await Promise.all([
     sb.from('service_sessions').select('*').eq('employee_id', empId).gte('started_at', today + 'T00:00:00'),
@@ -491,7 +497,7 @@ async function renderHome(c) {
     sb.from('staff_evaluations').select('overall_score').eq('employee_id', empId).eq('visible_to_employee', true),
     sb.from('attendance_logs').select('*').eq('employee_id', empId).eq('log_date', today).maybeSingle(),
     isCadreur || roles.includes('adm_manager') || roles.includes('community_manager')
-      ? sb.from('reservations').select('id,date,notes,wants_video,video_requested,video_price,assigned_employee_id').eq('date', today)
+      ? sb.from('reservations').select('id,user_name,phone,service,date,time,status,notes,wants_video,video_requested,video_price,video_status,video_consent,assigned_employee_id,assigned_employee_name').eq('date', today)
       : Promise.resolve({ data: [] }),
   ]);
 
@@ -505,11 +511,14 @@ async function renderHome(c) {
 
   // Video shoots today
   const myVideoToday = (videoRes.data || []).filter(r => {
-    const isVid = r.wants_video || r.video_requested || (Number(r.video_price) > 0) || (r.notes || '').includes('[VIDEO_META:');
+    const isVid = r.wants_video || r.video_requested || (Number(r.video_price) > 0) || (r.notes || '').includes('[VIDEO_META:') || (r.service || '').toLowerCase().includes('vidéo');
     if (!isVid) return false;
     if (seesAll) return true;
     const meta = parseReservationVideoMeta(r);
-    return r.assigned_employee_id === empId || meta.cadreur_id === empId || (meta.cadreur_name && meta.cadreur_name.toLowerCase() === (currentEmployee.full_name || '').toLowerCase());
+    return r.assigned_employee_id === empId ||
+           meta.cadreur_id === empId ||
+           (meta.cadreur_name && meta.cadreur_name.toLowerCase() === (currentEmployee.full_name || '').toLowerCase()) ||
+           (r.notes && r.notes.includes(empId));
   });
 
   const totalSecs = completed.reduce((s, x) => s + (x.duration_seconds || 0), 0);
@@ -537,6 +546,73 @@ async function renderHome(c) {
     <div id="home-online-status-banner" class="card" style="margin-bottom:1.3rem; border:1px solid rgba(212,175,55,0.3); background:rgba(20,28,20,0.85); box-shadow:0 4px 20px rgba(0,0,0,0.3);">
       ${renderOnlineBannerContent(currentLiveOnline)}
     </div>
+
+    ${isCadreur ? `
+      <!-- Section Tournages Vidéo 4K CVISUAL assignés au Cadreur / Community Manager -->
+      <div class="card" style="margin-bottom:1.3rem; border:1px solid rgba(212,175,55,0.35); background:linear-gradient(135deg, rgba(20,24,18,0.95), rgba(12,15,10,0.98)); box-shadow:0 6px 24px rgba(0,0,0,0.4);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.9rem;padding-bottom:0.6rem;border-bottom:1px solid rgba(212,175,55,0.2);">
+          <div style="display:flex;align-items:center;gap:0.6rem;">
+            <div style="width:34px;height:34px;border-radius:8px;background:rgba(212,175,55,0.12);display:flex;align-items:center;justify-content:center;color:#d4af37;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
+            </div>
+            <div>
+              <div style="font-weight:700;font-size:1.05rem;color:#FAF8F5;">Vos Tournages Vidéo 4K à Réaliser</div>
+              <div style="font-size:0.75rem;color:var(--muted);">Studio CVISUAL & Sanctuaire DALIGHT</div>
+            </div>
+          </div>
+          <span class="badge ${myVideoToday.length > 0 ? 'badge-green' : 'badge-muted'}" style="font-weight:700;">
+            ${myVideoToday.length} tournage${myVideoToday.length > 1 ? 's' : ''} aujourd'hui
+          </span>
+        </div>
+
+        ${myVideoToday.length === 0 ? `
+          <div style="text-align:center;padding:1.5rem 1rem;color:var(--muted);font-size:0.86rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(212,175,55,0.4)" stroke-width="1.6" style="margin-bottom:0.5rem;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <div style="color:#FAF8F5;font-weight:600;margin-bottom:0.25rem;">Aucun tournage vidéo 4K à réaliser pour l'instant aujourd'hui</div>
+            <div style="font-size:0.78rem;">Dès qu'un client réserve avec l'option vidéo 4K et que vous êtes En Ligne, la captation vous sera attribuée ici.</div>
+          </div>
+        ` : `
+          <div style="display:flex;flex-direction:column;gap:0.75rem;">
+            ${myVideoToday.map(r => {
+              const meta = parseReservationVideoMeta(r);
+              const isPrivate = (r.video_consent === 'private' || r.video_consent === 'oui_prive' || meta.consent === 'private');
+              const vStatus = meta.video_status || r.video_status || 'assigned';
+              let vBadge = '<span class="badge badge-gold">En attente de tournage</span>';
+              if (vStatus === 'shot') vBadge = '<span class="badge badge-blue">Tourné - En montage</span>';
+              if (vStatus === 'delivered') vBadge = '<span class="badge badge-green">Vidéo 4K Livrée</span>';
+
+              const cleanPhone = (r.phone || '').replace(/\D/g, '');
+              const waLink = cleanPhone ? 'https://wa.me/' + (cleanPhone.startsWith('509') ? cleanPhone : '509' + cleanPhone) : '';
+
+              return `
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;padding:0.85rem 1rem;background:rgba(255,255,255,0.03);border:1px solid rgba(212,175,55,0.2);border-radius:10px;flex-wrap:wrap;">
+                  <div>
+                    <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                      <strong style="color:#FAF8F5;font-size:0.95rem;">${esc(r.user_name || 'Client')}</strong>
+                      <span class="badge badge-gold" style="font-size:0.7rem;">${fmtTime(r.time)}</span>
+                      ${vBadge}
+                      ${isPrivate
+                        ? '<span class="badge badge-purple" style="font-size:0.7rem;"><i data-lucide="lock" style="width:11px;height:11px;vertical-align:-1px;"></i> Privé</span>'
+                        : '<span class="badge badge-green" style="font-size:0.7rem;"><i data-lucide="globe" style="width:11px;height:11px;vertical-align:-1px;"></i> Public CVISUAL</span>'}
+                    </div>
+                    <div style="font-size:0.82rem;color:var(--admin-text-muted);margin-top:0.25rem;">
+                      Service filmé : <strong style="color:#d4af37;">${esc(r.service || 'Soin')}</strong> · Praticien(ne) : ${esc(r.assigned_employee_name || 'Équipe')}
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:0.4rem;align-items:center;">
+                    ${waLink ? `<a href="${waLink}" target="_blank" class="btn btn-ghost btn-sm" style="display:inline-flex;align-items:center;gap:0.3rem;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> WhatsApp</a>` : ''}
+                    <button class="btn btn-gold btn-sm" onclick="openStaffVideoModal('${r.id}')" style="display:inline-flex;align-items:center;gap:0.35rem;font-weight:700;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                      ${vStatus === 'delivered' ? 'Mettre à jour la vidéo' : 'Uploader Vidéo 4K'}
+                    </button>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `}
+      </div>
+    ` : ''}
 
     <div class="grid cards-4" style="margin-bottom:1.3rem;">${cards.join('')}</div>
     <div class="card" style="margin-bottom:1.3rem;">
@@ -601,14 +677,33 @@ async function renderAppointments(c) {
     data = res.data; error = res.error;
   } else {
     const empId = currentEmployee.id;
-    const [primaryRes, empRes] = await Promise.all([
+    const empName = (currentEmployee.full_name || '').toLowerCase();
+    const isCadreur = checkIsCadreur(currentEmployee);
+
+    const [primaryRes, empRes, videoShootsRes] = await Promise.all([
       sb.from('reservations').select('*, reservation_employees(*)').eq('assigned_employee_id', empId).neq('status', 'CANCELLED'),
       sb.from('reservation_employees').select('reservation_id').eq('employee_id', empId),
+      isCadreur ? sb.from('reservations').select('*, reservation_employees(*)').neq('status', 'CANCELLED') : Promise.resolve({ data: [] })
     ]);
     const ids = new Set((empRes.data || []).map(re => re.reservation_id));
     (primaryRes.data || []).forEach(r => ids.add(r.id));
+
+    if (isCadreur && videoShootsRes.data) {
+      videoShootsRes.data.forEach(r => {
+        const isVid = r.wants_video === true || r.video_requested === true || (Number(r.video_price) > 0) || (r.notes || '').includes('[VIDEO_META:') || (r.service || '').toLowerCase().includes('vidéo');
+        if (isVid) {
+          const meta = parseReservationVideoMeta(r);
+          if (meta.cadreur_id === empId || (meta.cadreur_name && meta.cadreur_name.toLowerCase() === empName) || (r.notes && r.notes.includes(empId))) {
+            ids.add(r.id);
+          }
+        }
+      });
+    }
+
     if (ids.size) {
-      const res = await sb.from('reservations').select('*, reservation_employees(*)').in('id', Array.from(ids)).neq('status', 'CANCELLED').order('date', { ascending: true }).order('time', { ascending: true });
+      let q = sb.from('reservations').select('*, reservation_employees(*)').in('id', Array.from(ids)).neq('status', 'CANCELLED');
+      if (date) q = q.eq('date', date); else q = q.gte('date', todayStr());
+      const res = await q.order('date', { ascending: true }).order('time', { ascending: true });
       data = res.data; error = res.error;
     } else {
       data = [];
@@ -676,6 +771,17 @@ function getConsentInfo(r) {
 }
 
 function apptCard(r) {
+  const isCadreur = checkIsCadreur(currentEmployee);
+  const empId = currentEmployee?.id;
+  const empName = (currentEmployee?.full_name || '').toLowerCase();
+  const meta = parseReservationVideoMeta(r);
+
+  const isVideoShoot = isCadreur && (
+    meta.cadreur_id === empId ||
+    (meta.cadreur_name && meta.cadreur_name.toLowerCase() === empName) ||
+    (!isProviderRole(currentEmployee) && (r.wants_video === true || r.video_requested === true || (Number(r.video_price) > 0) || (r.notes || '').includes('[VIDEO_META:')))
+  );
+
   const statusBadge = {
     CONFIRMED: 'badge-green', PENDING: 'badge-gold', AWAITING_PAYMENT: 'badge-gold',
     COMPLETED: 'badge-blue', NO_SHOW: 'badge-muted'
@@ -685,6 +791,38 @@ function apptCard(r) {
   const dur = Number(r.duration_minutes) || (r.service && r.service.includes('Royale') ? 90 : (r.service && r.service.includes('Express') ? 45 : 60));
   const endTime = calculatePortalEndTime(r.time, dur);
   const countdown = getPortalCountdownBadge(r);
+
+  if (isVideoShoot) {
+    const isPrivate = (r.video_consent === 'private' || r.video_consent === 'oui_prive' || meta.consent === 'private');
+    const vStatus = meta.video_status || r.video_status || 'assigned';
+
+    return `<div class="list-item" style="cursor:pointer;display:flex;align-items:center;gap:.75rem;padding:.85rem;border-radius:12px;background:var(--surface-2);border:1px solid rgba(212,175,55,0.35);margin-bottom:.6rem;" onclick="openApptDetail('${r.id}')">
+      <div class="avatar" style="width:44px;height:44px;font-size:.9rem;flex-shrink:0;background:rgba(212,175,55,0.15);color:#d4af37;border:1px solid rgba(212,175,55,0.4);display:flex;align-items:center;justify-content:center;">
+        <i data-lucide="video" style="width:20px;height:20px;"></i>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;">
+          <span style="font-weight:700;font-size:.95rem;color:#FAF8F5;">${clientName}</span>
+          <span class="badge badge-purple" style="font-weight:700;"><i data-lucide="video" style="width:11px;height:11px;vertical-align:-1px;"></i> Tournage Vidéo 4K CVISUAL</span>
+          <span class="badge ${statusBadge}">${esc(r.status)}</span>
+          ${isPrivate ? '<span class="badge badge-muted" style="font-size:0.7rem;">🔒 Privé</span>' : '<span class="badge badge-green" style="font-size:0.7rem;">✨ Public</span>'}
+          ${countdown}
+        </div>
+        <div style="color:var(--admin-text);font-size:.86rem;margin-top:.2rem;">
+          Service filmé : <strong style="color:#d4af37;">${svc}</strong> · Praticien(ne) : ${esc(r.assigned_employee_name || 'Équipe Soins')}
+        </div>
+        <div style="color:var(--admin-text-muted);font-size:.78rem;margin-top:.1rem;">
+          Date : ${fmtDate(r.date)} · Horaire : <strong>${fmtTime(r.time)} → ${endTime}</strong> (${dur} min)
+        </div>
+      </div>
+      <div style="display:flex;gap:.4rem;align-items:center;" onclick="event.stopPropagation()">
+        <button class="btn btn-gold btn-sm" onclick="openStaffVideoModal('${r.id}')" style="display:inline-flex;align-items:center;gap:0.3rem;font-weight:700;">
+          <i data-lucide="upload" style="width:13px;height:13px;"></i>
+          ${vStatus === 'delivered' ? 'Màj Vidéo' : 'Uploader Vidéo 4K'}
+        </button>
+      </div>
+    </div>`;
+  }
 
   return `<div class="list-item" style="cursor:pointer;display:flex;align-items:center;gap:.75rem;padding:.85rem;border-radius:12px;background:var(--surface-2);border:1px solid var(--admin-border);margin-bottom:.6rem;" onclick="openApptDetail('${r.id}')">
     <div class="avatar" style="width:44px;height:44px;font-size:.9rem;flex-shrink:0;">${getInitials(r.user_name || 'C')}</div>
@@ -715,31 +853,43 @@ window.openApptDetail = function (reservationId) {
     COMPLETED: 'badge-blue', NO_SHOW: 'badge-muted'
   }[r.status] || 'badge-muted';
 
+  const isCadreur = checkIsCadreur(currentEmployee);
+  const meta = parseReservationVideoMeta(r);
+  const isVideoShoot = isCadreur && (
+    meta.cadreur_id === currentEmployee?.id ||
+    (meta.cadreur_name && meta.cadreur_name.toLowerCase() === (currentEmployee?.full_name || '').toLowerCase()) ||
+    (!isProviderRole(currentEmployee) && (r.wants_video === true || r.video_requested === true || (Number(r.video_price) > 0) || (r.notes || '').includes('[VIDEO_META:')))
+  );
+
   const overlay = document.createElement('div');
   overlay.id = 'appt-detail-overlay';
   overlay.style = 'position:fixed;inset:0;background:rgba(15,17,23,.55);z-index:9998;display:flex;align-items:center;justify-content:center;padding:1.5rem;';
   overlay.innerHTML = `
     <div class="card" style="max-width:480px;width:100%;margin:0;max-height:85vh;overflow-y:auto;">
       <div class="card-title">
-        Rendez-vous
+        ${isVideoShoot ? 'Tournage Vidéo 4K CVISUAL' : 'Rendez-vous'}
         <button class="btn btn-ghost btn-sm" onclick="closeApptDetail()">${lucideIcon('x', 16)}</button>
       </div>
       <div style="display:flex;align-items:center;gap:.9rem;margin-bottom:1rem;">
-        <div class="avatar" style="width:56px;height:56px;font-size:1.1rem;">${getInitials(r.user_name || 'C')}</div>
+        <div class="avatar" style="width:56px;height:56px;font-size:1.1rem;${isVideoShoot ? 'background:rgba(212,175,55,0.15);color:#d4af37;border:1px solid rgba(212,175,55,0.4);display:flex;align-items:center;justify-content:center;' : ''}">${isVideoShoot ? lucideIcon('video', 24) : getInitials(r.user_name || 'C')}</div>
         <div>
           <div style="font-weight:700;font-size:1.05rem;">${esc(r.user_name || 'Client')}</div>
-          <span class="badge ${statusBadge}">${esc(r.status)}</span>
+          <div style="display:flex;gap:0.3rem;margin-top:0.2rem;flex-wrap:wrap;">
+            <span class="badge ${statusBadge}">${esc(r.status)}</span>
+            ${isVideoShoot ? '<span class="badge badge-purple">Cadreur CVISUAL</span>' : ''}
+          </div>
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:.6rem;font-size:.9rem;color:var(--admin-text);">
-        <div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('sparkles')} <span>${esc(r.service || 'Service')}</span></div>
+        <div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('sparkles')} <span>Prestation: <strong>${esc(r.service || 'Service')}</strong></span></div>
+        ${isVideoShoot && r.assigned_employee_name ? `<div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('user')} <span>Praticienne du soin: <strong>${esc(r.assigned_employee_name)}</strong></span></div>` : ''}
         <div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('calendar')} <span>${fmtDate(r.date)}</span></div>
         <div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('clock')} <span>${fmtTime(r.time)} → ${calculatePortalEndTime(r.time, r.duration_minutes || 60)} (${r.duration_minutes || 60} min)</span></div>
         <div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('hourglass')} <span>${getPortalCountdownBadge(r)}</span></div>
-        <div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('map-pin')} <span>${esc(r.location || '—')}</span></div>
+        <div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('map-pin')} <span>${esc(r.location || 'Sanctuaire DALIGHT')}</span></div>
         ${r.phone ? `<div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('phone')} <span>${esc(r.phone)}</span></div>` : ''}
         ${email ? `<div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('mail')} <span>${email}</span></div>` : ''}
-        ${r.notes ? `<div style="display:flex;align-items:flex-start;gap:.6rem;">${lucideIcon('file-text')} <span>${esc(r.notes)}</span></div>` : ''}
+        ${r.notes ? `<div style="display:flex;align-items:flex-start;gap:.6rem;">${lucideIcon('file-text')} <span>${esc(r.notes.replace(/\[VIDEO_META:[^\]]+\]/g, '').trim())}</span></div>` : ''}
         ${r.duration_minutes ? `<div style="display:flex;align-items:center;gap:.6rem;">${lucideIcon('hourglass')} <span>Durée prévue: ${r.duration_minutes} min</span></div>` : ''}
         ${(r.reservation_employees || []).length ? `<div style="display:flex;align-items:flex-start;gap:.6rem;">${lucideIcon('users')} <span>Équipe: ${r.reservation_employees.map(e => esc(e.employee_name || e.employee_id)).join(', ')}</span></div>` : ''}
       </div>
@@ -748,7 +898,11 @@ window.openApptDetail = function (reservationId) {
         <div>${consentInfo}</div>
       </div>
       <div style="margin-top:1.2rem;display:flex;gap:.6rem;flex-wrap:wrap;">
-        <button class="btn btn-green" onclick="closeApptDetail();startServiceFromAppt('${r.id}')">${lucideIcon('play')} Démarrer le service</button>
+        ${isVideoShoot ? `
+          <button class="btn btn-gold" onclick="closeApptDetail();openStaffVideoModal('${r.id}')" style="font-weight:700;">${lucideIcon('upload')} Uploader la Vidéo 4K (CVISUAL)</button>
+        ` : `
+          <button class="btn btn-green" onclick="closeApptDetail();startServiceFromAppt('${r.id}')">${lucideIcon('play')} Démarrer le service</button>
+        `}
         <button class="btn btn-ghost" onclick="closeApptDetail()">Fermer</button>
       </div>
     </div>`;
@@ -1744,6 +1898,8 @@ window.toggleMyOnlineStatus = toggleMyOnlineStatus;
 window.syncOnlineStatus = syncOnlineStatus;
 window.showSection = showSection;
 window.toggleBellPanel = toggleBellPanel;
+window.openStaffVideoModal = openStaffVideoModal;
+window.openStaffVideoUploadModal = openStaffVideoModal;
 window.getCurrentEmployee = function () { return currentEmployee; };
 window.staffToast = toast;
 window.staffEsc = esc;

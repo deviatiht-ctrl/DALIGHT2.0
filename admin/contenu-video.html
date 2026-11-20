@@ -870,7 +870,7 @@
                 const existing = cvisualConfig.team_members.find(m => 
                   (m.id && m.id === emp.id) || 
                   (m.name && m.name.toLowerCase() === emp.full_name.toLowerCase()) ||
-                  (m.phone && emp.phone && m.phone.replace(/D/g, '') === emp.phone.replace(/D/g, ''))
+                  (m.phone && emp.phone && m.phone.replace(/\D/g, '') === emp.phone.replace(/\D/g, ''))
                 );
 
                 if (existing) {
