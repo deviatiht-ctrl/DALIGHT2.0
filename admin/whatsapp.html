@@ -504,7 +504,7 @@
         <div class="wa-hud-card">
           <div class="wa-hud-title">
             <span>Voie Prioritaire</span>
-            <span class="lane-badge lane-fast">⚡ FAST LANE</span>
+            <span class="lane-badge lane-fast"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:3px;vertical-align:middle;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>FAST LANE</span>
           </div>
           <div class="wa-hud-value">~2.5s - 6.5s</div>
           <div class="wa-hud-sub">
@@ -515,7 +515,7 @@
         <div class="wa-hud-card">
           <div class="wa-hud-title">
             <span>Anti-Ban Meta</span>
-            <span class="lane-badge lane-slow">🛡️ SLOW LANE</span>
+            <span class="lane-badge lane-slow"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:3px;vertical-align:middle;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>SLOW LANE</span>
           </div>
           <div class="wa-hud-value">10 - 16 min</div>
           <div class="wa-hud-sub">
@@ -678,8 +678,8 @@
                   <p class="card-subtitle" id="edit-key">template_key</p>
                 </div>
                 <div style="display:flex; gap:0.5rem;">
-                  <button class="btn btn-secondary" id="btn-spintax-test">🎲 Tester Spintax</button>
-                  <button class="btn btn-primary" id="btn-save-tpl">💾 Enregistrer</button>
+                  <button class="btn btn-secondary" id="btn-spintax-test"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>Tester Spintax</button>
+                  <button class="btn btn-primary" id="btn-save-tpl"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Enregistrer</button>
                 </div>
               </div>
 
@@ -692,8 +692,8 @@
                   <div class="form-group">
                     <label class="form-label">Voie de Routage (Anti-Ban)</label>
                     <select class="form-input" id="edit-lane">
-                      <option value="fast">⚡ Fast Lane (Instantané · Reçus &amp; Bienvenue)</option>
-                      <option value="slow">🛡️ Slow Lane (Anti-Ban · Rappels espacés)</option>
+                      <option value="fast">Fast Lane (Instantané · Reçus &amp; Bienvenue)</option>
+                      <option value="slow">Slow Lane (Anti-Ban · Rappels espacés)</option>
                     </select>
                   </div>
                 </div>
@@ -718,7 +718,7 @@
                   <label class="form-label">Contenu du Message (avec Spintax <code style="color:var(--admin-accent);">{Bonjour|Salut|Chère cliente}</code>)</label>
                   <textarea class="form-textarea" id="edit-message" rows="9" style="font-family:monospace; font-size:0.85rem; line-height:1.5;"></textarea>
                   <small style="color:var(--admin-text-muted); display:block; margin-top:0.35rem;">
-                    💡 Utilisez <code>{A|B|C}</code> pour varier automatiquement chaque envoi. Le logo DALIGHT, l'adresse de Delmas 65 et le lien officiel sont obligatoires.
+                    Guide : Utilisez <code>{A|B|C}</code> pour varier automatiquement chaque envoi. Le logo DALIGHT, l'adresse de Delmas 65 et le lien officiel sont obligatoires.
                   </small>
                 </div>
 
@@ -731,7 +731,7 @@
 
                 <!-- Spintax Variations Preview Box -->
                 <div id="spintax-box" style="display:none; margin-top:1rem; padding:1rem; border-radius:12px; background:rgba(212,175,55,0.06); border:1px dashed var(--admin-accent);">
-                  <h4 style="font-size:0.85rem; color:var(--admin-accent); margin-bottom:0.5rem;">🎲 Exemples de variations générées (anti-doublon Meta) :</h4>
+                  <h4 style="font-size:0.85rem; color:var(--admin-accent); margin-bottom:0.5rem;">Exemples de variations générées (anti-doublon Meta) :</h4>
                   <div id="spintax-samples" style="font-size:0.8rem; font-family:monospace; color:rgba(255,255,255,0.85); line-height:1.5;"></div>
                 </div>
               </div>
@@ -762,7 +762,7 @@
                 <div class="wa-bubble-received">
                   <span id="bubble-text">Chargement de l'aperçu...</span>
                   <div class="wa-pdf-attachment" id="bubble-pdf-box">
-                    <div class="wa-pdf-icon">📄</div>
+                    <div class="wa-pdf-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
                     <div class="wa-pdf-details">
                       <div class="wa-pdf-name" id="bubble-pdf-name">Recu_DALIGHT_#8492.pdf</div>
                       <div class="wa-pdf-size">1 page · 84 KB · PDF</div>
@@ -779,7 +779,7 @@
             <!-- Quick Download Sample Receipt Button -->
             <div style="text-align:center; margin-top:1.25rem;">
               <button class="btn btn-secondary" id="btn-download-sample-pdf">
-                📄 Télécharger un Reçu Exemple (PDF)
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;vertical-align:middle;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Télécharger un Reçu Exemple (PDF)
               </button>
             </div>
           </div>
@@ -868,7 +868,7 @@
 
             <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
               <button class="btn btn-primary" id="btn-send-test" style="padding:0.75rem 2rem;">
-                🚀 Envoyer le Message
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;vertical-align:middle;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Envoyer le Message
               </button>
             </div>
 
@@ -924,10 +924,10 @@
 
             <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
               <button class="btn btn-secondary" id="btn-rec-whatsapp">
-                📱 Envoyer directement sur WhatsApp
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;vertical-align:middle;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Envoyer directement sur WhatsApp
               </button>
               <button class="btn btn-primary" id="btn-rec-download">
-                📥 Télécharger le Reçu PDF
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;vertical-align:middle;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Télécharger le Reçu PDF
               </button>
             </div>
           </div>
@@ -987,7 +987,7 @@
                 </label>
                 <div style="display:flex; gap:0.5rem; margin-top:0.35rem;">
                   <input type="password" id="gemini-api-key-input" class="form-input" placeholder="Clé Google Gemini (chargée depuis les paramètres)..." style="font-size:0.85rem; font-family:monospace;">
-                  <button class="btn btn-secondary btn-sm" onclick="toggleApiKeyVisibility()" style="padding:0.4rem 0.65rem;" title="Afficher/Masquer">👁️</button>
+                  <button class="btn btn-secondary btn-sm" onclick="toggleApiKeyVisibility()" style="padding:0.4rem 0.65rem;" title="Afficher/Masquer"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
                 </div>
                 <small style="color:var(--admin-text-muted); font-size:0.75rem; display:block; margin-top:0.3rem;">
                   L'IA fonctionne également avec le moteur de compréhension contextuelle intégré même sans clé.
@@ -1056,13 +1056,13 @@
             <!-- Quick Prompt Pills -->
             <div style="display:flex; gap:0.4rem; overflow-x:auto; padding-bottom:0.6rem; margin-bottom:0.6rem;">
               <button type="button" class="btn btn-secondary btn-sm" onclick="sendQuickPrompt('Bonswa, konbyen Head Spa koute ?')" style="font-size:0.75rem; white-space:nowrap;">
-                💬 « Bonswa, konbyen Head Spa koute ? »
+                « Bonswa, konbyen Head Spa koute ? »
               </button>
               <button type="button" class="btn btn-secondary btn-sm" onclick="sendQuickPrompt('Ki kote nou ye tanpri ?')" style="font-size:0.75rem; white-space:nowrap;">
-                📍 « Ki kote nou ye ? »
+                « Ki kote nou ye ? »
               </button>
               <button type="button" class="btn btn-secondary btn-sm" onclick="sendQuickPrompt('Bonjou, kijan poum fe yon randevou ?')" style="font-size:0.75rem; white-space:nowrap;">
-                📅 « Kijan poum fe randevou ? »
+                « Kijan poum fe randevou ? »
               </button>
             </div>
 
@@ -1074,7 +1074,7 @@
                 </span>
               </div>
               <div style="align-self:flex-start; max-width:85%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:12px 12px 12px 2px; padding:0.75rem 1rem; font-size:0.85rem; color:#FAF8F5; line-height:1.45;">
-                Bonjour et bienvenue chez DALIGHT ! 🌿<br>Je suis votre Concierge IA. Écrivez-moi en Créole ou en Français pour toute question sur nos soins, nos tarifs ou notre adresse.
+                Bonjour et bienvenue chez DALIGHT !<br>Je suis votre Concierge IA. Écrivez-moi en Créole ou en Français pour toute question sur nos soins, nos tarifs ou notre adresse.
               </div>
             </div>
 
@@ -1380,7 +1380,7 @@
             pdfBase64 = pdfRes.rawBase64;
             out.textContent += `✓ Reçu officiel PDF DALIGHT généré (~${(pdfBase64.length / 1024).toFixed(1)} KB Base64)\n`;
           } catch (e) {
-            out.textContent += `⚠️ Erreur génération PDF : ${e.message}\n`;
+            out.textContent += `Erreur génération PDF : ${e.message}\n`;
           }
         }
 
@@ -1395,9 +1395,9 @@
             pdf_file_name: 'Recu_DALIGHT_Test.pdf'
           });
 
-          out.textContent += `\n✅ SUCCÈS GATEWAY :\n${JSON.stringify(res, null, 2)}`;
+          out.textContent += `\nSUCCÈS GATEWAY :\n${JSON.stringify(res, null, 2)}`;
         } catch (err) {
-          out.textContent += `\n❌ ERREUR GATEWAY : ${err.message}`;
+          out.textContent += `\nERREUR GATEWAY : ${err.message}`;
         }
       });
 
@@ -1878,6 +1878,18 @@
           updated_at: new Date().toISOString()
         }, { onConflict: 'id' });
 
+        // Synchroniser instantanément avec le Gateway WhatsApp CVISUAL
+        try {
+          fetch('https://cvisual-whatsapp-gateway.onrender.com/api/v1/admin/tenants/c21aa659-f837-4c81-9e55-ccef534f9420/auto-reply', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer cv_live_admin_6094ed1bf65bf0945706d3d7'
+            },
+            body: JSON.stringify({ enabled: nextState })
+          }).catch(err => console.warn('Gateway sync warning:', err));
+        } catch(e) {}
+
         if (window.adminCore?.showToast) {
           window.adminCore.showToast(
             nextState ? 'Concierge IA activé (réponses automatiques en ligne)' : 'Concierge IA éteint (réponses automatiques coupées)',
@@ -2073,7 +2085,7 @@
       if (isBooking) {
         const alertPill = document.createElement('div');
         alertPill.style.cssText = "align-self:center; font-size:0.75rem; background:rgba(239,68,68,0.18); border:1px solid rgba(239,68,68,0.4); color:#fca5a5; padding:0.35rem 0.75rem; border-radius:8px; display:flex; align-items:center; gap:0.35rem;";
-        alertPill.innerHTML = `🚨 Intention de réservation détectée — Alerte transmise au numéro DALIGHT (+509 4747-7221)`;
+        alertPill.innerHTML = `Intention de réservation détectée — Alerte transmise au numéro DALIGHT (+509 4747-7221)`;
         chatContainer.appendChild(alertPill);
 
         const realPhone = document.getElementById('ai-test-real-phone')?.value.trim() || '50947477221';
@@ -2139,7 +2151,7 @@
         if (simulatorChatHistory.length > 12) simulatorChatHistory.splice(0, 2);
 
         if (isBooking) {
-          aiReply += "\n\n🔔 *Information :* Notre responsable a également reçu votre demande en direct et peut prendre le relais ici même d'un instant à l'autre.";
+          aiReply += "\n\n*Information :* Notre responsable a également reçu votre demande en direct et peut prendre le relais ici même d'un instant à l'autre.";
         }
 
         lastGeneratedAiReply = aiReply;
@@ -2161,20 +2173,20 @@
       const salut = isBonswa ? "Bonsoir !" : (isBonjou ? "Bonjour !" : "Bonjour et bienvenue chez DALIGHT !");
 
       if (text.includes('kote') || text.includes('adrès') || text.includes('adres') || text.includes('adresse') || text.includes('situé') || text.includes('horaire') || text.includes('heure')) {
-        return salut + "\n\nC'est un réel plaisir de vous renseigner sur **DALIGHT** :\n\n📍 **Notre Adresse :**\nDelmas 65, Rue Faustin Premier / Rue Durandisse #10, Port-au-Prince, Haïti.\n(Sanctuaire calme et sécurisé avec parking privé réservé à notre clientèle).\n\n🕐 **Horaires d'Ouverture :**\n• **Tous les jours (Lundi au Dimanche, 7j/7) de 07h00 à 17h00** (7h du matin à 5h de l'après-midi).\n\nQuel jour et quelle heure vous conviendraient pour votre séance ?";
+        return salut + "\n\nC'est un réel plaisir de vous renseigner sur **DALIGHT** :\n\n**Notre Adresse :**\nDelmas 65, Rue Faustin Premier / Rue Durandisse #10, Port-au-Prince, Haïti.\n(Sanctuaire calme et sécurisé avec parking privé réservé à notre clientèle).\n\n**Horaires d'Ouverture :**\n• **Tous les jours (Lundi au Dimanche, 7j/7) de 07h00 à 17h00** (7h du matin à 5h de l'après-midi).\n\nQuel jour et quelle heure vous conviendraient pour votre séance ?";
       }
 
       if (text.includes('pri') || text.includes('prix') || text.includes('konbyen') || text.includes('combien') || text.includes('tarif') || text.includes('head spa') || text.includes('soin') || text.includes('massage')) {
         let menuStr = "";
         if (services && services.length) {
-          menuStr = services.slice(0, 8).map(s => "✨ **" + s.name + "** (" + (s.duration || 60) + " min) — **" + (s.price_htg ? s.price_htg + " HTG" : s.price_usd + " USD") + "**").join('\n');
+          menuStr = services.slice(0, 8).map(s => "**" + s.name + "** (" + (s.duration || 60) + " min) — **" + (s.price_htg ? s.price_htg + " HTG" : s.price_usd + " USD") + "**").join('\n');
         } else {
-          menuStr = "✨ **Silver Package Head Spa (60 min)** — **5 000 HTG**\n✨ **Golden Head Spa (60 min)** — **7 000 HTG**\n✨ **Diamond Head Spa (60 min)** — **10 000 HTG**\n✨ **Silver Head Spa Dreadlocks (60 min)** — **6 000 HTG**\n✨ **Massage relaxant Silver (45 min)** — **10 000 HTG**\n✨ **Massage relaxant Golden (45 min)** — **12 000 HTG**";
+          menuStr = "**Silver Package Head Spa (60 min)** — **5 000 HTG**\n**Golden Head Spa (60 min)** — **7 000 HTG**\n**Diamond Head Spa (60 min)** — **10 000 HTG**\n**Silver Head Spa Dreadlocks (60 min)** — **6 000 HTG**\n**Massage relaxant Silver (45 min)** — **10 000 HTG**\n**Massage relaxant Golden (45 min)** — **12 000 HTG**";
         }
-        return salut + "\n\nVoici les tarifs officiels de nos soins chez **DALIGHT** :\n\n" + menuStr + "\n\n🎥 **Option Vidéo Souvenir 4K :** +500 HTG (réseaux sociaux) ou +1 000 HTG (usage privé WhatsApp).\n\n💳 **Acompte de 50% obligatoire** par MonCash ou NatCash au **+509 4747-7221** pour garantir votre créneau.\n\nPour vous enregistrer, pouvez-vous me communiquer votre **nom**, **téléphone**, **e-mail**, ainsi que la **date et l'heure** souhaitées ?";
+        return salut + "\n\nVoici les tarifs officiels de nos soins chez **DALIGHT** :\n\n" + menuStr + "\n\n**Option Vidéo Souvenir 4K :** +500 HTG (réseaux sociaux) ou +1 000 HTG (usage privé WhatsApp).\n\n**Acompte de 50% obligatoire** par MonCash ou NatCash au **+509 4747-7221** pour garantir votre créneau.\n\nPour vous enregistrer, pouvez-vous me communiquer votre **nom**, **téléphone**, **e-mail**, ainsi que la **date et l'heure** souhaitées ?";
       }
 
-      return salut + "\n\nBienvenue chez **DALIGHT**, votre sanctuaire de bien-être à Delmas 65.\n\n🕐 **Horaires :** Ouvert tous les jours (7j/7) de **07h00 à 17h00**.\n\nComment puis-je vous accompagner aujourd'hui ?\n• Pour nos **tarifs & forfaits** (Head Spa dès 5 000 HTG, Massages...)\n• Pour réserver en ligne : https://dalightbeauty.com/pages/reservation-v2.html\n\nDites-moi tout !";
+      return salut + "\n\nBienvenue chez **DALIGHT**, votre sanctuaire de bien-être à Delmas 65.\n\n**Horaires :** Ouvert tous les jours (7j/7) de **07h00 à 17h00**.\n\nComment puis-je vous accompagner aujourd'hui ?\n• Pour nos **tarifs & forfaits** (Head Spa dès 5 000 HTG, Massages...)\n• Pour réserver en ligne : https://dalightbeauty.com/pages/reservation-v2.html\n\nDites-moi tout !";
     }
 
     async function sendLastAiResponseToRealPhone() {
