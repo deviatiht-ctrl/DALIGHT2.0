@@ -609,13 +609,13 @@ window.openDetailModal = function(id) {
 
       ${(r.wants_video || r.video_requested) ? `
       <!-- Option Video Souvenir -->
-      <div style="background:var(--admin-bg);border-radius:12px;padding:1rem;border:1px solid rgba(212,175,55,0.3);display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+      <div style="background:var(--admin-bg);border-radius:12px;padding:1rem;border:1px solid rgba(212,175,55,0.3);display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;gap:.6rem;">
           <div style="background:rgba(212,175,55,0.15);width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             ${ico('M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z', 17, 'var(--admin-accent,#c9a227)')}
           </div>
           <div>
-            <div style="font-weight:600;font-size:.88rem;color:var(--admin-accent,#c9a227);">Option Vidéo Souvenir Professionnelle</div>
+            <div style="font-weight:600;font-size:.88rem;color:var(--admin-accent,#c9a227);">Option Vidéo Souvenir Professionnelle 4K (CVISUAL)</div>
             <div style="font-size:.76rem;color:var(--admin-text-muted);margin-top:.15rem;">
               Consentement : <strong style="color:var(--admin-text);">${r.video_consent === 'private' ? 'Usage Privé Uniquement (WhatsApp)' : 'Autorisé Réseaux Sociaux (Public)'}</strong>
             </div>
@@ -624,8 +624,27 @@ window.openDetailModal = function(id) {
         <div style="text-align:right;">
           <div style="font-weight:700;color:var(--admin-accent,#c9a227);font-size:.95rem;">+${(Number(r.video_price) || 500).toLocaleString()} HTG</div>
           <span style="font-size:.7rem;padding:.15rem .5rem;border-radius:6px;background:rgba(74,222,128,0.15);color:#4ade80;font-weight:600;">Inclus</span>
+          <div style="margin-top:0.4rem;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.toggleReservationVideoAdmin('${r.id}', false)" style="font-size:0.7rem; color:#f87171; border-color:rgba(239,68,68,0.3); padding:0.2rem 0.55rem; cursor:pointer;">Désactiver Option Vidéo</button>
+          </div>
         </div>
-      </div>` : ''}
+      </div>` : `
+      <!-- Option Video Non Activée -->
+      <div style="background:var(--admin-bg);border-radius:12px;padding:0.85rem 1rem;border:1px dashed rgba(212,175,55,0.3);display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:.6rem;">
+          <div style="background:rgba(212,175,55,0.15);width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            ${ico('M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z', 17, 'var(--admin-accent,#c9a227)')}
+          </div>
+          <div>
+            <div style="font-weight:600;font-size:.88rem;color:var(--admin-accent,#c9a227);">Option Vidéo Souvenir Professionnelle 4K (CVISUAL)</div>
+            <div style="font-size:.76rem;color:var(--admin-text-muted);margin-top:.15rem;">Non activée pour cette réservation</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.4rem;">
+          <button type="button" class="btn btn-primary btn-sm" onclick="window.toggleReservationVideoAdmin('${r.id}', true, 'public')" style="font-size:0.75rem; padding:0.35rem 0.65rem; background:linear-gradient(135deg, #d4af37, #996515); border:none; color:#fff; cursor:pointer;">+ Activer Vidéo Public (500 HTG)</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="window.toggleReservationVideoAdmin('${r.id}', true, 'private')" style="font-size:0.75rem; padding:0.35rem 0.65rem; border-color:rgba(212,175,55,0.3); color:#FAF8F5; cursor:pointer;">+ Activer Privé (1000 HTG)</button>
+        </div>
+      </div>`}
 
       <!-- Consent Form section -->
       <div id="consent-section-${r.id}" style="background:var(--admin-bg);border-radius:12px;padding:1rem;border:1px solid var(--admin-border);">
@@ -3452,4 +3471,46 @@ window.copyDedicationMessage = function(id) {
   }).catch(() => {
     window.adminCore?.showToast('Impossible de copier automatiquement.', 'error');
   });
+};
+
+window.toggleReservationVideoAdmin = async function(id, enable, consent = 'public') {
+  try {
+    const sb = window.adminCore?.supabase || window.supabaseClient;
+    if (!sb) throw new Error("Supabase indisponible");
+
+    const price = enable ? (consent === 'private' ? 1000 : 500) : 0;
+    const payload = enable ? {
+      wants_video: true,
+      video_requested: true,
+      video_consent: consent,
+      video_price: price,
+      video_status: 'pending',
+      updated_at: new Date().toISOString()
+    } : {
+      wants_video: false,
+      video_requested: false,
+      video_price: 0,
+      video_status: null,
+      updated_at: new Date().toISOString()
+    };
+
+    const { error } = await sb.from('reservations').update(payload).eq('id', id);
+    if (error) throw error;
+
+    if (window.adminCore?.showToast) {
+      window.adminCore.showToast(enable ? "Option Vidéo 4K activée !" : "Option Vidéo 4K désactivée.", "success");
+    }
+
+    if (typeof allReservations !== 'undefined' && Array.isArray(allReservations)) {
+      const found = allReservations.find(x => x.id === id);
+      if (found) Object.assign(found, payload);
+    }
+
+    if (typeof window.openDetailModal === 'function') {
+      window.openDetailModal(id);
+    }
+  } catch(err) {
+    console.error("Toggle video error:", err);
+    alert("Erreur: " + err.message);
+  }
 };

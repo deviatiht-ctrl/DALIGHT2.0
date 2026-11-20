@@ -1106,7 +1106,7 @@ function buildEmployeeWhatsAppMessage(r, emp) {
       '*Date :* ' + fmtDate(r.date) + '\n' +
       '*Horaire :* ' + fmtTime(r.time) + ' → ' + endTime + ' (' + duration + ' min)\n' +
       '*Compte à rebours :* ' + countdownStr + '\n' +
-      '*Type d\'usage :* ' + (isPrivate ? '🔒 Usage Privé (Floutage client)' : '✨ DALIGHT & CVISUAL (Public)') + '\n' +
+      '*Type d\'usage :* ' + (isPrivate ? 'Usage Privé (Floutage client)' : 'DALIGHT & CVISUAL (Public)') + '\n' +
       (r.notes ? ('*Notes :* ' + r.notes.replace(/\[VIDEO_META:[^\]]+\]/g, '').trim() + '\n') : '') +
       '*Lieu :* Sanctuaire DALIGHT, Delmas 65 #10\n\n' +
       '*Accéder à votre espace cadrage & upload 4K :*\n' +

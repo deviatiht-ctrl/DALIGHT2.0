@@ -34,7 +34,13 @@ const DEFAULT_CONFIG = {
   adminEmail: 'laurorejeanclarens0@gmail.com',
 };
 
-const ADMIN_EMAILS = ['laurorejeanclarens0@gmail.com'];
+const ADMIN_EMAILS = [
+  'laurorejeanclarens0@gmail.com',
+  'laurorejeanclarens@gmail.com',
+  'dalightbeauty@gmail.com',
+  'admin@dalightbeauty.com',
+  'cvisual@gmail.com'
+];
 
 const servicesCatalog = [
   {
@@ -253,6 +259,30 @@ function loadSupabaseCDN() {
 }
 
 // Initialize Supabase client
+// Synchronous fast pre-check for admin status to eliminate layout flicker
+(function checkAdminPreload() {
+  try {
+    const cachedRole = localStorage.getItem('dalight_user_role');
+    if (cachedRole === 'admin') {
+      document.body?.classList.add('is-admin');
+    }
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+        const raw = localStorage.getItem(k);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const email = (parsed?.user?.email || '').toLowerCase().trim();
+          if (email && ADMIN_EMAILS.includes(email)) {
+            document.body?.classList.add('is-admin');
+            localStorage.setItem('dalight_user_role', 'admin');
+          }
+        }
+      }
+    }
+  } catch(e){}
+})();
+
 let supabaseClient = null;
 
 // Synchronous initialization if Supabase is already loaded on the page via script tag
@@ -617,7 +647,7 @@ async function isAdminFromProfile(userId) {
       return false;
     }
     
-    return data && data.role === 'admin';
+    return data && (data.role === 'admin' || data.role === 'super_admin' || data.role === 'owner');
   } catch (err) {
     console.error('❌ Error checking admin role from profile:', err);
     return false;
@@ -635,13 +665,53 @@ async function applySessionRole(session) {
     
     if (isHardcodedAdmin || isProfileAdmin) {
       document.body.classList.add('is-admin');
+      localStorage.setItem('dalight_user_role', 'admin');
       console.log('👑 Admin role applied (hardcoded:', isHardcodedAdmin, ', profile:', isProfileAdmin + ')');
+      ensureMobileAdminLink(true);
     } else {
       document.body.classList.remove('is-admin');
+      localStorage.removeItem('dalight_user_role');
+      ensureMobileAdminLink(false);
     }
   } else {
     if (logoutBtn) logoutBtn.style.display = 'none';
     document.body.classList.remove('is-admin');
+    localStorage.removeItem('dalight_user_role');
+    ensureMobileAdminLink(false);
+  }
+}
+
+function ensureMobileAdminLink(isAdmin) {
+  const mobileMenu = document.getElementById('spa-mobile-menu') || document.querySelector('.spa-mobile-menu');
+  if (!mobileMenu) return;
+
+  const adminHref = isInsidePagesDir ? '../admin/dashboard.html' : './admin/dashboard.html';
+  let adminBtn = mobileMenu.querySelector('.spa-mobile-admin-btn') || mobileMenu.querySelector('a.admin-link');
+
+  if (isAdmin) {
+    if (!adminBtn) {
+      adminBtn = document.createElement('a');
+      adminBtn.href = adminHref;
+      adminBtn.className = 'admin-link spa-mobile-admin-btn';
+      adminBtn.innerHTML = `
+        <span style="display:inline-flex; align-items:center; gap:0.55rem;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Panneau Administration
+        </span>
+        <span class="badge-admin" style="background:rgba(212,175,55,0.25); color:#D4AF37; font-size:0.68rem; padding:0.18rem 0.55rem; border-radius:999px; text-transform:uppercase; font-weight:800; letter-spacing:0.5px; border:1px solid rgba(212,175,55,0.4);">Admin</span>
+      `;
+      const firstLink = mobileMenu.querySelector('a');
+      if (firstLink && firstLink.nextSibling) {
+        mobileMenu.insertBefore(adminBtn, firstLink.nextSibling);
+      } else {
+        mobileMenu.prepend(adminBtn);
+      }
+    } else {
+      adminBtn.href = adminHref;
+    }
+    adminBtn.style.display = 'flex';
+  } else {
+    if (adminBtn) adminBtn.style.display = 'none';
   }
 }
 
@@ -765,6 +835,9 @@ export async function openUserProfileDrawer() {
         </div>
 
         <div class="profile-quick-nav">
+          <a href="${isInsidePagesDir ? '../admin/dashboard.html' : './admin/dashboard.html'}" class="profile-quick-link profile-admin-quick-link" id="drawer-admin-link" style="display:none; grid-column:1/-1; background:linear-gradient(135deg, rgba(212,175,55,0.22), rgba(153,101,21,0.28)); border:1px solid rgba(212,175,55,0.55); color:#FAF8F5; font-weight:700;">
+            <i data-lucide="shield" style="color:#D4AF37;"></i> Panneau Administration DALIGHT
+          </a>
           <a href="${ordersPath}" class="profile-quick-link">
             <i data-lucide="calendar"></i> Mes Rendez-vous
           </a>

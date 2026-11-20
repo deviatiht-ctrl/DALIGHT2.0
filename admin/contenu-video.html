@@ -153,6 +153,28 @@
       background: rgba(212, 175, 55, 0.05);
     }
 
+        .date-filter-pill {
+      padding: 0.35rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: transparent;
+      color: var(--admin-text-muted);
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .date-filter-pill:hover {
+      color: #FAF8F5;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .date-filter-pill.active {
+      background: rgba(212, 175, 55, 0.18);
+      border-color: rgba(212, 175, 55, 0.4);
+      color: #FAF8F5;
+      font-weight: 700;
+    }
     .cvisual-pill {
       background: linear-gradient(135deg, rgba(212,175,55,0.25), rgba(153,101,21,0.25));
       border: 1px solid rgba(212,175,55,0.5);
@@ -330,8 +352,8 @@
     </header>
 
     <div class="admin-content">
-      <!-- KALKIL KÒB LA & KPI STATS (5 CARDS DE LUXE) -->
-      <div class="stats-grid mb-4" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));">
+      <!-- KALKIL KÒB LA & KPI STATS (6 CARDS DE LUXE) -->
+      <div class="stats-grid mb-4" style="grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));">
         <!-- 1. Total Tournages -->
         <div class="stat-card">
           <div class="stat-icon gold">
@@ -355,40 +377,54 @@
           </div>
           <div class="stat-info">
             <div class="stat-value" id="stat-revenue-videos" style="color: #FAF8F5;">0 HTG</div>
-            <div class="stat-label">Chiffre d'Affaires Vidéo</div>
+            <div class="stat-label">Recettes Vidéo (Brut)</div>
             <div class="stat-change positive">Revenu brut collecté</div>
           </div>
         </div>
 
-        <!-- 3. Kòb Moun k'ap Filme yo (Part Cadreurs) -->
+        <!-- 3. Part CVISUAL -->
         <div class="stat-card">
           <div class="stat-icon blue" style="background: rgba(59, 130, 246, 0.16); color: #60a5fa;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-cvisual-net" style="color: #60a5fa;">0 HTG</div>
+            <div class="stat-label">Part CVISUAL (Production)</div>
+            <div class="stat-change" id="stat-cvisual-pct-label" style="color: #93c5fd;">50% du chiffre d'affaires</div>
+          </div>
+        </div>
+
+        <!-- 4. Part DALIGHT Salon -->
+        <div class="stat-card">
+          <div class="stat-icon green" style="background: rgba(34, 197, 94, 0.16); color: #4ade80;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-dalight-net" style="color: #4ade80;">0 HTG</div>
+            <div class="stat-label">Part DALIGHT (Salon)</div>
+            <div class="stat-change positive" id="stat-dalight-pct-label">50% du chiffre d'affaires</div>
+          </div>
+        </div>
+
+        <!-- 5. Kòb Moun k'ap Filme yo (Part Cadreurs) -->
+        <div class="stat-card">
+          <div class="stat-icon gold" style="background: rgba(212, 175, 55, 0.16); color: #D4AF37;">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
             </svg>
           </div>
           <div class="stat-info">
-            <div class="stat-value" id="stat-cadreurs-total" style="color: #60a5fa;">0 HTG</div>
+            <div class="stat-value" id="stat-cadreurs-total" style="color: #D4AF37;">0 HTG</div>
             <div class="stat-label">Kòb Moun k'ap Filme yo</div>
-            <div class="stat-change" style="color: #93c5fd;">Part totale due à l'équipe</div>
+            <div class="stat-change" style="color: #F3E5AB;">Part due aux cadreurs</div>
           </div>
         </div>
 
-        <!-- 4. Kòb CVISUAL (Bénéfice Agence) -->
-        <div class="stat-card">
-          <div class="stat-icon green" style="background: rgba(34, 197, 94, 0.16); color: #4ade80;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-            </svg>
-          </div>
-          <div class="stat-info">
-            <div class="stat-value" id="stat-cvisual-net" style="color: #4ade80;">0 HTG</div>
-            <div class="stat-label">Kòb CVISUAL (Bénéfice)</div>
-            <div class="stat-change positive">Marge nette conservée</div>
-          </div>
-        </div>
-
-        <!-- 5. Reste à Payer aux Cadreurs -->
+        <!-- 6. Reste à Payer aux Cadreurs -->
         <div class="stat-card">
           <div class="stat-icon orange" style="background: rgba(245, 158, 11, 0.16); color: #fbbf24;">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -416,15 +452,19 @@
             </p>
           </div>
           <div style="display:flex; gap:0.5rem; align-items:center;">
-            <span class="status-badge confirmed" id="cvisual-alert-status-badge">⚡ Alertes WhatsApp Actives</span>
+            <span class="status-badge confirmed" id="cvisual-alert-status-badge" style="display:inline-flex;align-items:center;gap:0.35rem;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Alertes WhatsApp Actives
+            </span>
           </div>
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
           <!-- 1. Numéro du Responsable CVISUAL -->
           <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem;">
-            <label style="font-weight: 700; color: #FAF8F5; font-size: 0.88rem; display: block; margin-bottom: 0.35rem;">
-              📱 Numéro WhatsApp Responsable / PDG CVISUAL :
+            <label style="font-weight: 700; color: #FAF8F5; font-size: 0.88rem; display: flex; align-items:center; gap:0.4rem; margin-bottom: 0.35rem;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              Numéro WhatsApp Responsable / PDG CVISUAL :
             </label>
             <p style="font-size: 0.78rem; color: var(--admin-text-muted); margin: 0 0 0.85rem 0;">
               Reçoit automatiquement les infos de chaque client qui coche l'option vidéo (Nom, date, heure, soin, usage unique ou réseaux publics).
@@ -444,33 +484,39 @@
             </div>
           </div>
 
-          <!-- 2. Répartition Financière par Défaut (% Cadreur vs CVISUAL) -->
+          <!-- 2. Partage des Gains (CVISUAL vs DALIGHT) -->
           <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem;">
-            <label style="font-weight: 700; color: #FAF8F5; font-size: 0.88rem; display: block; margin-bottom: 0.35rem;">
-              💰 Répartition des Gains (Kalkil Kòb la) :
+            <label style="font-weight: 700; color: #FAF8F5; font-size: 0.88rem; display: flex; align-items:center; gap:0.4rem; margin-bottom: 0.35rem;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              Partage des Gains : CVISUAL &amp; DALIGHT
             </label>
             <p style="font-size: 0.78rem; color: var(--admin-text-muted); margin: 0 0 0.85rem 0;">
-              Part par défaut reversée au cadreur qui filme la session vs part nette agence CVISUAL.
+              Configurez le pourcentage que CVISUAL reçoit, ce que DALIGHT reçoit, et la part du cadreur.
             </p>
-            <div style="display:flex; gap:0.75rem; align-items:center;">
+            <div style="display:flex; gap:0.6rem; align-items:center;">
               <div style="flex:1;">
-                <label style="font-size:0.75rem; color:var(--admin-text-muted); display:block; margin-bottom:0.2rem;">Part Cadreur (%) :</label>
-                <input type="number" id="cfg-cadreur-pct" class="form-input" min="0" max="100" value="50" oninput="updateSplitPreview()" style="font-weight:700; color:#60a5fa;">
+                <label style="font-size:0.75rem; color:var(--admin-text-muted); display:block; margin-bottom:0.2rem;">CVISUAL (%) :</label>
+                <input type="number" id="cfg-cvisual-pct" class="form-input" min="0" max="100" value="50" oninput="updateSplitPreview('cvisual')" style="font-weight:700; color:#60a5fa;">
               </div>
               <div style="flex:1;">
-                <label style="font-size:0.75rem; color:var(--admin-text-muted); display:block; margin-bottom:0.2rem;">Part CVISUAL (%) :</label>
-                <input type="number" id="cfg-cvisual-pct" class="form-input" value="50" readonly style="font-weight:700; color:#4ade80; background:rgba(255,255,255,0.04);">
+                <label style="font-size:0.75rem; color:var(--admin-text-muted); display:block; margin-bottom:0.2rem;">DALIGHT (%) :</label>
+                <input type="number" id="cfg-dalight-pct" class="form-input" min="0" max="100" value="50" oninput="updateSplitPreview('dalight')" style="font-weight:700; color:#4ade80;">
+              </div>
+              <div style="flex:1;">
+                <label style="font-size:0.75rem; color:var(--admin-text-muted); display:block; margin-bottom:0.2rem;">Cadreur (%) :</label>
+                <input type="number" id="cfg-cadreur-pct" class="form-input" min="0" max="100" value="50" oninput="updateSplitPreview()" style="font-weight:700; color:#D4AF37;">
               </div>
             </div>
-            <div id="cfg-split-preview-text" style="margin-top:0.6rem; font-size:0.78rem; color:#F3E5AB;">
-              Sur 1,000 HTG (Privé) : 500 HTG Cadreur | 500 HTG CVISUAL
+            <div id="cfg-split-preview-text" style="margin-top:0.6rem; font-size:0.75rem; color:#F3E5AB; line-height:1.4;">
+              Sur 1,000 HTG (Privé) : CVISUAL 500 HTG (Cadreur: 250 HTG) | DALIGHT Salon 500 HTG
             </div>
           </div>
 
           <!-- 3. Tarification Option Vidéo Client -->
           <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem;">
-            <label style="font-weight: 700; color: #FAF8F5; font-size: 0.88rem; display: block; margin-bottom: 0.35rem;">
-              🏷️ Tarification Client (Réservation DALIGHT) :
+            <label style="font-weight: 700; color: #FAF8F5; font-size: 0.88rem; display: flex; align-items:center; gap:0.4rem; margin-bottom: 0.35rem;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><circle cx="7" cy="7" r=".5" fill="currentColor"/></svg>
+              Tarification Client (Réservation DALIGHT) :
             </label>
             <p style="font-size: 0.78rem; color: var(--admin-text-muted); margin: 0 0 0.85rem 0;">
               Montants facturés au client selon son accord de diffusion d'image.
@@ -538,37 +584,67 @@
       <div class="glass-card" style="padding: 1.5rem; border: 1px solid rgba(255,255,255,0.08);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
           <div>
-            <h2 style="font-size: 1.15rem; font-weight: 700; color: #FAF8F5; margin: 0 0 0.25rem 0;">
-              Tableau de Bord des Tournages Vidéo
-            </h2>
-            <p style="font-size: 0.82rem; color: var(--admin-text-muted); margin: 0;">
+            <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+              <h2 style="font-size: 1.15rem; font-weight: 700; color: #FAF8F5; margin: 0;">
+                Tableau de Bord des Tournages Vidéo
+              </h2>
+              <button class="btn btn-secondary btn-sm" onclick="openAddVideoReservationModal()" style="display:inline-flex; align-items:center; gap:0.4rem; padding:0.35rem 0.75rem; font-size:0.78rem; font-weight:600; border-color:rgba(212,175,55,0.4); color:#FAF8F5;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                + Ajouter une Réservation au Tournage
+              </button>
+            </div>
+            <p style="font-size: 0.82rem; color: var(--admin-text-muted); margin: 0.25rem 0 0 0;">
               Assignez votre équipe, contrôlez les consentements de diffusion et suivez la paie de chaque tournage
             </p>
           </div>
 
-          <!-- Filtres -->
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items:center;">
-            <input type="text" id="filter-search" class="form-input" placeholder="🔍 Rechercher client, soin..." style="padding: 0.45rem 0.75rem; font-size: 0.82rem; width: 170px;" oninput="applyFilters()">
+          <!-- Filtres de Date & Statuts -->
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items:center; width:100%; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.06);">
+            <!-- Quick Date Filter Pills -->
+            <div style="display:inline-flex; background:rgba(0,0,0,0.4); padding:3px; border-radius:10px; border:1px solid rgba(255,255,255,0.08); gap:2px;">
+              <button type="button" class="date-filter-pill active" id="pill-filter-today" onclick="setDateFilterMode('today')">
+                Aujourd'hui
+              </button>
+              <button type="button" class="date-filter-pill" id="pill-filter-upcoming" onclick="setDateFilterMode('upcoming')">
+                À venir
+              </button>
+              <button type="button" class="date-filter-pill" id="pill-filter-week" onclick="setDateFilterMode('week')">
+                Cette Semaine
+              </button>
+              <button type="button" class="date-filter-pill" id="pill-filter-all" onclick="setDateFilterMode('all')">
+                Toutes les dates
+              </button>
+            </div>
 
-            <select id="filter-consent" class="form-select" style="padding: 0.45rem 0.75rem; font-size: 0.82rem; min-width: 140px;" onchange="applyFilters()">
-              <option value="all">Tous consentements</option>
-              <option value="public">Réseaux Publics</option>
-              <option value="private">Usage Privé Unique</option>
-            </select>
+            <!-- Date Picker -->
+            <div style="display:inline-flex; align-items:center; gap:0.35rem; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:0.25rem 0.5rem;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <input type="date" id="filter-date" class="form-input" style="padding: 0.25rem 0.4rem; font-size: 0.78rem; background:transparent; border:none; color:#FAF8F5;" onchange="onDateInputChange()">
+            </div>
 
-            <select id="filter-cadreur" class="form-select" style="padding: 0.45rem 0.75rem; font-size: 0.82rem; min-width: 140px;" onchange="applyFilters()">
-              <option value="all">Tous les cadreurs</option>
-              <option value="unassigned">Non assignés</option>
-            </select>
+            <div style="margin-left:auto; display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+              <input type="text" id="filter-search" class="form-input" placeholder="Rechercher client, soin..." style="padding: 0.45rem 0.75rem; font-size: 0.82rem; width: 170px;" oninput="applyFilters()">
 
-            <select id="filter-status" class="form-select" style="padding: 0.45rem 0.75rem; font-size: 0.82rem; min-width: 140px;" onchange="applyFilters()">
-              <option value="all">Tous les statuts</option>
-              <option value="pending">À filmer</option>
-              <option value="filmed">Filmée</option>
-              <option value="editing">En montage</option>
-              <option value="delivered">Livrée 4K</option>
-              <option value="published">Publiée réseaux</option>
-            </select>
+              <select id="filter-consent" class="form-select" style="padding: 0.45rem 0.75rem; font-size: 0.82rem; min-width: 130px;" onchange="applyFilters()">
+                <option value="all">Tous consentements</option>
+                <option value="public">Réseaux Publics</option>
+                <option value="private">Usage Privé Unique</option>
+              </select>
+
+              <select id="filter-cadreur" class="form-select" style="padding: 0.45rem 0.75rem; font-size: 0.82rem; min-width: 130px;" onchange="applyFilters()">
+                <option value="all">Tous les cadreurs</option>
+                <option value="unassigned">Non assignés</option>
+              </select>
+
+              <select id="filter-status" class="form-select" style="padding: 0.45rem 0.75rem; font-size: 0.82rem; min-width: 130px;" onchange="applyFilters()">
+                <option value="all">Tous les statuts</option>
+                <option value="pending">À filmer</option>
+                <option value="filmed">Filmée</option>
+                <option value="editing">En montage</option>
+                <option value="delivered">Livrée 4K</option>
+                <option value="published">Publiée réseaux</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -599,6 +675,31 @@
       </div>
     </div>
 
+    <!-- MODAL: AJOUTER UNE RÉSERVATION AU TOURNAGE VIDÉO 4K -->
+    <div class="modal-overlay" id="add-video-res-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(8,12,8,0.88); backdrop-filter:blur(16px); z-index:9999; align-items:center; justify-content:center; padding:1rem;">
+      <div class="modal" style="max-width: 680px; width:100%; max-height:85vh; display:flex; flex-direction:column; background: rgba(18, 27, 18, 0.98); border: 1px solid var(--cv-border-gold); border-radius: 20px; padding: 1.5rem; box-shadow: 0 25px 60px rgba(0,0,0,0.85);">
+        <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:0.75rem;">
+          <h3 style="margin:0; font-family:'Outfit',sans-serif; font-size:1.15rem; color:var(--cv-gold); display:flex; align-items:center; gap:0.5rem;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            Ajouter une Réservation Salon au Tournage Vidéo 4K
+          </h3>
+          <button class="modal-close" onclick="closeAddVideoReservationModal()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:1.3rem;">&times;</button>
+        </div>
+        <p style="font-size:0.8rem; color:var(--admin-text-muted); margin:0 0 0.85rem 0;">
+          Sélectionnez n'importe quelle réservation client du salon pour lui activer l'option vidéo souvenir 4K CVISUAL instantanément.
+        </p>
+        <div style="margin-bottom:0.85rem;">
+          <input type="text" id="add-video-search-input" class="form-input" placeholder="Rechercher par nom client, téléphone, prestation..." oninput="filterAddReservationModalList()" style="font-size:0.85rem; padding:0.55rem 0.85rem;">
+        </div>
+        <div id="add-video-res-list" style="overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:0.6rem; padding-right:0.25rem; min-height:220px;">
+          <div style="text-align:center; padding:2rem; color:var(--admin-text-muted); font-size:0.85rem;">Chargement des réservations du salon...</div>
+        </div>
+        <div class="modal-footer" style="display:flex; justify-content:flex-end; border-top:1px solid rgba(255,255,255,0.1); padding-top:0.75rem; margin-top:1rem;">
+          <button class="btn btn-secondary btn-sm" onclick="closeAddVideoReservationModal()">Fermer</button>
+        </div>
+      </div>
+    </div>
+
     <!-- MODAL: UPLOAD VIDÉO 4K & ENVOI AU CLIENT -->
     <div class="modal-overlay" id="upload-video-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(8,12,8,0.88); backdrop-filter:blur(16px); z-index:9999; align-items:center; justify-content:center; padding:1rem;">
       <div class="modal" style="max-width: 540px; width:100%; background: rgba(18, 27, 18, 0.98); border: 1px solid var(--cv-border-gold); border-radius: 20px; padding: 1.5rem; box-shadow: 0 25px 60px rgba(0,0,0,0.85);">
@@ -607,7 +708,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
             Livraison Vidéo Souvenir 4K
           </h3>
-          <button class="modal-close" onclick="closeUploadVideoModal()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:1.3rem;">✕</button>
+          <button class="modal-close" onclick="closeUploadVideoModal()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:1.3rem;">&times;</button>
         </div>
         <div class="modal-body">
           <input type="hidden" id="upload-res-id">
@@ -661,9 +762,9 @@
       <div class="modal" style="max-width: 500px; width:100%; background: rgba(18, 27, 18, 0.98); border: 1px solid var(--cv-border-gold); border-radius: 18px; padding: 1.5rem; box-shadow: 0 25px 60px rgba(0,0,0,0.85);">
         <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:0.75rem;">
           <h3 style="margin:0; font-family:'Outfit',sans-serif; font-size:1.15rem; color:var(--cv-gold); display:flex; align-items:center; gap:0.5rem;" id="cadreur-modal-title">
-            📲 Alerter le Cadreur (WhatsApp)
+            Alerter le Cadreur (WhatsApp)
           </h3>
-          <button class="modal-close" onclick="closeCadreurAlertModal()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:1.3rem;">✕</button>
+          <button class="modal-close" onclick="closeCadreurAlertModal()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:1.3rem;">&times;</button>
         </div>
         <div class="modal-body">
           <input type="hidden" id="alert-target-phone">
@@ -698,11 +799,16 @@
 
     let allVideoReservations = [];
     let currentSelectedVideoFile = null;
+    let allSalonReservationsCache = [];
+    let currentDateFilterMode = 'today';
+    let pickedCustomDate = '';
 
     // Default Configuration Object
     let cvisualConfig = {
       manager_phone: '+509 4747-7221',
       auto_alerts_enabled: true,
+      cvisual_split_pct: 50,
+      dalight_split_pct: 50,
       default_cadreur_split_pct: 50,
       price_public_htg: 500,
       price_private_htg: 1000,
@@ -711,6 +817,20 @@
         { id: 'cadreur_dalight1', name: 'Cadreur 1 (Équipe CVISUAL)', phone: '+509 3161-5567', rate_pct: 50 }
       ]
     };
+
+    function fmtDate(d) {
+      if (!d) return '—';
+      try {
+        const parts = String(d).split('-');
+        if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      } catch(e){}
+      return d;
+    }
+
+    function fmtTime(t) {
+      if (!t) return '—';
+      return String(t).slice(0, 5);
+    }
 
     // Helper: Supabase client
     async function getClient() {
@@ -745,12 +865,17 @@
 
       const isPublic = (r.video_consent || 'public').toLowerCase() === 'public';
       const totalPrice = Number(r.video_price) || (isPublic ? (cvisualConfig.price_public_htg || 500) : (cvisualConfig.price_private_htg || 1000));
-      
+
+      const cvisualSplitPct = Number(cvisualConfig.cvisual_split_pct !== undefined ? cvisualConfig.cvisual_split_pct : 50);
+      const dalightSplitPct = Number(cvisualConfig.dalight_split_pct !== undefined ? cvisualConfig.dalight_split_pct : (100 - cvisualSplitPct));
+
+      const cvisualGross = Math.round((totalPrice * cvisualSplitPct) / 100);
+      const dalightShare = totalPrice - cvisualGross;
+
       const cadreurId = r.video_cadreur_id || meta.cadreur_id || '';
       let cadreurName = r.video_cadreur_name || meta.cadreur_name || '';
       let cadreurPhone = r.video_cadreur_phone || meta.cadreur_phone || '';
 
-      // If matched with team member, fill details
       if (cadreurId && !cadreurPhone) {
         const found = cvisualConfig.team_members.find(m => m.id === cadreurId);
         if (found) {
@@ -766,9 +891,9 @@
       const splitPct = Number(meta.cadreur_rate_pct !== undefined ? meta.cadreur_rate_pct : (cvisualConfig.default_cadreur_split_pct || 50));
       const cadreurPay = meta.cadreur_pay !== undefined
         ? Number(meta.cadreur_pay)
-        : Math.round((totalPrice * splitPct) / 100);
+        : Math.round((cvisualGross * splitPct) / 100);
 
-      const cvisualShare = totalPrice - cadreurPay;
+      const cvisualNet = cvisualGross - cadreurPay;
 
       return {
         cadreur_id: cadreurId,
@@ -777,14 +902,17 @@
         cadreur_paid: isPaid,
         cadreur_pay: cadreurPay,
         cadreur_rate_pct: splitPct,
-        cvisual_share: cvisualShare,
+        cvisual_split_pct: cvisualSplitPct,
+        dalight_split_pct: dalightSplitPct,
+        cvisual_gross: cvisualGross,
+        cvisual_share: cvisualNet,
+        dalight_share: dalightShare,
         total_price: totalPrice
       };
     }
 
     // Initialize Page
     document.addEventListener('DOMContentLoaded', async () => {
-      // Mobile sidebar toggle
       const mobileBtn = document.getElementById('mobile-menu-btn');
       const sidebar = document.getElementById('sidebar');
       if (mobileBtn && sidebar) {
@@ -804,19 +932,43 @@
       if (el) el.scrollIntoView({ behavior: 'smooth' });
     }
 
-    function updateSplitPreview() {
-      const pct = Math.max(0, Math.min(100, Number(document.getElementById('cfg-cadreur-pct').value) || 0));
-      document.getElementById('cfg-cvisual-pct').value = 100 - pct;
+    function updateSplitPreview(changedSource) {
+      let cvPct = Number(document.getElementById('cfg-cvisual-pct').value) || 0;
+      let dlPct = Number(document.getElementById('cfg-dalight-pct').value) || 0;
+      let cadPct = Number(document.getElementById('cfg-cadreur-pct').value) || 0;
+
+      if (changedSource === 'cvisual') {
+        cvPct = Math.max(0, Math.min(100, cvPct));
+        dlPct = 100 - cvPct;
+        document.getElementById('cfg-dalight-pct').value = dlPct;
+      } else if (changedSource === 'dalight') {
+        dlPct = Math.max(0, Math.min(100, dlPct));
+        cvPct = 100 - dlPct;
+        document.getElementById('cfg-cvisual-pct').value = cvPct;
+      }
+      cadPct = Math.max(0, Math.min(100, cadPct));
+
+      cvisualConfig.cvisual_split_pct = cvPct;
+      cvisualConfig.dalight_split_pct = dlPct;
+      cvisualConfig.default_cadreur_split_pct = cadPct;
+
       const privTotal = Number(document.getElementById('cfg-price-private').value) || 1000;
-      const cadShare = Math.round((privTotal * pct) / 100);
-      const cvShare = privTotal - cadShare;
-      document.getElementById('cfg-split-preview-text').textContent = 
-        `Sur ${privTotal.toLocaleString()} HTG (Privé) : ${cadShare.toLocaleString()} HTG Cadreur | ${cvShare.toLocaleString()} HTG CVISUAL`;
+      const cvGross = Math.round((privTotal * cvPct) / 100);
+      const dlShare = privTotal - cvGross;
+      const cadPay = Math.round((cvGross * cadPct) / 100);
+      const cvNet = cvGross - cadPay;
+
+      document.getElementById('cfg-split-preview-text').innerHTML = 
+        `Sur ${privTotal.toLocaleString()} HTG (Privé) : CVISUAL ${cvGross.toLocaleString()} HTG (Cadreur: ${cadPay.toLocaleString()} HTG, Net Agence: ${cvNet.toLocaleString()} HTG) | DALIGHT Salon ${dlShare.toLocaleString()} HTG`;
+
+      const cvLabel = document.getElementById('stat-cvisual-pct-label');
+      if (cvLabel) cvLabel.textContent = `${cvPct}% du chiffre d'affaires`;
+      const dlLabel = document.getElementById('stat-dalight-pct-label');
+      if (dlLabel) dlLabel.textContent = `${dlPct}% du chiffre d'affaires`;
     }
 
     // Load CVISUAL Video Configuration
     async function loadCVISUALConfig() {
-      // Try local cache first
       try {
         const cached = localStorage.getItem('dalight_cvisual_video_config');
         if (cached) {
@@ -904,8 +1056,9 @@
       // Populate UI
       document.getElementById('cfg-manager-phone').value = cvisualConfig.manager_phone || '+509 4747-7221';
       document.getElementById('cfg-auto-alerts').checked = cvisualConfig.auto_alerts_enabled !== false;
+      document.getElementById('cfg-cvisual-pct').value = cvisualConfig.cvisual_split_pct !== undefined ? cvisualConfig.cvisual_split_pct : 50;
+      document.getElementById('cfg-dalight-pct').value = cvisualConfig.dalight_split_pct !== undefined ? cvisualConfig.dalight_split_pct : 50;
       document.getElementById('cfg-cadreur-pct').value = cvisualConfig.default_cadreur_split_pct || 50;
-      document.getElementById('cfg-cvisual-pct').value = 100 - (cvisualConfig.default_cadreur_split_pct || 50);
       document.getElementById('cfg-price-public').value = cvisualConfig.price_public_htg || 500;
       document.getElementById('cfg-price-private').value = cvisualConfig.price_private_htg || 1000;
 
@@ -935,7 +1088,7 @@
           </div>
           <div style="display:flex; align-items:center; gap:0.4rem;">
             ${m.access_code ? `
-              <button class="btn-action-icon" onclick="navigator.clipboard.writeText('https://dalightbeauty.com/staff.html?code=${encodeURIComponent(m.access_code)}').then(() => alert('Lien direct copié pour ' + '${escapeHtml(m.name)}'))" title="Copier lien direct staff.html?code=...">
+              <button class="btn-action-icon" onclick="navigator.clipboard.writeText('https://dalightbeauty.com/staff.html?code=' + encodeURIComponent('${m.access_code}')).then(() => alert('Lien direct copié pour ' + '${escapeHtml(m.name)}'))" title="Copier lien direct staff.html?code=...">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
               </button>
             ` : ''}
@@ -1014,23 +1167,24 @@
       try {
         const mgrPhone = document.getElementById('cfg-manager-phone').value.trim();
         const autoAlerts = document.getElementById('cfg-auto-alerts').checked;
+        const cvPct = Number(document.getElementById('cfg-cvisual-pct').value) || 50;
+        const dlPct = Number(document.getElementById('cfg-dalight-pct').value) || 50;
         const cadPct = Number(document.getElementById('cfg-cadreur-pct').value) || 50;
         const pricePub = Number(document.getElementById('cfg-price-public').value) || 500;
         const pricePriv = Number(document.getElementById('cfg-price-private').value) || 1000;
 
         cvisualConfig.manager_phone = mgrPhone;
         cvisualConfig.auto_alerts_enabled = autoAlerts;
+        cvisualConfig.cvisual_split_pct = cvPct;
+        cvisualConfig.dalight_split_pct = dlPct;
         cvisualConfig.default_cadreur_split_pct = cadPct;
         cvisualConfig.price_public_htg = pricePub;
         cvisualConfig.price_private_htg = pricePriv;
 
-        // Cache locally
         localStorage.setItem('dalight_cvisual_video_config', JSON.stringify(cvisualConfig));
 
-        // Save in Supabase settings
         const sb = await getClient();
         if (sb) {
-          // Sync cadreurs into presence_employees as registered staff with PIN access code
           if (Array.isArray(cvisualConfig.team_members)) {
             for (const m of cvisualConfig.team_members) {
               try {
@@ -1080,7 +1234,6 @@
             await sb.from('settings').update({ value: payload.value, updated_at: payload.updated_at }).eq('key', 'cvisual_video_config');
           }
 
-          // Also keep legacy 'video_service' synced
           try {
             await sb.from('settings').upsert({
               id: 'video_service',
@@ -1103,7 +1256,7 @@
         }
 
         updateHUD(allVideoReservations);
-        renderTable(allVideoReservations);
+        applyFilters();
 
       } catch (err) {
         console.error('Error saving config:', err);
@@ -1124,7 +1277,7 @@
       }
 
       const formatted = cleanPhone.length === 8 ? ('509' + cleanPhone) : cleanPhone;
-      const testMsg = `🎬 *TEST CONNEXION CVISUAL WHATSAPP GATEWAY*\n━━━━━━━━━━━━━━━━━━━━\nBonjour PDG CVISUAL ! Votre numéro est parfaitement configuré pour recevoir les alertes instantanées de réservations vidéo DALIGHT.\n━━━━━━━━━━━━━━━━━━━━\n⚡ _Ligne active : DALIGHT Pro_`;
+      const testMsg = `[TEST CONNEXION CVISUAL WHATSAPP GATEWAY]\n━━━━━━━━━━━━━━━━━━━━\nBonjour PDG CVISUAL ! Votre numéro est parfaitement configuré pour recevoir les alertes instantanées de réservations vidéo DALIGHT.\n━━━━━━━━━━━━━━━━━━━━\nLigne active : DALIGHT Pro`;
 
       try {
         if (window.adminCore?.showToast) window.adminCore.showToast('Envoi du message test en cours...', 'info');
@@ -1152,7 +1305,6 @@
         }
       } catch (err) {
         console.error('Test alert error:', err);
-        // Fallback wa.me
         window.open(`https://wa.me/${formatted}?text=${encodeURIComponent(testMsg)}`, '_blank');
       }
     }
@@ -1172,7 +1324,7 @@
         const { data, error } = await sb
           .from('reservations')
           .select('*')
-          .or('wants_video.eq.true,video_requested.eq.true')
+          .or('wants_video.eq.true,video_requested.eq.true,video_price.gt.0,notes.ilike.%VIDEO_META%')
           .order('date', { ascending: false });
 
         if (error) throw error;
@@ -1196,6 +1348,7 @@
       let totalRevenue = 0;
       let totalCadreurs = 0;
       let totalCVISUAL = 0;
+      let totalDALIGHT = 0;
       let cadreurPendingPay = 0;
       let cadreurPendingCount = 0;
 
@@ -1207,7 +1360,8 @@
 
         totalRevenue += meta.total_price;
         totalCadreurs += meta.cadreur_pay;
-        totalCVISUAL += meta.cvisual_share;
+        totalCVISUAL += meta.cvisual_gross;
+        totalDALIGHT += meta.dalight_share;
 
         if (!meta.cadreur_paid) {
           cadreurPendingPay += meta.cadreur_pay;
@@ -1218,11 +1372,35 @@
       document.getElementById('stat-total-videos').textContent = total;
       document.getElementById('stat-sub-videos').textContent = `${publicCount} public(s) · ${privateCount} privé(s)`;
       document.getElementById('stat-revenue-videos').textContent = totalRevenue.toLocaleString() + ' HTG';
-      document.getElementById('stat-cadreurs-total').textContent = totalCadreurs.toLocaleString() + ' HTG';
       document.getElementById('stat-cvisual-net').textContent = totalCVISUAL.toLocaleString() + ' HTG';
+      document.getElementById('stat-dalight-net').textContent = totalDALIGHT.toLocaleString() + ' HTG';
+      document.getElementById('stat-cadreurs-total').textContent = totalCadreurs.toLocaleString() + ' HTG';
       document.getElementById('stat-cadreur-pending-pay').textContent = cadreurPendingPay.toLocaleString() + ' HTG';
       document.getElementById('stat-cadreur-pending-count').textContent = 
         cadreurPendingCount === 0 ? 'Toutes les séances soldées' : `${cadreurPendingCount} tournage(s) à solder`;
+    }
+
+    function setDateFilterMode(mode) {
+      currentDateFilterMode = mode;
+      pickedCustomDate = '';
+      const dateInp = document.getElementById('filter-date');
+      if (dateInp) dateInp.value = '';
+
+      document.querySelectorAll('.date-filter-pill').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById(`pill-filter-${mode}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      applyFilters();
+    }
+
+    function onDateInputChange() {
+      const val = document.getElementById('filter-date')?.value;
+      if (val) {
+        currentDateFilterMode = 'custom';
+        pickedCustomDate = val;
+        document.querySelectorAll('.date-filter-pill').forEach(btn => btn.classList.remove('active'));
+        applyFilters();
+      }
     }
 
     // Filter Logic
@@ -1232,8 +1410,30 @@
       const cadreurFilter = document.getElementById('filter-cadreur')?.value || 'all';
       const statusFilter = document.getElementById('filter-status')?.value || 'all';
 
+      const today = new Date().toISOString().split('T')[0];
+
       let filtered = [...allVideoReservations];
 
+      // Date Filtering
+      if (currentDateFilterMode === 'today') {
+        filtered = filtered.filter(r => (r.date || '') === today);
+      } else if (currentDateFilterMode === 'upcoming') {
+        filtered = filtered.filter(r => (r.date || '') >= today);
+      } else if (currentDateFilterMode === 'week') {
+        const now = new Date();
+        const dayOfWeek = now.getDay() || 7;
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - dayOfWeek + 1);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        const monStr = monday.toISOString().split('T')[0];
+        const sunStr = sunday.toISOString().split('T')[0];
+        filtered = filtered.filter(r => (r.date || '') >= monStr && (r.date || '') <= sunStr);
+      } else if (currentDateFilterMode === 'custom' && pickedCustomDate) {
+        filtered = filtered.filter(r => (r.date || '') === pickedCustomDate);
+      }
+
+      // Search
       if (search) {
         filtered = filtered.filter(r => {
           const name = (r.user_name || r.client_name || '').toLowerCase();
@@ -1243,10 +1443,12 @@
         });
       }
 
+      // Consent
       if (consentFilter !== 'all') {
         filtered = filtered.filter(r => (r.video_consent || 'public').toLowerCase() === consentFilter);
       }
 
+      // Cadreur
       if (cadreurFilter !== 'all') {
         filtered = filtered.filter(r => {
           const meta = getReservationVideoMeta(r);
@@ -1257,6 +1459,7 @@
         });
       }
 
+      // Status
       if (statusFilter !== 'all') {
         filtered = filtered.filter(r => (r.video_status || 'pending') === statusFilter);
       }
@@ -1264,14 +1467,19 @@
       renderTable(filtered);
     }
 
-    // Render Table Rows
+    // Render Table Rows (100% Emoji-Free, pure Lucide vector SVGs)
     function renderTable(list) {
       const tbody = document.getElementById('video-reservations-tbody');
       if (!list.length) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        let emptyMsg = "Aucun tournage vidéo trouvé avec les filtres sélectionnés.";
+        if (currentDateFilterMode === 'today') {
+          emptyMsg = `Aucun tournage vidéo programmé pour aujourd'hui (${fmtDate(todayStr)}). Cliquez sur "À venir" ou "Toutes les dates" pour consulter les autres séances.`;
+        }
         tbody.innerHTML = `
           <tr>
             <td colspan="9" style="text-align: center; padding: 3rem; color: var(--admin-text-muted);">
-              Aucun tournage vidéo trouvé avec les filtres sélectionnés.
+              ${emptyMsg}
             </td>
           </tr>
         `;
@@ -1282,8 +1490,8 @@
         const meta = getReservationVideoMeta(r);
         const isPublic = (r.video_consent || 'public').toLowerCase() === 'public';
         const consentBadge = isPublic
-          ? `<span class="badge-consent-public">🌐 Réseaux Publics</span>`
-          : `<span class="badge-consent-private">🔒 Usage Privé Unique</span>`;
+          ? `<span class="badge-consent-public" style="display:inline-flex;align-items:center;gap:0.35rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Réseaux Publics</span>`
+          : `<span class="badge-consent-private" style="display:inline-flex;align-items:center;gap:0.35rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Usage Privé Unique</span>`;
 
         const clientName = r.user_name || r.client_name || 'Client';
         const clientEmail = r.user_email || r.client_email || '';
@@ -1297,24 +1505,22 @@
           ? `https://wa.me/${cleanPhone.length === 8 ? ('509' + cleanPhone) : cleanPhone}?text=${encodeURIComponent('Bonjour ' + clientName + ', concernant votre vidéo souvenir DALIGHT :')}`
           : null;
 
-        // Build Cadreur Dropdown Options
         let cadreurOptions = `<option value="">-- Non assigné --</option>`;
         (cvisualConfig.team_members || []).forEach(m => {
           const selected = (meta.cadreur_id === m.id || meta.cadreur_name === m.name) ? 'selected' : '';
           cadreurOptions += `<option value="${escapeHtml(m.id)}" ${selected}>${escapeHtml(m.name)}</option>`;
         });
 
-        // Payment status badge
         const payBadge = meta.cadreur_paid
-          ? `<span class="pay-badge-paid" onclick="toggleCadreurPaid('${r.id}')" title="Cliquer pour marquer NON PAYÉ">✅ Payé</span>`
-          : `<span class="pay-badge-pending" onclick="toggleCadreurPaid('${r.id}')" title="Cliquer pour marquer PAYÉ">⏳ À solder</span>`;
+          ? `<span class="pay-badge-paid" onclick="toggleCadreurPaid('${r.id}')" title="Cliquer pour marquer NON PAYÉ" style="display:inline-flex;align-items:center;gap:0.3rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Payé</span>`
+          : `<span class="pay-badge-pending" onclick="toggleCadreurPaid('${r.id}')" title="Cliquer pour marquer PAYÉ" style="display:inline-flex;align-items:center;gap:0.3rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>À solder</span>`;
 
         return `
           <tr>
             <!-- 1. Date & Heure -->
             <td>
-              <div style="font-weight: 700; color: #FAF8F5;">${r.date || '—'}</div>
-              <div style="font-size: 0.78rem; color: var(--cv-gold); font-weight:600;">${r.time || '—'}</div>
+              <div style="font-weight: 700; color: #FAF8F5;">${fmtDate(r.date)}</div>
+              <div style="font-size: 0.78rem; color: var(--cv-gold); font-weight:600;">${fmtTime(r.time)}</div>
             </td>
 
             <!-- 2. Client -->
@@ -1344,19 +1550,23 @@
                 ${cadreurOptions}
               </select>
               ${meta.cadreur_phone ? `
-                <div style="font-size:0.72rem; color:#60a5fa; margin-top:0.2rem; font-family:monospace;">
-                  📞 ${escapeHtml(meta.cadreur_phone)}
+                <div style="font-size:0.72rem; color:#60a5fa; margin-top:0.2rem; font-family:monospace; display:inline-flex; align-items:center; gap:0.25rem;">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  ${escapeHtml(meta.cadreur_phone)}
                 </div>
               ` : ''}
             </td>
 
             <!-- 7. Kalkil Kòb la -->
             <td>
-              <div style="font-size: 0.82rem; margin-bottom: 0.2rem;">
-                <span style="color:#60a5fa; font-weight:600;">Cadreur: ${meta.cadreur_pay.toLocaleString()} HTG</span>
+              <div style="font-size:0.8rem; margin-bottom:0.15rem; color:#60a5fa; font-weight:700;">
+                CVISUAL: ${meta.cvisual_gross.toLocaleString()} HTG (${meta.cvisual_split_pct}%)
               </div>
-              <div style="font-size: 0.76rem; color:#4ade80; margin-bottom: 0.3rem;">
-                CVISUAL: ${meta.cvisual_share.toLocaleString()} HTG
+              <div style="font-size:0.75rem; color:#4ade80; font-weight:600; margin-bottom:0.15rem;">
+                DALIGHT: ${meta.dalight_share.toLocaleString()} HTG (${meta.dalight_split_pct}%)
+              </div>
+              <div style="font-size:0.75rem; color:#D4AF37; margin-bottom:0.35rem;">
+                Cadreur: ${meta.cadreur_pay.toLocaleString()} HTG
               </div>
               <div>
                 ${payBadge}
@@ -1366,11 +1576,11 @@
             <!-- 8. Statut Tournage -->
             <td>
               <select class="status-select" onchange="updateVideoStatus('${r.id}', this.value)">
-                <option value="pending" ${status === 'pending' ? 'selected' : ''}>⏳ À filmer</option>
-                <option value="filmed" ${status === 'filmed' ? 'selected' : ''}>🎥 Filmée</option>
-                <option value="editing" ${status === 'editing' ? 'selected' : ''}>✂️ En montage</option>
-                <option value="delivered" ${status === 'delivered' ? 'selected' : ''}>📦 Livrée 4K</option>
-                <option value="published" ${status === 'published' ? 'selected' : ''}>🚀 Publiée réseaux</option>
+                <option value="pending" ${status === 'pending' ? 'selected' : ''}>À filmer</option>
+                <option value="filmed" ${status === 'filmed' ? 'selected' : ''}>Filmée</option>
+                <option value="editing" ${status === 'editing' ? 'selected' : ''}>En montage</option>
+                <option value="delivered" ${status === 'delivered' ? 'selected' : ''}>Livrée 4K</option>
+                <option value="published" ${status === 'published' ? 'selected' : ''}>Publiée réseaux</option>
               </select>
             </td>
 
@@ -1473,7 +1683,6 @@
 
           const { error } = await sb.from('reservations').update(updatePayload).eq('id', resId);
           if (error) {
-            // Missing columns fallback
             await sb.from('reservations').update({ notes: notes, updated_at: new Date().toISOString() }).eq('id', resId);
           }
         } catch(e) {
@@ -1523,7 +1732,6 @@
           return;
         }
 
-        // Trouver les tournages vidéo non encore assignés
         const unassigned = allVideoReservations.filter(r => {
           const meta = getReservationVideoMeta(r);
           return !meta.cadreur_id || meta.cadreur_name === 'Non assigné';
@@ -1539,7 +1747,6 @@
         let newlyAssignedCount = 0;
 
         for (const r of unassigned) {
-          // Équilibrage intelligent de la charge : choisir le cadreur en ligne avec le moins de tournages pour cette date
           onlineCadreurs.sort((a, b) => {
             const countA = allVideoReservations.filter(x => {
               const m = getReservationVideoMeta(x);
@@ -1556,7 +1763,9 @@
           const isPrivate = (r.video_consent || 'public').toLowerCase() === 'private';
           const totalPrice = Number(r.video_price) || (isPrivate ? 1000 : 500);
           const splitPct = Number(bestCadreur.rate_pct || cvisualConfig.default_cadreur_split_pct || 50);
-          const cadreurPay = Math.round((totalPrice * splitPct) / 100);
+          const cvisualSplitPct = Number(cvisualConfig.cvisual_split_pct !== undefined ? cvisualConfig.cvisual_split_pct : 50);
+          const cvisualGross = Math.round((totalPrice * cvisualSplitPct) / 100);
+          const cadreurPay = Math.round((cvisualGross * splitPct) / 100);
 
           const newMeta = {
             cadreur_id: bestCadreur.id,
@@ -1572,7 +1781,6 @@
           await persistVideoMeta(r.id, newMeta);
           newlyAssignedCount++;
 
-          // 1. Notification staff interne
           try {
             const sb = await getClient();
             if (sb) {
@@ -1589,7 +1797,6 @@
             console.warn('staff notification error:', notifErr);
           }
 
-          // 2. Alerte WhatsApp automatique au cadreur
           if (cvisualConfig.auto_alerts_enabled !== false && bestCadreur.phone) {
             let cleanPhone = String(bestCadreur.phone).replace(/\D/g, '');
             if (cleanPhone.length === 8) cleanPhone = '509' + cleanPhone;
@@ -1603,8 +1810,8 @@
               `*Prestation filmée :* ${r.service || 'Soin Sanctuaire'}\n` +
               `*Date :* ${fmtDate(r.date)}\n` +
               `*Heure :* ${fmtTime(r.time)}\n` +
-              `*Usage :* ${isPrivate ? '🔒 Usage Privé (Floutage client)' : '✨ DALIGHT & CVISUAL (Public)'}\n` +
-              `*Votre part (Kòb ou) :* ${cadreurPay.toLocaleString()} HTG (${splitPct}%)\n\n` +
+              `*Usage :* ${isPrivate ? 'Usage Privé (Floutage client)' : 'DALIGHT & CVISUAL (Public)'}\n` +
+              `*Votre part (Kòb ou) :* ${cadreurPay.toLocaleString()} HTG\n\n` +
               `Accédez à votre espace pour gérer la séance & uploader la vidéo 4K :\n` +
               `https://dalightbeauty.com/staff.html\n\n` +
               `_Préparez votre équipement et stabilisateurs 10 min à l'avance._`;
@@ -1691,32 +1898,32 @@
       `;
 
       if (mode === 'arrival') {
-        titleEl.textContent = "🔔 Alerte : Client Arrivé au Salon !";
+        titleEl.textContent = "Alerte : Client Arrivé au Salon !";
         textEl.value = 
-`🚨 *ALERTE TOURNAGE EN DIRECT - CVISUAL*
+`[ALERTE TOURNAGE EN DIRECT - CVISUAL]
 ━━━━━━━━━━━━━━━━━━━━
 Bonjour ${meta.cadreur_name} !
 Le client *${clientName}* vient d'arriver au salon DALIGHT Beauty pour son soin : *${serviceName}* !
 
-🎥 Merci de vous installer immédiatement en cabine de soin avec le matériel 4K.
-Date & Heure : ${r.date} à ${r.time}
-Option : ${isPublic ? '🌐 Réseaux Publics' : '🔒 Usage Privé Unique'}`;
+Merci de vous installer immédiatement en cabine de soin avec le matériel 4K.
+Date & Heure : ${fmtDate(r.date)} à ${fmtTime(r.time)}
+Option : ${isPublic ? 'Réseaux Publics' : 'Usage Privé Unique'}`;
 
       } else {
-        titleEl.textContent = "📲 Brief Tournage Vidéo (Cadreur)";
+        titleEl.textContent = "Brief Tournage Vidéo (Cadreur)";
         textEl.value = 
-`🎬 *BRIEF DE TOURNAGE CVISUAL - DALIGHT*
+`[BRIEF DE TOURNAGE CVISUAL - DALIGHT]
 ━━━━━━━━━━━━━━━━━━━━
 Bonjour ${meta.cadreur_name} ! Voici les détails de votre session vidéo assignée :
 
-👤 *Client :* ${clientName}
-📞 *Téléphone Client :* ${clientPhone}
-💆‍♀️ *Soin / Prestation :* ${serviceName}
-📅 *Date & Heure :* ${r.date} à ${r.time}
-🔒 *Droit à l'image :* ${isPublic ? '🌐 RÉSEAUX PUBLICS (Instagram & TikTok)' : '🔒 USAGE PRIVÉ EXCLUSIF (Diffusion strictement interdite)'}
-💰 *Votre Rémunération :* ${meta.cadreur_pay.toLocaleString()} HTG
+*Client :* ${clientName}
+*Téléphone Client :* ${clientPhone}
+*Soin / Prestation :* ${serviceName}
+*Date & Heure :* ${fmtDate(r.date)} à ${fmtTime(r.time)}
+*Droit à l'image :* ${isPublic ? 'RÉSEAUX PUBLICS (Instagram & TikTok)' : 'USAGE PRIVÉ EXCLUSIF (Diffusion strictement interdite)'}
+*Votre Rémunération :* ${meta.cadreur_pay.toLocaleString()} HTG
 ━━━━━━━━━━━━━━━━━━━━
-📍 Lieu : DALIGHT Beauty Salon. Préparez la caméra 4K, micros sans fil et stabilisateur !`;
+Lieu : DALIGHT Beauty Salon. Préparez la caméra 4K, micros sans fil et stabilisateur !`;
       }
 
       document.getElementById('btn-wa-native').href = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(textEl.value)}`;
@@ -1769,7 +1976,6 @@ Bonjour ${meta.cadreur_name} ! Voici les détails de votre session vidéo assign
         }
       } catch (err) {
         console.error('Dispatch error:', err);
-        // Fallback open wa.me
         window.open(`https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`, '_blank');
         closeCadreurAlertModal();
       } finally {
@@ -1795,8 +2001,8 @@ Bonjour ${meta.cadreur_name} ! Voici les détails de votre session vidéo assign
 
       const isPublic = (r.video_consent || 'public').toLowerCase() === 'public';
       const consentHtml = isPublic
-        ? '<span class="badge-consent-public">🌐 Réseaux Publics</span>'
-        : '<span class="badge-consent-private">🔒 Usage Privé Unique</span>';
+        ? '<span class="badge-consent-public" style="display:inline-flex;align-items:center;gap:0.35rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Réseaux Publics</span>'
+        : '<span class="badge-consent-private" style="display:inline-flex;align-items:center;gap:0.35rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Usage Privé Unique</span>';
 
       document.getElementById('upload-client-info').innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
@@ -1840,14 +2046,14 @@ Bonjour ${meta.cadreur_name} ! Voici les détails de votre session vidéo assign
       const urlText = directUrl || '[Lien Vidéo 4K Généré]';
 
       document.getElementById('video-whatsapp-msg').value = 
-`Bonjour ${name} ! ✨
+`Bonjour ${name} !
 
-Votre vidéo souvenir professionnelle DALIGHT est prête en qualité 4K ! 🎥
+Votre vidéo souvenir professionnelle DALIGHT est prête en qualité 4K !
 
 Vous pouvez visionner et télécharger votre film en haute définition originale via ce lien :
 ${urlText}
 
-Merci de votre confiance et au plaisir de vous choyer à nouveau chez DALIGHT ! 🌿`;
+Merci de votre confiance et au plaisir de vous choyer à nouveau chez DALIGHT !`;
     }
 
     async function startVideoUploadAndDispatch() {
@@ -1905,7 +2111,6 @@ Merci de votre confiance et au plaisir de vous choyer à nouveau chez DALIGHT ! 
 
         if (!finalVideoUrl) throw new Error("Impossible d'obtenir l'URL de la vidéo.");
 
-        // Update reservation notes and status to delivered
         const r = allVideoReservations.find(x => x.id === resId);
         let existingNotes = r?.notes || '';
         existingNotes = existingNotes.replace(/\[VIDEO_URL:\s*[^\]]+\]/gi, '').trim();
@@ -1924,7 +2129,6 @@ Merci de votre confiance et au plaisir de vous choyer à nouveau chez DALIGHT ! 
           r.video_status = 'delivered';
         }
 
-        // WhatsApp Gateway Dispatch
         progressLabel.textContent = 'Envoi sur WhatsApp DALIGHT...';
         progressBar.style.width = '90%';
         progressPct.textContent = '90%';
@@ -1969,6 +2173,131 @@ Merci de votre confiance et au plaisir de vous choyer à nouveau chez DALIGHT ! 
       } finally {
         btn.disabled = false;
         btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Uploader &amp; Livrer sur WhatsApp';
+      }
+    }
+
+    // Modal: Ajouter une Réservation au Tournage Vidéo 4K
+    async function openAddVideoReservationModal() {
+      document.getElementById('add-video-res-modal').style.display = 'flex';
+      const searchInput = document.getElementById('add-video-search-input');
+      if (searchInput) searchInput.value = '';
+      const listEl = document.getElementById('add-video-res-list');
+      listEl.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--admin-text-muted); font-size:0.85rem;">Chargement des réservations du salon...</div>';
+
+      try {
+        const sb = await getClient();
+        if (!sb) throw new Error('Supabase indisponible');
+
+        const { data, error } = await sb
+          .from('reservations')
+          .select('id, user_name, client_name, phone, client_phone, service, service_name, date, time, wants_video, video_requested, video_consent, video_price, video_status')
+          .order('date', { ascending: false })
+          .limit(80);
+
+        if (error) throw error;
+        allSalonReservationsCache = data || [];
+        renderAddReservationList(allSalonReservationsCache);
+      } catch (err) {
+        listEl.innerHTML = `<div style="color:#ef4444; padding:1.5rem; text-align:center;">Erreur : ${err.message}</div>`;
+      }
+    }
+
+    function closeAddVideoReservationModal() {
+      document.getElementById('add-video-res-modal').style.display = 'none';
+    }
+
+    function filterAddReservationModalList() {
+      const q = (document.getElementById('add-video-search-input')?.value || '').toLowerCase().trim();
+      if (!q) {
+        renderAddReservationList(allSalonReservationsCache);
+        return;
+      }
+      const filtered = allSalonReservationsCache.filter(r => {
+        const name = (r.user_name || r.client_name || '').toLowerCase();
+        const phone = (r.phone || r.client_phone || '').toLowerCase();
+        const srv = (r.service || r.service_name || '').toLowerCase();
+        return name.includes(q) || phone.includes(q) || srv.includes(q);
+      });
+      renderAddReservationList(filtered);
+    }
+
+    function renderAddReservationList(list) {
+      const container = document.getElementById('add-video-res-list');
+      if (!list.length) {
+        container.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--admin-text-muted); font-size:0.85rem;">Aucune réservation trouvée.</div>';
+        return;
+      }
+
+      container.innerHTML = list.map(r => {
+        const name = r.user_name || r.client_name || 'Client';
+        const phone = r.phone || r.client_phone || '—';
+        const service = r.service || r.service_name || 'Prestation salon';
+        const hasVideo = r.wants_video || r.video_requested || (Number(r.video_price) > 0);
+
+        return `
+          <div style="background:rgba(255,255,255,0.03); border:1px solid ${hasVideo ? 'rgba(74,222,128,0.3)' : 'rgba(212,175,55,0.2)'}; border-radius:12px; padding:0.75rem 1rem; display:flex; justify-content:space-between; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+            <div>
+              <div style="font-weight:700; color:#FAF8F5; font-size:0.9rem;">
+                ${escapeHtml(name)}
+                <span style="font-weight:400; color:var(--admin-text-muted); font-size:0.76rem; margin-left:0.35rem;">(${escapeHtml(phone)})</span>
+              </div>
+              <div style="font-size:0.78rem; color:var(--cv-gold); margin-top:0.15rem;">
+                ${escapeHtml(service)} • <span style="color:#FAF8F5;">${fmtDate(r.date)} à ${fmtTime(r.time)}</span>
+              </div>
+            </div>
+
+            <div>
+              ${hasVideo ? `
+                <span style="display:inline-flex; align-items:center; gap:0.3rem; background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.3); padding:0.3rem 0.65rem; border-radius:6px; font-size:0.75rem; font-weight:700;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  Tournage Actif
+                </span>
+              ` : `
+                <div style="display:flex; gap:0.4rem;">
+                  <button class="btn btn-primary btn-sm" onclick="activateVideoForReservation('${r.id}', 'public')" style="font-size:0.75rem; padding:0.35rem 0.7rem; background:linear-gradient(135deg, #d4af37, #996515); border:none; color:#fff;">
+                    Activer Public (${(cvisualConfig.price_public_htg || 500).toLocaleString()} HTG)
+                  </button>
+                  <button class="btn btn-secondary btn-sm" onclick="activateVideoForReservation('${r.id}', 'private')" style="font-size:0.75rem; padding:0.35rem 0.7rem; border-color:rgba(212,175,55,0.3); color:#FAF8F5;">
+                    Activer Privé (${(cvisualConfig.price_private_htg || 1000).toLocaleString()} HTG)
+                  </button>
+                </div>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function activateVideoForReservation(resId, consent) {
+      try {
+        const sb = await getClient();
+        if (!sb) throw new Error('Supabase indisponible');
+
+        const price = consent === 'private' ? (cvisualConfig.price_private_htg || 1000) : (cvisualConfig.price_public_htg || 500);
+
+        const updatePayload = {
+          wants_video: true,
+          video_requested: true,
+          video_consent: consent,
+          video_price: price,
+          video_status: 'pending',
+          updated_at: new Date().toISOString()
+        };
+
+        const { error } = await sb.from('reservations').update(updatePayload).eq('id', resId);
+        if (error) throw error;
+
+        if (window.adminCore?.showToast) {
+          window.adminCore.showToast(`Tournage vidéo 4K activé avec succès (${consent === 'private' ? 'Usage Privé' : 'Réseaux Publics'}) !`, 'success');
+        } else {
+          alert('Tournage vidéo 4K activé avec succès !');
+        }
+
+        closeAddVideoReservationModal();
+        await loadVideoData();
+      } catch (err) {
+        console.error('Activation error:', err);
+        alert('Erreur activation vidéo : ' + err.message);
       }
     }
 
