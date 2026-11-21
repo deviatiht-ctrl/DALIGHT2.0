@@ -20,13 +20,37 @@
       --cv-border-gold: rgba(212, 175, 55, 0.3);
     }
 
+    /* 6-Card KPI Grid (Clean luxury responsive alignment) */
+    .video-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.85rem;
+    }
+    @media (max-width: 1320px) {
+      .video-kpi-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+      }
+    }
+    @media (max-width: 768px) {
+      .video-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.65rem;
+      }
+    }
+    @media (max-width: 480px) {
+      .video-kpi-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .badge-consent-public {
       background: rgba(34, 197, 94, 0.16);
       color: #4ade80;
       border: 1px solid rgba(34, 197, 94, 0.35);
-      padding: 0.28rem 0.65rem;
+      padding: 0.25rem 0.6rem;
       border-radius: 9999px;
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       font-weight: 600;
       display: inline-flex;
       align-items: center;
@@ -38,9 +62,9 @@
       background: rgba(245, 158, 11, 0.16);
       color: #fbbf24;
       border: 1px solid rgba(245, 158, 11, 0.35);
-      padding: 0.28rem 0.65rem;
+      padding: 0.25rem 0.6rem;
       border-radius: 9999px;
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       font-weight: 600;
       display: inline-flex;
       align-items: center;
@@ -53,8 +77,8 @@
       color: #FAF8F5;
       border: 1px solid rgba(194, 164, 144, 0.3);
       border-radius: 8px;
-      padding: 0.4rem 0.6rem;
-      font-size: 0.8rem;
+      padding: 0.35rem 0.55rem;
+      font-size: 0.78rem;
       outline: none;
       cursor: pointer;
       transition: all 0.2s;
@@ -69,13 +93,13 @@
       color: #FAF8F5;
       border: 1px solid rgba(212, 175, 55, 0.4);
       border-radius: 8px;
-      padding: 0.4rem 0.6rem;
-      font-size: 0.8rem;
+      padding: 0.35rem 0.55rem;
+      font-size: 0.78rem;
       outline: none;
       cursor: pointer;
       font-weight: 500;
       width: 100%;
-      min-width: 160px;
+      min-width: 140px;
     }
     .cadreur-select:focus {
       border-color: #4ade80;
@@ -85,15 +109,16 @@
       background: rgba(34, 197, 94, 0.18);
       color: #4ade80;
       border: 1px solid rgba(34, 197, 94, 0.4);
-      padding: 0.25rem 0.55rem;
-      border-radius: 6px;
-      font-size: 0.73rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 5px;
+      font-size: 0.7rem;
       font-weight: 700;
       display: inline-flex;
       align-items: center;
-      gap: 0.3rem;
+      gap: 0.25rem;
       cursor: pointer;
       transition: all 0.2s;
+      white-space: nowrap;
     }
     .pay-badge-paid:hover {
       background: rgba(34, 197, 94, 0.3);
@@ -103,28 +128,73 @@
       background: rgba(245, 158, 11, 0.18);
       color: #fbbf24;
       border: 1px solid rgba(245, 158, 11, 0.4);
-      padding: 0.25rem 0.55rem;
-      border-radius: 6px;
-      font-size: 0.73rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 5px;
+      font-size: 0.7rem;
       font-weight: 700;
       display: inline-flex;
       align-items: center;
-      gap: 0.3rem;
+      gap: 0.25rem;
       cursor: pointer;
       transition: all 0.2s;
+      white-space: nowrap;
     }
     .pay-badge-pending:hover {
       background: rgba(245, 158, 11, 0.3);
     }
 
+    /* Structured Kalkil Financial Breakdown Card */
+    .kalkil-card {
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(212, 175, 55, 0.22);
+      border-radius: 8px;
+      padding: 0.45rem 0.65rem;
+      font-size: 0.74rem;
+      min-width: 155px;
+    }
+    .kalkil-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.18rem;
+      line-height: 1.25;
+      gap: 0.4rem;
+    }
+    .kalkil-line.border-top {
+      margin-top: 0.25rem;
+      padding-top: 0.25rem;
+      border-top: 1px dashed rgba(255, 255, 255, 0.12);
+    }
+    .k-tag {
+      font-weight: 600;
+      font-size: 0.7rem;
+      white-space: nowrap;
+    }
+    .k-tag.cvisual { color: #60a5fa; }
+    .k-tag.dalight { color: #4ade80; }
+    .k-tag.cadreur { color: #D4AF37; }
+    .k-num {
+      font-family: monospace;
+      font-weight: 700;
+      color: #FAF8F5;
+      font-size: 0.76rem;
+      white-space: nowrap;
+    }
+    .k-num.gold { color: #F3E5AB; }
+    .kalkil-badge-wrap {
+      margin-top: 0.35rem;
+      display: flex;
+      justify-content: flex-start;
+    }
+
     .btn-action-icon {
-      width: 30px;
-      height: 30px;
+      width: 28px;
+      height: 28px;
       padding: 0;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      border-radius: 8px;
+      border-radius: 7px;
       background: rgba(255,255,255,0.06);
       border: 1px solid rgba(255,255,255,0.12);
       color: #FAF8F5;
@@ -138,22 +208,37 @@
     }
 
     .team-chip {
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(0, 0, 0, 0.4);
       border: 1px solid rgba(212, 175, 55, 0.25);
-      border-radius: 10px;
-      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      padding: 0.75rem 0.95rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 1rem;
-      transition: all 0.2s;
+      gap: 0.75rem;
+      transition: all 0.2s ease;
     }
     .team-chip:hover {
-      border-color: var(--cv-gold);
-      background: rgba(212, 175, 55, 0.05);
+      border-color: rgba(212, 175, 55, 0.55);
+      background: rgba(212, 175, 55, 0.04);
+      transform: translateY(-1px);
+    }
+    .cadreur-avatar-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(212, 175, 55, 0.15);
+      border: 1.5px solid rgba(212, 175, 55, 0.4);
+      color: #FAF8F5;
+      font-weight: 700;
+      font-size: 0.82rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
 
-        .date-filter-pill {
+    .date-filter-pill {
       padding: 0.35rem 0.75rem;
       border-radius: 8px;
       border: 1px solid transparent;
@@ -178,6 +263,14 @@
     .cvisual-pill {
       background: linear-gradient(135deg, rgba(212,175,55,0.25), rgba(153,101,21,0.25));
       border: 1px solid rgba(212,175,55,0.5);
+      color: #F3E5AB;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      padding: 0.2rem 0.55rem;
+      border-radius: 9999px;
+      text-transform: uppercase;
+    }
       color: #F3E5AB;
       font-size: 0.7rem;
       font-weight: 700;
@@ -353,7 +446,7 @@
 
     <div class="admin-content">
       <!-- KALKIL KÒB LA & KPI STATS (6 CARDS DE LUXE) -->
-      <div class="stats-grid mb-4" style="grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));">
+      <div class="video-kpi-grid mb-4">
         <!-- 1. Total Tournages -->
         <div class="stat-card">
           <div class="stat-icon gold">
@@ -599,30 +692,33 @@
           </div>
 
           <!-- Filtres de Date & Statuts -->
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items:center; width:100%; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.06);">
-            <!-- Quick Date Filter Pills -->
-            <div style="display:inline-flex; background:rgba(0,0,0,0.4); padding:3px; border-radius:10px; border:1px solid rgba(255,255,255,0.08); gap:2px;">
-              <button type="button" class="date-filter-pill active" id="pill-filter-today" onclick="setDateFilterMode('today')">
-                Aujourd'hui
-              </button>
-              <button type="button" class="date-filter-pill" id="pill-filter-upcoming" onclick="setDateFilterMode('upcoming')">
-                À venir
-              </button>
-              <button type="button" class="date-filter-pill" id="pill-filter-week" onclick="setDateFilterMode('week')">
-                Cette Semaine
-              </button>
-              <button type="button" class="date-filter-pill" id="pill-filter-all" onclick="setDateFilterMode('all')">
-                Toutes les dates
-              </button>
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items:center; justify-content:space-between; width:100%; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.06);">
+            <!-- Left: Quick Date Filter Pills + Date Picker -->
+            <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+              <div style="display:inline-flex; background:rgba(0,0,0,0.4); padding:3px; border-radius:10px; border:1px solid rgba(255,255,255,0.08); gap:2px;">
+                <button type="button" class="date-filter-pill active" id="pill-filter-today" onclick="setDateFilterMode('today')">
+                  Aujourd'hui
+                </button>
+                <button type="button" class="date-filter-pill" id="pill-filter-upcoming" onclick="setDateFilterMode('upcoming')">
+                  À venir
+                </button>
+                <button type="button" class="date-filter-pill" id="pill-filter-week" onclick="setDateFilterMode('week')">
+                  Cette Semaine
+                </button>
+                <button type="button" class="date-filter-pill" id="pill-filter-all" onclick="setDateFilterMode('all')">
+                  Toutes les dates
+                </button>
+              </div>
+
+              <!-- Date Picker -->
+              <div style="display:inline-flex; align-items:center; gap:0.35rem; background:rgba(0,0,0,0.3); border:1px solid rgba(212,175,55,0.3); border-radius:8px; padding:0.3rem 0.55rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <input type="date" id="filter-date" class="form-input" style="padding: 0; font-size: 0.78rem; background:transparent; border:none; color:#FAF8F5;" onchange="onDateInputChange()">
+              </div>
             </div>
 
-            <!-- Date Picker -->
-            <div style="display:inline-flex; align-items:center; gap:0.35rem; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:0.25rem 0.5rem;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              <input type="date" id="filter-date" class="form-input" style="padding: 0.25rem 0.4rem; font-size: 0.78rem; background:transparent; border:none; color:#FAF8F5;" onchange="onDateInputChange()">
-            </div>
-
-            <div style="margin-left:auto; display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+            <!-- Right: Search + Dropdown Filters -->
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
               <input type="text" id="filter-search" class="form-input" placeholder="Rechercher client, soin..." style="padding: 0.45rem 0.75rem; font-size: 0.82rem; width: 170px;" oninput="applyFilters()">
 
               <select id="filter-consent" class="form-select" style="padding: 0.45rem 0.75rem; font-size: 0.82rem; min-width: 130px;" onchange="applyFilters()">
@@ -636,13 +732,13 @@
                 <option value="unassigned">Non assignés</option>
               </select>
 
-              <select id="filter-status" class="form-select" style="padding: 0.45rem 0.75rem; font-size: 0.82rem; min-width: 130px;" onchange="applyFilters()">
+              <select id="filter-status" class="form-select" style="padding: 0.45rem 0.75rem; font-size: 0.82rem; min-width: 120px;" onchange="applyFilters()">
                 <option value="all">Tous les statuts</option>
                 <option value="pending">À filmer</option>
                 <option value="filmed">Filmée</option>
                 <option value="editing">En montage</option>
                 <option value="delivered">Livrée 4K</option>
-                <option value="published">Publiée réseaux</option>
+                <option value="published">Publiée</option>
               </select>
             </div>
           </div>
@@ -652,20 +748,18 @@
           <table class="data-table" style="width: 100%;">
             <thead>
               <tr>
-                <th style="min-width: 120px;">Date &amp; Heure</th>
-                <th style="min-width: 160px;">Client</th>
-                <th style="min-width: 140px;">Soin</th>
-                <th style="min-width: 120px;">Droit à l'Image</th>
-                <th style="min-width: 90px;">Prix Client</th>
-                <th style="min-width: 170px;">Cadreur Assigné (CVISUAL)</th>
-                <th style="min-width: 150px;">Kalkil Kòb la</th>
-                <th style="min-width: 130px;">Statut Tournage</th>
-                <th style="text-align: right; min-width: 140px;">Actions CVISUAL</th>
+                <th style="min-width: 95px;">Date &amp; Heure</th>
+                <th style="min-width: 190px;">Client &amp; Prestation</th>
+                <th style="min-width: 125px;">Option &amp; Tarif</th>
+                <th style="min-width: 155px;">Cadreur CVISUAL</th>
+                <th style="min-width: 165px;">Kalkil Kòb la</th>
+                <th style="min-width: 115px;">Statut</th>
+                <th style="text-align: right; min-width: 135px;">Actions CVISUAL</th>
               </tr>
             </thead>
             <tbody id="video-reservations-tbody">
               <tr>
-                <td colspan="9" style="text-align: center; padding: 2.5rem; color: var(--admin-text-muted);">
+                <td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--admin-text-muted);">
                   Chargement des tournages vidéo...
                 </td>
               </tr>
@@ -959,7 +1053,13 @@
       const cvNet = cvGross - cadPay;
 
       document.getElementById('cfg-split-preview-text').innerHTML = 
-        `Sur ${privTotal.toLocaleString()} HTG (Privé) : CVISUAL ${cvGross.toLocaleString()} HTG (Cadreur: ${cadPay.toLocaleString()} HTG, Net Agence: ${cvNet.toLocaleString()} HTG) | DALIGHT Salon ${dlShare.toLocaleString()} HTG`;
+        `<div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; align-items:center;">` +
+          `<span>Exemple sur <strong>${privTotal.toLocaleString()} HTG</strong> (Privé) :</span>` +
+          `<span style="color:#60a5fa; font-weight:700;">CVISUAL: ${cvGross.toLocaleString()} HTG</span>` +
+          `<span style="color:#D4AF37; font-weight:700;">Cadreur: ${cadPay.toLocaleString()} HTG</span>` +
+          `<span style="color:#93c5fd; font-weight:600;">Net CVISUAL: ${cvNet.toLocaleString()} HTG</span>` +
+          `<span style="color:#4ade80; font-weight:700;">DALIGHT: ${dlShare.toLocaleString()} HTG</span>` +
+        `</div>`;
 
       const cvLabel = document.getElementById('stat-cvisual-pct-label');
       if (cvLabel) cvLabel.textContent = `${cvPct}% du chiffre d'affaires`;
@@ -1070,39 +1170,50 @@
     function renderTeamList() {
       const container = document.getElementById('cvisual-team-list');
       if (!cvisualConfig.team_members || !cvisualConfig.team_members.length) {
-        container.innerHTML = `<div style="grid-column:1/-1; color:var(--admin-text-muted); font-size:0.8rem;">Aucun cadreur configuré. Ajoutez votre premier membre ci-dessous.</div>`;
+        container.innerHTML = `<div style="grid-column:1/-1; color:var(--admin-text-muted); font-size:0.8rem; padding:1.2rem; text-align:center;">Aucun cadreur configuré. Ajoutez votre premier membre ci-dessous.</div>`;
         return;
       }
 
-      container.innerHTML = cvisualConfig.team_members.map((m, idx) => `
-        <div class="team-chip" style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0.85rem; border-radius:12px; background:rgba(0,0,0,0.35); border:1px solid rgba(212,175,55,0.25);">
-          <div>
-            <div style="font-weight:700; color:#FAF8F5; font-size:0.85rem; display:flex; align-items:center; gap:0.4rem;">
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
-              ${escapeHtml(m.name)}
-              ${m.access_code ? `<span style="background:rgba(212,175,55,0.18); color:#d4af37; padding:0.1rem 0.35rem; border-radius:4px; font-size:0.65rem; font-family:monospace; letter-spacing:1px; font-weight:800;">PIN: ${escapeHtml(m.access_code)}</span>` : ''}
+      container.innerHTML = cvisualConfig.team_members.map((m, idx) => {
+        const initials = (m.name || 'C').split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase();
+        const cleanPhone = String(m.phone || '').replace(/\D/g, '');
+        const waLink = cleanPhone ? `https://wa.me/${cleanPhone.length === 8 ? ('509' + cleanPhone) : cleanPhone}` : null;
+
+        return `
+          <div class="team-chip">
+            <div style="display:flex; align-items:center; gap:0.65rem; min-width:0;">
+              <div class="cadreur-avatar-badge">${initials}</div>
+              <div style="min-width:0;">
+                <div style="font-weight:700; color:#FAF8F5; font-size:0.86rem; display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap;">
+                  <span>${escapeHtml(m.name)}</span>
+                  ${m.access_code ? `<span style="background:rgba(212,175,55,0.18); color:#d4af37; border:1px solid rgba(212,175,55,0.35); padding:0.1rem 0.35rem; border-radius:4px; font-size:0.65rem; font-family:monospace; letter-spacing:1px; font-weight:800;">PIN: ${escapeHtml(m.access_code)}</span>` : ''}
+                </div>
+                <div style="font-size:0.75rem; color:#60a5fa; font-family:monospace; margin-top:0.15rem; display:flex; align-items:center; gap:0.25rem;">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  ${escapeHtml(m.phone || 'Pas de numéro')}
+                </div>
+              </div>
             </div>
-            <div style="font-size:0.75rem; color:#60a5fa; font-family:monospace; margin-top:0.15rem;">
-              ${escapeHtml(m.phone || 'Pas de numéro')}
+            <div style="display:flex; align-items:center; gap:0.35rem; flex-shrink:0;">
+              ${m.access_code ? `
+                <button class="btn-action-icon" onclick="navigator.clipboard.writeText('https://dalightbeauty.com/staff.html?code=' + encodeURIComponent('${m.access_code}')).then(() => { if (window.adminCore?.showToast) window.adminCore.showToast('Lien portail copié !', 'success'); else alert('Lien direct copié'); })" title="Copier lien direct staff.html">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                </button>
+              ` : ''}
+              ${waLink ? `
+                <a href="${waLink}" target="_blank" rel="noopener" class="btn-action-icon" style="color:#4ade80;" title="Ouvrir WhatsApp direct">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/></svg>
+                </a>
+              ` : ''}
+              ${cvisualConfig.team_members.length > 1 ? `
+                <button class="btn-action-icon" onclick="removeCadreurFromTeam(${idx})" style="color:#ef4444;" title="Retirer ce cadreur">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              ` : ''}
             </div>
           </div>
-          <div style="display:flex; align-items:center; gap:0.4rem;">
-            ${m.access_code ? `
-              <button class="btn-action-icon" onclick="navigator.clipboard.writeText('https://dalightbeauty.com/staff.html?code=' + encodeURIComponent('${m.access_code}')).then(() => alert('Lien direct copié pour ' + '${escapeHtml(m.name)}'))" title="Copier lien direct staff.html?code=...">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-              </button>
-            ` : ''}
-            <a href="https://wa.me/${String(m.phone).replace(/\D/g, '')}" target="_blank" rel="noopener" class="btn-action-icon" title="Ouvrir WhatsApp direct">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/></svg>
-            </a>
-            ${cvisualConfig.team_members.length > 1 ? `
-              <button class="btn-action-icon" onclick="removeCadreurFromTeam(${idx})" style="color:#ef4444;" title="Retirer ce cadreur">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-            ` : ''}
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function updateCadreurFilterDropdown() {
@@ -1478,7 +1589,7 @@
         }
         tbody.innerHTML = `
           <tr>
-            <td colspan="9" style="text-align: center; padding: 3rem; color: var(--admin-text-muted);">
+            <td colspan="7" style="text-align: center; padding: 3rem; color: var(--admin-text-muted);">
               ${emptyMsg}
             </td>
           </tr>
@@ -1490,8 +1601,8 @@
         const meta = getReservationVideoMeta(r);
         const isPublic = (r.video_consent || 'public').toLowerCase() === 'public';
         const consentBadge = isPublic
-          ? `<span class="badge-consent-public" style="display:inline-flex;align-items:center;gap:0.35rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Réseaux Publics</span>`
-          : `<span class="badge-consent-private" style="display:inline-flex;align-items:center;gap:0.35rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Usage Privé Unique</span>`;
+          ? `<span class="badge-consent-public"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Réseaux Publics</span>`
+          : `<span class="badge-consent-private"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Usage Privé Unique</span>`;
 
         const clientName = r.user_name || r.client_name || 'Client';
         const clientEmail = r.user_email || r.client_email || '';
@@ -1512,82 +1623,87 @@
         });
 
         const payBadge = meta.cadreur_paid
-          ? `<span class="pay-badge-paid" onclick="toggleCadreurPaid('${r.id}')" title="Cliquer pour marquer NON PAYÉ" style="display:inline-flex;align-items:center;gap:0.3rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Payé</span>`
-          : `<span class="pay-badge-pending" onclick="toggleCadreurPaid('${r.id}')" title="Cliquer pour marquer PAYÉ" style="display:inline-flex;align-items:center;gap:0.3rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>À solder</span>`;
+          ? `<span class="pay-badge-paid" onclick="toggleCadreurPaid('${r.id}')" title="Cliquer pour marquer NON PAYÉ"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Payé</span>`
+          : `<span class="pay-badge-pending" onclick="toggleCadreurPaid('${r.id}')" title="Cliquer pour marquer PAYÉ"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>À solder</span>`;
 
         return `
           <tr>
             <!-- 1. Date & Heure -->
-            <td>
-              <div style="font-weight: 700; color: #FAF8F5;">${fmtDate(r.date)}</div>
-              <div style="font-size: 0.78rem; color: var(--cv-gold); font-weight:600;">${fmtTime(r.time)}</div>
+            <td style="vertical-align: middle;">
+              <div style="font-weight: 700; color: #FAF8F5; font-size: 0.88rem;">${fmtDate(r.date)}</div>
+              <div style="font-size: 0.76rem; color: var(--cv-gold); font-weight: 700; margin-top: 0.15rem;">${fmtTime(r.time)}</div>
             </td>
 
-            <!-- 2. Client -->
-            <td>
-              <div style="font-weight: 700; color: #FAF8F5;">${escapeHtml(clientName)}</div>
-              <div style="font-size: 0.78rem; color: #94a3b8; font-family:monospace;">${escapeHtml(clientPhone)}</div>
+            <!-- 2. Client & Prestation -->
+            <td style="vertical-align: middle;">
+              <div style="font-weight: 700; color: #FAF8F5; font-size: 0.88rem;">${escapeHtml(clientName)}</div>
+              <div style="font-size: 0.74rem; color: #94a3b8; font-family: monospace; display: flex; align-items: center; gap: 0.25rem; margin-top: 0.15rem;">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                ${escapeHtml(clientPhone)}
+              </div>
+              <div style="font-size: 0.72rem; color: #F3E5AB; font-weight: 600; margin-top: 0.25rem; background: rgba(212,175,55,0.08); border: 1px solid rgba(212,175,55,0.2); border-radius: 4px; padding: 0.1rem 0.4rem; display: inline-block;">
+                ${escapeHtml(serviceName)}
+              </div>
             </td>
 
-            <!-- 3. Prestation -->
-            <td>
-              <span style="font-weight: 600; color: #FAF8F5;">${escapeHtml(serviceName)}</span>
+            <!-- 3. Option & Tarif -->
+            <td style="vertical-align: middle;">
+              <div style="display: flex; flex-direction: column; gap: 0.3rem; align-items: flex-start;">
+                ${consentBadge}
+                <span style="font-weight: 800; color: #D4AF37; font-size: 0.92rem; font-family: monospace;">
+                  ${meta.total_price.toLocaleString()} HTG
+                </span>
+              </div>
             </td>
 
-            <!-- 4. Consentement -->
-            <td>
-              ${consentBadge}
-            </td>
-
-            <!-- 5. Prix Client -->
-            <td>
-              <strong style="color: #D4AF37; font-size: 0.95rem;">${meta.total_price.toLocaleString()} HTG</strong>
-            </td>
-
-            <!-- 6. Cadreur Assigné (PDG CVISUAL) -->
-            <td>
-              <select class="cadreur-select" onchange="assignCadreur('${r.id}', this.value)">
+            <!-- 4. Cadreur Assigné (PDG CVISUAL) -->
+            <td style="vertical-align: middle;">
+              <select class="cadreur-select" onchange="assignCadreur('${r.id}', this.value)" style="width: 100%; max-width: 160px;">
                 ${cadreurOptions}
               </select>
               ${meta.cadreur_phone ? `
-                <div style="font-size:0.72rem; color:#60a5fa; margin-top:0.2rem; font-family:monospace; display:inline-flex; align-items:center; gap:0.25rem;">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                <div style="font-size: 0.72rem; color: #60a5fa; margin-top: 0.25rem; font-family: monospace; display: flex; align-items: center; gap: 0.25rem;">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                   ${escapeHtml(meta.cadreur_phone)}
                 </div>
               ` : ''}
             </td>
 
-            <!-- 7. Kalkil Kòb la -->
-            <td>
-              <div style="font-size:0.8rem; margin-bottom:0.15rem; color:#60a5fa; font-weight:700;">
-                CVISUAL: ${meta.cvisual_gross.toLocaleString()} HTG (${meta.cvisual_split_pct}%)
-              </div>
-              <div style="font-size:0.75rem; color:#4ade80; font-weight:600; margin-bottom:0.15rem;">
-                DALIGHT: ${meta.dalight_share.toLocaleString()} HTG (${meta.dalight_split_pct}%)
-              </div>
-              <div style="font-size:0.75rem; color:#D4AF37; margin-bottom:0.35rem;">
-                Cadreur: ${meta.cadreur_pay.toLocaleString()} HTG
-              </div>
-              <div>
-                ${payBadge}
+            <!-- 5. Kalkil Kòb la -->
+            <td style="vertical-align: middle;">
+              <div class="kalkil-card">
+                <div class="kalkil-line">
+                  <span class="k-tag cvisual">CVISUAL (${meta.cvisual_split_pct}%)</span>
+                  <span class="k-num">${meta.cvisual_gross.toLocaleString()} HTG</span>
+                </div>
+                <div class="kalkil-line">
+                  <span class="k-tag dalight">DALIGHT (${meta.dalight_split_pct}%)</span>
+                  <span class="k-num">${meta.dalight_share.toLocaleString()} HTG</span>
+                </div>
+                <div class="kalkil-line border-top">
+                  <span class="k-tag cadreur">Cadreur</span>
+                  <span class="k-num gold">${meta.cadreur_pay.toLocaleString()} HTG</span>
+                </div>
+                <div class="kalkil-badge-wrap">
+                  ${payBadge}
+                </div>
               </div>
             </td>
 
-            <!-- 8. Statut Tournage -->
-            <td>
-              <select class="status-select" onchange="updateVideoStatus('${r.id}', this.value)">
+            <!-- 6. Statut Tournage -->
+            <td style="vertical-align: middle;">
+              <select class="status-select" onchange="updateVideoStatus('${r.id}', this.value)" style="width: 100%; max-width: 125px;">
                 <option value="pending" ${status === 'pending' ? 'selected' : ''}>À filmer</option>
                 <option value="filmed" ${status === 'filmed' ? 'selected' : ''}>Filmée</option>
                 <option value="editing" ${status === 'editing' ? 'selected' : ''}>En montage</option>
                 <option value="delivered" ${status === 'delivered' ? 'selected' : ''}>Livrée 4K</option>
-                <option value="published" ${status === 'published' ? 'selected' : ''}>Publiée réseaux</option>
+                <option value="published" ${status === 'published' ? 'selected' : ''}>Publiée</option>
               </select>
             </td>
 
-            <!-- 9. Actions CVISUAL -->
-            <td style="text-align: right;">
-              <div style="display:inline-flex; align-items:center; gap:0.35rem; justify-content:flex-end; flex-wrap:wrap;">
-                
+            <!-- 7. Actions CVISUAL -->
+            <td style="text-align: right; vertical-align: middle;">
+              <div style="display: inline-flex; align-items: center; gap: 0.35rem; justify-content: flex-end;">
                 <!-- Alerter le Cadreur (Brief WhatsApp) -->
                 <button class="btn-action-icon" onclick="openCadreurAlertModal('${r.id}', 'brief')" title="Envoyer le brief tournage au cadreur (WhatsApp)" style="color:#60a5fa;">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -1619,7 +1735,6 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                   </button>
                 ` : ''}
-
               </div>
             </td>
           </tr>
