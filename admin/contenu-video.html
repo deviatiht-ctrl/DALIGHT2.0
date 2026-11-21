@@ -129,6 +129,34 @@
       border-bottom: none;
     }
 
+    /* Configuration 3-Card Grid & Compact Form Inputs */
+    .cvisual-config-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 1100px) {
+      .cvisual-config-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+    }
+    .cfg-split-input::-webkit-outer-spin-button,
+    .cfg-split-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .cfg-split-input[type=number] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+    @media (max-width: 680px) {
+      .add-cadreur-form-grid {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
     .badge-consent-public {
       background: rgba(34, 197, 94, 0.16);
       color: #4ade80;
@@ -629,9 +657,9 @@
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+        <div class="cvisual-config-grid">
           <!-- 1. Numéro du Responsable CVISUAL -->
-          <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem;">
+          <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem; min-width: 0;">
             <label style="font-weight: 700; color: #FAF8F5; font-size: 0.88rem; display: flex; align-items:center; gap:0.4rem; margin-bottom: 0.35rem;">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
               Numéro WhatsApp Responsable / PDG CVISUAL :
@@ -639,9 +667,9 @@
             <p style="font-size: 0.78rem; color: var(--admin-text-muted); margin: 0 0 0.85rem 0;">
               Reçoit automatiquement les infos de chaque client qui coche l'option vidéo (Nom, date, heure, soin, usage unique ou réseaux publics).
             </p>
-            <div style="display:flex; gap:0.5rem;">
-              <input type="text" id="cfg-manager-phone" class="form-input" placeholder="+509 4747-7221" value="+509 4747-7221" style="font-weight:700; color:#FAF8F5; font-size:0.95rem;">
-              <button class="btn btn-secondary btn-sm" onclick="sendTestAlert()" title="Envoyer un test WhatsApp direct" style="white-space:nowrap; display:inline-flex; align-items:center; gap:0.3rem;">
+            <div style="display:flex; gap:0.5rem; align-items:stretch; width:100%;">
+              <input type="text" id="cfg-manager-phone" class="form-input" placeholder="+509 4747-7221" value="+509 4747-7221" style="flex:1; min-width:0; width:100%; font-weight:700; color:#FAF8F5; font-size:0.92rem; padding:0.5rem 0.75rem;">
+              <button class="btn btn-secondary btn-sm" onclick="sendTestAlert()" title="Envoyer un test WhatsApp direct" style="white-space:nowrap; flex-shrink:0; display:inline-flex; align-items:center; gap:0.35rem; padding:0.5rem 0.85rem; font-weight:600;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                 Tester
               </button>
@@ -655,7 +683,7 @@
           </div>
 
           <!-- 2. Partage des Gains (CVISUAL vs DALIGHT) -->
-          <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem;">
+          <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem; min-width: 0;">
             <label style="font-weight: 700; color: #FAF8F5; font-size: 0.88rem; display: flex; align-items:center; gap:0.4rem; margin-bottom: 0.35rem;">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
               Partage des Gains : CVISUAL &amp; DALIGHT
@@ -663,18 +691,18 @@
             <p style="font-size: 0.78rem; color: var(--admin-text-muted); margin: 0 0 0.85rem 0;">
               Configurez le pourcentage que CVISUAL reçoit, ce que DALIGHT reçoit, et la part du cadreur.
             </p>
-            <div style="display:flex; gap:0.6rem; align-items:center;">
-              <div style="flex:1;">
-                <label style="font-size:0.75rem; color:var(--admin-text-muted); display:block; margin-bottom:0.2rem;">CVISUAL (%) :</label>
-                <input type="number" id="cfg-cvisual-pct" class="form-input" min="0" max="100" value="50" oninput="updateSplitPreview('cvisual')" style="font-weight:700; color:#60a5fa;">
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:0.5rem; width:100%;">
+              <div style="min-width:0;">
+                <label style="font-size:0.72rem; color:var(--admin-text-muted); display:block; margin-bottom:0.25rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">CVISUAL (%)</label>
+                <input type="number" id="cfg-cvisual-pct" class="form-input cfg-split-input" min="0" max="100" value="50" oninput="updateSplitPreview('cvisual')" style="width:100%; min-width:0; font-weight:700; color:#60a5fa; padding:0.45rem 0.4rem; font-size:0.9rem; text-align:center;">
               </div>
-              <div style="flex:1;">
-                <label style="font-size:0.75rem; color:var(--admin-text-muted); display:block; margin-bottom:0.2rem;">DALIGHT (%) :</label>
-                <input type="number" id="cfg-dalight-pct" class="form-input" min="0" max="100" value="50" oninput="updateSplitPreview('dalight')" style="font-weight:700; color:#4ade80;">
+              <div style="min-width:0;">
+                <label style="font-size:0.72rem; color:var(--admin-text-muted); display:block; margin-bottom:0.25rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">DALIGHT (%)</label>
+                <input type="number" id="cfg-dalight-pct" class="form-input cfg-split-input" min="0" max="100" value="50" oninput="updateSplitPreview('dalight')" style="width:100%; min-width:0; font-weight:700; color:#4ade80; padding:0.45rem 0.4rem; font-size:0.9rem; text-align:center;">
               </div>
-              <div style="flex:1;">
-                <label style="font-size:0.75rem; color:var(--admin-text-muted); display:block; margin-bottom:0.2rem;">Cadreur (%) :</label>
-                <input type="number" id="cfg-cadreur-pct" class="form-input" min="0" max="100" value="50" oninput="updateSplitPreview()" style="font-weight:700; color:#D4AF37;">
+              <div style="min-width:0;">
+                <label style="font-size:0.72rem; color:var(--admin-text-muted); display:block; margin-bottom:0.25rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Cadreur (%)</label>
+                <input type="number" id="cfg-cadreur-pct" class="form-input cfg-split-input" min="0" max="100" value="50" oninput="updateSplitPreview()" style="width:100%; min-width:0; font-weight:700; color:#D4AF37; padding:0.45rem 0.4rem; font-size:0.9rem; text-align:center;">
               </div>
             </div>
             <div id="cfg-split-preview-text" style="margin-top:0.6rem; font-size:0.75rem; color:#F3E5AB; line-height:1.4;">
@@ -683,7 +711,7 @@
           </div>
 
           <!-- 3. Tarification Option Vidéo Client -->
-          <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem;">
+          <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem; min-width: 0;">
             <label style="font-weight: 700; color: #FAF8F5; font-size: 0.88rem; display: flex; align-items:center; gap:0.4rem; margin-bottom: 0.35rem;">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><circle cx="7" cy="7" r=".5" fill="currentColor"/></svg>
               Tarification Client (Réservation DALIGHT) :
@@ -691,14 +719,14 @@
             <p style="font-size: 0.78rem; color: var(--admin-text-muted); margin: 0 0 0.85rem 0;">
               Montants facturés au client selon son accord de diffusion d'image.
             </p>
-            <div style="display:flex; gap:0.75rem;">
-              <div style="flex:1;">
-                <label style="font-size:0.75rem; color:var(--admin-text-muted); display:block; margin-bottom:0.2rem;">Réseaux Publics (HTG) :</label>
-                <input type="number" id="cfg-price-public" class="form-input" min="0" step="50" value="500" style="font-weight:700; color:#4ade80;">
+            <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:0.65rem; width:100%;">
+              <div style="min-width:0;">
+                <label style="font-size:0.72rem; color:var(--admin-text-muted); display:block; margin-bottom:0.25rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Réseaux Publics (HTG)</label>
+                <input type="number" id="cfg-price-public" class="form-input cfg-split-input" min="0" step="50" value="500" style="width:100%; min-width:0; font-weight:700; color:#4ade80; padding:0.45rem 0.5rem; font-size:0.9rem; text-align:center;">
               </div>
-              <div style="flex:1;">
-                <label style="font-size:0.75rem; color:var(--admin-text-muted); display:block; margin-bottom:0.2rem;">Usage Privé (HTG) :</label>
-                <input type="number" id="cfg-price-private" class="form-input" min="0" step="50" value="1000" style="font-weight:700; color:#D4AF37;">
+              <div style="min-width:0;">
+                <label style="font-size:0.72rem; color:var(--admin-text-muted); display:block; margin-bottom:0.25rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Usage Privé (HTG)</label>
+                <input type="number" id="cfg-price-private" class="form-input cfg-split-input" min="0" step="50" value="1000" style="width:100%; min-width:0; font-weight:700; color:#D4AF37; padding:0.45rem 0.5rem; font-size:0.9rem; text-align:center;">
               </div>
             </div>
           </div>
@@ -724,16 +752,16 @@
           </div>
 
           <!-- Formulaire Ajout Rapide d'un Membre -->
-          <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:flex-end; background:rgba(255,255,255,0.03); border:1px dashed rgba(212,175,55,0.3); border-radius:10px; padding:0.85rem;">
-            <div style="flex:2; min-width:180px;">
-              <label style="font-size:0.75rem; color:var(--admin-text-muted); display:block; margin-bottom:0.2rem;">Nom du Cadreur :</label>
-              <input type="text" id="new-cadreur-name" class="form-input" placeholder="ex: Marc (Cadreur CVISUAL)">
+          <div class="add-cadreur-form-grid" style="display:grid; grid-template-columns: 1fr 1fr auto; gap:0.65rem; align-items:end; background:rgba(255,255,255,0.03); border:1px dashed rgba(212,175,55,0.3); border-radius:10px; padding:0.85rem; width:100%; box-sizing:border-box;">
+            <div style="min-width:0;">
+              <label style="font-size:0.75rem; color:var(--admin-text-muted); display:block; margin-bottom:0.25rem;">Nom du Cadreur :</label>
+              <input type="text" id="new-cadreur-name" class="form-input" placeholder="ex: Marc (Cadreur CVISUAL)" style="width:100%; box-sizing:border-box;">
             </div>
-            <div style="flex:2; min-width:180px;">
-              <label style="font-size:0.75rem; color:var(--admin-text-muted); display:block; margin-bottom:0.2rem;">Téléphone WhatsApp :</label>
-              <input type="text" id="new-cadreur-phone" class="form-input" placeholder="+509 3100-0000">
+            <div style="min-width:0;">
+              <label style="font-size:0.75rem; color:var(--admin-text-muted); display:block; margin-bottom:0.25rem;">Téléphone WhatsApp :</label>
+              <input type="text" id="new-cadreur-phone" class="form-input" placeholder="+509 3100-0000" style="width:100%; box-sizing:border-box;">
             </div>
-            <button class="btn btn-secondary btn-sm" onclick="addCadreurToTeam()" style="height:38px; display:inline-flex; align-items:center; gap:0.35rem; font-weight:600; color:#FAF8F5;">
+            <button class="btn btn-secondary btn-sm" onclick="addCadreurToTeam()" style="height:38px; display:inline-flex; align-items:center; gap:0.35rem; font-weight:600; color:#FAF8F5; white-space:nowrap; flex-shrink:0;">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Ajouter Cadreur
             </button>
