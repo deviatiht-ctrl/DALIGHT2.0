@@ -20,28 +20,113 @@
       --cv-border-gold: rgba(212, 175, 55, 0.3);
     }
 
-    /* 6-Card KPI Grid (Clean luxury responsive alignment) */
+    /* 6-Card KPI Grid (Executive 3x2 Luxury Grid) */
     .video-kpi-grid {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 0.85rem;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.15rem;
+      margin-bottom: 1.75rem;
     }
-    @media (max-width: 1320px) {
-      .video-kpi-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.75rem;
-      }
+    .video-kpi-grid .stat-card {
+      padding: 1.25rem 1.4rem;
+      gap: 1.15rem;
+      border-radius: 16px;
+      background: rgba(18, 29, 22, 0.88);
+      border: 1px solid rgba(212, 175, 55, 0.22);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+      display: flex;
+      align-items: center;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    @media (max-width: 768px) {
+    .video-kpi-grid .stat-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(212, 175, 55, 0.5);
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5);
+    }
+    .video-kpi-grid .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .video-kpi-grid .stat-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .video-kpi-grid .stat-value {
+      font-size: 1.7rem;
+      font-weight: 700;
+      line-height: 1.2;
+      color: #FAF8F5;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+    .video-kpi-grid .stat-label {
+      font-size: 0.82rem;
+      color: var(--admin-text-muted);
+      margin-top: 0.2rem;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .video-kpi-grid .stat-change {
+      font-size: 0.74rem;
+      margin-top: 0.35rem;
+      padding: 0.15rem 0.55rem;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-weight: 600;
+    }
+    @media (max-width: 1024px) {
       .video-kpi-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 0.65rem;
+        gap: 1rem;
       }
     }
-    @media (max-width: 480px) {
+    @media (max-width: 640px) {
       .video-kpi-grid {
         grid-template-columns: 1fr;
+        gap: 0.85rem;
       }
+    }
+
+    /* Video Dedicated Table Styles (Compact, Luxury, 100% Legible) */
+    .video-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    .video-table th {
+      padding: 0.85rem 0.75rem;
+      text-align: left;
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--cv-gold);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+      background: rgba(15, 23, 17, 0.95);
+      white-space: nowrap;
+    }
+    .video-table td {
+      padding: 0.8rem 0.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      vertical-align: middle;
+      font-size: 0.84rem;
+      color: #FAF8F5;
+      transition: background 0.15s ease;
+    }
+    .video-table tbody tr:hover td {
+      background: rgba(212, 175, 55, 0.05);
+    }
+    .video-table tbody tr:last-child td {
+      border-bottom: none;
     }
 
     .badge-consent-public {
@@ -263,14 +348,6 @@
     .cvisual-pill {
       background: linear-gradient(135deg, rgba(212,175,55,0.25), rgba(153,101,21,0.25));
       border: 1px solid rgba(212,175,55,0.5);
-      color: #F3E5AB;
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      padding: 0.2rem 0.55rem;
-      border-radius: 9999px;
-      text-transform: uppercase;
-    }
       color: #F3E5AB;
       font-size: 0.7rem;
       font-weight: 700;
@@ -745,21 +822,23 @@
         </div>
 
         <div class="table-container" style="overflow-x: auto;">
-          <table class="data-table" style="width: 100%;">
+          <table class="video-table" style="width: 100%;">
             <thead>
               <tr>
                 <th style="min-width: 95px;">Date &amp; Heure</th>
-                <th style="min-width: 190px;">Client &amp; Prestation</th>
-                <th style="min-width: 125px;">Option &amp; Tarif</th>
-                <th style="min-width: 155px;">Cadreur CVISUAL</th>
-                <th style="min-width: 165px;">Kalkil Kòb la</th>
-                <th style="min-width: 115px;">Statut</th>
-                <th style="text-align: right; min-width: 135px;">Actions CVISUAL</th>
+                <th style="min-width: 140px;">Client</th>
+                <th style="min-width: 140px;">Soin</th>
+                <th style="min-width: 110px;">Droit à l'Image</th>
+                <th style="min-width: 75px;">Tarif</th>
+                <th style="min-width: 140px;">Cadreur CVISUAL</th>
+                <th style="min-width: 145px;">Kalkil Kòb la</th>
+                <th style="min-width: 105px;">Statut</th>
+                <th style="text-align: right; min-width: 135px;">Actions</th>
               </tr>
             </thead>
             <tbody id="video-reservations-tbody">
               <tr>
-                <td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--admin-text-muted);">
+                <td colspan="9" style="text-align: center; padding: 2.5rem; color: var(--admin-text-muted);">
                   Chargement des tournages vidéo...
                 </td>
               </tr>
@@ -1589,7 +1668,7 @@
         }
         tbody.innerHTML = `
           <tr>
-            <td colspan="7" style="text-align: center; padding: 3rem; color: var(--admin-text-muted);">
+            <td colspan="9" style="text-align: center; padding: 3rem; color: var(--admin-text-muted);">
               ${emptyMsg}
             </td>
           </tr>
@@ -1630,35 +1709,41 @@
           <tr>
             <!-- 1. Date & Heure -->
             <td style="vertical-align: middle;">
-              <div style="font-weight: 700; color: #FAF8F5; font-size: 0.88rem;">${fmtDate(r.date)}</div>
-              <div style="font-size: 0.76rem; color: var(--cv-gold); font-weight: 700; margin-top: 0.15rem;">${fmtTime(r.time)}</div>
+              <div style="font-weight: 700; color: #FAF8F5; font-size: 0.85rem;">${fmtDate(r.date)}</div>
+              <div style="font-size: 0.75rem; color: var(--cv-gold); font-weight: 600; margin-top: 0.15rem;">${fmtTime(r.time)}</div>
             </td>
 
-            <!-- 2. Client & Prestation -->
+            <!-- 2. Client -->
             <td style="vertical-align: middle;">
-              <div style="font-weight: 700; color: #FAF8F5; font-size: 0.88rem;">${escapeHtml(clientName)}</div>
+              <div style="font-weight: 700; color: #FAF8F5; font-size: 0.85rem;">${escapeHtml(clientName)}</div>
               <div style="font-size: 0.74rem; color: #94a3b8; font-family: monospace; display: flex; align-items: center; gap: 0.25rem; margin-top: 0.15rem;">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                 ${escapeHtml(clientPhone)}
               </div>
-              <div style="font-size: 0.72rem; color: #F3E5AB; font-weight: 600; margin-top: 0.25rem; background: rgba(212,175,55,0.08); border: 1px solid rgba(212,175,55,0.2); border-radius: 4px; padding: 0.1rem 0.4rem; display: inline-block;">
+            </td>
+
+            <!-- 3. Soin -->
+            <td style="vertical-align: middle;">
+              <span style="font-size: 0.78rem; color: #FAF8F5; font-weight: 500; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 0.2rem 0.5rem; display: inline-block; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(serviceName)}">
                 ${escapeHtml(serviceName)}
-              </div>
+              </span>
             </td>
 
-            <!-- 3. Option & Tarif -->
+            <!-- 4. Droit à l'Image -->
             <td style="vertical-align: middle;">
-              <div style="display: flex; flex-direction: column; gap: 0.3rem; align-items: flex-start;">
-                ${consentBadge}
-                <span style="font-weight: 800; color: #D4AF37; font-size: 0.92rem; font-family: monospace;">
-                  ${meta.total_price.toLocaleString()} HTG
-                </span>
-              </div>
+              ${consentBadge}
             </td>
 
-            <!-- 4. Cadreur Assigné (PDG CVISUAL) -->
+            <!-- 5. Prix -->
             <td style="vertical-align: middle;">
-              <select class="cadreur-select" onchange="assignCadreur('${r.id}', this.value)" style="width: 100%; max-width: 160px;">
+              <span style="font-weight: 800; color: #D4AF37; font-size: 0.88rem; font-family: monospace;">
+                ${meta.total_price.toLocaleString()} HTG
+              </span>
+            </td>
+
+            <!-- 6. Cadreur CVISUAL -->
+            <td style="vertical-align: middle;">
+              <select class="cadreur-select" onchange="assignCadreur('${r.id}', this.value)" style="width: 100%; max-width: 150px;">
                 ${cadreurOptions}
               </select>
               ${meta.cadreur_phone ? `
@@ -1669,7 +1754,7 @@
               ` : ''}
             </td>
 
-            <!-- 5. Kalkil Kòb la -->
+            <!-- 7. Kalkil Kòb la -->
             <td style="vertical-align: middle;">
               <div class="kalkil-card">
                 <div class="kalkil-line">
@@ -1690,9 +1775,9 @@
               </div>
             </td>
 
-            <!-- 6. Statut Tournage -->
+            <!-- 8. Statut Tournage -->
             <td style="vertical-align: middle;">
-              <select class="status-select" onchange="updateVideoStatus('${r.id}', this.value)" style="width: 100%; max-width: 125px;">
+              <select class="status-select" onchange="updateVideoStatus('${r.id}', this.value)" style="width: 100%; max-width: 115px;">
                 <option value="pending" ${status === 'pending' ? 'selected' : ''}>À filmer</option>
                 <option value="filmed" ${status === 'filmed' ? 'selected' : ''}>Filmée</option>
                 <option value="editing" ${status === 'editing' ? 'selected' : ''}>En montage</option>
@@ -1701,7 +1786,7 @@
               </select>
             </td>
 
-            <!-- 7. Actions CVISUAL -->
+            <!-- 9. Actions CVISUAL -->
             <td style="text-align: right; vertical-align: middle;">
               <div style="display: inline-flex; align-items: center; gap: 0.35rem; justify-content: flex-end;">
                 <!-- Alerter le Cadreur (Brief WhatsApp) -->
