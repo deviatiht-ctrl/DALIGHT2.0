@@ -17,6 +17,44 @@ function ico(path, size = 14, color = 'currentColor') {
   return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="${color}" stroke-width="2" width="${size}" height="${size}" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="${path}"/></svg>`;
 }
 
+// ─── PRIX DYNAMIQUES VIDÉO CVISUAL / DALIGHT ──────────────────
+window.adminVideoPricePublic = 1000;
+window.adminVideoPricePrivate = 2000;
+
+async function loadAdminVideoPricing() {
+  try {
+    const sb = window.adminCore?.supabase || window.supabaseClient;
+    if (!sb) return;
+    const { data: setRows } = await sb
+      .from('settings')
+      .select('key, value')
+      .in('key', ['cvisual_video_config', 'video_service']);
+
+    if (setRows && setRows.length) {
+      setRows.forEach(row => {
+        let val = row.value;
+        if (typeof val === 'string') {
+          try { val = JSON.parse(val); } catch(e){}
+        }
+        if (val) {
+          if (val.price_public_htg) window.adminVideoPricePublic = Number(val.price_public_htg);
+          if (val.price_private_htg) window.adminVideoPricePrivate = Number(val.price_private_htg);
+        }
+      });
+    }
+
+    // Mise à jour de l'affichage dans le modal de création
+    const badgeEl = document.getElementById('create-video-price-badge');
+    if (badgeEl) badgeEl.textContent = `+${window.adminVideoPricePublic.toLocaleString()} HTG`;
+    const pubEl = document.getElementById('create-video-public-price-text');
+    if (pubEl) pubEl.textContent = `+${window.adminVideoPricePublic.toLocaleString()} HTG`;
+    const privEl = document.getElementById('create-video-private-price-text');
+    if (privEl) privEl.textContent = `+${window.adminVideoPricePrivate.toLocaleString()} HTG`;
+  } catch(e) {
+    console.warn("Could not load dynamic admin video pricing:", e);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   await new Promise(resolve => setTimeout(resolve, 100));
   
@@ -27,6 +65,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSearch();
   initDateFilter();
   initExport();
+  loadAdminVideoPricing();
   loadReservations();
 });
 
@@ -622,7 +661,7 @@ window.openDetailModal = function(id) {
           </div>
         </div>
         <div style="text-align:right;">
-          <div style="font-weight:700;color:var(--admin-accent,#c9a227);font-size:.95rem;">+${(Number(r.video_price) || 500).toLocaleString()} HTG</div>
+          <div style="font-weight:700;color:var(--admin-accent,#c9a227);font-size:.95rem;">+${(Number(r.video_price) || (r.video_consent === 'private' ? (window.adminVideoPricePrivate || 2000) : (window.adminVideoPricePublic || 1000))).toLocaleString()} HTG</div>
           <span style="font-size:.7rem;padding:.15rem .5rem;border-radius:6px;background:rgba(74,222,128,0.15);color:#4ade80;font-weight:600;">Inclus</span>
           <div style="margin-top:0.4rem;">
             <button type="button" class="btn btn-secondary btn-sm" onclick="window.toggleReservationVideoAdmin('${r.id}', false)" style="font-size:0.7rem; color:#f87171; border-color:rgba(239,68,68,0.3); padding:0.2rem 0.55rem; cursor:pointer;">Désactiver Option Vidéo</button>
@@ -640,9 +679,9 @@ window.openDetailModal = function(id) {
             <div style="font-size:.76rem;color:var(--admin-text-muted);margin-top:.15rem;">Non activée pour cette réservation</div>
           </div>
         </div>
-        <div style="display:flex;gap:0.4rem;">
-          <button type="button" class="btn btn-primary btn-sm" onclick="window.toggleReservationVideoAdmin('${r.id}', true, 'public')" style="font-size:0.75rem; padding:0.35rem 0.65rem; background:linear-gradient(135deg, #d4af37, #996515); border:none; color:#fff; cursor:pointer;">+ Activer Vidéo Public (500 HTG)</button>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="window.toggleReservationVideoAdmin('${r.id}', true, 'private')" style="font-size:0.75rem; padding:0.35rem 0.65rem; border-color:rgba(212,175,55,0.3); color:#FAF8F5; cursor:pointer;">+ Activer Privé (1000 HTG)</button>
+        <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+          <button type="button" class="btn btn-primary btn-sm" onclick="window.toggleReservationVideoAdmin('${r.id}', true, 'public')" style="font-size:0.75rem; padding:0.35rem 0.65rem; background:linear-gradient(135deg, #d4af37, #996515); border:none; color:#fff; cursor:pointer;">+ Activer Vidéo Public (${(window.adminVideoPricePublic || 1000).toLocaleString()} HTG)</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="window.toggleReservationVideoAdmin('${r.id}', true, 'private')" style="font-size:0.75rem; padding:0.35rem 0.65rem; border-color:rgba(212,175,55,0.3); color:#FAF8F5; cursor:pointer;">+ Activer Privé (${(window.adminVideoPricePrivate || 2000).toLocaleString()} HTG)</button>
         </div>
       </div>`}
 
@@ -2673,6 +2712,7 @@ function openCreateReservationModal() {
 
   createReservationClient = null;
   createReservationExtras = [];
+  loadAdminVideoPricing();
 
   const extraList = document.getElementById('extra-services-list');
   if (extraList) extraList.innerHTML = '';
@@ -3019,10 +3059,12 @@ function updateCreateReservationTotal() {
     feeAmount += includeFee ? (withFee(base) - base) : 0;
   });
 
-  // Option Vidéo Souvenir (+500 HTG Public / +1 000 HTG Privé)
+  // Option Vidéo Souvenir (dynamique selon settings CVISUAL)
   const wantsVideo = document.getElementById('create-video-toggle')?.checked ?? false;
   const videoConsent = document.querySelector('input[name="create_video_consent"]:checked')?.value || 'public';
-  const videoPrice = wantsVideo ? (videoConsent === 'private' ? 1000 : 500) : 0;
+  const pubPrice = window.adminVideoPricePublic || 1000;
+  const privPrice = window.adminVideoPricePrivate || 2000;
+  const videoPrice = wantsVideo ? (videoConsent === 'private' ? privPrice : pubPrice) : 0;
   if (wantsVideo) {
     subtotal += videoPrice;
     feeAmount += includeFee ? (withFee(videoPrice) - videoPrice) : 0;
@@ -3148,7 +3190,9 @@ async function submitCreateReservation() {
 
   const wantsVideo = document.getElementById('create-video-toggle')?.checked ?? false;
   const videoConsent = document.querySelector('input[name="create_video_consent"]:checked')?.value || 'public';
-  const videoPrice = wantsVideo ? (videoConsent === 'private' ? 1000 : 500) : 0;
+  const pubPrice = window.adminVideoPricePublic || 1000;
+  const privPrice = window.adminVideoPricePrivate || 2000;
+  const videoPrice = wantsVideo ? (videoConsent === 'private' ? privPrice : pubPrice) : 0;
 
   const reservationNumber = 'DL' + Date.now().toString().slice(-8);
 
@@ -3478,7 +3522,9 @@ window.toggleReservationVideoAdmin = async function(id, enable, consent = 'publi
     const sb = window.adminCore?.supabase || window.supabaseClient;
     if (!sb) throw new Error("Supabase indisponible");
 
-    const price = enable ? (consent === 'private' ? 1000 : 500) : 0;
+    const pubPrice = window.adminVideoPricePublic || 1000;
+    const privPrice = window.adminVideoPricePrivate || 2000;
+    const price = enable ? (consent === 'private' ? privPrice : pubPrice) : 0;
     const payload = enable ? {
       wants_video: true,
       video_requested: true,

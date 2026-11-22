@@ -1138,7 +1138,7 @@
                   <div>
                     <strong style="color:var(--dalight-text);font-size:1.02rem;display:flex;align-items:center;gap:0.4rem;">
                       Option Vidéo Souvenir Professionnelle
-                      <span id="video-price-tag-badge" style="font-size:0.75rem;padding:0.15rem 0.55rem;border-radius:999px;background:rgba(212,175,55,0.2);color:var(--dalight-gold);font-weight:700;">+500 HTG</span>
+                      <span id="video-price-tag-badge" style="font-size:0.75rem;padding:0.15rem 0.55rem;border-radius:999px;background:rgba(212,175,55,0.2);color:var(--dalight-gold);font-weight:700;">+1 000 HTG</span>
                     </strong>
                     <span style="font-size:0.82rem;color:var(--dalight-muted);display:block;margin-top:0.2rem;">Captation esthétique et montage 4K haute définition de votre séance</span>
                   </div>
@@ -1164,7 +1164,7 @@
                       <span style="font-size:0.78rem;color:var(--dalight-muted);display:block;margin-top:0.15rem;">DALIGHT peut publier un extrait esthétique sur nos réseaux (Instagram, TikTok).</span>
                     </div>
                   </div>
-                  <strong style="color:#4ade80;font-size:0.92rem;white-space:nowrap;margin-left:0.5rem;" id="video-public-price-label">+500 HTG</strong>
+                  <strong style="color:#4ade80;font-size:0.92rem;white-space:nowrap;margin-left:0.5rem;" id="video-public-price-label">+1 000 HTG</strong>
                 </label>
 
                 <!-- Private: Increased Price -->
@@ -1178,7 +1178,7 @@
                       <span style="font-size:0.78rem;color:var(--dalight-muted);display:block;margin-top:0.15rem;">Vidéo privée envoyée uniquement sur votre WhatsApp. Aucune diffusion sur les réseaux.</span>
                     </div>
                   </div>
-                  <strong style="color:var(--dalight-gold);font-size:0.92rem;white-space:nowrap;margin-left:0.5rem;" id="video-private-price-label">+1 000 HTG</strong>
+                  <strong style="color:var(--dalight-gold);font-size:0.92rem;white-space:nowrap;margin-left:0.5rem;" id="video-private-price-label">+2 000 HTG</strong>
                 </label>
               </div>
             </div>
@@ -1532,8 +1532,8 @@
           </div>
 
           <div class="summary-line" id="sum-video-row" style="display:none;color:#4ade80;">
-            <span>Option Vidéo</span>
-            <strong style="color:#4ade80;">+500 HTG</strong>
+            <span id="sum-video-label">Option Vidéo Souvenir</span>
+            <strong id="sum-video-price" style="color:#4ade80;">+1 000 HTG</strong>
           </div>
 
           <div class="summary-line" id="sum-discount-row" style="display:none;color:#10b981;">
@@ -1646,8 +1646,8 @@
     let appliedPromo = null;
     let wantsVideo = false;
     let videoConsent = 'public'; // 'public' or 'private'
-    let VIDEO_PRICE_PUBLIC = 500;
-    let VIDEO_PRICE_PRIVATE = 1000;
+    let VIDEO_PRICE_PUBLIC = 1000;
+    let VIDEO_PRICE_PRIVATE = 2000;
     let currentVideoPrice = 0;
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -2028,25 +2028,32 @@
     async function fetchDynamicSettingsAndPaymentMethods() {
       if (!supabase) return;
       try {
-        // 1. Fetch Video Service Pricing from settings
-        const { data: setRow } = await supabase
+        // 1. Fetch Video Service Pricing from settings (cvisual_video_config / video_service)
+        const { data: setRows } = await supabase
           .from('settings')
-          .select('value')
-          .eq('key', 'video_service')
-          .maybeSingle();
+          .select('key, value')
+          .in('key', ['cvisual_video_config', 'video_service']);
 
-        if (setRow && setRow.value) {
-          let val = setRow.value;
-          if (typeof val === 'string') {
-            try { val = JSON.parse(val); } catch(e){}
-          }
-          if (val.price_public_htg) VIDEO_PRICE_PUBLIC = Number(val.price_public_htg);
-          if (val.price_private_htg) VIDEO_PRICE_PRIVATE = Number(val.price_private_htg);
+        if (setRows && setRows.length) {
+          setRows.forEach(row => {
+            let val = row.value;
+            if (typeof val === 'string') {
+              try { val = JSON.parse(val); } catch(e){}
+            }
+            if (val) {
+              if (val.price_public_htg) VIDEO_PRICE_PUBLIC = Number(val.price_public_htg);
+              if (val.price_private_htg) VIDEO_PRICE_PRIVATE = Number(val.price_private_htg);
+            }
+          });
 
+          const tagBadge = document.getElementById('video-price-tag-badge');
+          if (tagBadge) tagBadge.textContent = `+${VIDEO_PRICE_PUBLIC.toLocaleString()} HTG`;
           const pubEl = document.getElementById('video-public-price-label');
           if (pubEl) pubEl.textContent = `+${VIDEO_PRICE_PUBLIC.toLocaleString()} HTG`;
           const privEl = document.getElementById('video-private-price-label');
           if (privEl) privEl.textContent = `+${VIDEO_PRICE_PRIVATE.toLocaleString()} HTG`;
+          
+          if (typeof updateSummary === 'function') updateSummary();
         }
 
         // 2. Fetch Payment Methods from payment_methods table
@@ -2262,11 +2269,12 @@
         if (appliedPromo.discount_type === 'percentage') {
           discount = Math.round(basePrice * (Number(appliedPromo.discount_value) / 100));
         } else {
-          discount = Number(appliedPromo.discount_value) || 0;
+          discount = Math.min(basePrice, Number(appliedPromo.discount_value) || 0);
         }
       }
 
-      const finalHTG = Math.max(0, basePrice + extraPrice - discount);
+      // Règle stricte DALIGHT : Le rabais s'applique uniquement au soin, la vidéo reste à 100%
+      const finalHTG = Math.max(0, basePrice - discount) + extraPrice;
       const finalUSD = (finalHTG / 130).toFixed(2);
 
       const depositHTG = paymentChoice === 'deposit' ? Math.round(finalHTG / 2) : finalHTG;
@@ -2319,7 +2327,11 @@
       }
 
       const videoRow = document.getElementById('sum-video-row');
-      if (videoRow) videoRow.style.display = wantsVideo ? 'flex' : 'none';
+      if (videoRow) {
+        videoRow.style.display = wantsVideo ? 'flex' : 'none';
+        const sumVideoPriceEl = document.getElementById('sum-video-price');
+        if (sumVideoPriceEl) sumVideoPriceEl.textContent = `+${videoExtra.toLocaleString()} HTG`;
+      }
 
       const discountRow = document.getElementById('sum-discount-row');
       if (discountRow) {
@@ -2406,15 +2418,17 @@
           }
         }
 
+        const videoConsentChoice = document.querySelector('input[name="client_video_consent"]:checked')?.value || videoConsent || 'public';
         const basePrice = Number(activeService.price_htg) || 8500;
         const extraPrice = wantsVideo ? (videoConsentChoice === 'private' ? VIDEO_PRICE_PRIVATE : VIDEO_PRICE_PUBLIC) : 0;
         let discount = 0;
         if (appliedPromo) {
           discount = appliedPromo.discount_type === 'percentage'
             ? Math.round(basePrice * (Number(appliedPromo.discount_value) / 100))
-            : Number(appliedPromo.discount_value);
+            : Math.min(basePrice, Number(appliedPromo.discount_value) || 0);
         }
-        const totalAmount = Math.max(0, basePrice + extraPrice - discount);
+        // Règle stricte DALIGHT : Rabais sur le soin uniquement, la vidéo CVISUAL reste intacte à 100%
+        const totalAmount = Math.max(0, basePrice - discount) + extraPrice;
         const depositAmt = paymentChoice === 'deposit' ? Math.round(totalAmount / 2) : totalAmount;
         const balanceAmt = totalAmount - depositAmt;
 
@@ -2438,8 +2452,6 @@
           paymentRef = bRef || bName || '';
           senderAccountInfo = `Banque: ${bSel.toUpperCase()} | Titulaire: ${bName} (Réf: ${bRef})`;
         }
-
-        const videoConsentChoice = document.querySelector('input[name="client_video_consent"]:checked')?.value || 'public';
 
         // Check logged in user ID if available
         let currentUserId = null;
@@ -2496,17 +2508,20 @@
           if (appliedPromo) {
             try {
               const commPct = Number(appliedPromo.commission_pct || 0);
+              // Règle stricte DALIGHT : La commission est calculée uniquement sur le soin (hors vidéo)
+              const serviceRevenue = Math.max(0, basePrice - discount);
               const commAmt = appliedPromo.owner_type === 'influencer' && commPct > 0
-                ? (totalAmount * commPct) / 100
+                ? (serviceRevenue * commPct) / 100
                 : 0;
 
               await supabase.from('promo_code_uses').insert([{
                 promo_code_id: appliedPromo.id,
                 code: appliedPromo.code,
-                client_email: (currentUser?.email || clientEmail).toLowerCase(),
+                client_email: (currentUser?.email || em).toLowerCase(),
                 discount_amount: discount,
                 commission_amount: commAmt,
-                revenue_amount: totalAmount,
+                revenue_amount: serviceRevenue,
+                video_price: extraPrice,
                 commission_paid: false,
                 created_at: new Date().toISOString()
               }]);
@@ -2553,7 +2568,7 @@
                   ? '🌐 RÉSEAUX PUBLICS AUTORISÉS (Instagram & TikTok)'
                   : '🔒 USAGE PRIVÉ EXCLUSIF (Diffusion strictement interdite)';
 
-                const videoPriceFormatted = (payload.video_price || (isPublicConsent ? 500 : 1000)).toLocaleString() + ' HTG';
+                const videoPriceFormatted = (payload.video_price || (isPublicConsent ? VIDEO_PRICE_PUBLIC : VIDEO_PRICE_PRIVATE)).toLocaleString() + ' HTG';
 
                 const alertMsg = 
 `🎬 *NOUVELLE RÉSERVATION VIDÉO CVISUAL / DALIGHT*

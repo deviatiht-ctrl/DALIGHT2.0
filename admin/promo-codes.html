@@ -399,12 +399,39 @@
       <!-- =========================================================================
            TAB 2: COMMISSIONS INFLUENCEURS
            ========================================================================= -->
-      <div id="content-commissions" class="tab-content" style="display:none;">
+      <div id="content-commissions" class="tab-content">
+        <!-- Contrôle global des pourcentages par Dalight -->
+        <div class="glass-card" style="margin-bottom:1.25rem;padding:1.25rem 1.5rem;background:linear-gradient(135deg, rgba(201,162,39,0.12), rgba(26,29,23,0.85));border:1px solid rgba(201,162,39,0.35);">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+            <div>
+              <div style="display:flex;align-items:center;gap:0.5rem;">
+                <i data-lucide="percent" style="width:18px;height:18px;color:var(--admin-accent);"></i>
+                <h4 style="margin:0;font-size:1rem;color:var(--admin-text);font-weight:700;">Contrôle des Pourcentages de Commission DALIGHT</h4>
+              </div>
+              <p style="margin:0.35rem 0 0;font-size:0.8rem;color:var(--admin-text-muted);line-height:1.4;">
+                Modifiez individuellement les taux ci-dessous ou appliquez un taux global à tous les influenceurs.
+                <br><strong style="color:var(--admin-accent);">&#9432; Règle stricte :</strong> Les commissions et rabais portent <strong>exclusivement sur les soins du salon</strong> et ne touchent jamais les recettes du contenu vidéo CVISUAL.
+              </p>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+              <span style="font-size:0.82rem;color:var(--admin-text-muted);">Taux par défaut :</span>
+              <div style="display:flex;align-items:center;gap:0.35rem;">
+                <input type="number" id="global-comm-pct" min="0" max="100" step="0.5" value="10" class="form-input" style="width:75px;padding:0.35rem 0.5rem;text-align:center;font-weight:700;font-size:0.95rem;">
+                <span style="font-weight:700;color:var(--admin-accent);font-size:0.9rem;">%</span>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="applyGlobalCommission()" style="white-space:nowrap;">
+                <i data-lucide="check-check" style="width:14px;height:14px;"></i>
+                Appliquer à tous les influenceurs
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="glass-card">
           <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;">
             <div>
               <h3 class="card-title">Tableau des Commissions Influenceurs</h3>
-              <p class="card-subtitle">Calcul automatique des commissions sur réservations et ventes apportées</p>
+              <p class="card-subtitle">Calcul automatique sur réservations apportées (recettes soins salon uniquement)</p>
             </div>
             <button class="btn btn-secondary btn-sm" onclick="loadCommissions()">
               <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i>
@@ -419,7 +446,7 @@
                   <th>Code affilié</th>
                   <th>Taux commission</th>
                   <th>Utilisations</th>
-                  <th>Chiffre d'affaires généré</th>
+                  <th>Recettes soins (Salon)</th>
                   <th>Commission totale</th>
                   <th>Montant versé</th>
                   <th>Solde restant dû</th>
@@ -436,7 +463,7 @@
       <!-- =========================================================================
            TAB 3: HISTORIQUE UTILISATIONS
            ========================================================================= -->
-      <div id="content-uses" class="tab-content" style="display:none;">
+      <div id="content-uses" class="tab-content">
         <div class="glass-card">
           <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;">
             <div>
@@ -471,7 +498,7 @@
       <!-- =========================================================================
            TAB 4: DEMANDES DE RETRAIT
            ========================================================================= -->
-      <div id="content-payouts" class="tab-content" style="display:none;">
+      <div id="content-payouts" class="tab-content">
         <div class="glass-card">
           <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;">
             <div>
@@ -534,8 +561,17 @@
 
       ['codes','commissions','uses','payouts'].forEach(t => {
         const el = document.getElementById('content-' + t);
-        if (el) el.style.display = (t === tab) ? '' : 'none';
+        if (el) {
+          const isActive = (t === tab);
+          el.classList.toggle('active', isActive);
+          el.style.display = isActive ? 'block' : 'none';
+        }
       });
+
+      if (tab === 'codes') loadCodes();
+      else if (tab === 'commissions') loadCommissions();
+      else if (tab === 'uses') loadUses();
+      else if (tab === 'payouts') loadPayouts();
 
       if (window.lucide) lucide.createIcons();
     };
@@ -626,8 +662,14 @@
         const discount = c.discount_type === 'percentage' ? c.discount_value + '%' : fmtHTG(c.discount_value);
         const owner = c.owner_type !== 'admin'
           ? `<div style="font-size:.76rem;color:var(--admin-text-muted);">${esc(c.owner_name || '')}${c.owner_email ? ' · ' + esc(c.owner_email) : ''}</div>` : '';
-        const commission = c.owner_type === 'influencer' && c.commission_pct > 0
-          ? `<span class="status-badge completed">${c.commission_pct}%</span>`
+        const commission = c.owner_type === 'influencer'
+          ? `<div style="display:flex;align-items:center;gap:.3rem;">
+              <input type="number" id="code-comm-${c.id}" min="0" max="100" step="0.5" value="${c.commission_pct || 0}" class="form-input" style="width:58px;padding:.2rem .35rem;text-align:center;font-size:.82rem;font-weight:700;">
+              <span style="font-size:.75rem;color:var(--admin-accent);font-weight:700;">%</span>
+              <button class="btn btn-secondary btn-sm" onclick="quickSaveCommission('${c.id}', 'code-comm-${c.id}')" title="Sauvegarder %" style="padding:.2rem .4rem;">
+                <i data-lucide="check" style="width:12px;height:12px;"></i>
+              </button>
+            </div>`
           : c.owner_type === 'client' && c.points_per_use > 0
             ? `<span class="status-badge pending">+${c.points_per_use} pts</span>` : '—';
         const validity = c.valid_until ? new Date(c.valid_until).toLocaleDateString('fr-FR') : 'Illimitée';
@@ -865,6 +907,82 @@
       } catch (err) { alert('Erreur: ' + err.message); }
     };
 
+    // ─── CONTRÔLE RAPIDE DES COMMISSIONS (DALIGHT ADMIN) ─────────
+    window.quickSaveCommission = async function(id, inputId) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      const newPct = parseFloat(input.value);
+      if (isNaN(newPct) || newPct < 0 || newPct > 100) {
+        alert('Veuillez entrer un pourcentage valide entre 0 et 100.');
+        return;
+      }
+
+      try {
+        const { data: codeData, error: fetchErr } = await sb().from('promo_codes').select('*').eq('id', id).single();
+        if (fetchErr) throw fetchErr;
+
+        const { error: updateErr } = await sb().from('promo_codes').update({
+          commission_pct: newPct,
+          updated_at: new Date().toISOString()
+        }).eq('id', id);
+        if (updateErr) throw updateErr;
+
+        if (codeData && codeData.owner_email) {
+          try {
+            await sb().from('dalight_influencers').update({
+              commission_pct: newPct,
+              updated_at: new Date().toISOString()
+            }).eq('email', codeData.owner_email);
+          } catch(e) {}
+        }
+        if (codeData && codeData.code) {
+          try {
+            await sb().from('dalight_influencers').update({
+              commission_pct: newPct,
+              updated_at: new Date().toISOString()
+            }).eq('assigned_code', codeData.code);
+          } catch(e) {}
+        }
+
+        window.adminCore?.showToast?.(`Commission mise à jour à ${newPct}% ✓`);
+        await loadCodes();
+        await loadCommissions();
+      } catch (err) {
+        alert('Erreur: ' + err.message);
+      }
+    };
+
+    window.applyGlobalCommission = async function() {
+      const input = document.getElementById('global-comm-pct');
+      const val = parseFloat(input?.value);
+      if (isNaN(val) || val < 0 || val > 100) {
+        alert('Veuillez entrer un pourcentage valide entre 0 et 100.');
+        return;
+      }
+      if (!confirm(`Appliquer le taux de commission de ${val}% à TOUS les influenceurs partenaires ?`)) return;
+
+      try {
+        const { error: promoErr } = await sb().from('promo_codes').update({
+          commission_pct: val,
+          updated_at: new Date().toISOString()
+        }).eq('owner_type', 'influencer');
+        if (promoErr) throw promoErr;
+
+        try {
+          await sb().from('dalight_influencers').update({
+            commission_pct: val,
+            updated_at: new Date().toISOString()
+          }).neq('id', '00000000-0000-0000-0000-000000000000');
+        } catch(e) {}
+
+        window.adminCore?.showToast?.(`Taux global (${val}%) appliqué à tous les influenceurs ✓`);
+        await loadCodes();
+        await loadCommissions();
+      } catch(err) {
+        alert('Erreur: ' + err.message);
+      }
+    };
+
     // ─── TAB 2: COMMISSIONS INFLUENCEURS ──────────────────────────
     async function loadCommissions() {
       const tbody = document.getElementById('commissions-table');
@@ -882,8 +1000,10 @@
         const { data: uses } = await sb().from('promo_code_uses').select('*');
         const usesList = uses || [];
 
-        // 3. Récupère les réservations qui auraient utilisé un code
-        const { data: reservations } = await sb().from('reservations').select('id,promo_code,total_amount,status,user_email,created_at');
+        // 3. Récupère les réservations qui auraient utilisé un code (avec champs vidéo)
+        const { data: reservations } = await sb()
+          .from('reservations')
+          .select('id,promo_code,total_amount,wants_video,video_requested,video_price,status,user_email,created_at');
         const resList = reservations || [];
 
         if (!infCodes || !infCodes.length) {
@@ -903,13 +1023,20 @@
           
           const useCount = Math.max(matchingUses.length, matchingRes.length, inf.uses_count || 0);
 
+          // RÈGLE STRICTE DALIGHT :
+          // Le calcul des commissions porte UNIQUEMENT sur les soins du salon.
+          // Le montant de l'option vidéo (CVISUAL) est strictement retranché et préservé à 100%.
           let totalRevenue = 0;
           matchingRes.forEach(r => {
-            totalRevenue += Number(r.total_amount || 0);
+            const videoAmt = (r.wants_video || r.video_requested) ? (Number(r.video_price) || 0) : 0;
+            const serviceAmt = Math.max(0, Number(r.total_amount || 0) - videoAmt);
+            totalRevenue += serviceAmt;
           });
           matchingUses.forEach(u => {
             if (!matchingRes.some(r => r.id === u.reservation_id)) {
-              totalRevenue += Number(u.revenue_amount || 0);
+              const videoAmt = Number(u.video_price || 0);
+              const serviceAmt = Math.max(0, Number(u.revenue_amount || 0) - videoAmt);
+              totalRevenue += serviceAmt;
             }
           });
 
@@ -923,11 +1050,13 @@
 
           const remainingDue = Math.max(0, totalCommission - paidCommission);
 
-          // Calcule les stats pour le mois courant
+          // Calcule les stats pour le mois courant (recettes salon pures, hors vidéo)
           matchingRes.forEach(r => {
             if (r.created_at && r.created_at.startsWith(currentMonth)) {
               totalMonthUses++;
-              totalMonthCommission += (Number(r.total_amount || 0) * commPct) / 100;
+              const videoAmt = (r.wants_video || r.video_requested) ? (Number(r.video_price) || 0) : 0;
+              const serviceAmt = Math.max(0, Number(r.total_amount || 0) - videoAmt);
+              totalMonthCommission += (serviceAmt * commPct) / 100;
             }
           });
 
@@ -937,7 +1066,15 @@
               <div style="font-size:.76rem;color:var(--admin-text-muted);">${esc(inf.owner_email || '—')}</div>
             </td>
             <td><span class="code-badge">${esc(inf.code)}</span></td>
-            <td><span class="status-badge completed">${commPct}%</span></td>
+            <td>
+              <div style="display:flex;align-items:center;gap:.3rem;">
+                <input type="number" id="comm-row-pct-${inf.id}" min="0" max="100" step="0.5" value="${commPct}" class="form-input" style="width:58px;padding:.2rem .35rem;text-align:center;font-weight:700;font-size:.85rem;">
+                <span style="font-size:.8rem;color:var(--admin-accent);font-weight:700;">%</span>
+                <button class="btn btn-secondary btn-sm" onclick="quickSaveCommission('${inf.id}', 'comm-row-pct-${inf.id}')" title="Sauvegarder ce %" style="padding:.2rem .4rem;">
+                  <i data-lucide="check" style="width:12px;height:12px;"></i>
+                </button>
+              </div>
+            </td>
             <td><strong>${useCount}</strong></td>
             <td>${fmtHTG(totalRevenue)}</td>
             <td><strong style="color:var(--admin-accent);">${fmtHTG(totalCommission)}</strong></td>
@@ -1039,7 +1176,9 @@
                 <button class="btn btn-danger btn-sm" onclick="processPayout('${r.id}','rejected')">✕</button>
               ` : ''}
               ${r.status === 'approved' ? `
-                <button class="btn btn-primary btn-sm" onclick="processPayout('${r.id}','paid')">💵 Marquer Payée</button>
+                <button class="btn btn-primary btn-sm" onclick="processPayout('${r.id}','paid')" style="display:inline-flex;align-items:center;gap:4px;">
+                  <i data-lucide="banknote" style="width:13px;height:13px;"></i> Marquer Payée
+                </button>
               ` : ''}
             </div>
           </td>
