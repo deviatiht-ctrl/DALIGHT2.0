@@ -230,10 +230,7 @@
                 <label class="form-label" style="font-size:.75rem;">Libellé *</label>
                 <input class="form-input" id="headspa-label" placeholder="ex: Adulte, Enfant..." style="font-size:.83rem;">
               </div>
-              <div class="form-group" style="margin-bottom:0;">
-                <label class="form-label" style="font-size:.75rem;">Longueur</label>
-                <input class="form-input" id="headspa-length" placeholder="ex: 0-10 cm" style="font-size:.83rem;">
-              </div>
+              <input type="hidden" id="headspa-length" value="Toutes longueurs">
               <div class="form-group" style="margin-bottom:0;">
                 <label class="form-label" style="font-size:.75rem;">Prix HTG *</label>
                 <input class="form-input" id="headspa-price-htg" type="number" placeholder="5000" style="font-size:.83rem;" min="0">
@@ -257,14 +254,13 @@
                 <tr>
                   <th>Type de cheveux</th>
                   <th>Libellé</th>
-                  <th>Longueur</th>
                   <th>Prix HTG</th>
                   <th>Statut</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="headspa-pricing-table">
-                <tr><td colspan="6" class="text-center text-muted" style="padding:1rem;">Chargement...</td></tr>
+                <tr><td colspan="5" class="text-center text-muted" style="padding:1rem;">Chargement...</td></tr>
               </tbody>
             </table>
           </div>
@@ -674,7 +670,7 @@
     function renderHeadSpaPricingTable() {
       const tbody = document.getElementById('headspa-pricing-table');
       if (!headSpaPricing.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:1rem;">Aucun type configuré. Utilisez le formulaire ci-dessus.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:1rem;">Aucun type configuré. Utilisez le formulaire ci-dessus.</td></tr>';
         return;
       }
       
@@ -689,7 +685,6 @@
         <tr>
           <td><span class="status-badge confirmed">${hairTypeLabels[p.type] || p.type}</span></td>
           <td><strong>${esc(p.label)}</strong></td>
-          <td style="font-size:.8rem;color:rgba(255,255,255,.55);">${esc(p.hair_length || '—')}</td>
           <td><strong>${Number(p.price_htg).toLocaleString()} Gds</strong></td>
           <td>
             <label class="toggle-switch">
@@ -723,7 +718,7 @@
       document.getElementById('headspa-type').value = p.type;
       document.getElementById('headspa-type').disabled = true;
       document.getElementById('headspa-label').value = p.label;
-      document.getElementById('headspa-length').value = p.hair_length || '';
+      const hl = document.getElementById('headspa-length'); if (hl) hl.value = 'Toutes longueurs';
       document.getElementById('headspa-price-htg').value = p.price_htg;
       document.getElementById('headspa-price-usd').value = p.price_usd || '';
       document.getElementById('headspa-form-title').textContent = 'Modifier: ' + p.label;
@@ -736,7 +731,7 @@
       document.getElementById('headspa-type').value = '';
       document.getElementById('headspa-type').disabled = false;
       document.getElementById('headspa-label').value = '';
-      document.getElementById('headspa-length').value = '';
+      const hl = document.getElementById('headspa-length'); if (hl) hl.value = 'Toutes longueurs';
       document.getElementById('headspa-price-htg').value = '';
       document.getElementById('headspa-price-usd').value = '';
       document.getElementById('headspa-form-title').textContent = 'Ajouter un type de cheveux';
