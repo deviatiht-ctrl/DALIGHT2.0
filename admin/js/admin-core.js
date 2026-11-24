@@ -1,4 +1,4 @@
-// ============================================
+﻿// ============================================
 // DALIGHT - ADMIN CORE
 // Shared functionality for all admin pages
 // ============================================
@@ -177,17 +177,51 @@ function initSidebar() {
   const mobileMenuBtn = document.getElementById('mobile-menu-btn');
   const sidebar = document.getElementById('sidebar');
 
+  // Ensure Backdrop Overlay exists
+  let overlay = document.querySelector('.sidebar-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.className = 'sidebar-overlay';
+    document.body.appendChild(overlay);
+  }
+
+  function toggleSidebar(open) {
+    if (!sidebar) return;
+    const shouldOpen = open !== undefined ? open : !sidebar.classList.contains('open');
+    sidebar.classList.toggle('open', shouldOpen);
+    overlay.classList.toggle('active', shouldOpen);
+    if (window.innerWidth <= 1024) {
+      document.body.style.overflow = shouldOpen ? 'hidden' : '';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }
+
   if (mobileMenuBtn && sidebar) {
-    mobileMenuBtn.addEventListener('click', () => {
-      sidebar.classList.toggle('open');
+    mobileMenuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleSidebar();
     });
-    
-    // Close sidebar when clicking outside on mobile
-    document.addEventListener('click', (e) => {
-      if (window.innerWidth <= 768) {
-        if (!sidebar.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
-          sidebar.classList.remove('open');
+
+    overlay.addEventListener('click', () => {
+      toggleSidebar(false);
+    });
+
+    // Close when clicking nav links on mobile/tablet
+    sidebar.querySelectorAll('.nav-item').forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.innerWidth <= 1024) {
+          toggleSidebar(false);
         }
+      });
+    });
+
+    // Close on resize if going to desktop
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 1024) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
       }
     });
   }

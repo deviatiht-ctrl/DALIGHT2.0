@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -356,10 +356,39 @@
       transition: all 0.15s ease;
     }
 
-    .chip-btn:hover {
+        .chip-btn:hover {
       background: rgba(212, 175, 55, 0.15);
       border-color: var(--admin-accent);
       transform: translateY(-1px);
+    }
+
+    /* Responsive WhatsApp Layout */
+    @media (max-width: 1024px) {
+      .wa-grid-2col,
+      div[style*="grid-template-columns: 1.15fr 0.85fr"],
+      div[style*="grid-template-columns: 1fr 1.15fr"],
+      div[style*="grid-template-columns:1.15fr 0.85fr"] {
+        grid-template-columns: 1fr !important;
+        gap: 1.25rem !important;
+      }
+      .phone-mockup-wrapper {
+        max-width: 100% !important;
+        margin: 0 auto !important;
+      }
+    }
+    @media (max-width: 640px) {
+      .wa-status-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+      }
+      .template-grid {
+        grid-template-columns: 1fr !important;
+      }
+      .phone-mockup {
+        height: 500px !important;
+        border-width: 4px !important;
+        border-radius: 24px !important;
+      }
     }
   </style>
 </head>
@@ -2104,7 +2133,7 @@
 
         let servicesMenu = "";
         if (liveServicesCache.length) {
-          servicesMenu = liveServicesCache.map(s => '• ' + s.name + ' (' + (s.duration || 60) + ' min) : ' + (s.price_htg ? s.price_htg + ' HTG' : s.price_usd + ' USD')).join('\n');
+          servicesMenu = liveServicesCache.map(s => '• ' + s.name + ' (' + (s.duration || 60) + ' min) : ' + (s.price_htg ? Number(s.price_htg).toLocaleString() + ' HTG' : '')).join('\n');
         } else {
           servicesMenu = "• Silver Package Head Spa (60 min) : 5 000 HTG\n• Golden Head Spa (60 min) : 7 000 HTG\n• Diamond Head Spa (60 min) : 10 000 HTG\n• Silver Head Spa Dreadlocks (60 min) : 6 000 HTG\n• Massage relaxant Silver (45 min) : 10 000 HTG\n• Massage relaxant Golden (45 min) : 12 000 HTG";
         }
@@ -2179,7 +2208,7 @@
       if (text.includes('pri') || text.includes('prix') || text.includes('konbyen') || text.includes('combien') || text.includes('tarif') || text.includes('head spa') || text.includes('soin') || text.includes('massage')) {
         let menuStr = "";
         if (services && services.length) {
-          menuStr = services.slice(0, 8).map(s => "**" + s.name + "** (" + (s.duration || 60) + " min) — **" + (s.price_htg ? s.price_htg + " HTG" : s.price_usd + " USD") + "**").join('\n');
+          menuStr = services.slice(0, 8).map(s => "**" + s.name + "** (" + (s.duration || 60) + " min) — **" + (s.price_htg ? Number(s.price_htg).toLocaleString() + " HTG" : "") + "**").join('\n');
         } else {
           menuStr = "**Silver Package Head Spa (60 min)** — **5 000 HTG**\n**Golden Head Spa (60 min)** — **7 000 HTG**\n**Diamond Head Spa (60 min)** — **10 000 HTG**\n**Silver Head Spa Dreadlocks (60 min)** — **6 000 HTG**\n**Massage relaxant Silver (45 min)** — **10 000 HTG**\n**Massage relaxant Golden (45 min)** — **12 000 HTG**";
         }

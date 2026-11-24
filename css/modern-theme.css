@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    DALIGHT — MASTER LUXURY SPA DESIGN SYSTEM
    Dark Olive (#3E4A28) + Deep Dark Olive (#2C351C) + Warm Taupe Rose (#C2A490)
    Crisp White (#FFFFFF) + Cream Light (#FAF8F5)
@@ -2288,6 +2288,26 @@ select option {
   background: rgba(255, 255, 255, 0.06);
 }
 
+@media (max-width: 480px) {
+  .spa-auth-tabs {
+    padding: 3px !important;
+    gap: 3px !important;
+  }
+  .spa-auth-tab {
+    padding: 0.45rem 0.5rem !important;
+    font-size: 0.72rem !important;
+    gap: 0.25rem !important;
+  }
+  .spa-auth-tab span {
+    font-size: 0.72rem !important;
+  }
+  .spa-auth-tab i,
+  .spa-auth-tab svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+}
+
 /* Form Titles */
 .spa-form-heading {
   margin-bottom: 1.75rem;
@@ -2512,9 +2532,45 @@ select option {
   /* Cache le bouton large de connexion/deconnexion et pill pour eviter d'eclater la navbar */
   .spa-nav-right .auth-btn,
   .nav-cta .auth-btn,
-  .spa-nav-right .spa-pill-btn,
+    .spa-nav-right .spa-pill-btn,
   .nav-cta .spa-pill-btn {
     display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .spa-auth-section {
+    padding: 1.5rem 0.65rem 3rem !important;
+  }
+  .spa-auth-form-capsule,
+  .spa-auth-form-capsule.login-curve,
+  .spa-auth-form-capsule.register-curve {
+    padding: 1.35rem 0.85rem !important;
+    border-radius: 24px !important;
+  }
+  .spa-auth-tabs {
+    display: flex !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 3px !important;
+    gap: 3px !important;
+  }
+  .spa-auth-tab {
+    flex: 1 1 50% !important;
+    min-width: 0 !important;
+    padding: 0.5rem 0.35rem !important;
+    font-size: 0.74rem !important;
+    gap: 0.3rem !important;
+    white-space: nowrap !important;
+  }
+  .spa-auth-tab span {
+    font-size: 0.74rem !important;
+  }
+  .spa-auth-tab i,
+  .spa-auth-tab svg {
+    width: 14px !important;
+    height: 14px !important;
+    flex-shrink: 0 !important;
   }
 }
 

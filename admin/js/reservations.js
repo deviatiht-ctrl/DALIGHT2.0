@@ -1837,10 +1837,72 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Fetch service categories from database and populate dropdowns
+let availableServiceCategories = [];
+
+// Helper functions for multi-service selection checkboxes
+window.toggleAllBlockServices = function(checked) {
+  const allCb = document.getElementById('block-service-all');
+  if (allCb) allCb.checked = checked;
+  document.querySelectorAll('.block-service-cb').forEach(cb => {
+    cb.checked = checked;
+  });
+};
+
+window.onBlockAllServicesChange = function(checked) {
+  if (checked) {
+    document.querySelectorAll('.block-service-cb').forEach(cb => cb.checked = false);
+  }
+};
+
+window.onBlockSingleServiceChange = function() {
+  const anyChecked = Array.from(document.querySelectorAll('.block-service-cb')).some(cb => cb.checked);
+  const allCb = document.getElementById('block-service-all');
+  if (allCb && anyChecked) {
+    allCb.checked = false;
+  }
+};
+
+window.toggleAllCapacityServices = function(checked) {
+  const allCb = document.getElementById('capacity-service-all');
+  if (allCb) allCb.checked = checked;
+  document.querySelectorAll('.capacity-service-cb').forEach(cb => {
+    cb.checked = checked;
+  });
+};
+
+window.onCapacityAllServicesChange = function(checked) {
+  if (checked) {
+    document.querySelectorAll('.capacity-service-cb').forEach(cb => cb.checked = false);
+  }
+};
+
+window.onCapacitySingleServiceChange = function() {
+  const anyChecked = Array.from(document.querySelectorAll('.capacity-service-cb')).some(cb => cb.checked);
+  const allCb = document.getElementById('capacity-service-all');
+  if (allCb && anyChecked) {
+    allCb.checked = false;
+  }
+};
+
 async function loadServiceCategories() {
   try {
     const supabase = getSupabaseClient();
     if (!supabase) return;
+
+    // Fetch from service_categories if available
+    let dbCategories = [];
+    try {
+      const { data: catData } = await supabase
+        .from('service_categories')
+        .select('slug, label')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+      if (catData && catData.length) {
+        dbCategories = catData;
+      }
+    } catch(e) {
+      console.warn('Could not read service_categories table:', e);
+    }
 
     const { data: services, error } = await supabase
       .from('services')
@@ -1848,51 +1910,84 @@ async function loadServiceCategories() {
       .not('category', 'is', null);
 
     if (error) {
-      console.error('Error fetching categories:', error);
-      return;
+      console.error('Error fetching categories from services:', error);
     }
 
-    // Get distinct categories
-    const categories = [...new Set(services?.map(s => s.category) || [])];
-    console.log('Fetched categories:', categories);
+    // Default category map
+    const defaultLabels = {
+      'headspa': 'Head Spa',
+      'massage-relaxant': 'Massage Relaxant',
+      'wood-therapy': 'Wood Therapy',
+      'facial': 'Facial',
+      'ongles': 'Ongles & Manucure',
+      'lifting-colombien': 'Lifting colombien',
+      'package': 'Packages',
+      'cure': 'Cures'
+    };
 
-    // Populate availability category filter
+    const slugsFromServices = [...new Set(services?.map(s => s.category) || [])];
+    const categoryMap = new Map();
+
+    // Add db categories
+    dbCategories.forEach(c => {
+      if (c.slug) categoryMap.set(c.slug, c.label || defaultLabels[c.slug] || c.slug);
+    });
+
+    // Add from services
+    slugsFromServices.forEach(slug => {
+      if (slug && !categoryMap.has(slug)) {
+        categoryMap.set(slug, defaultLabels[slug] || (slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' ')));
+      }
+    });
+
+    // Ensure our core categories exist
+    ['headspa', 'massage-relaxant', 'wood-therapy', 'facial', 'ongles'].forEach(slug => {
+      if (!categoryMap.has(slug)) {
+        categoryMap.set(slug, defaultLabels[slug]);
+      }
+    });
+
+    availableServiceCategories = Array.from(categoryMap.entries()).map(([slug, label]) => ({ slug, label }));
+    console.log('✅ Loaded categories for availability:', availableServiceCategories);
+
+    // 1. Populate availability category filter dropdown
     const categoryFilter = document.getElementById('availability-category-filter');
     if (categoryFilter) {
       const currentValue = categoryFilter.value;
-      categoryFilter.innerHTML = '<option value="all">Toutes les catégories</option>';
-      categories.forEach(cat => {
-        if (cat) {
-          const option = document.createElement('option');
-          option.value = cat;
-          option.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
-          categoryFilter.appendChild(option);
-        }
+      categoryFilter.innerHTML = '<option value="all">🌐 Toutes les catégories (Global)</option>';
+      availableServiceCategories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.slug;
+        option.textContent = cat.label;
+        categoryFilter.appendChild(option);
       });
-      // Restore previous selection if possible
-      if (categories.includes(currentValue) || currentValue === 'all') {
+      if (currentValue && (categoryMap.has(currentValue) || currentValue === 'all')) {
         categoryFilter.value = currentValue;
       }
     }
 
-    // Populate modal service type dropdown
-    const serviceTypeSelect = document.getElementById('capacity-service-type');
-    if (serviceTypeSelect) {
-      const currentValue = serviceTypeSelect.value;
-      serviceTypeSelect.innerHTML = '<option value="all">Tous les services (bloquer la salle entière)</option>';
-      categories.forEach(cat => {
-        if (cat) {
-          const option = document.createElement('option');
-          option.value = cat;
-          option.textContent = cat.charAt(0).toUpperCase() + cat.slice(1) + ' uniquement';
-          serviceTypeSelect.appendChild(option);
-        }
-      });
-      // Restore previous selection if possible
-      if (categories.includes(currentValue) || currentValue === 'all') {
-        serviceTypeSelect.value = currentValue;
-      }
+    // 2. Populate block-service-checkboxes in block modal
+    const blockCbContainer = document.getElementById('block-service-checkboxes');
+    if (blockCbContainer) {
+      blockCbContainer.innerHTML = availableServiceCategories.map(cat => `
+        <label style="display:flex;align-items:center;gap:0.45rem;cursor:pointer;font-size:0.82rem;background:rgba(255,255,255,0.04);padding:0.4rem 0.55rem;border-radius:6px;border:1px solid rgba(255,255,255,0.08);transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.04)'">
+          <input type="checkbox" class="block-service-cb" value="${cat.slug}" onchange="onBlockSingleServiceChange()" style="accent-color:#ef4444;width:16px;height:16px;cursor:pointer;">
+          <span style="font-weight:500;">${cat.label}</span>
+        </label>
+      `).join('');
     }
+
+    // 3. Populate capacity-service-checkboxes in capacity modal
+    const capCbContainer = document.getElementById('capacity-service-checkboxes');
+    if (capCbContainer) {
+      capCbContainer.innerHTML = availableServiceCategories.map(cat => `
+        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.8rem;background:rgba(255,255,255,0.04);padding:0.35rem 0.5rem;border-radius:6px;border:1px solid rgba(255,255,255,0.08);transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.04)'">
+          <input type="checkbox" class="capacity-service-cb" value="${cat.slug}" onchange="onCapacitySingleServiceChange()" style="accent-color:#6366f1;width:15px;height:15px;cursor:pointer;">
+          <span style="font-weight:500;">${cat.label}</span>
+        </label>
+      `).join('');
+    }
+
   } catch (err) {
     console.error('Error loading service categories:', err);
   }
@@ -2021,31 +2116,49 @@ async function loadAvailabilityFallback(supabase, year, month) {
     .gte('exception_date', startDate).lte('exception_date', endDate);
   
   if (categoryFilter !== 'all') {
-    exceptionsQuery = exceptionsQuery.eq('service_type', categoryFilter);
+    exceptionsQuery = exceptionsQuery.or(`service_type.eq.${categoryFilter},service_type.eq.all,service_type.is.null`);
   }
 
   const [exceptionsRes, bookingsRes] = await Promise.all([
     exceptionsQuery,
-    supabase.from('reservations').select('date, time, status, service_id')
+    supabase.from('reservations').select('date, time, status, service, service_id, services')
       .gte('date', startDate).lte('date', endDate)
-      .not('status', 'eq', 'cancelled')
+      .not('status', 'ilike', '%cancel%')
   ]);
 
   const exceptions = exceptionsRes.data || [];
   const bookings   = bookingsRes.data || [];
   const results    = [];
 
+  // Helper to match a reservation against a category
+  function matchesCategory(b, cat) {
+    if (cat === 'all') return true;
+    if (Array.isArray(b.services) && b.services.some(s => s.category === cat)) return true;
+    const bName = (b.service || '').toLowerCase().trim();
+    if (cat === 'headspa' && (bName.includes('head spa') || bName.includes('headspa'))) return true;
+    if (cat === 'massage-relaxant' && bName.includes('massage')) return true;
+    if (cat === 'wood-therapy' && (bName.includes('wood') || bName.includes('minceur'))) return true;
+    if (cat === 'facial' && (bName.includes('facial') || bName.includes('visage'))) return true;
+    if (cat === 'ongles' && (bName.includes('mani') || bName.includes('pédi') || bName.includes('ongle'))) return true;
+    return false;
+  }
+
   // Filter bookings by category if category filter is set
   let filteredBookings = bookings;
   if (categoryFilter !== 'all') {
-    // Get service IDs for the selected category
-    const { data: services } = await supabase
-      .from('services')
-      .select('id')
-      .eq('category', categoryFilter);
-    
-    const serviceIds = services?.map(s => s.id) || [];
-    filteredBookings = bookings.filter(b => serviceIds.includes(b.service_id));
+    let serviceIds = [];
+    try {
+      const { data: services } = await supabase
+        .from('services')
+        .select('id')
+        .eq('category', categoryFilter);
+      serviceIds = services?.map(s => s.id) || [];
+    } catch(e) {}
+
+    filteredBookings = bookings.filter(b => {
+      if (b.service_id && serviceIds.includes(b.service_id)) return true;
+      return matchesCategory(b, categoryFilter);
+    });
   }
 
   for (const exc of exceptions) {
@@ -2055,7 +2168,7 @@ async function loadAvailabilityFallback(supabase, year, month) {
     const booked  = filteredBookings.filter(b =>
       b.date === dateStr && b.time?.substring(0,5) === timeStr
     ).length;
-    const capacity  = exc.max_capacity ?? 1;
+    const capacity  = exc.max_capacity ?? ((categoryFilter === 'headspa' || categoryFilter === 'massage-relaxant') ? 2 : 1);
     const remaining = exc.is_blocked ? 0 : Math.max(0, capacity - booked);
 
     results.push({
@@ -2070,12 +2183,42 @@ async function loadAvailabilityFallback(supabase, year, month) {
       is_exception:     true
     });
   }
+
+  // Also include dates & times with bookings that don't have explicit exceptions yet
+  const coveredKeySet = new Set(exceptions.filter(e => e.time_slot).map(e => `${e.exception_date}_${e.time_slot.substring(0,5)}`));
+  const seenBookedSlots = new Set();
+
+  filteredBookings.forEach(b => {
+    if (!b.date || !b.time) return;
+    const tStr = b.time.substring(0, 5);
+    const key = `${b.date}_${tStr}`;
+    if (!coveredKeySet.has(key) && !seenBookedSlots.has(key)) {
+      seenBookedSlots.add(key);
+      const bookedCount = filteredBookings.filter(bk => bk.date === b.date && bk.time?.substring(0,5) === tStr).length;
+      const defaultCap = (categoryFilter === 'headspa' || categoryFilter === 'massage-relaxant') ? 2 : 1;
+      const remaining = Math.max(0, defaultCap - bookedCount);
+      results.push({
+        available_date: b.date,
+        slot_time: tStr + ':00',
+        is_available: remaining > 0,
+        is_blocked: false,
+        service_type: categoryFilter !== 'all' ? categoryFilter : 'all',
+        max_capacity: defaultCap,
+        current_bookings: bookedCount,
+        remaining_slots: remaining,
+        is_exception: false
+      });
+    }
+  });
+
   return results;
 }
 
 function renderAvailabilityCalendar(data) {
   const tbody = document.getElementById('availability-body');
   if (!tbody) return;
+
+  const categoryFilter = document.getElementById('availability-category-filter')?.value || 'all';
 
   // Index exceptions par date+heure (array pou sipòte pliziè service_type)
   const byDate = {};
@@ -2111,17 +2254,34 @@ function renderAvailabilityCalendar(data) {
         ${dayName} ${dayNum}
       </td>
       ${timeSlots.map(time => {
-        const slots   = byDate[date]?.[time] || [];
-        const primary = slots.find(s => (s.service_type === 'all' || !s.service_type) && s.is_blocked)
-                     || slots.find(s => s.service_type === 'all' || !s.service_type)
-                     || slots[0] || null;
+        const slots = byDate[date]?.[time] || [];
+        
+        let primary = null;
+        if (categoryFilter !== 'all') {
+          // Find slot matching categoryFilter first, then fallback to global 'all' block
+          primary = slots.find(s => s.service_type === categoryFilter)
+                 || slots.find(s => (s.service_type === 'all' || !s.service_type) && s.is_blocked)
+                 || slots.find(s => s.service_type === 'all' || !s.service_type)
+                 || null;
+        } else {
+          // Global view
+          primary = slots.find(s => (s.service_type === 'all' || !s.service_type) && s.is_blocked)
+                 || slots.find(s => s.service_type === 'all' || !s.service_type)
+                 || slots[0] || null;
+        }
+
         const hasPartialBlock = slots.some(s => s.is_blocked) &&
           !slots.some(s => s.is_blocked && (s.service_type === 'all' || !s.service_type));
-        const status = getSlotStatus(primary, slots);
-        const label  = !primary ? '✓'
-          : (primary.is_blocked && (primary.service_type === 'all' || !primary.service_type)) ? '🔒'
-          : hasPartialBlock ? '⚡'
+        
+        const status = getSlotStatus(primary, slots, categoryFilter);
+        
+        const isBlockedForCurrentView = (primary?.is_blocked && (primary.service_type === 'all' || !primary.service_type || (categoryFilter !== 'all' && primary.service_type === categoryFilter)));
+
+        const label = !primary ? '✓'
+          : isBlockedForCurrentView ? '🔒'
+          : (categoryFilter === 'all' && hasPartialBlock) ? '⚡'
           : `${primary.remaining_slots}/${primary.max_capacity}`;
+
         return `<td style="padding:1px;">
           <button
             class="availability-cell ${status.class}"
@@ -2137,8 +2297,30 @@ function renderAvailabilityCalendar(data) {
   }).join('');
 }
 
-function getSlotStatus(slot, allSlots) {
-  // Pa konfigire encore — disponib pa default (vèt)
+function getSlotStatus(slot, allSlots, categoryFilter) {
+  categoryFilter = categoryFilter || document.getElementById('availability-category-filter')?.value || 'all';
+
+  if (categoryFilter !== 'all') {
+    // Specific service category filter
+    const isCatBlocked = (slot?.is_blocked && (slot.service_type === categoryFilter || slot.service_type === 'all' || !slot.service_type))
+                      || allSlots?.some(s => s.is_blocked && (s.service_type === categoryFilter || s.service_type === 'all' || !s.service_type));
+    
+    if (isCatBlocked) {
+      return { class: 'blocked', color: '#6b7280', textColor: 'white', tooltip: `Bloqué (${categoryFilter})` };
+    }
+    if (!slot) {
+      return { class: 'available', color: '#10b981', textColor: 'white', tooltip: 'Disponible — cliquez pour configurer' };
+    }
+    if (slot.remaining_slots <= 0) {
+      return { class: 'full', color: '#ef4444', textColor: 'white', tooltip: `Complet (${slot.current_bookings}/${slot.max_capacity})` };
+    }
+    if (slot.remaining_slots <= Math.ceil(slot.max_capacity * 0.3)) {
+      return { class: 'limited', color: '#f59e0b', textColor: 'white', tooltip: `Presque plein — ${slot.remaining_slots} restante(s)` };
+    }
+    return { class: 'available', color: '#10b981', textColor: 'white', tooltip: `${slot.remaining_slots} place(s) disponible(s)` };
+  }
+
+  // Global / Tous les services view
   if (!slot && (!allSlots || allSlots.length === 0)) {
     return { class: 'available', color: '#10b981', textColor: 'white', tooltip: 'Disponible — cliquez pour configurer' };
   }
@@ -2173,18 +2355,21 @@ function openBlockDateModal() {
   console.log('📦 Modal element:', modal);
   
   if (modal) {
-    // Use active class for proper CSS display
     modal.classList.add('active');
     modal.style.display = 'flex';
-    // Clear all fields
     document.getElementById('block-date-input').value = '';
     document.getElementById('block-time-from').value = '';
     document.getElementById('block-time-to').value = '';
     document.getElementById('block-reason-input').value = '';
-    // Hide preview and reservations
     document.getElementById('selected-hours-preview').style.display = 'none';
     document.getElementById('existing-reservations-section').style.display = 'none';
     document.getElementById('no-reservations-msg').style.display = 'none';
+
+    // Reset multi-service checkboxes: default to 'all' checked
+    const allCb = document.getElementById('block-service-all');
+    if (allCb) allCb.checked = true;
+    document.querySelectorAll('.block-service-cb').forEach(cb => cb.checked = false);
+
     console.log('✅ Modal opened with active class');
   } else {
     console.error('❌ Modal not found!');
@@ -2199,13 +2384,9 @@ function closeBlockDateModal() {
     modal.style.display = 'none';
     console.log('✅ Modal closed');
   }
-  // Clear all sections
   document.getElementById('existing-reservations-section').style.display = 'none';
   document.getElementById('no-reservations-msg').style.display = 'none';
   document.getElementById('selected-hours-preview').style.display = 'none';
-  // Reset service type selector
-  const svcTypeEl = document.getElementById('block-service-type');
-  if (svcTypeEl) svcTypeEl.value = 'all';
 }
 
 // Time Range Functions
@@ -2221,14 +2402,12 @@ function onTimeFromChange() {
   const from = document.getElementById('block-time-from').value;
   const toSelect = document.getElementById('block-time-to');
   
-  // If "from" is selected and "to" is empty or before "from", set "to" to next hour
   if (from && !toSelect.value) {
     const nextHour = parseInt(from.split(':')[0]) + 1;
     if (nextHour <= 18) {
       toSelect.value = `${nextHour.toString().padStart(2, '0')}:00`;
     }
   }
-  
   updateHoursPreview();
 }
 
@@ -2243,7 +2422,6 @@ function updateHoursPreview() {
     return;
   }
   
-  // Generate list of hours to block
   const startHour = parseInt(from.split(':')[0]);
   const endHour = parseInt(to.split(':')[0]);
   const hours = [];
@@ -2257,7 +2435,6 @@ function updateHoursPreview() {
     return;
   }
   
-  // Display hours
   hoursList.innerHTML = hours.map(h => 
     `<span style="padding: 0.25rem 0.5rem; background: #ef4444; color: white; border-radius: 4px; font-size: 0.75rem;">${h}</span>`
   ).join('');
@@ -2271,16 +2448,12 @@ function getHoursToBlock() {
   const to = document.getElementById('block-time-to').value;
   
   if (!from && !to) {
-    // Block whole day - return special marker
     return ['ALL_DAY'];
   }
-  
   if (!from || !to) {
-    // Single hour
     return [from || to];
   }
   
-  // Range of hours
   const startHour = parseInt(from.split(':')[0]);
   const endHour = parseInt(to.split(':')[0]);
   const hours = [];
@@ -2288,7 +2461,6 @@ function getHoursToBlock() {
   for (let h = startHour; h < endHour; h++) {
     hours.push(`${h.toString().padStart(2, '0')}:00`);
   }
-  
   return hours;
 }
 
@@ -2305,7 +2477,6 @@ async function onBlockDateChange(date) {
   const section = document.getElementById('existing-reservations-section');
   const noMsg = document.getElementById('no-reservations-msg');
 
-  // Show loading
   listContainer.innerHTML = '<p style="text-align: center; color: var(--admin-text-muted);">Chargement...</p>';
   section.style.display = 'block';
   noMsg.style.display = 'none';
@@ -2317,12 +2488,11 @@ async function onBlockDateChange(date) {
       return;
     }
 
-    // Load reservations for this date
     const { data: reservations, error } = await supabase
       .from('reservations')
       .select('id, user_name, service, time, status, location')
       .eq('date', date)
-      .not('status', 'eq', 'CANCELLED')
+      .not('status', 'ilike', '%cancel%')
       .order('time', { ascending: true });
 
     if (error) throw error;
@@ -2333,7 +2503,6 @@ async function onBlockDateChange(date) {
       return;
     }
 
-    // Display reservations
     listContainer.innerHTML = reservations.map(r => {
       const time = r.time?.substring(0, 5) || '--:--';
       const statusColors = {
@@ -2389,21 +2558,14 @@ async function onBlockDateChange(date) {
 // Select time from reservation
 function selectReservationTime(time, clientName, service) {
   console.log('⏰ Selected reservation time:', time);
-  
-  // Set as single hour (from and to are the same)
   document.getElementById('block-time-from').value = time;
   const nextHour = (parseInt(time.split(':')[0]) + 1).toString().padStart(2, '0') + ':00';
   document.getElementById('block-time-to').value = nextHour;
-  
-  // Update preview
   updateHoursPreview();
-  
-  // Auto-fill reason with client info
   const reasonInput = document.getElementById('block-reason-input');
   if (!reasonInput.value) {
     reasonInput.value = `Bloquer - Réservation ${clientName} (${service})`;
   }
-  
   window.adminCore?.showToast(`Heure ${time} sélectionnée pour ${clientName}`);
 }
 
@@ -2412,23 +2574,31 @@ async function confirmBlockDate() {
   
   const date = document.getElementById('block-date-input').value;
   const reason = document.getElementById('block-reason-input').value;
-  const serviceType = document.getElementById('block-service-type')?.value || 'all';
   const hoursToBlock = getHoursToBlock();
-  
-  console.log('📅 Date:', date, '🕐 Hours:', hoursToBlock, '🏷️ Service:', serviceType);
   
   if (!date) {
     window.adminCore?.showToast('Veuillez sélectionner une date', 'error');
     return;
   }
+
+  // Get selected services from checkboxes
+  const isAllChecked = document.getElementById('block-service-all')?.checked;
+  const checkedBoxes = Array.from(document.querySelectorAll('.block-service-cb:checked')).map(cb => cb.value);
+
+  let targetServices = [];
+  if (isAllChecked || checkedBoxes.length === 0) {
+    targetServices = ['all'];
+  } else {
+    targetServices = checkedBoxes;
+  }
+
+  console.log('📅 Date:', date, '🕐 Hours:', hoursToBlock, '🏷️ Target Services:', targetServices);
   
   const btn = document.querySelector('#block-date-modal .btn-danger');
   const originalText = btn?.textContent;
   if (btn) {
     btn.disabled = true;
-    btn.textContent = hoursToBlock.length > 1
-      ? `Bloquer ${hoursToBlock.length} heures...`
-      : 'Traitement...';
+    btn.textContent = 'Enregistrement...';
   }
   
   try {
@@ -2441,54 +2611,53 @@ async function confirmBlockDate() {
     }
     if (!supabase) throw new Error('Supabase non initialisé. Veuillez rafraîchir la page.');
 
-    const blockedHours = [];
+    const blockedEntries = [];
     const errors = [];
 
     for (const hour of hoursToBlock) {
-      console.log('📤 Blocking:', hour, 'service:', serviceType);
-      try {
-        // Try new admin_block_slot first (supports service_type), fallback to admin_block_date
-        let data, error;
-        const slotResult = await supabase.rpc('admin_block_slot', {
-          p_date: date,
-          p_time_slot: hour === 'ALL_DAY' ? null : hour,
-          p_service_type: serviceType,
-          p_is_blocked: true,
-          p_reason: reason || 'Bloqué par admin'
-        });
-        data = slotResult.data;
-        error = slotResult.error;
+      const formattedTime = (hour === 'ALL_DAY') ? null : (hour.length === 5 ? (hour + ':00') : hour);
 
-        // Fallback: if function doesn't exist yet, use old admin_block_date
-        if (error && error.message?.includes('does not exist')) {
-          const fallback = await supabase.rpc('admin_block_date', {
-            p_date: date,
-            p_time_slot: hour === 'ALL_DAY' ? null : hour,
-            p_reason: reason || 'Bloqué par admin',
-            p_is_blocked: true
-          });
-          data = fallback.data;
-          error = fallback.error;
-        }
+      for (const svc of targetServices) {
+        console.log('📤 Blocking:', hour, 'service:', svc);
+        try {
+          // Direct Upsert into availability_exceptions
+          const { error: upsertErr } = await supabase
+            .from('availability_exceptions')
+            .upsert({
+              exception_date: date,
+              time_slot: formattedTime,
+              is_blocked: true,
+              service_type: svc,
+              reason: reason || 'Bloqué par admin'
+            }, { onConflict: 'exception_date,time_slot,service_type' });
 
-        if (error) {
-          errors.push(`${hour}: ${error.message}`);
-        } else if (data?.success) {
-          blockedHours.push(hour === 'ALL_DAY' ? 'Toute la journée' : hour);
+          if (upsertErr) {
+            // Fallback RPC attempt
+            try {
+              await supabase.rpc('admin_block_slot', {
+                p_date: date,
+                p_time_slot: formattedTime,
+                p_service_type: svc,
+                p_is_blocked: true,
+                p_reason: reason || 'Bloqué par admin'
+              });
+            } catch(rpcErr) {
+              console.warn('RPC fallback error:', rpcErr);
+            }
+          }
+
+          blockedEntries.push(`${hour === 'ALL_DAY' ? 'Toute la journée' : hour} (${svc})`);
+        } catch (err) {
+          errors.push(`${hour} [${svc}]: ${err.message}`);
         }
-      } catch (err) {
-        errors.push(`${hour}: ${err.message}`);
       }
     }
     
-    console.log('📊 Results:', { blocked: blockedHours.length, errors: errors.length });
+    console.log('📊 Results:', { blocked: blockedEntries.length, errors: errors.length });
     
-    if (blockedHours.length > 0) {
-      const svcLabel = serviceType === 'all' ? '' : ` (${serviceType})`;
-      const message = blockedHours.length === 1
-        ? `Créneau bloqué${svcLabel}: ${blockedHours[0]}`
-        : `${blockedHours.length} créneaux bloqués${svcLabel}: ${blockedHours.join(', ')}`;
-      window.adminCore?.showToast(message);
+    if (blockedEntries.length > 0) {
+      const svcNames = targetServices.includes('all') ? 'Tous les services' : targetServices.join(', ');
+      window.adminCore?.showToast(`Bloqué avec succès pour : ${svcNames} ✓`);
       closeBlockDateModal();
       loadAvailability();
     } else if (errors.length > 0) {
@@ -2498,9 +2667,7 @@ async function confirmBlockDate() {
   } catch (err) {
     console.error('❌ Error blocking date:', err);
     window.adminCore?.showToast('Erreur: ' + err.message, 'error');
-    alert('Erreur: ' + err.message + '\n\nVérifiez que vous avez exécuté dateheure.sql dans Supabase');
   } finally {
-    // Restore button state
     if (btn) {
       btn.disabled = false;
       btn.textContent = originalText || '🚫 Bloquer';
@@ -2515,20 +2682,27 @@ function openSlotModal(date, time, slotData, allSlotsData) {
   const isExisting  = !!slotData;
   const isBlocked   = slotData?.is_blocked === true;
 
-  // Titre modal
   const titleEl = document.getElementById('capacity-modal-title');
   if (titleEl) titleEl.textContent = isExisting ? 'Modifier créneau' : 'Ajouter créneau';
 
-  // Champs
   document.getElementById('capacity-time-display').value = `${date} à ${time}`;
   document.getElementById('capacity-input').value = slotData?.max_capacity || 1;
   document.getElementById('capacity-available').checked = isBlocked ? false : (slotData?.is_available ?? true);
-  const svcTypeEl = document.getElementById('capacity-service-type');
   
-  // Pre-select the category filter value if no slot data exists, otherwise use slot's service_type
   const categoryFilter = document.getElementById('availability-category-filter')?.value || 'all';
-  const serviceType = slotData?.service_type || categoryFilter;
-  if (svcTypeEl) svcTypeEl.value = serviceType;
+  const targetSvc = slotData?.service_type || (categoryFilter !== 'all' ? categoryFilter : 'all');
+
+  // Pre-check multi-service checkboxes in capacity modal
+  const capAllCb = document.getElementById('capacity-service-all');
+  if (targetSvc === 'all') {
+    if (capAllCb) capAllCb.checked = true;
+    document.querySelectorAll('.capacity-service-cb').forEach(cb => cb.checked = false);
+  } else {
+    if (capAllCb) capAllCb.checked = false;
+    document.querySelectorAll('.capacity-service-cb').forEach(cb => {
+      cb.checked = (cb.value === targetSvc);
+    });
+  }
 
   // Breakdown list
   const breakdownContainer = document.getElementById('capacity-breakdown');
@@ -2544,7 +2718,6 @@ function openSlotModal(date, time, slotData, allSlotsData) {
     breakdownContainer.style.display = 'none';
   }
 
-  // Bouton débloquer — visible sèlman si kreno egziste nan DB
   const btnDeblock = document.getElementById('btn-deblock-slot');
   const blockedInfo = document.getElementById('slot-blocked-info');
   if (btnDeblock) btnDeblock.style.display = isExisting ? 'block' : 'none';
@@ -2565,23 +2738,27 @@ async function deleteSlot() {
     const supabase = getSupabaseClient();
     if (!supabase) throw new Error('Connexion Supabase non établie.');
 
-    // Essai 1: avec service_type
-    const delSvcType = document.getElementById('capacity-service-type')?.value || 'all';
-    let { error } = await supabase
-      .from('availability_exceptions')
-      .delete()
-      .eq('exception_date', selectedSlot.date)
-      .eq('time_slot', selectedSlot.time + ':00')
-      .eq('service_type', delSvcType);
+    const isAllChecked = document.getElementById('capacity-service-all')?.checked;
+    const checkedBoxes = Array.from(document.querySelectorAll('.capacity-service-cb:checked')).map(cb => cb.value);
 
-    if (error) {
-      // Essai 2: sans service_type
-      const { error: e2 } = await supabase
+    const formattedTime = selectedSlot.time.length === 5 ? (selectedSlot.time + ':00') : selectedSlot.time;
+
+    if (isAllChecked || checkedBoxes.length === 0) {
+      // Delete all or 'all'
+      await supabase
         .from('availability_exceptions')
         .delete()
         .eq('exception_date', selectedSlot.date)
-        .eq('time_slot', selectedSlot.time + ':00');
-      if (e2) throw e2;
+        .eq('time_slot', formattedTime);
+    } else {
+      for (const svc of checkedBoxes) {
+        await supabase
+          .from('availability_exceptions')
+          .delete()
+          .eq('exception_date', selectedSlot.date)
+          .eq('time_slot', formattedTime)
+          .eq('service_type', svc);
+      }
     }
 
     window.adminCore?.showToast('Créneau supprimé ✓');
@@ -2608,42 +2785,47 @@ async function saveCapacity() {
 
   const capacity    = parseInt(document.getElementById('capacity-input').value) || 1;
   const isAvailable = document.getElementById('capacity-available').checked;
-  const serviceType = document.getElementById('capacity-service-type')?.value || 'all';
+  
+  const isAllChecked = document.getElementById('capacity-service-all')?.checked;
+  const checkedBoxes = Array.from(document.querySelectorAll('.capacity-service-cb:checked')).map(cb => cb.value);
 
-  console.log('💾 Saving capacity:', { date: selectedSlot.date, time: selectedSlot.time, capacity, isAvailable, serviceType });
+  let targetServices = [];
+  if (isAllChecked || checkedBoxes.length === 0) {
+    targetServices = ['all'];
+  } else {
+    targetServices = checkedBoxes;
+  }
+
+  console.log('💾 Saving capacity:', { date: selectedSlot.date, time: selectedSlot.time, capacity, isAvailable, targetServices });
 
   try {
     const supabase = getSupabaseClient();
     if (!supabase) throw new Error('Connexion Supabase non établie. Rafraîchissez la page.');
 
-    // Ekri nan availability_exceptions (dat espesifik), pa availability_rules (rekiran)
-    const { error } = await supabase
-      .from('availability_exceptions')
-      .upsert({
-        exception_date: selectedSlot.date,
-        time_slot:      selectedSlot.time + ':00',
-        is_blocked:     !isAvailable,
-        max_capacity:   isAvailable ? capacity : null,
-        service_type:   serviceType
-      }, { onConflict: 'exception_date,time_slot,service_type' });
+    const formattedTime = selectedSlot.time.length === 5 ? (selectedSlot.time + ':00') : selectedSlot.time;
 
-    if (error) {
-      console.error('❌ Error saving capacity:', error);
-    } else {
-      console.log('✅ Capacity saved successfully');
-    }
-
-    if (error) {
-      // Si constraint pa egziste ak service_type, essaie san li
-      const { error: e2 } = await supabase
+    for (const svc of targetServices) {
+      const { error } = await supabase
         .from('availability_exceptions')
         .upsert({
           exception_date: selectedSlot.date,
-          time_slot:      selectedSlot.time + ':00',
+          time_slot:      formattedTime,
           is_blocked:     !isAvailable,
-          max_capacity:   isAvailable ? capacity : null
-        }, { onConflict: 'exception_date,time_slot' });
-      if (e2) throw e2;
+          max_capacity:   isAvailable ? capacity : null,
+          service_type:   svc
+        }, { onConflict: 'exception_date,time_slot,service_type' });
+
+      if (error) {
+        console.warn('Upsert fallback for', svc, error);
+        await supabase
+          .from('availability_exceptions')
+          .upsert({
+            exception_date: selectedSlot.date,
+            time_slot:      formattedTime,
+            is_blocked:     !isAvailable,
+            max_capacity:   isAvailable ? capacity : null
+          }, { onConflict: 'exception_date,time_slot' });
+      }
     }
 
     window.adminCore?.showToast('Créneau mis à jour ✓');
@@ -2829,21 +3011,16 @@ function onCreateServiceToggle(index) {
 }
 
 function renderHeadSpaConfig(index, svc) {
-  const hairTypes = [...new Set(createReservationHeadSpaPricing.map(p => p.type))];
+  const hairTypes = ['naturels', 'defrises', 'dreadlocks'];
   return `
     <div style="font-weight:600;margin-bottom:.5rem;color:#334155;">${escapeHtml(svc.name)}</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+    <div style="display:grid;grid-template-columns:1fr;gap:.75rem;">
       <div class="form-group" style="margin-bottom:0;">
-        <label style="font-size:.78rem;">Type de cheveux</label>
-        <select id="create-svc-hair-type-${index}" class="form-input" onchange="populateHeadSpaLengthOptions(${index})">
-          <option value="">Choisir...</option>
-          ${hairTypes.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(HAIR_TYPE_LABELS[t] || t)}</option>`).join('')}
-        </select>
-      </div>
-      <div class="form-group" style="margin-bottom:0;">
-        <label style="font-size:.78rem;">Longueur / Prix</label>
-        <select id="create-svc-hair-length-${index}" class="form-input" onchange="updateCreateReservationTotal()">
-          <option value="">Choisir d'abord le type</option>
+        <label style="font-size:.78rem;">Type de cheveux (Tarif unique inclus)</label>
+        <select id="create-svc-hair-type-${index}" class="form-input" onchange="updateCreateReservationTotal()">
+          <option value="naturels">Cheveux Naturels</option>
+          <option value="defrises">Cheveux Défrisés</option>
+          <option value="dreadlocks">Dreadlocks</option>
         </select>
       </div>
     </div>
@@ -2851,18 +3028,7 @@ function renderHeadSpaConfig(index, svc) {
 }
 
 function populateHeadSpaLengthOptions(index) {
-  const typeSelect = document.getElementById(`create-svc-hair-type-${index}`);
-  const lengthSelect = document.getElementById(`create-svc-hair-length-${index}`);
-  if (!typeSelect || !lengthSelect) return;
-
-  const selectedType = typeSelect.value;
-  const options = createReservationHeadSpaPricing
-    .filter(p => p.type === selectedType)
-    .map((p, i) => `<option value="${escapeHtml(p.id)}" data-price-htg="${p.price_htg}" data-price-usd="${p.price_usd || ''}">${escapeHtml(p.label)} ${p.hair_length ? '(' + escapeHtml(p.hair_length) + ')' : ''} — ${Number(p.price_htg).toLocaleString()} HTG</option>`);
-
-  lengthSelect.innerHTML = options.length
-    ? `<option value="">Choisir...</option>` + options.join('')
-    : `<option value="">Aucun tarif pour ce type</option>`;
+  // Longueur retirée — tarif unique
   updateCreateReservationTotal();
 }
 
@@ -3034,21 +3200,9 @@ function updateCreateReservationTotal() {
     if (!svc) return;
 
     const isHeadSpa = String(svc.category || '').toLowerCase() === 'headspa';
-    if (isHeadSpa) {
-      const lengthSelect = document.getElementById(`create-svc-hair-length-${idx}`);
-      const selectedOption = lengthSelect?.selectedOptions?.[0];
-      if (selectedOption?.dataset?.priceHtg) {
-        const base = Number(selectedOption.dataset.priceHtg);
-        subtotal += base;
-        feeAmount += includeFee ? (withFee(base) - base) : 0;
-      } else {
-        headSpaMissing = true;
-      }
-    } else {
-      const base = Number(svc.price_htg || 0);
-      subtotal += base;
-      feeAmount += includeFee ? (withFee(base) - base) : 0;
-    }
+    const base = Number(svc.price_htg || 0);
+    subtotal += base;
+    feeAmount += includeFee ? (withFee(base) - base) : 0;
   });
 
   // Sèvis extra ki tcheke yo
@@ -3123,11 +3277,6 @@ async function submitCreateReservation() {
   }
 
   const { subtotal, feeAmount, total, headSpaMissing } = updateCreateReservationTotal();
-  if (headSpaMissing) {
-    window.adminCore?.showToast('Veuillez choisir le type et la longueur pour chaque service Head Spa.', 'error');
-    return;
-  }
-
   const includeFee = document.getElementById('create-include-moncash-fee')?.checked ?? true;
   const selectedServices = selected.map(cb => {
     const idx = Number(cb.dataset.index);
@@ -3135,30 +3284,25 @@ async function submitCreateReservation() {
     if (!svc) return null;
 
     const isHeadSpa = String(svc.category || '').toLowerCase() === 'headspa';
+    const baseHtg = Number(svc.price_htg || 0);
+    const baseUsd = Number(svc.price_usd || 0);
+
     if (isHeadSpa) {
-      const lengthSelect = document.getElementById(`create-svc-hair-length-${idx}`);
-      const option = lengthSelect?.selectedOptions?.[0];
-      const pricingId = option?.value;
-      const pricing = createReservationHeadSpaPricing.find(p => p.id === pricingId);
-      if (!pricing) return null;
-      const baseHtg = Number(pricing.price_htg || 0);
-      const baseUsd = Number(pricing.price_usd || 0);
+      const hairTypeSelect = document.getElementById(`create-svc-hair-type-${idx}`);
+      const hairType = hairTypeSelect?.value || 'naturels';
+      const hairTypeLabel = HAIR_TYPE_LABELS[hairType] || hairType;
       return {
         id: svc.id,
-        name: `${svc.name} — ${HAIR_TYPE_LABELS[pricing.type] || pricing.type} — ${pricing.label}`,
+        name: `${svc.name} (${hairTypeLabel})`,
         base_name: svc.name,
         price_htg: includeFee ? withFee(baseHtg) : baseHtg,
         price_usd: includeFee ? withFeeUSD(baseUsd) : baseUsd,
-        hair_type: pricing.type,
-        hair_length: pricing.label,
-        hair_length_detail: pricing.hair_length || null,
-        head_spa_pricing_id: pricing.id,
+        hair_type: hairType,
+        hair_length: 'Toutes longueurs',
         category: svc.category,
       };
     }
 
-    const baseHtg = Number(svc.price_htg || 0);
-    const baseUsd = Number(svc.price_usd || 0);
     return {
       id: svc.id,
       name: svc.name,

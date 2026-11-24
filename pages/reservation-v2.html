@@ -1546,7 +1546,7 @@
               Total de votre soin
             </div>
             <div class="summary-total-amount" id="sum-total-htg">8 500 HTG</div>
-            <div class="summary-total-usd" id="sum-total-usd">~ $85.00 USD</div>
+            <div class="summary-total-usd" id="sum-total-usd" style="display:none;"></div>
           </div>
 
           <div class="summary-line" id="sum-choice-row" style="border-top:1px dashed var(--dalight-border);padding-top:0.6rem;margin-top:0.6rem;">
@@ -1890,22 +1890,94 @@
       }
 
       try {
+        // Detect current service category
+        let svcCategory = (activeService?.category || '').toLowerCase().trim();
+        const sName = (activeService?.name || '').toLowerCase().trim();
+        if (!svcCategory || svcCategory === 'all') {
+          if (sName.includes('head spa') || sName.includes('headspa')) svcCategory = 'headspa';
+          else if (sName.includes('wood') || sName.includes('minceur')) svcCategory = 'wood-therapy';
+          else if (sName.includes('facial') || sName.includes('visage')) svcCategory = 'facial';
+          else if (sName.includes('ongle') || sName.includes('mani') || sName.includes('pédi')) svcCategory = 'ongles';
+          else if (sName.includes('massage')) svcCategory = 'massage-relaxant';
+          else svcCategory = 'headspa';
+        }
+
         const [bookingsRes, exceptionsRes] = await Promise.all([
           supabase
             .from('reservations')
-            .select('time')
+            .select('time, service, service_id, services, status')
             .eq('date', dateStr)
-            .in('status', ['confirmed', 'CONFIRMED', 'completed', 'COMPLETED']),
+            .not('status', 'ilike', '%cancel%'),
           supabase
             .from('availability_exceptions')
-            .select('time_slot, is_blocked')
+            .select('time_slot, is_blocked, max_capacity, service_type')
             .eq('exception_date', dateStr)
-            .eq('is_blocked', true)
         ]);
 
-        const booked = (bookingsRes.data || []).map(b => b.time?.substring(0, 5));
-        const blocked = (exceptionsRes.data || []).map(e => e.time_slot?.substring(0, 5));
-        const unavailable = [...new Set([...booked, ...blocked])];
+        const exceptions = exceptionsRes.data || [];
+        const bookings = bookingsRes.data || [];
+
+        // Check if entire day is blocked for this service or all
+        const dayBlocked = exceptions.some(e => 
+          !e.time_slot && e.is_blocked && (e.service_type === 'all' || !e.service_type || e.service_type === svcCategory)
+        );
+
+        if (dayBlocked) {
+          renderSlots(defaultSlots, defaultSlots); // All slots unavailable
+          return;
+        }
+
+        // Helper to check if a booking belongs to current category
+        function bookingBelongsToCategory(b, cat) {
+          if (Array.isArray(b.services) && b.services.some(s => s.category === cat)) return true;
+          const bName = (b.service || '').toLowerCase().trim();
+          if (cat === 'headspa' && (bName.includes('head spa') || bName.includes('headspa'))) return true;
+          if (cat === 'massage-relaxant' && bName.includes('massage')) return true;
+          if (cat === 'wood-therapy' && (bName.includes('wood') || bName.includes('minceur'))) return true;
+          if (cat === 'facial' && (bName.includes('facial') || bName.includes('visage'))) return true;
+          if (cat === 'ongles' && (bName.includes('mani') || bName.includes('pédi') || bName.includes('ongle'))) return true;
+          return false;
+        }
+
+        // Filter bookings specifically for this category
+        const relevantBookings = bookings.filter(b => bookingBelongsToCategory(b, svcCategory));
+
+        const unavailable = [];
+
+        defaultSlots.forEach(time => {
+          const tPrefix = time.substring(0, 5);
+
+          // 1. Check if blocked by exception for this service or all
+          const isSlotBlocked = exceptions.some(e => {
+            const eTime = e.time_slot ? e.time_slot.substring(0, 5) : null;
+            if (eTime === tPrefix && e.is_blocked) {
+              return e.service_type === 'all' || !e.service_type || e.service_type === svcCategory;
+            }
+            return false;
+          });
+
+          if (isSlotBlocked) {
+            unavailable.push(time);
+            return;
+          }
+
+          // 2. Check capacity override from exception
+          const matchingExc = exceptions.find(e => {
+            const eTime = e.time_slot ? e.time_slot.substring(0, 5) : null;
+            return eTime === tPrefix && (e.service_type === svcCategory || e.service_type === 'all' || !e.service_type);
+          });
+
+          // Head Spa has 2 stations, Massage has 2 stations, others default to 1
+          const defaultCapacity = (svcCategory === 'headspa' || svcCategory === 'massage-relaxant') ? 2 : 1;
+          const capacity = (matchingExc && matchingExc.max_capacity != null) ? matchingExc.max_capacity : defaultCapacity;
+
+          // 3. Count bookings for this category at this time
+          const countForThisService = relevantBookings.filter(b => b.time && b.time.substring(0, 5) === tPrefix).length;
+
+          if (countForThisService >= capacity) {
+            unavailable.push(time);
+          }
+        });
 
         renderSlots(defaultSlots, unavailable);
       } catch (err) {
@@ -2299,7 +2371,7 @@
 
       // Update right sticky summary
       document.getElementById('sum-total-htg').textContent = finalHTG.toLocaleString() + ' HTG';
-      document.getElementById('sum-total-usd').textContent = `~ $${finalUSD} USD`;
+      const usdEl = document.getElementById('sum-total-usd'); if (usdEl) { usdEl.style.display = 'none'; usdEl.textContent = ''; }
 
       const sumChoiceLabel = document.getElementById('sum-choice-label');
       if (sumChoiceLabel) sumChoiceLabel.textContent = paymentChoice === 'deposit' ? 'Acompte 50%' : 'Paiement Complet 100%';

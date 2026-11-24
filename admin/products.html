@@ -114,20 +114,24 @@
   <main class="admin-main">
     <header class="admin-header">
       <div class="header-left">
-        <button class="mobile-menu-btn" id="mobile-menu-btn">
+        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="24" height="24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
           </svg>
         </button>
-        <h1>Gestion des Produits</h1>
-        <p class="admin-header-subtitle">Ajoutez et gérez les produits de votre boutique</p>
+        <div>
+          <h1 class="page-title">Gestion des Produits</h1>
+          <p class="admin-header-subtitle">Ajoutez et gérez les produits de votre boutique</p>
+        </div>
       </div>
-      <button class="btn btn-primary" onclick="openAddProductModal()">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-        </svg>
-        Ajouter un produit
-      </button>
+      <div class="header-right">
+        <button class="btn btn-primary" onclick="openAddProductModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+          </svg>
+          Ajouter un produit
+        </button>
+      </div>
     </header>
 
     <!-- Filters -->
@@ -145,7 +149,7 @@
 
     <!-- Category Management -->
     <div class="admin-card" style="margin-bottom: 1.5rem;">
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid var(--admin-border);">
+      <div class="card-header" style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--admin-border); margin-bottom: 0;">
         <div>
           <h3 style="font-size: 1rem; font-weight: 600; margin: 0;">Gérer les catégories</h3>
           <p style="font-size: 0.85rem; color: var(--admin-text-muted); margin: 0.25rem 0 0 0;">Ajoutez ou supprimez des catégories pour vos produits</p>

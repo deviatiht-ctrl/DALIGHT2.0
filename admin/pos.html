@@ -468,12 +468,87 @@
     }
     @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
-    /* Lucide icons inline sizing */
+        /* Lucide icons inline sizing */
     .pm-btn svg, .choice-btn svg { width:13px;height:13px;vertical-align:middle;margin-right:4px;flex-shrink:0; }
     .pos-btn svg  { width:15px;height:15px;vertical-align:middle;margin-right:5px;flex-shrink:0; }
     .pos-order-title svg { width:16px;height:16px;vertical-align:middle;margin-right:5px; }
     .btn-print svg, .btn-close-receipt svg { width:14px;height:14px;vertical-align:middle;margin-right:4px; }
     .pos-empty svg { display:block;margin:0 auto .75rem;opacity:.3; }
+
+    /* Responsive POS layout for Tablets & Mobile */
+    @media (max-width: 1024px) {
+      .pos-shell {
+        grid-template-columns: 1fr;
+        height: auto;
+        min-height: calc(100vh - var(--header-height));
+        overflow: visible;
+      }
+      .pos-catalog {
+        overflow: visible;
+      }
+      .pos-grid {
+        grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+        overflow: visible;
+        max-height: none;
+      }
+      .pos-order {
+        border-left: none;
+        border-top: 2px solid var(--admin-border);
+        margin-top: 1.5rem;
+        border-radius: var(--radius-md);
+        max-width: 100%;
+      }
+    }
+    @media (max-width: 640px) {
+      .pos-catalog-header {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0.75rem;
+        gap: 0.6rem;
+      }
+      .pos-search {
+        width: 100%;
+        min-width: 100%;
+      }
+      .pos-cats {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 0.35rem;
+        scrollbar-width: none;
+      }
+      .pos-cats::-webkit-scrollbar { display: none; }
+      .cat-btn {
+        flex-shrink: 0;
+      }
+      .pos-grid {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 0.65rem;
+        gap: 0.5rem;
+      }
+      .svc-card {
+        padding: 0.75rem 0.65rem;
+      }
+      .svc-name {
+        font-size: 0.82rem;
+      }
+      .svc-price {
+        font-size: 0.92rem;
+      }
+      .pos-client {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.65rem 0.75rem;
+      }
+      .pos-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.65rem 0.75rem;
+      }
+      .pos-btn {
+        width: 100%;
+        min-height: 44px;
+      }
+    }
   </style>
 </head>
 <body>

@@ -204,6 +204,18 @@
             <i data-lucide="trees"></i>
             <span>Wood Therapy</span>
           </button>
+          <button class="filter-btn" data-filter="facial">
+            <i data-lucide="sparkles"></i>
+            <span>Facial</span>
+          </button>
+          <button class="filter-btn" data-filter="ongles">
+            <i data-lucide="hand"></i>
+            <span>Mani &amp; Pédi</span>
+          </button>
+          <button class="filter-btn" data-filter="package">
+            <i data-lucide="gift"></i>
+            <span>Combos</span>
+          </button>
           <button class="filter-btn" data-filter="packages-silver">
             <i data-lucide="shield"></i>
             <span>Silver</span>
@@ -241,132 +253,117 @@
     </section>
 
     <!-- ═══════════════════════════════════════════
-           ABONNEMENTS MENSUELS (JEU DE FORMES ARCHITECTURAL DALIGHT)
+           COMBOS BIEN-ÊTRE & DÉTENTE ABSOLUE
       ═══════════════════════════════════════════ -->
-    <section class="spa-subscription-section" id="abonnements">
+    <section class="spa-subscription-section" id="combos">
       <div class="spa-subscription-header">
-        <div class="spa-kicker-pill"><i data-lucide="crown"></i> Cures &amp; Soins Mensuels de Détente</div>
-        <h2>SERVICE D'ABONNEMENT HEAD SPA</h2>
-        <p>4 soins de relaxation par mois (1 soin par semaine) pour maintenir l'équilibre parfait de votre cuir chevelu et une déconnexion absolue.</p>
+        <div class="spa-kicker-pill"><i data-lucide="sparkles"></i> Formules Tout-en-Un Exclusives</div>
+        <h2>COMBOS BIEN-ÊTRE &amp; DÉTENTE</h2>
+        <p>L'alliance parfaite de nos soins signatures pour une évasion sensorielle complète et une déconnexion totale.</p>
       </div>
 
-      <div class="spa-subscription-grid">
+      <div class="spa-subscription-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
 
-        <!-- Silver Package -->
-        <article class="spa-package-card silver package-card" data-package="Silver Package">
+        <!-- Combo 1 -->
+        <article class="spa-package-card silver package-card" data-package="Combo 1">
           <div class="spa-package-header">
-            <span class="spa-package-crest silver"><i data-lucide="sparkles"></i> BASIC SILVER · 4 SÉANCES / MOIS</span>
-            <h3 class="spa-package-name">Silver Package</h3>
+            <span class="spa-package-crest silver"><i data-lucide="sparkles"></i> COMBO 1 · HARMONIE &amp; VITALITÉ</span>
+            <h3 class="spa-package-name">Combo 1</h3>
             <div class="spa-package-price-wrap">
               <div class="spa-package-price-row">
-                <span class="spa-package-num package-price">15 830</span>
+                <span class="spa-package-num package-price">12 000</span>
                 <span class="spa-package-curr">Gourdes</span>
               </div>
-              <span class="spa-package-usd">~$125 USD / mois</span>
+              <span class="spa-package-duration" style="font-size:0.85rem;color:var(--spa-taupe-rose);opacity:0.85;">Durée : 2h 30min</span>
             </div>
           </div>
           <div class="spa-package-body">
             <ul class="spa-package-features">
-              <li><i data-lucide="check"></i> <span>Diagnostic cuir chevelu personnalisé</span></li>
-              <li><i data-lucide="check"></i> <span>Lavage adapté selon la nature du cuir chevelu</span></li>
-              <li><i data-lucide="check"></i> <span>Massage crânien à la nuque &amp; déconnexion</span></li>
-              <li><i data-lucide="check"></i> <span>Masque capillaire nourrissant et régénérant</span></li>
-              <li><i data-lucide="check"></i> <span>Traitement adapté &amp; hydrothérapie japonaise</span></li>
-              <li><i data-lucide="check"></i> <span>Coiffure protectrice simple en fin de soin</span></li>
+              <li><i data-lucide="check"></i> <span>Facial purifiant &amp; éclat</span></li>
+              <li><i data-lucide="check"></i> <span>Head Spa japonais signature</span></li>
+              <li><i data-lucide="check"></i> <span>Coiffure protectrice soignée</span></li>
+              <li><i data-lucide="check"></i> <span>Massage relaxant aux huiles précieuses</span></li>
+              <li><i data-lucide="check"></i> <span>Bain moussant délassant</span></li>
+              <li><i data-lucide="check"></i> <span>Thé aromatique bienfaisant</span></li>
             </ul>
-            <div class="spa-pkg-lengths">
-              <p class="spa-pkg-lengths-title"><i data-lucide="scissors"></i> Tarif selon longueur de cheveux</p>
-              <div class="spa-pkg-lengths-row">
-                <span>Extra Court &amp; Court</span>
-                <strong>Inclus</strong>
-              </div>
-              <div class="spa-pkg-lengths-row">
-                <span>Médium · Large · Extra Large</span>
-                <strong>+ 5 000 Gdes</strong>
-              </div>
-            </div>
           </div>
           <div class="spa-package-footer">
             <button class="spa-package-cta-btn silver add-to-cart-package"
-              data-package="Silver Package" data-price="15000" data-price-usd="125">
-              <i data-lucide="plus"></i> <span>Ajouter au Panier</span>
+              data-package="Combo 1" data-price="12000" data-price-usd="90" data-duration="2h 30min"
+              data-desc="Facial, Head spa, Coiffure protectrice, Massage relaxant, Bain moussant, Thé">
+              <i data-lucide="plus"></i> <span>Réserver le Combo 1</span>
             </button>
           </div>
         </article>
 
-        <!-- Golden Luxury Package -->
-        <article class="spa-package-card gold package-card" data-package="Golden Luxury Package">
+        <!-- Combo 2 -->
+        <article class="spa-package-card gold package-card" data-package="Combo 2">
           <div class="spa-package-header">
-            <span class="spa-package-crest gold"><i data-lucide="crown"></i> ✦ GOLDEN LUXURY · EXPÉRIENCE ULTIME ✦</span>
-            <h3 class="spa-package-name">Golden Luxury Package</h3>
+            <span class="spa-package-crest gold"><i data-lucide="heart"></i> COMBO 2 · DOUCEUR &amp; GOURMANDISE</span>
+            <h3 class="spa-package-name">Combo 2</h3>
             <div class="spa-package-price-wrap">
               <div class="spa-package-price-row">
-                <span class="spa-package-num package-price">21 240</span>
+                <span class="spa-package-num package-price">12 000</span>
                 <span class="spa-package-curr">Gourdes</span>
               </div>
-              <span class="spa-package-usd">~$167 USD / mois</span>
+              <span class="spa-package-duration" style="font-size:0.85rem;color:var(--spa-taupe-rose);opacity:0.85;">Durée : 2h 30min</span>
             </div>
           </div>
           <div class="spa-package-body">
             <ul class="spa-package-features">
-              <li><i data-lucide="sparkles"></i> <span>Diagnostic cuir chevelu approfondi &amp; caméra HD</span></li>
-              <li><i data-lucide="sparkles"></i> <span>Lavage traitant profond selon la nature du cuir chevelu</span></li>
-              <li><i data-lucide="sparkles"></i> <span>Massage crânien prolongé jusqu'aux trapèzes</span></li>
-              <li><i data-lucide="sparkles"></i> <span>Masque capillaire haute nutrition aux actifs purs</span></li>
-              <li><i data-lucide="sparkles"></i> <span>Traitement intensif &amp; vapeur aromatique tiède</span></li>
-              <li><i data-lucide="sparkles"></i> <span>Fusion de plantes naturelles fortifiantes</span></li>
-              <li><i data-lucide="sparkles"></i> <span>Coiffure protectrice pour une semaine complète</span></li>
+              <li><i data-lucide="check"></i> <span>Facial éclat jeunesse</span></li>
+              <li><i data-lucide="check"></i> <span>Manicure soignée</span></li>
+              <li><i data-lucide="check"></i> <span>Pédicure relaxante</span></li>
+              <li><i data-lucide="check"></i> <span>Massage relaxant corps entier</span></li>
+              <li><i data-lucide="check"></i> <span>Bain moussant voluptueux</span></li>
+              <li><i data-lucide="check"></i> <span>Coupe de Vin raffiné</span></li>
+              <li><i data-lucide="check"></i> <span>Plat de charcuterie offert</span></li>
             </ul>
-            <div class="spa-pkg-lengths">
-              <p class="spa-pkg-lengths-title"><i data-lucide="scissors"></i> Tarif selon longueur de cheveux</p>
-              <div class="spa-pkg-lengths-row">
-                <span>Extra Court &amp; Court</span>
-                <strong>Inclus</strong>
-              </div>
-              <div class="spa-pkg-lengths-row">
-                <span>Médium · Large · Extra Large</span>
-                <strong>+ 7 000 Gdes</strong>
-              </div>
-            </div>
           </div>
           <div class="spa-package-footer">
             <button class="spa-package-cta-btn gold add-to-cart-package"
-              data-package="Golden Luxury Package" data-price="20000" data-price-usd="167">
-              <i data-lucide="sparkles"></i> <span>Choisir l'Expérience Golden</span>
+              data-package="Combo 2" data-price="12000" data-price-usd="90" data-duration="2h 30min"
+              data-desc="Facial, Manicure, Pedicure, Massage relaxant, Bain moussant, Vin, Plat charcuterie">
+              <i data-lucide="plus"></i> <span>Réserver le Combo 2</span>
             </button>
           </div>
         </article>
 
-      </div>
+        <!-- Combo 3 -->
+        <article class="spa-package-card gold package-card" data-package="Combo 3" style="border-color: #d4af37; box-shadow: 0 10px 30px rgba(212,175,55,0.15);">
+          <div class="spa-package-header" style="background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(74,55,40,0.3));">
+            <span class="spa-package-crest gold"><i data-lucide="crown"></i> ✦ COMBO 3 · EXPÉRIENCE ROYALE VIP ✦</span>
+            <h3 class="spa-package-name">Combo 3</h3>
+            <div class="spa-package-price-wrap">
+              <div class="spa-package-price-row">
+                <span class="spa-package-num package-price">15 000</span>
+                <span class="spa-package-curr">Gourdes</span>
+              </div>
+              <span class="spa-package-duration" style="font-size:0.85rem;color:var(--spa-taupe-rose);opacity:0.85;">Durée : 3h 30min</span>
+            </div>
+          </div>
+          <div class="spa-package-body">
+            <ul class="spa-package-features">
+              <li><i data-lucide="sparkles"></i> <span>Head Spa japonais complet</span></li>
+              <li><i data-lucide="sparkles"></i> <span>Facial profond &amp; hydratation</span></li>
+              <li><i data-lucide="sparkles"></i> <span>Manicure complète</span></li>
+              <li><i data-lucide="sparkles"></i> <span>Pédicure Spa prestige</span></li>
+              <li><i data-lucide="sparkles"></i> <span>Massage relaxant en profondeur</span></li>
+              <li><i data-lucide="sparkles"></i> <span>Bain moussant aux sels apaisants</span></li>
+              <li><i data-lucide="sparkles"></i> <span>Vin de sélection ou Thé gourmand</span></li>
+              <li><i data-lucide="sparkles"></i> <span>Plat de charcuterie fine</span></li>
+            </ul>
+          </div>
+          <div class="spa-package-footer">
+            <button class="spa-package-cta-btn gold add-to-cart-package"
+              data-package="Combo 3" data-price="15000" data-price-usd="115" data-duration="3h 30min"
+              data-desc="Head spa, Facial, Manicure, Pedicure spa, Massage relaxant, Bain moussant, Vin ou Thé, Plat charcuterie"
+              style="background: linear-gradient(135deg, #d4af37, #996515); color: #fff;">
+              <i data-lucide="crown"></i> <span>Réserver le Combo 3 VIP</span>
+            </button>
+          </div>
+        </article>
 
-      <!-- Règlement DALIGHT (Floating Capsule Badges) -->
-      <div class="spa-reglement-wrapper">
-        <div class="spa-reglement-title">
-          <i data-lucide="shield-check"></i>
-          <span>Règlement DALIGHT · Abonnements</span>
-        </div>
-        <div class="spa-reglement-capsules">
-          <div class="spa-reglement-capsule">
-            <i data-lucide="calendar-check"></i>
-            <span>Valable <strong>30 jours</strong></span>
-          </div>
-          <div class="spa-reglement-capsule">
-            <i data-lucide="credit-card"></i>
-            <span>Paiement à l'<strong>avance requis</strong></span>
-          </div>
-          <div class="spa-reglement-capsule">
-            <i data-lucide="x-circle"></i>
-            <span>Sessions non utilisées = <strong>perdues</strong></span>
-          </div>
-          <div class="spa-reglement-capsule">
-            <i data-lucide="clock"></i>
-            <span>Retard = <strong>temps de soin réduit</strong></span>
-          </div>
-          <div class="spa-reglement-capsule">
-            <i data-lucide="bell-off"></i>
-            <span>Annulation <strong>24h avant requise</strong></span>
-          </div>
-        </div>
       </div>
     </section>
 
@@ -458,7 +455,7 @@
           <div class="spa-modal-footer">
             <div class="spa-modal-price-display">
               <div class="spa-modal-price-htg" id="spa-modal-price-htg">0 HTG</div>
-              <small style="color:var(--spa-taupe-rose);font-size:.85rem;margin-top:2px;" id="spa-modal-price-usd">$0 USD</small>
+              <small style="display:none;" id="spa-modal-price-usd"></small>
             </div>
             <button class="spa-modal-reserve-btn" id="spa-modal-reserve-btn">
               <i data-lucide="calendar-check"></i> <span>Réserver ce soin</span>
@@ -469,7 +466,7 @@
     </div>
 
     <!-- ===== MODAL: SELEKSYON TIP CHEVEUX HEAD SPA ===== -->
-    <div id="hair-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;align-items:center;justify-content:center;padding:1rem;">
+    <div id="hair-modal-overlay" style="display:none !important;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;align-items:center;justify-content:center;padding:1rem;">
       <div style="background:#fff;border-radius:20px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);">
         <div style="background:linear-gradient(135deg,#4A3728,#6B4F3B);padding:1.25rem 1.5rem;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;">
           <div>
@@ -837,15 +834,16 @@
             cart.push({
               id: Date.now().toString(),
               name: packageName,
-              description: 'Abonnement mensuel - 4 séances par mois',
-              duration: '1 mois (4 séances)',
+              description: btn.dataset.desc || 'Formule bien-être tout-en-un',
+              duration: btn.dataset.duration || '2h 30min',
               base_price_htg: Number(priceHtg),
               price_htg: withFee(priceHtg),
               price_usd: withFeeUSD(priceUsd),
+              category: 'package',
               isPackage: true
             });
             saveCart();
-            showToast('success', 'Abonnement ajouté', `${packageName} a été ajouté au panier.`);
+            showToast('success', 'Formule ajoutée', `${packageName} a été ajouté au panier.`);
             openCart();
 
             // Visual feedback
@@ -1066,6 +1064,8 @@
           if (category === 'headspa') return 'headspa';
           if (category === 'massage-relaxant') return 'massage-relaxant';
           if (category === 'wood-therapy') return 'wood-therapy';
+          if (category === 'facial') return 'facial';
+          if (category === 'ongles') return 'ongles';
           if (category === 'packages-silver') return 'packages-silver';
           if (category === 'packages-luxury') return 'packages-luxury';
           if (category === 'couple-silver' || category === 'couple-golden') return 'couple';
@@ -1075,11 +1075,14 @@
 
         // Fallback to name detection
         const name = (service.name || '').toLowerCase();
+        if (name.includes('combo')) return 'package';
         if (name.includes('couple') || name.includes('duo')) return 'couple';
         if (name.includes('bestie') || name.includes('ami')) return 'besties';
         if (name.includes('luxury') || name.includes('gold')) return 'packages-luxury';
         if (name.includes('silver') && name.includes('pack')) return 'packages-silver';
         if (name.includes('wood')) return 'wood-therapy';
+        if (name.includes('facial') || name.includes('visage')) return 'facial';
+        if (name.includes('mani') || name.includes('pédi') || name.includes('ongle')) return 'ongles';
         if (name.includes('massage')) return 'massage-relaxant';
         if (name.includes('head spa')) return 'headspa';
 
@@ -1234,7 +1237,7 @@
         // Price display
         const priceHtgFormatted = withFee(service.price_htg).toLocaleString();
         document.getElementById('spa-modal-price-htg').innerHTML = `${isHeadSpa ? '<span style="font-size:0.6em;color:var(--spa-taupe-rose);display:block;">À partir de</span>' : ''}${priceHtgFormatted} HTG <small style="display:inline;font-size:0.55em;color:var(--spa-taupe-rose);">(3% Moncash incl.)</small>`;
-        document.getElementById('spa-modal-price-usd').textContent = `$${withFeeUSD(service.price_usd)} USD`;
+        const usdEl = document.getElementById('spa-modal-price-usd'); if (usdEl) { usdEl.style.display = 'none'; usdEl.textContent = ''; }
 
         // Benefits Checklist
         const benefits = getServiceBenefits(service);
@@ -1343,10 +1346,7 @@
 
         closeServiceDetailModal();
 
-        if (isHeadSpa && headSpaPricing.length > 0) {
-          openHairModal(service);
-          return;
-        }
+        // Head Spa has flat pricing - no length/photo modal required
 
         await addToCart(service);
       });
@@ -1400,7 +1400,7 @@
                   ${withFee(s.price_htg).toLocaleString()} HTG
                   <small>(Moncash incl.)</small>
                 </div>
-                <div class="spa-price-usd">$${withFeeUSD(s.price_usd)}</div>
+                
               </div>
 
               <!-- Action Buttons -->
@@ -1447,10 +1447,7 @@
               category: s.category || ''
             };
 
-            if (isHeadSpa && headSpaPricing.length > 0) {
-              openHairModal(serviceObj);
-              return;
-            }
+            // Head Spa has flat pricing - no length/photo modal required
 
             await addToCart(serviceObj);
 

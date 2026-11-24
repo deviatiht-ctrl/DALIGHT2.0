@@ -345,7 +345,7 @@ function renderServiceGrid(cat = 'all', search = '') {
         </div>
         <div class="svc-price">${s.price_htg ? 'Total : '+fmtHTG(s.price_htg) : '<em style="font-size:.7rem;color:#aaa;">Sur demande</em>'}</div>`;
     } else {
-      priceBlock = `<div class="svc-price">${fmtHTG(s.price_htg)}<span class="svc-price-usd">${s.price_usd ? '· '+fmtUSD(s.price_usd) : ''}</span></div>`;
+      priceBlock = `<div class="svc-price">${fmtHTG(s.price_htg)}</div>`;
     }
     return `
     <div class="svc-card${s.type === 'formation' ? ' svc-card--formation' : ''}" data-id="${s.id}">

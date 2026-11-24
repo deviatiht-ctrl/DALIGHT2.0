@@ -52,7 +52,21 @@
       .print-only { display:block !important; position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; color:#000; overflow:auto; }
       .print-only * { color:#000 !important; }
     }
-    .empty-state { text-align:center; padding:3rem; color:var(--admin-text-muted); }
+        .empty-state { text-align:center; padding:3rem; color:var(--admin-text-muted); }
+
+    @media (max-width: 768px) {
+      .tracking-tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+        scrollbar-width: none;
+      }
+      .tracking-tabs::-webkit-scrollbar { display: none; }
+      .tracking-tab { flex-shrink: 0; }
+      div[style*="grid-template-columns:1fr 1fr"],
+      div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+      }
+    }
   </style>
 </head>
 <body>

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * DALIGHT - Premium Navbar Announcement Banner Module
  * Injects a highly responsive, mobile-optimized banner at the very top of the page.
  * Prompts new users to register or login with clear, tap-friendly buttons to simplify bookings & purchases.
@@ -213,7 +213,7 @@ function injectStyles() {
     }
 
     /* Compact Mobile Styling */
-    @media (max-width: 768px) {
+        @media (max-width: 768px) {
       .dl-alert-banner {
         font-size: 0.74rem;
         padding: 0.4rem 2rem 0.4rem 0.75rem;
@@ -229,6 +229,28 @@ function injectStyles() {
       
       .dl-alert-btn {
         padding: 0.2rem 0.55rem;
+        font-size: 0.7rem;
+      }
+    }
+
+    @media (max-width: 540px) {
+      .dl-alert-banner {
+        padding: 0.4rem 2rem 0.4rem 0.6rem;
+      }
+      .dl-alert-content {
+        flex-direction: column;
+        gap: 0.3rem;
+        text-align: center;
+      }
+      .dl-alert-text {
+        font-size: 0.72rem !important;
+        line-height: 1.25;
+      }
+      .dl-alert-buttons {
+        gap: 0.35rem;
+      }
+      .dl-alert-btn {
+        padding: 0.2rem 0.5rem;
         font-size: 0.7rem;
       }
     }

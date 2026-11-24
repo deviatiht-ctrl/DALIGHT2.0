@@ -16,10 +16,10 @@ const DALIGHT_INFO = {
   whatsappUrl: "https://wa.me/50947477221?text=Bonjour%20DALIGHT%2C%20je%20souhaite%20des%20renseignements%20sur%20vos%20soins",
   hours: "Du Mardi au Dimanche, de 7h00 à 17h00 (Fermé le Lundi)",
   services: [
-    { name: "Head Spa Japonais Signature", price: "85 USD / 10 000 HTG", duration: "60 min" },
-    { name: "Massage Thérapeutique & Relaxant", price: "70 USD / 8 500 HTG", duration: "75 min" },
-    { name: "Wood Therapy Sculptante & Détox", price: "95 USD / 11 000 HTG", duration: "90 min" },
-    { name: "Thérapie Crânienne & Éclat Visage", price: "65 USD / 8 000 HTG", duration: "60 min" },
+    { name: "Head Spa Japonais Signature", price: "5 000 HTG", duration: "60 min" },
+    { name: "Massage Thérapeutique & Relaxant", price: "10 000 HTG", duration: "75 min" },
+    { name: "Wood Therapy Sculptante & Détox", price: "5 000 HTG", duration: "90 min" },
+    { name: "Thérapie Crânienne & Éclat Visage", price: "2 000 HTG", duration: "60 min" },
     { name: "Abonnement Silver Package (4 séances/mois)", price: "15 830 HTG", duration: "Mensuel" },
     { name: "Abonnement Golden Luxury (4 séances/mois)", price: "21 240 HTG", duration: "Mensuel" }
   ]
@@ -285,7 +285,7 @@ function respondToQuery(query) {
   const q = query.toLowerCase();
 
   if (q.includes('prix') || q.includes('tarif') || q.includes('combien') || q.includes('koban') || q.includes('pri')) {
-    let resp = "Nos soins de détente Head Spa débutent à partir de <strong>$85 USD (10 000 HTG)</strong>, les massages à <strong>$70 USD (8 500 HTG)</strong>, et la Wood Therapy à <strong>$95 USD (11 000 HTG)</strong>.<br><br><a href='./services.html' style='color:var(--spa-taupe-rose);text-decoration:underline;'>Consulter tous les tarifs officiels →</a>";
+    let resp = "Nos soins de détente Head Spa débutent à partir de <strong>5 000 HTG</strong>, les massages à <strong>10 000 HTG</strong>, et la Wood Therapy à <strong>5 000 HTG</strong>.<br><br><a href='./services.html' style='color:var(--spa-taupe-rose);text-decoration:underline;'>Consulter tous les tarifs officiels →</a>";
     addAssistantMessage(resp, true);
   } else if (q.includes('rendez-vous') || q.includes('reserver') || q.includes('rezève') || q.includes('booking') || q.includes('dispo')) {
     let resp = "Vous pouvez réserver en ligne 24h/24 en choisissant votre soin et créneau horaire :<br><br><a href='./services.html' class='spa-pill-btn' style='display:inline-block;padding:.4rem 1rem;font-size:.78rem;text-decoration:none;'>Prendre Rendez-vous Maintenant →</a>";

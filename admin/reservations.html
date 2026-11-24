@@ -17,8 +17,22 @@
     }
     #print-area { display: none; }
     .balance-pm-btn.active { background: var(--admin-accent); color: #fff; border-color: var(--admin-accent); }
-    @media (max-width: 480px) {
+        @media (max-width: 768px) {
       #create-reservation-form .form-row { grid-template-columns: 1fr !important; }
+      .filter-btn {
+        padding: 0.45rem 0.85rem !important;
+        font-size: 0.78rem !important;
+      }
+      .d-flex.gap-1 {
+        flex-wrap: wrap !important;
+        width: 100% !important;
+      }
+      .d-flex.gap-1 > * {
+        flex: 1 1 auto !important;
+      }
+      #date-filter {
+        width: 100% !important;
+      }
     }
   </style>
 </head>
@@ -438,16 +452,28 @@
         </div>
 
         <div class="form-group" style="margin-top: 1rem;">
-          <label>Type de service concerné</label>
-          <select id="block-service-type" class="form-input">
-            <option value="all">Tous les services (bloquer la salle entière)</option>
-            <option value="headspa">Head Spa uniquement</option>
-            <option value="massage">Massage uniquement</option>
-            <option value="package">Package uniquement</option>
-            <option value="cure">Cure uniquement</option>
-          </select>
-          <p style="font-size:0.75rem;color:var(--admin-text-muted);margin-top:0.25rem;">
-            ℹ️ Choisissez "Tous" pour bloquer la salle complète, ou un service spécifique si d'autres salles restent disponibles.
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <label style="font-weight: 600; margin: 0;">Services concernés (Sélection multiple)</label>
+            <div style="display: flex; gap: 0.35rem;">
+              <button type="button" class="btn btn-sm btn-secondary" onclick="toggleAllBlockServices(true)" style="padding: 0.2rem 0.5rem; font-size: 0.72rem;">Tout cocher</button>
+              <button type="button" class="btn btn-sm btn-secondary" onclick="toggleAllBlockServices(false)" style="padding: 0.2rem 0.5rem; font-size: 0.72rem;">Tout décocher</button>
+            </div>
+          </div>
+
+          <!-- Option Global: Tous les services -->
+          <div style="padding: 0.6rem; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 8px; margin-bottom: 0.6rem;">
+            <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; font-weight: 600; color: #ef4444; font-size: 0.85rem; margin: 0;">
+              <input type="checkbox" id="block-service-all" onchange="onBlockAllServicesChange(this.checked)" checked style="width: 18px; height: 18px; accent-color: #ef4444; cursor: pointer;">
+              <span>🌐 TOUS LES SERVICES (Bloquer la salle complète / Global)</span>
+            </label>
+          </div>
+
+          <!-- Dynamic Checkboxes per Service Category -->
+          <div id="block-service-checkboxes" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.5rem; padding: 0.6rem; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--admin-border); border-radius: 8px; max-height: 160px; overflow-y: auto;">
+            <!-- Rempli dynamiquement par JS -->
+          </div>
+          <p style="font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 0.35rem;">
+            💡 Cochez "Tous les services" pour bloquer tout d'un coup, ou cochez un ou plusieurs services spécifiques pour bloquer uniquement ceux-là.
           </p>
         </div>
 
@@ -484,12 +510,24 @@
           <input type="number" id="capacity-input" class="form-input" min="1" max="20" value="1">
         </div>
         <div class="form-group">
-          <label>Type de service concerné</label>
-          <select id="capacity-service-type" class="form-input">
-            <option value="all">Tous les services (bloquer la salle entière)</option>
-          </select>
-          <p style="font-size:0.75rem;color:var(--admin-text-muted);margin-top:0.25rem;">
-            ℹ️ Un blocage par type laisse les autres services disponibles sur ce créneau.
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <label style="font-weight: 600; margin: 0;">Type de service concerné</label>
+            <div style="display: flex; gap: 0.3rem;">
+              <button type="button" class="btn btn-sm btn-secondary" onclick="toggleAllCapacityServices(true)" style="padding: 0.15rem 0.4rem; font-size: 0.7rem;">Tout cocher</button>
+              <button type="button" class="btn btn-sm btn-secondary" onclick="toggleAllCapacityServices(false)" style="padding: 0.15rem 0.4rem; font-size: 0.7rem;">Tout décocher</button>
+            </div>
+          </div>
+          <div style="padding: 0.5rem; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 8px; margin-bottom: 0.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600; font-size: 0.82rem; margin: 0;">
+              <input type="checkbox" id="capacity-service-all" onchange="onCapacityAllServicesChange(this.checked)" checked style="width: 16px; height: 16px; accent-color: #6366f1; cursor: pointer;">
+              <span>🌐 Tous les services (Global)</span>
+            </label>
+          </div>
+          <div id="capacity-service-checkboxes" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; padding: 0.5rem; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--admin-border); border-radius: 8px; max-height: 130px; overflow-y: auto;">
+            <!-- Rempli dynamiquement -->
+          </div>
+          <p style="font-size: 0.72rem; color: var(--admin-text-muted); margin-top: 0.25rem;">
+            ℹ️ Sélectionnez un ou plusieurs services. Un réglage par type laisse les autres services indépendants.
           </p>
         </div>
         <div class="form-group">
