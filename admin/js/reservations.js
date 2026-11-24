@@ -2918,12 +2918,108 @@ function openCreateReservationModal() {
   if (timeInput && !timeInput.value) timeInput.value = '10:00';
 }
 
+
+// ── Code Promo & Remise dans Création Réservation Admin ─────────────────────
+let adminCreateAppliedPromo = null;
+
+window.applyCreatePromoCode = async function() {
+  const codeInput = document.getElementById('create-promo-code');
+  const code = (codeInput?.value || '').trim().toUpperCase();
+  const feedback = document.getElementById('create-promo-feedback');
+  const badge = document.getElementById('create-discount-badge');
+
+  if (!code) {
+    adminCreateAppliedPromo = null;
+    if (feedback) { feedback.style.display = 'none'; feedback.textContent = ''; }
+    if (badge) { badge.style.display = 'none'; badge.textContent = ''; }
+    updateCreateReservationTotal();
+    return;
+  }
+
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    if (feedback) {
+      feedback.style.display = 'block';
+      feedback.style.color = '#ef4444';
+      feedback.textContent = 'Erreur: Connexion Supabase non disponible.';
+    }
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('promo_codes')
+      .select('*')
+      .ilike('code', code)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (error || !data) {
+      adminCreateAppliedPromo = null;
+      if (feedback) {
+        feedback.style.display = 'block';
+        feedback.style.color = '#ef4444';
+        feedback.innerHTML = '❌ Code promo invalide ou inactif. <button type="button" onclick="clearCreatePromoCode()" style="background:none;border:none;color:#6366f1;cursor:pointer;text-decoration:underline;font-size:0.75rem;">Effacer</button>';
+      }
+      if (badge) badge.style.display = 'none';
+      updateCreateReservationTotal();
+      return;
+    }
+
+    const now = new Date();
+    if (data.valid_until && new Date(data.valid_until) < now) {
+      adminCreateAppliedPromo = null;
+      if (feedback) {
+        feedback.style.display = 'block';
+        feedback.style.color = '#ef4444';
+        feedback.textContent = '❌ Ce code promo a expiré.';
+      }
+      if (badge) badge.style.display = 'none';
+      updateCreateReservationTotal();
+      return;
+    }
+
+    adminCreateAppliedPromo = data;
+    const valText = data.discount_type === 'percentage' ? `${data.discount_value}%` : `${Number(data.discount_value).toLocaleString()} HTG`;
+    if (feedback) {
+      feedback.style.display = 'block';
+      feedback.style.color = '#10b981';
+      feedback.innerHTML = `✅ Code promo <strong>${data.code}</strong> appliqué : <strong>-${valText}</strong> ! <button type="button" onclick="clearCreatePromoCode()" style="background:none;border:none;color:#ef4444;cursor:pointer;text-decoration:underline;font-size:0.75rem;margin-left:6px;">Retirer</button>`;
+    }
+    if (badge) {
+      badge.style.display = 'inline-block';
+      badge.textContent = `Promo: -${valText}`;
+    }
+    updateCreateReservationTotal();
+  } catch (err) {
+    console.error('Error verifying promo code:', err);
+    if (feedback) {
+      feedback.style.display = 'block';
+      feedback.style.color = '#ef4444';
+      feedback.textContent = 'Erreur lors de la vérification du code promo.';
+    }
+  }
+};
+
+window.clearCreatePromoCode = function() {
+  adminCreateAppliedPromo = null;
+  const codeInput = document.getElementById('create-promo-code');
+  if (codeInput) codeInput.value = '';
+  const feedback = document.getElementById('create-promo-feedback');
+  if (feedback) { feedback.style.display = 'none'; feedback.textContent = ''; }
+  const badge = document.getElementById('create-discount-badge');
+  if (badge) { badge.style.display = 'none'; badge.textContent = ''; }
+  updateCreateReservationTotal();
+};
+
 function closeCreateReservationModal() {
   const modal = document.getElementById('create-reservation-modal');
   if (!modal) return;
   modal.classList.remove('active');
   modal.style.display = 'none';
   createReservationClient = null;
+  if (window.clearCreatePromoCode) window.clearCreatePromoCode();
+  const dIn = document.getElementById("create-discount-input"); if (dIn) dIn.value = "";
 }
 
 
@@ -3224,20 +3320,50 @@ function updateCreateReservationTotal() {
     feeAmount += includeFee ? (withFee(videoPrice) - videoPrice) : 0;
   }
 
-  const total = includeFee ? withFee(subtotal) : subtotal;
+  // 2. Calcul des réductions (Code promo + Remise manuelle)
+  let promoDiscount = 0;
+  if (adminCreateAppliedPromo) {
+    if (adminCreateAppliedPromo.discount_type === 'percentage') {
+      promoDiscount = Math.round(subtotal * (Number(adminCreateAppliedPromo.discount_value) / 100));
+    } else {
+      promoDiscount = Math.min(subtotal, Number(adminCreateAppliedPromo.discount_value) || 0);
+    }
+  }
+
+  const manualDiscVal = parseFloat(document.getElementById('create-discount-input')?.value) || 0;
+  const manualDiscType = document.getElementById('create-discount-type')?.value || 'fixed';
+  let manualDiscount = 0;
+  const remainingAfterPromo = Math.max(0, subtotal - promoDiscount);
+  if (manualDiscVal > 0) {
+    if (manualDiscType === 'percent') {
+      manualDiscount = Math.round(remainingAfterPromo * (manualDiscVal / 100));
+    } else {
+      manualDiscount = Math.min(remainingAfterPromo, manualDiscVal);
+    }
+  }
+
+  const totalDiscount = Math.min(subtotal, promoDiscount + manualDiscount);
+  const netBeforeFee = Math.max(0, subtotal - totalDiscount);
+
+  // 3. Frais MonCash (3%) appliqués sur le montant net
+  feeAmount = (includeFee && netBeforeFee > 0) ? (withFee(netBeforeFee) - netBeforeFee) : 0;
+  const total = netBeforeFee + feeAmount;
+
   const totalEl = document.getElementById('create-reservation-total');
   const feeEl = document.getElementById('create-moncash-fee-display');
 
   if (totalEl) {
-    let text = subtotal > 0 ? `Sous-total : ${subtotal.toLocaleString()} HTG` : '';
-    if (includeFee && subtotal > 0) text += `  —  Frais MonCash : ${feeAmount.toLocaleString()} HTG  —  Total : ${total.toLocaleString()} HTG`;
-    else if (subtotal > 0) text += `  —  Total : ${total.toLocaleString()} HTG`;
-    if (wantsVideo) text += ` (dont Option Vidéo : ${videoPrice.toLocaleString()} HTG - ${videoConsent === 'private' ? 'Usage Privé' : 'Public'})`;
-    totalEl.textContent = text;
+    let parts = [];
+    if (subtotal > 0) parts.push(`Sous-total : ${subtotal.toLocaleString()} HTG`);
+    if (totalDiscount > 0) parts.push(`<span style="color:#10b981;">Réduction : -${totalDiscount.toLocaleString()} HTG</span>`);
+    if (includeFee && feeAmount > 0) parts.push(`Frais MonCash : +${feeAmount.toLocaleString()} HTG`);
+    if (subtotal > 0) parts.push(`<strong style="color:var(--admin-accent);font-size:1.05rem;">TOTAL : ${total.toLocaleString()} HTG</strong>`);
+    if (wantsVideo) parts.push(`(dont Vidéo : ${videoPrice.toLocaleString()} HTG)`);
+    totalEl.innerHTML = parts.join(' &nbsp;—&nbsp; ');
   }
-  if (feeEl) feeEl.textContent = includeFee ? 'Frais MonCash (3%) inclus dans le total' : 'Frais MonCash retirés';
+  if (feeEl) feeEl.textContent = includeFee ? 'Frais MonCash (3%) calculés sur le montant net' : 'Frais MonCash retirés';
 
-  return { subtotal, feeAmount, total, headSpaMissing };
+  return { subtotal, totalDiscount, feeAmount, total, headSpaMissing };
 }
 
 async function submitCreateReservation() {
@@ -3276,7 +3402,7 @@ async function submitCreateReservation() {
     return;
   }
 
-  const { subtotal, feeAmount, total, headSpaMissing } = updateCreateReservationTotal();
+  const { subtotal, totalDiscount, feeAmount, total, headSpaMissing } = updateCreateReservationTotal();
   const includeFee = document.getElementById('create-include-moncash-fee')?.checked ?? true;
   const selectedServices = selected.map(cb => {
     const idx = Number(cb.dataset.index);
@@ -3408,7 +3534,12 @@ async function submitCreateReservation() {
     payment_method: document.getElementById('create-payment-method').value,
     payment_choice: 'full',
     total_amount: total,
+    total_amount_htg: total,
     deposit_amount: total,
+    balance_amount_due: 0,
+    promo_code: adminCreateAppliedPromo ? adminCreateAppliedPromo.code : null,
+    discount_amount: totalDiscount || 0,
+    discount_pct: (adminCreateAppliedPromo && adminCreateAppliedPromo.discount_type === 'percentage') ? Number(adminCreateAppliedPromo.discount_value) : 0,
     notes: document.getElementById('create-notes').value.trim() || null,
     wants_video: wantsVideo,
     video_requested: wantsVideo,
@@ -3426,6 +3557,28 @@ async function submitCreateReservation() {
     if (error) throw error;
 
     const reservation = data?.[0] || record;
+
+    // Enregistrer l'utilisation du code promo si applicable
+    if (adminCreateAppliedPromo) {
+      try {
+        await supabase.from('promo_codes').update({
+          uses_count: (Number(adminCreateAppliedPromo.uses_count) || 0) + 1,
+          updated_at: new Date().toISOString()
+        }).eq('id', adminCreateAppliedPromo.id);
+
+        await supabase.from('promo_code_uses').insert([{
+          promo_code_id: adminCreateAppliedPromo.id,
+          code: adminCreateAppliedPromo.code,
+          reservation_id: reservation.id,
+          user_id: finalUserId,
+          discount_applied_htg: totalDiscount || 0,
+          created_at: new Date().toISOString()
+        }]);
+      } catch(promoErr) {
+        console.warn('Promo code use tracking notice:', promoErr);
+      }
+    }
+
 
     // Automatic WhatsApp Dispatch on Ligne #3 DALIGHT
     const cleanPhone = String(clientPhone).replace(/\D/g, '');

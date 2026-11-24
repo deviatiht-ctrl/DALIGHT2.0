@@ -737,7 +737,46 @@
             </div>
           </div>
 
-          <div class="form-group">
+                    <!-- 🏷️ Réduction, Remise & Code Promo -->
+          <div class="form-group" style="background: rgba(16, 185, 129, 0.06); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 10px; padding: 0.85rem; margin-bottom: 1rem;">
+            <div style="font-weight: 600; font-size: 0.88rem; color: #10b981; margin-bottom: 0.65rem; display: flex; align-items: center; justify-content: space-between;">
+              <span style="display: flex; align-items: center; gap: 0.4rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                </svg>
+                Réduction / Remise &amp; Code Promo
+              </span>
+              <span id="create-discount-badge" style="display:none; font-size: 0.72rem; padding: 0.15rem 0.5rem; border-radius: 999px; background: rgba(16, 185, 129, 0.2); color: #10b981; font-weight: 700;"></span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.5rem;">
+              <!-- Remise manuelle -->
+              <div>
+                <label style="font-size: 0.78rem; display: block; margin-bottom: 0.25rem;">Remise directe / Discount :</label>
+                <div style="display: flex; gap: 0.35rem;">
+                  <input type="number" id="create-discount-input" class="form-input" placeholder="0" min="0" step="any" style="flex: 1; font-size: 0.85rem;" oninput="updateCreateReservationTotal()">
+                  <select id="create-discount-type" class="form-input" style="width: 75px; font-size: 0.82rem; padding: 0 0.3rem;" onchange="updateCreateReservationTotal()">
+                    <option value="fixed">HTG</option>
+                    <option value="percent">%</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Code Promo -->
+              <div>
+                <label style="font-size: 0.78rem; display: block; margin-bottom: 0.25rem;">Code Promo (optionnel) :</label>
+                <div style="display: flex; gap: 0.35rem;">
+                  <input type="text" id="create-promo-code" class="form-input" placeholder="Ex: PROMO10" style="flex: 1; font-size: 0.85rem; text-transform: uppercase;" onkeydown="if(event.key==='Enter'){event.preventDefault();applyCreatePromoCode();}">
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="applyCreatePromoCode()" style="font-size: 0.75rem; white-space: nowrap; padding: 0 0.6rem;">Appliquer</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Feedback / message code promo -->
+            <div id="create-promo-feedback" style="display: none; font-size: 0.78rem; margin-top: 0.35rem; line-height: 1.4;"></div>
+          </div>
+
+<div class="form-group">
             <label>Notes</label>
             <textarea id="create-notes" class="form-input" rows="3" placeholder="Notes internes..."></textarea>
           </div>
