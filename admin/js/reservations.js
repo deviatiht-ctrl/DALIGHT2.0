@@ -2849,6 +2849,7 @@ let createReservationClient = null;
 let createReservationServices = [];
 let createReservationHeadSpaPricing = [];
 let createReservationExtras = []; // sèvis "extra" kreye a la vole (kache sou sit la)
+let createReservationCart = []; // PANIER interactif des services sélectionnés
 const HAIR_TYPE_LABELS = { dreadlocks: 'Dreadlocks', defrises: 'Cheveux Défrisés', naturels: 'Cheveux Naturels' };
 
 function withFee(p) { return Math.round(Number(p) * 1.03); }
@@ -2894,7 +2895,9 @@ function openCreateReservationModal() {
 
   createReservationClient = null;
   createReservationExtras = [];
+  createReservationCart = [];
   loadAdminVideoPricing();
+  renderCreateCart();
 
   const extraList = document.getElementById('extra-services-list');
   if (extraList) extraList.innerHTML = '';
@@ -3018,6 +3021,8 @@ function closeCreateReservationModal() {
   modal.classList.remove('active');
   modal.style.display = 'none';
   createReservationClient = null;
+  createReservationCart = [];
+  renderCreateCart();
   if (window.clearCreatePromoCode) window.clearCreatePromoCode();
   const dIn = document.getElementById("create-discount-input"); if (dIn) dIn.value = "";
 }
@@ -3030,13 +3035,12 @@ window.toggleCreateVideoOption = function(isChecked) {
 };
 
 async function loadCreateReservationServices() {
-  const listEl = document.getElementById('create-services-list');
-  const configEl = document.getElementById('create-services-config');
-  if (!listEl) return;
+  const pickerEl = document.getElementById('create-service-picker');
+  if (!pickerEl) return;
 
   const supabase = getSupabaseClient();
   if (!supabase) {
-    listEl.innerHTML = '<p class="text-muted">Supabase non connecté.</p>';
+    pickerEl.innerHTML = '<option value="">Supabase non connecté.</option>';
     return;
   }
 
@@ -3051,81 +3055,198 @@ async function loadCreateReservationServices() {
     createReservationHeadSpaPricing = pricing || [];
 
     if (!createReservationServices.length) {
-      listEl.innerHTML = '<p class="text-muted">Aucun service actif.</p>';
+      pickerEl.innerHTML = '<option value="">Aucun service actif disponible</option>';
       return;
     }
 
-    listEl.innerHTML = createReservationServices.map((s, i) => {
-      const isHeadSpa = String(s.category || '').toLowerCase() === 'headspa';
-      const isExtra = s.is_extra === true || s.is_visible === false;
-      const basePrice = isHeadSpa ? null : Number(s.price_htg || 0);
-      return `
-      <label id="create-svc-label-${i}" style="display: flex; align-items: center; gap: .5rem; padding: .4rem 0; cursor: pointer; border-bottom: 1px solid #f1f5f9;">
-        <input type="checkbox" name="create-service" value="${s.id}" data-index="${i}" onchange="onCreateServiceToggle(${i})">
-        <span style="flex: 1;">${escapeHtml(s.name)} ${isExtra ? '<span style="background:#fef3c7;color:#92400e;font-size:.68rem;font-weight:700;padding:.1rem .4rem;border-radius:10px;">EXTRA</span> ' : ''}<span style="color: #64748b; font-size: .85rem;">${isHeadSpa ? '(Head Spa — choisir type & longueur)' : '(' + basePrice.toLocaleString() + ' HTG)'}</span></span>
-      </label>`;
-    }).join('');
+    // Grouper les services logiquement
+    const categoryGroups = {
+      'package': { label: '🎁 Combos & Forfaits', items: [] },
+      'headspa': { label: '🌿 Head Spa', items: [] },
+      'massage-relaxant': { label: '💆 Massages Relaxants', items: [] },
+      'facial': { label: '✨ Soins Visage (Facial)', items: [] },
+      'wood-therapy': { label: '🪵 Wood Thérapie', items: [] },
+      'ongles': { label: '💅 Soins des Ongles', items: [] },
+      'other': { label: '🌸 Autres Services & Extras', items: [] }
+    };
 
-    if (configEl) configEl.innerHTML = '';
+    createReservationServices.forEach(s => {
+      const catKey = String(s.category || '').toLowerCase();
+      if (categoryGroups[catKey]) {
+        categoryGroups[catKey].items.push(s);
+      } else {
+        categoryGroups['other'].items.push(s);
+      }
+    });
+
+    let optionsHtml = '<option value="">-- Choisir un service à ajouter au panier --</option>';
+
+    Object.values(categoryGroups).forEach(group => {
+      if (group.items.length > 0) {
+        optionsHtml += `<optgroup label="${group.label}">`;
+        group.items.forEach(s => {
+          const isExtra = s.is_extra === true || s.is_visible === false;
+          const price = Number(s.price_htg || 0);
+          optionsHtml += `<option value="${s.id}">${escapeHtml(s.name)}${isExtra ? ' [EXTRA]' : ''} — ${price.toLocaleString()} HTG</option>`;
+        });
+        optionsHtml += `</optgroup>`;
+      }
+    });
+
+    pickerEl.innerHTML = optionsHtml;
+    renderCreateCart();
   } catch (err) {
     console.error('Error loading services:', err);
-    listEl.innerHTML = '<p class="text-muted">Erreur chargement services.</p>';
+    pickerEl.innerHTML = '<option value="">Erreur chargement services.</option>';
   }
 }
 
-function onCreateServiceToggle(index) {
-  const cb = document.querySelector(`input[name="create-service"][data-index="${index}"]`);
-  const configEl = document.getElementById('create-services-config');
-  if (!cb || !configEl) return;
-
-  const svc = createReservationServices[index];
-  if (!svc) return;
-
-  const isHeadSpa = String(svc.category || '').toLowerCase() === 'headspa';
-  if (!isHeadSpa) {
-    updateCreateReservationTotal();
+// ── PANIER INTERACTIF (Ajout multiple, quantité, suppression) ─────────────
+window.addPickerServiceToCart = function() {
+  const pickerEl = document.getElementById('create-service-picker');
+  const serviceId = pickerEl?.value;
+  if (!serviceId) {
+    window.adminCore?.showToast('Veuillez sélectionner un service dans la liste déroulante.', 'warning');
     return;
   }
 
-  const existing = document.getElementById(`create-svc-config-${index}`);
-  if (cb.checked) {
-    if (!existing) {
-      const div = document.createElement('div');
-      div.id = `create-svc-config-${index}`;
-      div.className = 'create-svc-config-box';
-      div.style.cssText = 'background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:.75rem;margin-bottom:.5rem;';
-      div.innerHTML = renderHeadSpaConfig(index, svc);
-      configEl.appendChild(div);
-      // Auto-select first options if available
-      const typeSelect = div.querySelector(`#create-svc-hair-type-${index}`);
-      if (typeSelect) { typeSelect.value = typeSelect.options[1]?.value || ''; populateHeadSpaLengthOptions(index); }
-    }
-  } else if (existing) {
-    existing.remove();
+  const svc = createReservationServices.find(s => s.id === serviceId);
+  if (!svc) {
+    window.adminCore?.showToast('Service introuvable.', 'error');
+    return;
   }
-  updateCreateReservationTotal();
-}
 
-function renderHeadSpaConfig(index, svc) {
-  const hairTypes = ['naturels', 'defrises', 'dreadlocks'];
-  return `
-    <div style="font-weight:600;margin-bottom:.5rem;color:#334155;">${escapeHtml(svc.name)}</div>
-    <div style="display:grid;grid-template-columns:1fr;gap:.75rem;">
-      <div class="form-group" style="margin-bottom:0;">
-        <label style="font-size:.78rem;">Type de cheveux (Tarif unique inclus)</label>
-        <select id="create-svc-hair-type-${index}" class="form-input" onchange="updateCreateReservationTotal()">
-          <option value="naturels">Cheveux Naturels</option>
-          <option value="defrises">Cheveux Défrisés</option>
-          <option value="dreadlocks">Dreadlocks</option>
-        </select>
+  const isHeadSpa = String(svc.category || '').toLowerCase() === 'headspa';
+
+  // Si le service existe déjà dans le panier (et s'il s'agit de headspa avec même type de cheveux)
+  const existing = createReservationCart.find(item => item.id === svc.id && (!isHeadSpa || item.hair_type === 'naturels'));
+  if (existing) {
+    existing.qty += 1;
+    window.adminCore?.showToast(`Quantité augmentée : ${existing.name} (x${existing.qty})`, 'info');
+  } else {
+    createReservationCart.push({
+      cartItemId: 'cart_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+      id: svc.id,
+      name: svc.name,
+      price_htg: Number(svc.price_htg || 0),
+      price_usd: 0,
+      category: svc.category || '',
+      duration: svc.duration || null,
+      extra: !!svc.is_extra,
+      hair_type: isHeadSpa ? 'naturels' : null,
+      qty: 1
+    });
+    window.adminCore?.showToast(`Ajouté au panier : ${svc.name}`, 'success');
+  }
+
+  pickerEl.value = '';
+  renderCreateCart();
+  updateCreateReservationTotal();
+};
+
+window.changeCreateCartItemQty = function(cartItemId, delta) {
+  const item = createReservationCart.find(i => i.cartItemId === cartItemId);
+  if (!item) return;
+
+  item.qty += delta;
+  if (item.qty <= 0) {
+    createReservationCart = createReservationCart.filter(i => i.cartItemId !== cartItemId);
+    window.adminCore?.showToast('Service retiré du panier.', 'info');
+  }
+  renderCreateCart();
+  updateCreateReservationTotal();
+};
+
+window.removeCreateCartItem = function(cartItemId) {
+  createReservationCart = createReservationCart.filter(i => i.cartItemId !== cartItemId);
+  window.adminCore?.showToast('Service retiré du panier.', 'info');
+  renderCreateCart();
+  updateCreateReservationTotal();
+};
+
+window.updateCreateCartItemHairType = function(cartItemId, newHairType) {
+  const item = createReservationCart.find(i => i.cartItemId === cartItemId);
+  if (item) {
+    item.hair_type = newHairType;
+    updateCreateReservationTotal();
+  }
+};
+
+function renderCreateCart() {
+  const badgeEl = document.getElementById('create-cart-badge');
+  const emptyEl = document.getElementById('create-cart-empty');
+  const listEl = document.getElementById('create-cart-items-list');
+
+  const totalQty = createReservationCart.reduce((sum, item) => sum + (item.qty || 1), 0);
+  if (badgeEl) {
+    badgeEl.textContent = `${totalQty} service${totalQty > 1 ? 's' : ''}`;
+  }
+
+  if (!listEl) return;
+
+  if (createReservationCart.length === 0) {
+    if (emptyEl) emptyEl.style.display = 'block';
+    listEl.style.display = 'none';
+    listEl.innerHTML = '';
+    return;
+  }
+
+  if (emptyEl) emptyEl.style.display = 'none';
+  listEl.style.display = 'flex';
+
+  listEl.innerHTML = createReservationCart.map(item => {
+    const isHeadSpa = String(item.category || '').toLowerCase() === 'headspa';
+    const unitPrice = Number(item.price_htg || 0);
+    const lineTotal = unitPrice * item.qty;
+
+    return `
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.55rem 0.75rem; background: var(--admin-card-bg, #ffffff); border: 1px solid var(--admin-border, #e2e8f0); border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+        <!-- Info service -->
+        <div style="flex: 1; min-width: 0;">
+          <div style="font-weight: 600; font-size: 0.88rem; color: var(--admin-text, #1e293b); display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
+            <span>${escapeHtml(item.name)}</span>
+            ${item.extra ? '<span style="background:#fef3c7;color:#92400e;font-size:0.65rem;font-weight:700;padding:1px 6px;border-radius:10px;">EXTRA</span>' : ''}
+          </div>
+          <div style="font-size: 0.78rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <span>${unitPrice.toLocaleString()} HTG</span>
+            ${isHeadSpa ? `
+              <span style="display: inline-flex; align-items: center; gap: 3px;">
+                • Type:
+                <select onchange="updateCreateCartItemHairType('${item.cartItemId}', this.value)" style="font-size: 0.75rem; padding: 1px 5px; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff; cursor: pointer;">
+                  <option value="naturels" ${item.hair_type === 'naturels' ? 'selected' : ''}>Naturels</option>
+                  <option value="defrises" ${item.hair_type === 'defrises' ? 'selected' : ''}>Défrisés</option>
+                  <option value="dreadlocks" ${item.hair_type === 'dreadlocks' ? 'selected' : ''}>Dreadlocks</option>
+                </select>
+              </span>
+            ` : ''}
+          </div>
+        </div>
+
+        <!-- Contrôles Quantité -->
+        <div style="display: flex; align-items: center; gap: 3px; background: #f1f5f9; padding: 2px 4px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <button type="button" onclick="changeCreateCartItemQty('${item.cartItemId}', -1)" style="width: 26px; height: 26px; border: none; background: #ffffff; color: #334155; border-radius: 4px; font-weight: bold; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Diminuer">
+            −
+          </button>
+          <span style="min-width: 24px; text-align: center; font-weight: 700; font-size: 0.88rem; color: #0f172a;">${item.qty}</span>
+          <button type="button" onclick="changeCreateCartItemQty('${item.cartItemId}', 1)" style="width: 26px; height: 26px; border: none; background: #ffffff; color: #334155; border-radius: 4px; font-weight: bold; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Augmenter">
+            +
+          </button>
+        </div>
+
+        <!-- Total ligne -->
+        <div style="min-width: 75px; text-align: right; font-weight: 700; font-size: 0.88rem; color: var(--admin-accent, #d4af37);">
+          ${lineTotal.toLocaleString()} HTG
+        </div>
+
+        <!-- Bouton Retirer -->
+        <div>
+          <button type="button" onclick="removeCreateCartItem('${item.cartItemId}')" style="background: #fee2e2; border: none; color: #ef4444; width: 26px; height: 26px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;" title="Retirer du panier">
+            ✕
+          </button>
+        </div>
       </div>
-    </div>
-  `;
-}
-
-function populateHeadSpaLengthOptions(index) {
-  // Longueur retirée — tarif unique
-  updateCreateReservationTotal();
+    `;
+  }).join('');
 }
 
 // ── Sèvis EXTRA (kache sou sit piblik la) ───────────────────────────────────
@@ -3146,7 +3267,6 @@ window.addExtraService = async function() {
   const supabase = getSupabaseClient();
   let dbId = null;
 
-  // Si checkbox la kochwe, anrejistre l nan tab services kòm sèvis kache
   if (save && supabase) {
     try {
       const { data, error } = await supabase.from('services').insert({
@@ -3162,46 +3282,46 @@ window.addExtraService = async function() {
       }).select('id').single();
       if (error) throw error;
       dbId = data?.id || null;
-      // Ajoute l nan lis sèvis yo pou l reyitilizab nan menm sesyon an
       if (dbId) {
         createReservationServices.push({ id: dbId, name, price_htg: price, price_usd: 0, duration, category: 'package', is_visible: false, is_extra: true });
       }
     } catch (e) {
-      console.warn('Extra service save failed (is_visible/is_extra columns?):', e.message);
-      window.adminCore?.showToast('Sèvis la ajoute pou rezèvasyon sa a sèlman — kolòn is_visible/is_extra poko egziste (egzekite 39_extra_services.sql)', 'warning');
+      console.warn('Extra service save notice:', e.message);
     }
   }
 
-  createReservationExtras.push({ id: dbId, name, price_htg: price, duration, extra: true, checked: true });
+  // Ajoute l dirèkteman nan Panier a
+  createReservationCart.push({
+    cartItemId: 'cart_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+    id: dbId,
+    name,
+    price_htg: price,
+    price_usd: 0,
+    duration: duration || null,
+    category: 'package',
+    extra: true,
+    hair_type: null,
+    qty: 1
+  });
+
   document.getElementById('extra-svc-name').value = '';
   document.getElementById('extra-svc-price').value = '';
   document.getElementById('extra-svc-duration').value = '';
-  renderExtraServices();
+  const f = document.getElementById('extra-service-form');
+  if (f) f.style.display = 'none';
+
+  renderCreateCart();
   updateCreateReservationTotal();
+  window.adminCore?.showToast(`Sèvis extra "${name}" ajoute nan panier a !`, 'success');
 };
 
-function renderExtraServices() {
-  const el = document.getElementById('extra-services-list');
-  if (!el) return;
-  if (!createReservationExtras.length) { el.innerHTML = ''; return; }
-  el.innerHTML = createReservationExtras.map((s, i) => `
-    <label style="display:flex;align-items:center;gap:.5rem;padding:.4rem .75rem;background:#fef9e7;border:1px dashed #d9b53a;border-radius:8px;margin-bottom:.4rem;cursor:pointer;">
-      <input type="checkbox" name="create-extra-service" data-extra-index="${i}" ${s.checked ? 'checked' : ''} onchange="onExtraServiceToggle(${i})">
-      <span style="flex:1;">${escapeHtml(s.name)} <span style="background:#fef3c7;color:#92400e;font-size:.68rem;font-weight:700;padding:.1rem .4rem;border-radius:10px;">EXTRA</span> <span style="color:#64748b;font-size:.85rem;">(${Number(s.price_htg).toLocaleString()} HTG)</span></span>
-      <button type="button" onclick="removeExtraService(${i})" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:1rem;" title="Retire">✕</button>
-    </label>`).join('');
-}
-
-window.onExtraServiceToggle = function(i) {
-  if (createReservationExtras[i]) createReservationExtras[i].checked = !createReservationExtras[i].checked;
-  updateCreateReservationTotal();
-};
-
-window.removeExtraService = function(i) {
-  createReservationExtras.splice(i, 1);
-  renderExtraServices();
-  updateCreateReservationTotal();
-};
+// Fonksyon stubs pou konpatibilite
+function onCreateServiceToggle() {}
+function renderHeadSpaConfig() { return ''; }
+function populateHeadSpaLengthOptions() {}
+function renderExtraServices() {}
+window.onExtraServiceToggle = function() {};
+window.removeExtraService = function() {};
 
 window.generateRandomClientPassword = function() {
   const pwd = 'Dalight' + Math.floor(1000 + Math.random() * 9000) + '!';
@@ -3284,29 +3404,13 @@ async function searchClientByEmail() {
 }
 
 function updateCreateReservationTotal() {
-  const checkboxes = document.querySelectorAll('input[name="create-service"]:checked');
   const includeFee = document.getElementById('create-include-moncash-fee')?.checked ?? true;
   let subtotal = 0;
-  let feeAmount = 0;
-  let headSpaMissing = false;
 
-  checkboxes.forEach(cb => {
-    const idx = Number(cb.dataset.index);
-    const svc = createReservationServices[idx];
-    if (!svc) return;
-
-    const isHeadSpa = String(svc.category || '').toLowerCase() === 'headspa';
-    const base = Number(svc.price_htg || 0);
-    subtotal += base;
-    feeAmount += includeFee ? (withFee(base) - base) : 0;
-  });
-
-  // Sèvis extra ki tcheke yo
-  createReservationExtras.forEach(s => {
-    if (!s.checked) return;
-    const base = Number(s.price_htg || 0);
-    subtotal += base;
-    feeAmount += includeFee ? (withFee(base) - base) : 0;
+  // Calcul du sous-total basé sur le panier interactif
+  createReservationCart.forEach(item => {
+    const base = Number(item.price_htg || 0);
+    subtotal += base * (item.qty || 1);
   });
 
   // Option Vidéo Souvenir (dynamique selon settings CVISUAL)
@@ -3317,7 +3421,6 @@ function updateCreateReservationTotal() {
   const videoPrice = wantsVideo ? (videoConsent === 'private' ? privPrice : pubPrice) : 0;
   if (wantsVideo) {
     subtotal += videoPrice;
-    feeAmount += includeFee ? (withFee(videoPrice) - videoPrice) : 0;
   }
 
   // 2. Calcul des réductions (Code promo + Remise manuelle)
@@ -3346,7 +3449,7 @@ function updateCreateReservationTotal() {
   const netBeforeFee = Math.max(0, subtotal - totalDiscount);
 
   // 3. Frais MonCash (3%) appliqués sur le montant net
-  feeAmount = (includeFee && netBeforeFee > 0) ? (withFee(netBeforeFee) - netBeforeFee) : 0;
+  const feeAmount = (includeFee && netBeforeFee > 0) ? (withFee(netBeforeFee) - netBeforeFee) : 0;
   const total = netBeforeFee + feeAmount;
 
   const totalEl = document.getElementById('create-reservation-total');
@@ -3363,7 +3466,7 @@ function updateCreateReservationTotal() {
   }
   if (feeEl) feeEl.textContent = includeFee ? 'Frais MonCash (3%) calculés sur le montant net' : 'Frais MonCash retirés';
 
-  return { subtotal, totalDiscount, feeAmount, total, headSpaMissing };
+  return { subtotal, totalDiscount, feeAmount, total, headSpaMissing: false };
 }
 
 async function submitCreateReservation() {
@@ -3395,66 +3498,52 @@ async function submitCreateReservation() {
     return;
   }
 
-  const selected = Array.from(document.querySelectorAll('input[name="create-service"]:checked'));
-  const hasExtra = createReservationExtras.some(s => s.checked);
-  if (!selected.length && !hasExtra) {
-    window.adminCore?.showToast('Veuillez sélectionner au moins un service.', 'error');
+  if (!createReservationCart || createReservationCart.length === 0) {
+    window.adminCore?.showToast('Veuillez ajouter au moins un service au panier.', 'error');
     return;
   }
 
-  const { subtotal, totalDiscount, feeAmount, total, headSpaMissing } = updateCreateReservationTotal();
+  const { subtotal, totalDiscount, feeAmount, total } = updateCreateReservationTotal();
   const includeFee = document.getElementById('create-include-moncash-fee')?.checked ?? true;
-  const selectedServices = selected.map(cb => {
-    const idx = Number(cb.dataset.index);
-    const svc = createReservationServices[idx];
-    if (!svc) return null;
 
-    const isHeadSpa = String(svc.category || '').toLowerCase() === 'headspa';
-    const baseHtg = Number(svc.price_htg || 0);
-    const baseUsd = Number(svc.price_usd || 0);
+  // Construction de la liste des services avec support des quantités multiples
+  const selectedServices = [];
+  createReservationCart.forEach(item => {
+    const isHeadSpa = String(item.category || '').toLowerCase() === 'headspa';
+    const hairType = item.hair_type || 'naturels';
+    const hairTypeLabel = isHeadSpa ? (HAIR_TYPE_LABELS[hairType] || hairType) : null;
+    const displayName = (isHeadSpa && hairTypeLabel) ? `${item.name} (${hairTypeLabel})` : item.name;
+    const baseHtg = Number(item.price_htg || 0);
 
-    if (isHeadSpa) {
-      const hairTypeSelect = document.getElementById(`create-svc-hair-type-${idx}`);
-      const hairType = hairTypeSelect?.value || 'naturels';
-      const hairTypeLabel = HAIR_TYPE_LABELS[hairType] || hairType;
-      return {
-        id: svc.id,
-        name: `${svc.name} (${hairTypeLabel})`,
-        base_name: svc.name,
+    for (let q = 0; q < item.qty; q++) {
+      selectedServices.push({
+        id: item.id || null,
+        name: displayName,
+        base_name: item.name,
         price_htg: includeFee ? withFee(baseHtg) : baseHtg,
-        price_usd: includeFee ? withFeeUSD(baseUsd) : baseUsd,
-        hair_type: hairType,
+        price_usd: 0,
+        hair_type: isHeadSpa ? hairType : null,
         hair_length: 'Toutes longueurs',
-        category: svc.category,
-      };
+        category: item.category || 'general',
+        extra: !!item.extra,
+        duration: item.duration || null,
+        qty: 1,
+        total_qty: item.qty,
+        unit_index: q + 1
+      });
     }
-
-    return {
-      id: svc.id,
-      name: svc.name,
-      base_name: svc.name,
-      price_htg: includeFee ? withFee(baseHtg) : baseHtg,
-      price_usd: includeFee ? withFeeUSD(baseUsd) : baseUsd,
-      category: svc.category,
-    };
-  }).filter(Boolean);
-
-  createReservationExtras.filter(s => s.checked).forEach(s => {
-    const baseHtg = Number(s.price_htg || 0);
-    selectedServices.push({
-      id: s.id || null,
-      name: s.name,
-      base_name: s.name,
-      price_htg: includeFee ? withFee(baseHtg) : baseHtg,
-      price_usd: 0,
-      category: 'package',
-      extra: true,
-      duration: s.duration || null,
-    });
   });
 
+  const serviceSummary = createReservationCart.map(item => {
+    const isHeadSpa = String(item.category || '').toLowerCase() === 'headspa';
+    const hairType = item.hair_type || 'naturels';
+    const hairTypeLabel = isHeadSpa ? (HAIR_TYPE_LABELS[hairType] || hairType) : null;
+    const fullName = (isHeadSpa && hairTypeLabel) ? `${item.name} (${hairTypeLabel})` : item.name;
+    return item.qty > 1 ? `${item.qty}x ${fullName}` : fullName;
+  }).join(', ');
+
   if (!selectedServices.length) {
-    window.adminCore?.showToast('Erreur lors de la construction des services.', 'error');
+    window.adminCore?.showToast('Erreur lors de la préparation des services du panier.', 'error');
     return;
   }
 
@@ -3523,7 +3612,7 @@ async function submitCreateReservation() {
     user_email: clientEmail,
     user_name: clientName,
     phone: clientPhone || null,
-    service: selectedServices.map(s => s.name).join(', '),
+    service: serviceSummary,
     services: selectedServices.map(s => ({ id: s.id, name: s.name, price_htg: s.price_htg, price_usd: s.price_usd, hair_type: s.hair_type || null, hair_length: s.hair_length || null, extra: !!s.extra })),
     service_id: (selectedServices.find(s => s.id) || selectedServices[0]).id || null,
     location: document.getElementById('create-location').value,
@@ -3687,6 +3776,11 @@ window.submitCreateReservation = submitCreateReservation;
 window.updateCreateReservationTotal = updateCreateReservationTotal;
 window.onCreateServiceToggle = onCreateServiceToggle;
 window.populateHeadSpaLengthOptions = populateHeadSpaLengthOptions;
+window.addPickerServiceToCart = addPickerServiceToCart;
+window.changeCreateCartItemQty = changeCreateCartItemQty;
+window.removeCreateCartItem = removeCreateCartItem;
+window.updateCreateCartItemHairType = updateCreateCartItemHairType;
+window.renderCreateCart = renderCreateCart;
 
 function escapeHtml(str) {
   if (!str) return '';
