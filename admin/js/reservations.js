@@ -2852,6 +2852,13 @@ let createReservationExtras = []; // sèvis "extra" kreye a la vole (kache sou s
 let createReservationCart = []; // PANIER interactif des services sélectionnés
 const HAIR_TYPE_LABELS = { dreadlocks: 'Dreadlocks', defrises: 'Cheveux Défrisés', naturels: 'Cheveux Naturels' };
 
+function refreshLucideIcons() {
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    try { window.lucide.createIcons(); } catch(e) { console.warn('Lucide icon refresh:', e); }
+  }
+}
+window.refreshLucideIcons = refreshLucideIcons;
+
 function withFee(p) { return Math.round(Number(p) * 1.03); }
 function withoutFee(p) { return Math.round(Number(p)); }
 
@@ -2898,6 +2905,7 @@ function openCreateReservationModal() {
   createReservationCart = [];
   loadAdminVideoPricing();
   renderCreateCart();
+  setTimeout(refreshLucideIcons, 50);
 
   const extraList = document.getElementById('extra-services-list');
   if (extraList) extraList.innerHTML = '';
@@ -2962,7 +2970,7 @@ window.applyCreatePromoCode = async function() {
       if (feedback) {
         feedback.style.display = 'block';
         feedback.style.color = '#ef4444';
-        feedback.innerHTML = '❌ Code promo invalide ou inactif. <button type="button" onclick="clearCreatePromoCode()" style="background:none;border:none;color:#6366f1;cursor:pointer;text-decoration:underline;font-size:0.75rem;">Effacer</button>';
+        feedback.innerHTML = '<span style="display:inline-flex;align-items:center;gap:4px;"><i data-lucide="alert-circle" style="width:14px;height:14px;"></i> Code promo invalide ou inactif.</span> <button type="button" onclick="clearCreatePromoCode()" style="background:none;border:none;color:#6366f1;cursor:pointer;text-decoration:underline;font-size:0.75rem;margin-left:4px;">Effacer</button>'; refreshLucideIcons();
       }
       if (badge) badge.style.display = 'none';
       updateCreateReservationTotal();
@@ -2975,7 +2983,7 @@ window.applyCreatePromoCode = async function() {
       if (feedback) {
         feedback.style.display = 'block';
         feedback.style.color = '#ef4444';
-        feedback.textContent = '❌ Ce code promo a expiré.';
+        feedback.innerHTML = '<span style="display:inline-flex;align-items:center;gap:4px;"><i data-lucide="alert-circle" style="width:14px;height:14px;"></i> Ce code promo a expiré.</span>'; refreshLucideIcons();
       }
       if (badge) badge.style.display = 'none';
       updateCreateReservationTotal();
@@ -2987,7 +2995,7 @@ window.applyCreatePromoCode = async function() {
     if (feedback) {
       feedback.style.display = 'block';
       feedback.style.color = '#10b981';
-      feedback.innerHTML = `✅ Code promo <strong>${data.code}</strong> appliqué : <strong>-${valText}</strong> ! <button type="button" onclick="clearCreatePromoCode()" style="background:none;border:none;color:#ef4444;cursor:pointer;text-decoration:underline;font-size:0.75rem;margin-left:6px;">Retirer</button>`;
+      feedback.innerHTML = `<span style="display:inline-flex;align-items:center;gap:4px;"><i data-lucide="check-circle" style="width:14px;height:14px;"></i> Code promo <strong>${data.code}</strong> appliqué : <strong>-${valText}</strong> !</span> <button type="button" onclick="clearCreatePromoCode()" style="background:none;border:none;color:#ef4444;cursor:pointer;text-decoration:underline;font-size:0.75rem;margin-left:6px;">Retirer</button>`; refreshLucideIcons();
     }
     if (badge) {
       badge.style.display = 'inline-block';
@@ -3059,15 +3067,15 @@ async function loadCreateReservationServices() {
       return;
     }
 
-    // Grouper les services logiquement
+    // Grouper les services logiquement sans emojis
     const categoryGroups = {
-      'package': { label: '🎁 Combos & Forfaits', items: [] },
-      'headspa': { label: '🌿 Head Spa', items: [] },
-      'massage-relaxant': { label: '💆 Massages Relaxants', items: [] },
-      'facial': { label: '✨ Soins Visage (Facial)', items: [] },
-      'wood-therapy': { label: '🪵 Wood Thérapie', items: [] },
-      'ongles': { label: '💅 Soins des Ongles', items: [] },
-      'other': { label: '🌸 Autres Services & Extras', items: [] }
+      'package': { label: 'Combos & Forfaits', items: [] },
+      'headspa': { label: 'Head Spa', items: [] },
+      'massage-relaxant': { label: 'Massages Relaxants', items: [] },
+      'facial': { label: 'Soins Visage (Facial)', items: [] },
+      'wood-therapy': { label: 'Wood Thérapie', items: [] },
+      'ongles': { label: 'Soins des Ongles', items: [] },
+      'other': { label: 'Autres Services & Extras', items: [] }
     };
 
     createReservationServices.forEach(s => {
@@ -3144,6 +3152,52 @@ window.addPickerServiceToCart = function() {
   updateCreateReservationTotal();
 };
 
+window.quickAddServiceByName = function(nameSnippet) {
+  if (!createReservationServices || !createReservationServices.length) {
+    window.adminCore?.showToast('Services en cours de chargement...', 'warning');
+    return;
+  }
+
+  const query = String(nameSnippet).toLowerCase();
+  const svc = createReservationServices.find(s => String(s.name || '').toLowerCase().includes(query));
+  if (!svc) {
+    window.adminCore?.showToast(`Service "${nameSnippet}" non trouvé dans la liste.`, 'warning');
+    return;
+  }
+
+  const isHeadSpa = String(svc.category || '').toLowerCase() === 'headspa';
+  const existing = createReservationCart.find(item => item.id === svc.id && (!isHeadSpa || item.hair_type === 'naturels'));
+  if (existing) {
+    existing.qty += 1;
+    window.adminCore?.showToast(`Quantité augmentée : ${existing.name} (x${existing.qty})`, 'info');
+  } else {
+    createReservationCart.push({
+      cartItemId: 'cart_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+      id: svc.id,
+      name: svc.name,
+      price_htg: Number(svc.price_htg || 0),
+      price_usd: 0,
+      category: svc.category || '',
+      duration: svc.duration || null,
+      extra: !!svc.is_extra,
+      hair_type: isHeadSpa ? 'naturels' : null,
+      qty: 1
+    });
+    window.adminCore?.showToast(`Ajouté au panier : ${svc.name}`, 'success');
+  }
+
+  renderCreateCart();
+  updateCreateReservationTotal();
+};
+
+window.clearCreateCart = function() {
+  if (!createReservationCart.length) return;
+  createReservationCart = [];
+  renderCreateCart();
+  updateCreateReservationTotal();
+  window.adminCore?.showToast('Panier vidé.', 'info');
+};
+
 window.changeCreateCartItemQty = function(cartItemId, delta) {
   const item = createReservationCart.find(i => i.cartItemId === cartItemId);
   if (!item) return;
@@ -3176,22 +3230,38 @@ function renderCreateCart() {
   const badgeEl = document.getElementById('create-cart-badge');
   const emptyEl = document.getElementById('create-cart-empty');
   const listEl = document.getElementById('create-cart-items-list');
+  const clearBtn = document.getElementById('create-cart-clear-btn');
+  const footerEl = document.getElementById('create-cart-footer');
+  const footerCount = document.getElementById('create-cart-footer-count');
+  const footerTotal = document.getElementById('create-cart-footer-total');
 
   const totalQty = createReservationCart.reduce((sum, item) => sum + (item.qty || 1), 0);
+  const cartSubtotal = createReservationCart.reduce((sum, item) => sum + (Number(item.price_htg || 0) * (item.qty || 1)), 0);
+
   if (badgeEl) {
     badgeEl.textContent = `${totalQty} service${totalQty > 1 ? 's' : ''}`;
+  }
+  if (clearBtn) {
+    clearBtn.style.display = createReservationCart.length > 0 ? 'inline-flex' : 'none';
   }
 
   if (!listEl) return;
 
   if (createReservationCart.length === 0) {
     if (emptyEl) emptyEl.style.display = 'block';
+    if (footerEl) footerEl.style.display = 'none';
     listEl.style.display = 'none';
     listEl.innerHTML = '';
+    refreshLucideIcons();
     return;
   }
 
   if (emptyEl) emptyEl.style.display = 'none';
+  if (footerEl) {
+    footerEl.style.display = 'flex';
+    if (footerCount) footerCount.textContent = totalQty;
+    if (footerTotal) footerTotal.textContent = `${cartSubtotal.toLocaleString()} HTG`;
+  }
   listEl.style.display = 'flex';
 
   listEl.innerHTML = createReservationCart.map(item => {
@@ -3200,19 +3270,19 @@ function renderCreateCart() {
     const lineTotal = unitPrice * item.qty;
 
     return `
-      <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.55rem 0.75rem; background: var(--admin-card-bg, #ffffff); border: 1px solid var(--admin-border, #e2e8f0); border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+      <div class="cart-item-card">
         <!-- Info service -->
         <div style="flex: 1; min-width: 0;">
           <div style="font-weight: 600; font-size: 0.88rem; color: var(--admin-text, #1e293b); display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
             <span>${escapeHtml(item.name)}</span>
-            ${item.extra ? '<span style="background:#fef3c7;color:#92400e;font-size:0.65rem;font-weight:700;padding:1px 6px;border-radius:10px;">EXTRA</span>' : ''}
+            ${item.extra ? '<span style="background:rgba(212,175,55,0.15);color:var(--admin-accent);font-size:0.65rem;font-weight:700;padding:1px 6px;border-radius:10px;border:1px solid rgba(212,175,55,0.3);">EXTRA</span>' : ''}
           </div>
           <div style="font-size: 0.78rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-            <span>${unitPrice.toLocaleString()} HTG</span>
+            <span style="font-weight: 500;">${unitPrice.toLocaleString()} HTG</span>
             ${isHeadSpa ? `
-              <span style="display: inline-flex; align-items: center; gap: 3px;">
-                • Type:
-                <select onchange="updateCreateCartItemHairType('${item.cartItemId}', this.value)" style="font-size: 0.75rem; padding: 1px 5px; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff; cursor: pointer;">
+              <span style="display: inline-flex; align-items: center; gap: 3px; background: rgba(0,0,0,0.03); padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                <span style="font-size: 0.72rem; color: #64748b;">Type:</span>
+                <select onchange="updateCreateCartItemHairType('${item.cartItemId}', this.value)" style="font-size: 0.75rem; padding: 1px 4px; border: none; background: transparent; cursor: pointer; font-weight: 500; color: var(--admin-text);">
                   <option value="naturels" ${item.hair_type === 'naturels' ? 'selected' : ''}>Naturels</option>
                   <option value="defrises" ${item.hair_type === 'defrises' ? 'selected' : ''}>Défrisés</option>
                   <option value="dreadlocks" ${item.hair_type === 'dreadlocks' ? 'selected' : ''}>Dreadlocks</option>
@@ -3223,13 +3293,13 @@ function renderCreateCart() {
         </div>
 
         <!-- Contrôles Quantité -->
-        <div style="display: flex; align-items: center; gap: 3px; background: #f1f5f9; padding: 2px 4px; border-radius: 6px; border: 1px solid #e2e8f0;">
-          <button type="button" onclick="changeCreateCartItemQty('${item.cartItemId}', -1)" style="width: 26px; height: 26px; border: none; background: #ffffff; color: #334155; border-radius: 4px; font-weight: bold; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Diminuer">
-            −
+        <div class="cart-stepper">
+          <button type="button" class="cart-stepper-btn" onclick="changeCreateCartItemQty('${item.cartItemId}', -1)" title="Diminuer">
+            <i data-lucide="minus" style="width: 12px; height: 12px;"></i>
           </button>
           <span style="min-width: 24px; text-align: center; font-weight: 700; font-size: 0.88rem; color: #0f172a;">${item.qty}</span>
-          <button type="button" onclick="changeCreateCartItemQty('${item.cartItemId}', 1)" style="width: 26px; height: 26px; border: none; background: #ffffff; color: #334155; border-radius: 4px; font-weight: bold; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Augmenter">
-            +
+          <button type="button" class="cart-stepper-btn" onclick="changeCreateCartItemQty('${item.cartItemId}', 1)" title="Augmenter">
+            <i data-lucide="plus" style="width: 12px; height: 12px;"></i>
           </button>
         </div>
 
@@ -3240,13 +3310,15 @@ function renderCreateCart() {
 
         <!-- Bouton Retirer -->
         <div>
-          <button type="button" onclick="removeCreateCartItem('${item.cartItemId}')" style="background: #fee2e2; border: none; color: #ef4444; width: 26px; height: 26px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;" title="Retirer du panier">
-            ✕
+          <button type="button" class="cart-delete-btn" onclick="removeCreateCartItem('${item.cartItemId}')" title="Retirer du panier">
+            <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
           </button>
         </div>
       </div>
     `;
   }).join('');
+
+  refreshLucideIcons();
 }
 
 // ── Sèvis EXTRA (kache sou sit piblik la) ───────────────────────────────────
@@ -3377,12 +3449,12 @@ async function searchClientByEmail() {
       if (phoneInput && data.phone) phoneInput.value = data.phone;
       if (pwdGroup) pwdGroup.style.display = 'none';
       if (badgeEl) {
-        badgeEl.textContent = 'Compte existant ✓';
+        badgeEl.textContent = 'Compte existant';
         badgeEl.style.background = 'rgba(74,222,128,0.18)';
         badgeEl.style.color = '#4ade80';
       }
       if (infoEl) {
-        infoEl.innerHTML = `✅ Compte client trouvé : <strong>${escapeHtml(data.full_name || 'Sans nom')}</strong> (${escapeHtml(data.email)})`;
+        infoEl.innerHTML = `<span style="display:inline-flex;align-items:center;gap:4px;"><i data-lucide="check-circle-2" style="width:14px;height:14px;"></i> Compte client trouvé : <strong>${escapeHtml(data.full_name || 'Sans nom')}</strong> (${escapeHtml(data.email)})</span>`; refreshLucideIcons();
       }
     } else {
       // New client: show password box, pre-fill temporary password
@@ -3781,6 +3853,8 @@ window.changeCreateCartItemQty = changeCreateCartItemQty;
 window.removeCreateCartItem = removeCreateCartItem;
 window.updateCreateCartItemHairType = updateCreateCartItemHairType;
 window.renderCreateCart = renderCreateCart;
+window.quickAddServiceByName = quickAddServiceByName;
+window.clearCreateCart = clearCreateCart;
 
 function escapeHtml(str) {
   if (!str) return '';

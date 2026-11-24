@@ -8,6 +8,7 @@
   <link href="../vendor/fonts/inter-fonts.css" rel="stylesheet">
   <link rel="stylesheet" href="css/admin.css?v=202611190137">
   <script src="../vendor/supabase/supabase.min.js"></script>
+  <script src="../vendor/lucide/lucide.min.js"></script>
   <style>
     /* Print styles */
     @media print {
@@ -33,6 +34,88 @@
       #date-filter {
         width: 100% !important;
       }
+    }
+  
+    /* Cart & Quick Chips Modern Styling */
+    .lucide { display: inline-block; vertical-align: middle; stroke-width: 2; }
+    .cart-quick-chip {
+      background: rgba(212, 175, 55, 0.08);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      color: var(--admin-text);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 0.74rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .cart-quick-chip:hover {
+      background: var(--admin-accent);
+      color: #fff;
+      border-color: var(--admin-accent);
+      transform: translateY(-1px);
+    }
+    .cart-item-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.65rem 0.85rem;
+      background: var(--admin-card-bg, #ffffff);
+      border: 1px solid var(--admin-border, #e2e8f0);
+      border-radius: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      transition: border-color 0.15s ease;
+    }
+    .cart-item-card:hover {
+      border-color: rgba(212, 175, 55, 0.4);
+    }
+    .cart-stepper {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      background: #f1f5f9;
+      padding: 2px 4px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+    .cart-stepper-btn {
+      width: 26px;
+      height: 26px;
+      border: none;
+      background: #ffffff;
+      color: #334155;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .cart-stepper-btn:hover {
+      background: var(--admin-accent);
+      color: #ffffff;
+    }
+    .cart-delete-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: #fee2e2;
+      color: #ef4444;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+    .cart-delete-btn:hover {
+      background: #ef4444;
+      color: #ffffff;
     }
   </style>
 </head>
@@ -464,7 +547,7 @@
           <div style="padding: 0.6rem; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 8px; margin-bottom: 0.6rem;">
             <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; font-weight: 600; color: #ef4444; font-size: 0.85rem; margin: 0;">
               <input type="checkbox" id="block-service-all" onchange="onBlockAllServicesChange(this.checked)" checked style="width: 18px; height: 18px; accent-color: #ef4444; cursor: pointer;">
-              <span>🌐 TOUS LES SERVICES (Bloquer la salle complète / Global)</span>
+              <span><i data-lucide="globe" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i> TOUS LES SERVICES (Bloquer la salle complète / Global)</span>
             </label>
           </div>
 
@@ -473,7 +556,7 @@
             <!-- Rempli dynamiquement par JS -->
           </div>
           <p style="font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 0.35rem;">
-            💡 Cochez "Tous les services" pour bloquer tout d'un coup, ou cochez un ou plusieurs services spécifiques pour bloquer uniquement ceux-là.
+            <i data-lucide="info" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i> Cochez "Tous les services" pour bloquer tout d'un coup, ou cochez un ou plusieurs services spécifiques pour bloquer uniquement ceux-là.
           </p>
         </div>
 
@@ -484,7 +567,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeBlockDateModal()">Annuler</button>
-        <button class="btn btn-danger" onclick="confirmBlockDate()">🚫 Bloquer</button>
+        <button class="btn btn-danger" onclick="confirmBlockDate()" style="display:inline-flex;align-items:center;gap:4px;"><i data-lucide="ban" style="width:14px;height:14px;"></i> Bloquer</button>
       </div>
     </div>
   </div>
@@ -520,7 +603,7 @@
           <div style="padding: 0.5rem; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 8px; margin-bottom: 0.5rem;">
             <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600; font-size: 0.82rem; margin: 0;">
               <input type="checkbox" id="capacity-service-all" onchange="onCapacityAllServicesChange(this.checked)" checked style="width: 16px; height: 16px; accent-color: #6366f1; cursor: pointer;">
-              <span>🌐 Tous les services (Global)</span>
+              <span><i data-lucide="globe" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i> Tous les services (Global)</span>
             </label>
           </div>
           <div id="capacity-service-checkboxes" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; padding: 0.5rem; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--admin-border); border-radius: 8px; max-height: 130px; overflow-y: auto;">
@@ -575,7 +658,7 @@
           <!-- Client Information -->
           <div class="form-group" style="background: rgba(255,255,255,0.02); border: 1px solid var(--admin-border); border-radius: 12px; padding: 1rem; margin-bottom: 1.25rem;">
             <div style="font-weight: 600; font-size: 0.9rem; color: var(--admin-accent); margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between;">
-              <span>👤 Informations du Client</span>
+              <span style="display:inline-flex;align-items:center;gap:5px;"><i data-lucide="user" style="width:15px;height:15px;vertical-align:-2px;"></i> Informations du Client</span>
               <span id="client-account-status-badge" style="font-size: 0.72rem; padding: 0.15rem 0.5rem; border-radius: 999px; background: rgba(255,255,255,0.08); color: var(--admin-text-muted);">Nouveau ou existant</span>
             </div>
 
@@ -606,10 +689,10 @@
             <div id="create-password-group" class="form-group" style="margin-bottom: 0; background: rgba(212,175,55,0.06); border: 1px dashed rgba(212,175,55,0.3); border-radius: 8px; padding: 0.75rem;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
                 <label style="font-size: 0.78rem; font-weight: 600; color: var(--admin-accent); margin: 0;">
-                  🔑 Mot de passe de connexion pour le client :
+                  <span style="display:inline-flex;align-items:center;gap:4px;"><i data-lucide="key-round" style="width:14px;height:14px;"></i> Mot de passe de connexion pour le client :</span>
                 </label>
                 <button type="button" onclick="generateRandomClientPassword()" class="btn btn-secondary btn-sm" style="font-size:0.7rem; padding:0.15rem 0.45rem;">
-                  Générer automatique
+                  <i data-lucide="sparkles" style="width:12px;height:12px;"></i> Générer auto
                 </button>
               </div>
               <input type="text" id="create-client-password" class="form-input" placeholder="Ex: Dalight2026!" style="font-size: 0.85rem; font-family: monospace;">
@@ -619,38 +702,88 @@
             </div>
           </div>
 
-          <div class="form-group">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-              <label style="margin: 0; font-weight: 600;">🛒 Panier des services *</label>
-              <span id="create-cart-badge" style="font-size: 0.78rem; background: rgba(212,175,55,0.18); color: var(--admin-accent); padding: 2px 10px; border-radius: 12px; font-weight: 600;">
-                0 service
-              </span>
+          <div class="form-group" style="background: rgba(255,255,255,0.02); border: 1px solid var(--admin-border); border-radius: 12px; padding: 1rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <label style="margin: 0; font-weight: 600; font-size: 0.92rem; display: inline-flex; align-items: center; gap: 6px; color: var(--admin-text);">
+                <i data-lucide="shopping-bag" style="width: 17px; height: 17px; color: var(--admin-accent);"></i>
+                <span>Panier des services</span>
+                <span style="color: var(--admin-accent); font-weight: bold;">*</span>
+              </label>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span id="create-cart-badge" style="font-size: 0.75rem; background: rgba(212,175,55,0.15); color: var(--admin-accent); padding: 3px 10px; border-radius: 12px; font-weight: 600; border: 1px solid rgba(212,175,55,0.25);">
+                  0 service
+                </span>
+                <button type="button" id="create-cart-clear-btn" onclick="clearCreateCart()" style="display: none; background: none; border: none; color: #ef4444; font-size: 0.75rem; cursor: pointer; align-items: center; gap: 3px; padding: 2px 6px;">
+                  <i data-lucide="trash" style="width: 12px; height: 12px;"></i> Vider
+                </button>
+              </div>
             </div>
 
             <!-- Barre de sélection et ajout -->
-            <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem;">
-              <select id="create-service-picker" class="form-input" style="flex: 1; font-size: 0.88rem;">
-                <option value="">-- Choisir un service à ajouter au panier --</option>
-              </select>
-              <button type="button" class="btn btn-primary" onclick="addPickerServiceToCart()" style="white-space: nowrap; padding: 0.55rem 1rem; display: flex; align-items: center; gap: 0.35rem; font-weight: 600;">
-                ➕ <span>Ajouter</span>
+            <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
+              <div style="position: relative; flex: 1;">
+                <select id="create-service-picker" class="form-input" style="width: 100%; font-size: 0.88rem; padding-left: 2.25rem;">
+                  <option value="">-- Choisir un service dans la liste --</option>
+                </select>
+                <i data-lucide="sparkles" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--admin-accent); pointer-events: none;"></i>
+              </div>
+              <button type="button" class="btn btn-primary" onclick="addPickerServiceToCart()" style="white-space: nowrap; padding: 0.55rem 1.1rem; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600;">
+                <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+                <span>Ajouter</span>
+              </button>
+            </div>
+
+            <!-- Raccourcis Rapides (Quick Add Chips) -->
+            <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px dashed var(--admin-border);">
+              <span style="font-size: 0.72rem; color: var(--admin-text-muted); font-weight: 600; display: inline-flex; align-items: center; gap: 3px; margin-right: 2px;">
+                <i data-lucide="zap" style="width: 12px; height: 12px; color: var(--admin-accent);"></i> Rapide :
+              </span>
+              <button type="button" class="cart-quick-chip" onclick="quickAddServiceByName('Head Spa Adultes')">
+                <i data-lucide="plus" style="width: 11px; height: 11px;"></i> Head Spa Adultes
+              </button>
+              <button type="button" class="cart-quick-chip" onclick="quickAddServiceByName('Combo 1')">
+                <i data-lucide="plus" style="width: 11px; height: 11px;"></i> Combo 1
+              </button>
+              <button type="button" class="cart-quick-chip" onclick="quickAddServiceByName('Combo 2')">
+                <i data-lucide="plus" style="width: 11px; height: 11px;"></i> Combo 2
+              </button>
+              <button type="button" class="cart-quick-chip" onclick="quickAddServiceByName('Combo 3')">
+                <i data-lucide="plus" style="width: 11px; height: 11px;"></i> Combo 3
+              </button>
+              <button type="button" class="cart-quick-chip" onclick="quickAddServiceByName('Massage relaxant')">
+                <i data-lucide="plus" style="width: 11px; height: 11px;"></i> Massage
+              </button>
+              <button type="button" class="cart-quick-chip" onclick="quickAddServiceByName('Facial')">
+                <i data-lucide="plus" style="width: 11px; height: 11px;"></i> Facial
+              </button>
+              <button type="button" class="cart-quick-chip" onclick="quickAddServiceByName('Wood Thérapie')">
+                <i data-lucide="plus" style="width: 11px; height: 11px;"></i> Wood Thérapie
               </button>
             </div>
 
             <!-- Panier list container -->
-            <div id="create-cart-container" style="border: 1px solid var(--admin-border); border-radius: 8px; padding: 0.5rem; min-height: 90px; max-height: 260px; overflow-y: auto; background: var(--admin-bg, #f8fafc);">
-              <div id="create-cart-empty" style="text-align: center; padding: 1.5rem 0.5rem; color: var(--admin-text-muted); font-size: 0.85rem;">
-                <span style="font-size: 1.5rem; display: block; margin-bottom: 0.25rem;">🛒</span>
-                Aucun service dans le panier.<br>
-                <span style="font-size: 0.78rem; color: #94a3b8;">Sélectionnez un service ci-dessus et cliquez sur <strong>Ajouter</strong>.</span>
+            <div id="create-cart-container" style="border: 1px solid var(--admin-border); border-radius: 10px; overflow: hidden; background: var(--admin-bg, #f8fafc);">
+              <div id="create-cart-empty" style="text-align: center; padding: 1.8rem 1rem; color: var(--admin-text-muted); font-size: 0.85rem;">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(0,0,0,0.03); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 0.5rem;">
+                  <i data-lucide="shopping-cart" style="width: 24px; height: 24px; color: #94a3b8;"></i>
+                </div>
+                <div style="font-weight: 500; color: var(--admin-text); margin-bottom: 0.2rem;">Votre panier est vide</div>
+                <span style="font-size: 0.78rem; color: #94a3b8;">Sélectionnez un service ci-dessus ou utilisez les raccourcis rapides.</span>
               </div>
-              <div id="create-cart-items-list" style="display: none; flex-direction: column; gap: 0.4rem;"></div>
+              <div id="create-cart-items-list" style="display: none; flex-direction: column; gap: 0.5rem; padding: 0.65rem; max-height: 260px; overflow-y: auto;"></div>
+              
+              <!-- Mini footer sous-total panier -->
+              <div id="create-cart-footer" style="display: none; justify-content: space-between; align-items: center; padding: 0.55rem 0.85rem; background: rgba(0,0,0,0.03); border-top: 1px solid var(--admin-border); font-size: 0.82rem;">
+                <span style="color: var(--admin-text-muted);"><span id="create-cart-footer-count">0</span> prestation(s) au total</span>
+                <span>Sous-total panier : <strong style="color: var(--admin-accent); font-size: 0.9rem;" id="create-cart-footer-total">0 HTG</strong></span>
+              </div>
             </div>
 
             <!-- Sèvis EXTRA (kache sou sit la) -->
-            <div style="margin-top: .75rem; display: flex; justify-content: space-between; align-items: center;">
-              <button type="button" class="btn btn-secondary btn-sm" onclick="toggleExtraServiceForm()" style="font-size: 0.8rem;">
-                ➕ Créer un service extra / personnalisé
+            <div style="margin-top: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="toggleExtraServiceForm()" style="font-size: 0.78rem; display: inline-flex; align-items: center; gap: 4px;">
+                <i data-lucide="plus-circle" style="width: 13px; height: 13px;"></i>
+                <span>Créer un service extra / personnalisé</span>
               </button>
             </div>
             <div id="extra-service-form" style="display:none;margin-top:.5rem;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;padding:.75rem;">
@@ -672,7 +805,9 @@
                 <input type="checkbox" id="extra-svc-save" checked>
                 Enregistrer pour réutilisation (restera invisible sur le site public)
               </label>
-              <button type="button" class="btn btn-primary btn-sm" style="margin-top:.5rem;" onclick="addExtraService()">Ajouter au panier</button>
+              <button type="button" class="btn btn-primary btn-sm" style="margin-top:.5rem; display:inline-flex; align-items:center; gap:4px;" onclick="addExtraService()">
+                <i data-lucide="plus" style="width:13px;height:13px;"></i> Ajouter au panier
+              </button>
             </div>
           </div>
 
@@ -759,7 +894,7 @@
             </div>
           </div>
 
-                    <!-- 🏷️ Réduction, Remise & Code Promo -->
+                    <!-- Réduction, Remise & Code Promo -->
           <div class="form-group" style="background: rgba(16, 185, 129, 0.06); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 10px; padding: 0.85rem; margin-bottom: 1rem;">
             <div style="font-weight: 600; font-size: 0.88rem; color: #10b981; margin-bottom: 0.65rem; display: flex; align-items: center; justify-content: space-between;">
               <span style="display: flex; align-items: center; gap: 0.4rem;">
