@@ -1142,7 +1142,7 @@ async function sendWhatsAppNotificationToEmployee(reservation, employee) {
   const msgText = buildEmployeeWhatsAppMessage(reservation, employee);
 
   try {
-    const res = await fetch('https://cvisual-whatsapp-gateway.onrender.com/api/v1/messages/send', {
+    const res = await fetch('https://cvisual-whatsapp-gateway-e79p.onrender.com/api/v1/messages/send', {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c',
@@ -1201,7 +1201,7 @@ window.dispatchDirectWhatsAppNotification = async function() {
   if (rawPhone.length === 8) rawPhone = '509' + rawPhone;
 
   try {
-    const res = await fetch('https://cvisual-whatsapp-gateway.onrender.com/api/v1/messages/send', {
+    const res = await fetch('https://cvisual-whatsapp-gateway-e79p.onrender.com/api/v1/messages/send', {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c',

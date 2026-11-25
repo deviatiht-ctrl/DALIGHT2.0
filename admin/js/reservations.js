@@ -3777,7 +3777,7 @@ Merci de votre confiance et au plaisir de vous choyer chez DALIGHT ! 🌿`;
       }
 
       // Send via CVISUAL Gateway Ligne #3
-      fetch('https://cvisual-whatsapp-gateway.onrender.com/api/v1/messages/send', {
+      fetch('https://cvisual-whatsapp-gateway-e79p.onrender.com/api/v1/messages/send', {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c',

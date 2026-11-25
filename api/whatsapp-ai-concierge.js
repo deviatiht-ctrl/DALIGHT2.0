@@ -294,7 +294,7 @@ async function dispatchBookingAlertToDalight(clientPhone, clientMessage, dalight
     directChatLink;
 
   try {
-    const gatewayUrl = process.env.CVISUAL_WA_BASE_URL || 'https://cvisual-whatsapp-gateway.onrender.com';
+    const gatewayUrl = process.env.CVISUAL_WA_BASE_URL || 'https://cvisual-whatsapp-gateway-e79p.onrender.com';
     const apiKey = process.env.CVISUAL_WA_API_KEY || 'cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c';
 
     const res = await fetch(gatewayUrl + '/api/v1/messages/send', {

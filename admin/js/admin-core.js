@@ -782,7 +782,7 @@ async function sendReservationWhatsAppConfirmation(reservation) {
     idempotencyKey: `wa_conf_${reservation.id}_${Date.now()}`
   };
 
-  const CVISUAL_GATEWAY_URL = 'https://cvisual-whatsapp-gateway.onrender.com';
+  const CVISUAL_GATEWAY_URL = 'https://cvisual-whatsapp-gateway-e79p.onrender.com';
   const DEFAULT_CVISUAL_KEY = 'cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c';
   const apiKey = localStorage.getItem('cvisual_wa_api_key') || DEFAULT_CVISUAL_KEY;
 
@@ -875,7 +875,7 @@ async function sendReservationWhatsAppReminder24h(reservation) {
     idempotencyKey: `wa_rem24h_${reservation.id}_${Date.now()}`
   };
 
-  const CVISUAL_GATEWAY_URL = 'https://cvisual-whatsapp-gateway.onrender.com';
+  const CVISUAL_GATEWAY_URL = 'https://cvisual-whatsapp-gateway-e79p.onrender.com';
   const DEFAULT_CVISUAL_KEY = 'cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c';
   const apiKey = localStorage.getItem('cvisual_wa_api_key') || DEFAULT_CVISUAL_KEY;
 
@@ -937,7 +937,7 @@ async function sendReservationWhatsAppAlert30m(reservation) {
     idempotencyKey: `wa_alert30m_${reservation.id}_${Date.now()}`
   };
 
-  const CVISUAL_GATEWAY_URL = 'https://cvisual-whatsapp-gateway.onrender.com';
+  const CVISUAL_GATEWAY_URL = 'https://cvisual-whatsapp-gateway-e79p.onrender.com';
   const DEFAULT_CVISUAL_KEY = 'cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c';
   const apiKey = localStorage.getItem('cvisual_wa_api_key') || DEFAULT_CVISUAL_KEY;
 
@@ -1030,7 +1030,7 @@ async function sendGiftDedicationWhatsApp(reservation, giftInfo = null) {
     idempotencyKey: `wa_gift_${reservation.id}_${Date.now()}`
   };
 
-  const CVISUAL_GATEWAY_URL = 'https://cvisual-whatsapp-gateway.onrender.com';
+  const CVISUAL_GATEWAY_URL = 'https://cvisual-whatsapp-gateway-e79p.onrender.com';
   const DEFAULT_CVISUAL_KEY = 'cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c';
   const apiKey = localStorage.getItem('cvisual_wa_api_key') || DEFAULT_CVISUAL_KEY;
 

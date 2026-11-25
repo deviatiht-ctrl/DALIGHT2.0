@@ -1933,7 +1933,7 @@ window.startStaffVideoUploadAndDispatch = async function() {
       const msgToSend = whatsappMsg.replace('{LIEN_VIDEO}', finalVideoUrl);
 
       try {
-        const res = await fetch('https://cvisual-whatsapp-gateway.onrender.com/api/send', {
+        const res = await fetch('https://cvisual-whatsapp-gateway-e79p.onrender.com/api/send', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

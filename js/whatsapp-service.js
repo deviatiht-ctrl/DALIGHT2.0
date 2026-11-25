@@ -4,7 +4,7 @@
  * Strictly zero emojis — Luxury DALIGHT standard
  */
 
-export const CVISUAL_GATEWAY_URL = 'https://cvisual-whatsapp-gateway.onrender.com';
+export const CVISUAL_GATEWAY_URL = 'https://cvisual-whatsapp-gateway-e79p.onrender.com';
 export const DALIGHT_CVISUAL_KEY = 'cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c';
 export const MASTER_ADMIN_KEY = 'cv_live_admin_6094ed1bf65bf0945706d3d7';
 export const DEFAULT_CVISUAL_KEY = DALIGHT_CVISUAL_KEY;

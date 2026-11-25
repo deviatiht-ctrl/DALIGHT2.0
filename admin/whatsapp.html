@@ -1561,7 +1561,7 @@
     let qrFetchFailCount = 0;
 
     async function fetchDalightAccountQr(isUserAction = false) {
-      const GATEWAY_URL = 'https://cvisual-whatsapp-gateway.onrender.com';
+      const GATEWAY_URL = 'https://cvisual-whatsapp-gateway-e79p.onrender.com';
       const API_KEY = 'cv_live_admin_6094ed1bf65bf0945706d3d7'; // Master key for hardware line #3 socket control
 
       const badge = document.getElementById('wa-connection-badge');
@@ -1668,7 +1668,7 @@
       if (isAutoResetting) return;
       isAutoResetting = true;
 
-      const GATEWAY_URL = 'https://cvisual-whatsapp-gateway.onrender.com';
+      const GATEWAY_URL = 'https://cvisual-whatsapp-gateway-e79p.onrender.com';
       const API_KEY = 'cv_live_admin_6094ed1bf65bf0945706d3d7'; // Master admin key for hardware reset
 
       const qrImg = document.getElementById('dalight-qr-image');
@@ -1809,7 +1809,7 @@
     }
 
     async function fetchLiveGatewayStatus(isManual = false) {
-      const GATEWAY_URL = 'https://cvisual-whatsapp-gateway.onrender.com';
+      const GATEWAY_URL = 'https://cvisual-whatsapp-gateway-e79p.onrender.com';
       const API_KEY = localStorage.getItem('cvisual_wa_api_key') || 'cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c';
 
       // 1. Try direct CVISUAL gateway /api/v1/me and /api/v1/status
@@ -1964,7 +1964,7 @@
 
         // Synchroniser instantanément avec le Gateway WhatsApp CVISUAL
         try {
-          fetch('https://cvisual-whatsapp-gateway.onrender.com/api/v1/admin/tenants/c21aa659-f837-4c81-9e55-ccef534f9420/auto-reply', {
+          fetch('https://cvisual-whatsapp-gateway-e79p.onrender.com/api/v1/admin/tenants/c21aa659-f837-4c81-9e55-ccef534f9420/auto-reply', {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
@@ -2288,7 +2288,7 @@
       const formatted = phone.length === 8 ? ('509' + phone) : phone;
 
       try {
-        const res = await fetch('https://cvisual-whatsapp-gateway.onrender.com/api/v1/messages/send', {
+        const res = await fetch('https://cvisual-whatsapp-gateway-e79p.onrender.com/api/v1/messages/send', {
           method: 'POST',
           headers: {
             'Authorization': 'Bearer cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c',

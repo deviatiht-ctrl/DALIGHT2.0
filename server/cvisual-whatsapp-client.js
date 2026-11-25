@@ -3,7 +3,7 @@
  * Dual-Lane Routing & Anti-Ban Meta Meta-Compliant WhatsApp Integration
  * 
  * Specifications:
- * - Base URL: https://cvisual-whatsapp-gateway.onrender.com
+ * - Base URL: https://cvisual-whatsapp-gateway-e79p.onrender.com
  * - Auth: Bearer CVISUAL_WA_API_KEY
  * - Fast Lane (sync/async): receipt, welcome, otp, test, manual_direct
  * - Slow Lane (async only, 10-16 min pauses, max 25/day/SIM): reminder, reminder_7d, reminder_2d, marketing, manual
@@ -35,7 +35,7 @@ function loadEnv() {
 }
 loadEnv();
 
-const CVISUAL_BASE_URL = process.env.CVISUAL_WA_BASE_URL || 'https://cvisual-whatsapp-gateway.onrender.com';
+const CVISUAL_BASE_URL = process.env.CVISUAL_WA_BASE_URL || 'https://cvisual-whatsapp-gateway-e79p.onrender.com';
 const CVISUAL_API_KEY = process.env.CVISUAL_WA_API_KEY || 'cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c';
 const CVISUAL_ACCOUNT_INDEX = Number(process.env.CVISUAL_WA_ACCOUNT_INDEX) || 3;
 
