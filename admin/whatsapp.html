@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -602,6 +602,26 @@
 
             <!-- Disconnected / Scan Required Container -->
             <div id="wa-qr-box" style="display: block;">
+              <!-- Alerte Sèvis Render Sispann -->
+              <div id="render-suspended-alert" style="display:none; max-width:500px; margin:0 auto 1.5rem; padding:1.25rem 1.4rem; background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.4); border-radius:14px; text-align:left;">
+                <div style="display:flex; align-items:center; gap:0.55rem; color:#f87171; font-weight:700; margin-bottom:0.5rem; font-size:0.98rem;">
+                  <i data-lucide="alert-octagon" style="width:20px;height:20px;flex-shrink:0;"></i>
+                  Sèvè WhatsApp la Sispann sou Render (Status 503)
+                </div>
+                <p style="font-size:0.86rem; color:#fca5a5; margin:0 0 0.85rem; line-height:1.5;">
+                  Sèvis <strong>cvisual-whatsapp-gateway</strong> la te sispann sou kont Render ou a. Se sa k fè WhatsApp dekonekte e kòd QR la paka chaje (erè <em>"Failed to fetch"</em>).
+                  <br><strong style="color:#FAF8F5;">Kouman pou relanse l :</strong> Klike sou bouton ki anba a pou louvri Render, epi klike sou <strong>« Resume »</strong>.
+                </p>
+                <div style="display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
+                  <a href="https://dashboard.render.com" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:0.4rem; text-decoration:none; padding:0.45rem 1rem;">
+                    <i data-lucide="external-link" style="width:14px;height:14px;"></i> Louvri Render &gt; Peze Resume
+                  </a>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="fetchDalightAccountQr(true)" style="display:inline-flex; align-items:center; gap:0.4rem; padding:0.45rem 0.9rem;">
+                    <i data-lucide="rotate-cw" style="width:14px;height:14px;"></i> Re-tcheke
+                  </button>
+                </div>
+              </div>
+
               <p style="color:#FAF8F5; font-size:0.95rem; line-height:1.5; margin-bottom:1.5rem;">
                 Ouvrez WhatsApp sur le téléphone DALIGHT &gt; <strong>Appareils connectés</strong> &gt; Scannez le code QR ci-dessous pour connecter votre compte :
               </p>
@@ -1554,11 +1574,34 @@
       const hudPill = document.getElementById('gateway-pill');
       const hudStatus = document.getElementById('gateway-status-text');
 
+      function showRenderSuspendedAlert(show, customMsg = null) {
+        const el = document.getElementById('render-suspended-alert');
+        if (el) el.style.display = show ? 'block' : 'none';
+        const hudPill = document.getElementById('gateway-pill');
+        const hudStatus = document.getElementById('gateway-status-text');
+        if (show) {
+          if (hudPill) {
+            hudPill.textContent = '● SÈVIS SISPANN SOU RENDER';
+            hudPill.style.background = 'rgba(239,68,68,0.2)';
+            hudPill.style.color = '#f87171';
+          }
+          if (hudStatus) hudStatus.textContent = 'Sèvis cvisual-whatsapp-gateway sispann sou Render';
+        }
+        if (window.lucide) lucide.createIcons();
+      }
+
       try {
         const res = await fetch(`${GATEWAY_URL}/api/v1/accounts/3/qr`, {
           headers: { 'Authorization': `Bearer ${API_KEY}` }
         });
-        if (!res.ok) throw new Error('Gateway non joignable');
+        if (!res.ok) {
+          if (res.status === 503) {
+            showRenderSuspendedAlert(true);
+            throw new Error('Sèvis Render la sispann (503)');
+          }
+          throw new Error('Gateway non joignable (HTTP ' + res.status + ')');
+        }
+        showRenderSuspendedAlert(false);
         const data = await res.json();
         qrFetchFailCount = 0;
 
@@ -1614,7 +1657,10 @@
       } catch (err) {
         console.warn('Erreur QR fetch:', err);
         qrFetchFailCount++;
-        if (qrLoadingText) qrLoadingText.textContent = 'Connexion à la passerelle en cours...';
+        showRenderSuspendedAlert(true);
+        if (qrLoadingText) {
+          qrLoadingText.innerHTML = `<span style="color:#ef4444;font-weight:700;">Sèvis WhatsApp la sispann sou Render.</span><br><span style="font-size:0.8rem;color:#555;">Klike sou 'Louvri Render' pi wo a pou peze Resume.</span>`;
+        }
       }
     }
 
@@ -1639,6 +1685,11 @@
           method: 'POST',
           headers: { 'Authorization': `Bearer ${API_KEY}` }
         });
+        if (!res.ok) {
+          const el = document.getElementById('render-suspended-alert');
+          if (el) el.style.display = 'block';
+          throw new Error('Gateway non joignable (HTTP ' + res.status + ')');
+        }
         const json = await res.json();
         console.log('Reset response:', json);
 
@@ -1648,7 +1699,11 @@
         setTimeout(() => fetchDalightAccountQr(true), 4000);
       } catch (e) {
         console.error('Reset error:', e);
-        if (qrLoadingText) qrLoadingText.textContent = 'Erreur: ' + e.message + '. Réessayez.';
+        const el = document.getElementById('render-suspended-alert');
+        if (el) el.style.display = 'block';
+        if (qrLoadingText) {
+          qrLoadingText.innerHTML = `<span style="color:#ef4444;font-weight:700;">Erè: Sèvè a sispann sou Render.</span><br><span style="font-size:0.8rem;color:#555;">Louvri dashboard.render.com epi peze Resume pou relanse l.</span>`;
+        }
       } finally {
         setTimeout(() => { isAutoResetting = false; }, 4000);
       }
