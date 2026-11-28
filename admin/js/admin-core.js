@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // DALIGHT - ADMIN CORE
 // Shared functionality for all admin pages
 // ============================================
@@ -197,12 +197,19 @@ function initSidebar() {
     }
   }
 
-  if (mobileMenuBtn && sidebar) {
-    mobileMenuBtn.addEventListener('click', (e) => {
+  window.toggleAdminSidebar = toggleSidebar;
+
+  // Global delegated click handler for admin mobile menu buttons
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('#mobile-menu-btn, .mobile-menu-btn');
+    if (btn) {
+      e.preventDefault();
       e.stopPropagation();
       toggleSidebar();
-    });
+    }
+  });
 
+  if (mobileMenuBtn && sidebar) {
     overlay.addEventListener('click', () => {
       toggleSidebar(false);
     });
@@ -1587,6 +1594,10 @@ window.adminCore = {
 };
 
 // Auto-initialize
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    initAdminCore();
+  });
+} else {
   initAdminCore();
-});
+}

@@ -7,7 +7,268 @@
   
   <link href="../vendor/fonts/inter-fonts.css" rel="stylesheet">
   <link rel="stylesheet" href="css/admin.css?v=202611190137">
-  <script src="../vendor/supabase/supabase.min.js"></script>
+  <script src="../vendor/supabase/supabase.min.js">
+    // ————————— HOMEPAGE MEDIA MANAGER —————————
+    const DEFAULT_HOMEPAGE_MEDIA = {
+      hero_desktop: './assets/images/hero_spa.jpg',
+      hero_mobile: './assets/images/hero_spa.jpg',
+      service_1: './assets/images/service_headspa.jpg',
+      service_2: './assets/images/service_massage.jpg',
+      service_3: './assets/images/service_facial.jpg',
+      service_4: './assets/images/service_woodtherapy.jpg',
+      ambiance_1: './assets/images/service_massage.jpg',
+      ambiance_2: './assets/images/essential_oils_bowl.jpg',
+      ambiance_3: './assets/images/service_woodtherapy.jpg'
+    };
+
+    const MEDIA_CONFIGS = [
+      {
+        key: 'hero_desktop',
+        title: 'Bannière Hero — Écran Large (Laptop & PC)',
+        badge: '1920 × 1080 px · Ratio 16:9 (Paysage)',
+        icon: 'monitor',
+        badgeColor: '#60a5fa',
+        desc: 'Affichée sur ordinateur et grand écran pour une netteté totale sans coupure.',
+        aspectRatio: '16/9',
+        defaultVal: './assets/images/hero_spa.jpg'
+      },
+      {
+        key: 'hero_mobile',
+        title: 'Bannière Hero — Téléphone (Mobile & Smartphone)',
+        badge: '750 × 1334 px · Ratio 9:16 (Portrait)',
+        icon: 'smartphone',
+        badgeColor: '#4ade80',
+        desc: 'Optimisée pour écrans verticaux. Empêche que l\'image soit rognée ou étirée sur mobile.',
+        aspectRatio: '9/16',
+        defaultVal: './assets/images/hero_spa.jpg'
+      },
+      {
+        key: 'service_1',
+        title: 'Soin Arche 1 — Head Spa Signature',
+        badge: '600 × 800 px · Ratio 3:4 (Portrait)',
+        icon: 'sparkles',
+        badgeColor: '#D4AF37',
+        desc: 'Photo de la première capsule arquée (Hydrothérapie & Cuir chevelu).',
+        aspectRatio: '3/4',
+        defaultVal: './assets/images/service_headspa.jpg'
+      },
+      {
+        key: 'service_2',
+        title: 'Soin Arche 2 — Massage Thérapeutique',
+        badge: '600 × 800 px · Ratio 3:4 (Portrait)',
+        icon: 'heart',
+        badgeColor: '#D4AF37',
+        desc: 'Photo de la deuxième capsule arquée (Massages relaxants & huiles).',
+        aspectRatio: '3/4',
+        defaultVal: './assets/images/service_massage.jpg'
+      },
+      {
+        key: 'service_3',
+        title: 'Soin Arche 3 — Thérapie Crânienne & Éclat',
+        badge: '600 × 800 px · Ratio 3:4 (Portrait)',
+        icon: 'smile',
+        badgeColor: '#D4AF37',
+        desc: 'Photo de la troisième capsule arquée (Soin éclat & décompression).',
+        aspectRatio: '3/4',
+        defaultVal: './assets/images/service_facial.jpg'
+      },
+      {
+        key: 'service_4',
+        title: 'Soin Arche 4 — Wood Therapy & Détox',
+        badge: '600 × 800 px · Ratio 3:4 (Portrait)',
+        icon: 'feather',
+        badgeColor: '#D4AF37',
+        desc: 'Photo de la quatrième capsule arquée (Drainage et instruments en bois).',
+        aspectRatio: '3/4',
+        defaultVal: './assets/images/service_woodtherapy.jpg'
+      },
+      {
+        key: 'ambiance_1',
+        title: 'Ambiance Mosaïque 1 — Photo Principale (Gauche)',
+        badge: '800 × 900 px · Ratio 8:9 (Vertical)',
+        icon: 'image',
+        badgeColor: '#a78bfa',
+        desc: 'Grande photo verticale supportant le bouton de lecture vidéo.',
+        aspectRatio: '8/9',
+        defaultVal: './assets/images/service_massage.jpg'
+      },
+      {
+        key: 'ambiance_2',
+        title: 'Ambiance Mosaïque 2 — Huiles & Pétales (Haut Droit)',
+        badge: '800 × 600 px · Ratio 4:3 (Paysage)',
+        icon: 'sparkle',
+        badgeColor: '#a78bfa',
+        desc: 'Photo rectangulaire supérieure de la composition artistique.',
+        aspectRatio: '4/3',
+        defaultVal: './assets/images/essential_oils_bowl.jpg'
+      },
+      {
+        key: 'ambiance_3',
+        title: 'Ambiance Mosaïque 3 — Soins & Naturel (Bas Droit)',
+        badge: '800 × 600 px · Ratio 4:3 (Paysage)',
+        icon: 'leaf',
+        badgeColor: '#a78bfa',
+        desc: 'Photo organique inférieure de la composition artistique.',
+        aspectRatio: '4/3',
+        defaultVal: './assets/images/service_woodtherapy.jpg'
+      }
+    ];
+
+    let currentHomepageMedia = { ...DEFAULT_HOMEPAGE_MEDIA };
+
+    async function loadHomepageMedia() {
+      const container = document.getElementById('homepage-media-container');
+      try {
+        const { data, error } = await sb().from('settings').select('value').eq('key', 'homepage_media').maybeSingle();
+        if (data && data.value) {
+          currentHomepageMedia = { ...DEFAULT_HOMEPAGE_MEDIA, ...data.value };
+        }
+      } catch (err) {
+        console.warn('Unable to load homepage_media from DB:', err.message);
+      }
+      renderHomepageMediaUI();
+    }
+
+    function renderHomepageMediaUI() {
+      const container = document.getElementById('homepage-media-container');
+      if (!container) return;
+
+      // homepage media
+      setTimeout(() => { if (window.lucide) lucide.createIcons(); }, 10);
+      container.innerHTML = MEDIA_CONFIGS.map(cfg => {
+        const currentVal = currentHomepageMedia[cfg.key] || cfg.defaultVal;
+        // Preview source: if relative starting with ./, resolve relative to root
+        const imgSrc = currentVal.startsWith('http') ? currentVal : '../' + currentVal.replace(/^\.?\//, '');
+
+        return `
+          <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.1rem;display:flex;flex-direction:column;gap:0.75rem;transition:border-color 0.2s;" onmouseover="this.style.borderColor='rgba(201,162,39,0.35)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem;">
+              <div>
+                <div style="font-weight:700;font-size:0.9rem;color:#FAF8F5;">${cfg.title}</div>
+                <div style="font-size:0.75rem;color:rgba(245,245,240,0.6);margin-top:2px;">${cfg.desc}</div>
+              </div>
+            </div>
+
+            <!-- Dimension Badge -->
+            <div style="display:inline-flex;align-items:center;background:rgba(255,255,255,0.05);border:1px solid ${cfg.badgeColor}55;color:${cfg.badgeColor};padding:0.25rem 0.65rem;border-radius:20px;font-size:0.73rem;font-weight:700;width:fit-content;">
+              <i data-lucide="${cfg.icon || 'image'}" style="width:13px;height:13px;margin-right:0.35rem;"></i> ${cfg.badge}
+            </div>
+
+            <!-- Image Preview Box -->
+            <div style="width:100%;height:150px;background:#0d1611;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;position:relative;">
+              <img id="prev-${cfg.key}" src="${imgSrc}" alt="${cfg.title}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='../assets/images/service_massage.jpg'">
+              <div id="loader-${cfg.key}" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;font-size:0.8rem;color:#D4AF37;">
+                Téléversement en cours...
+              </div>
+            </div>
+
+            <!-- URL Input -->
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="font-size:0.74rem;display:flex;justify-content:space-between;">
+                <span>URL de l'image</span>
+                <a href="javascript:void(0)" onclick="resetMediaItem('${cfg.key}')" style="color:var(--admin-accent);text-decoration:none;font-weight:600;">Par défaut</a>
+              </label>
+              <input type="text" class="form-input" id="input-${cfg.key}" value="${esc(currentVal)}" style="font-size:0.8rem;" oninput="previewMediaItem('${cfg.key}', this.value)">
+            </div>
+
+            <!-- File Upload Button -->
+            <div style="display:flex;align-items:center;gap:0.5rem;">
+              <label class="btn btn-secondary btn-sm" style="flex:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:0.4rem;font-size:0.78rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                <span>Changer l'image...</span>
+                <input type="file" accept="image/*" style="display:none;" onchange="uploadHomepageMediaFile('${cfg.key}', this.files[0])">
+              </label>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function previewMediaItem(key, url) {
+      currentHomepageMedia[key] = url;
+      const prev = document.getElementById('prev-' + key);
+      if (prev && url) {
+        prev.src = url.startsWith('http') ? url : '../' + url.replace(/^\.?\//, '');
+      }
+    }
+
+    function resetMediaItem(key) {
+      const def = DEFAULT_HOMEPAGE_MEDIA[key];
+      currentHomepageMedia[key] = def;
+      const inp = document.getElementById('input-' + key);
+      if (inp) inp.value = def;
+      previewMediaItem(key, def);
+    }
+
+    async function uploadHomepageMediaFile(key, file) {
+      if (!file) return;
+      const loader = document.getElementById('loader-' + key);
+      if (loader) loader.style.display = 'flex';
+
+      try {
+        const ext = file.name.split('.').pop() || 'jpg';
+        const path = `homepage/${key}-${Date.now()}.${ext}`;
+        const { data, error } = await sb().storage.from('payment-proofs').upload(path, file, { upsert: true });
+        if (error) throw error;
+
+        const { data: urlData } = sb().storage.from('payment-proofs').getPublicUrl(path);
+        const publicUrl = urlData.publicUrl;
+
+        currentHomepageMedia[key] = publicUrl;
+        const inp = document.getElementById('input-' + key);
+        if (inp) inp.value = publicUrl;
+        previewMediaItem(key, publicUrl);
+        window.adminCore?.showToast('Image téléversée avec succès');
+      } catch (err) {
+        console.error('Upload error:', err);
+        alert('Erreur lors du téléversement: ' + err.message);
+      } finally {
+        if (loader) loader.style.display = 'none';
+      }
+    }
+
+    async function saveHomepageMedia() {
+      const btn = document.getElementById('btn-save-homepage-media');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Enregistrement...';
+      }
+
+      // Read from inputs
+      MEDIA_CONFIGS.forEach(cfg => {
+        const inp = document.getElementById('input-' + cfg.key);
+        if (inp) currentHomepageMedia[cfg.key] = inp.value.trim() || cfg.defaultVal;
+      });
+
+      try {
+        const payload = {
+          id: 'homepage_media',
+          key: 'homepage_media',
+          value: currentHomepageMedia,
+          description: 'Médias officiels et photos de la page d\'accueil index.html',
+          updated_at: new Date().toISOString()
+        };
+
+        const { error } = await sb().from('settings').upsert(payload, { onConflict: 'key' });
+        if (error) throw error;
+
+        // Also store in localStorage for offline / instant client speed
+        try {
+          localStorage.setItem('dalight_homepage_media', JSON.stringify(currentHomepageMedia));
+        } catch(e) {}
+
+        window.adminCore?.showToast('Toutes les photos de l\'accueil ont été enregistrées avec succès');
+      } catch (err) {
+        alert('Erreur lors de la sauvegarde: ' + err.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i data-lucide="save" style="width:15px;height:15px;vertical-align:-2px;"></i> Enregistrer les Photos';
+        }
+      }
+    }
+
+  </script>
 </head>
 <body>
   <aside class="admin-sidebar" id="sidebar">
@@ -83,7 +344,7 @@
         <!-- General Settings -->
         <div class="glass-card">
           <div class="card-header">
-            <h3 class="card-title">⚙️ Paramètres généraux</h3>
+            <h3 class="card-title"><i data-lucide="sliders" style="width:18px;height:18px;vertical-align:-3px;color:#D4AF37;"></i> Paramètres généraux</h3>
           </div>
           <form id="general-form">
             <div class="form-group">
@@ -109,7 +370,7 @@
         <!-- Admin Emails -->
         <div class="glass-card">
           <div class="card-header">
-            <h3 class="card-title">👑 Administrateurs</h3>
+            <h3 class="card-title"><i data-lucide="shield" style="width:18px;height:18px;vertical-align:-3px;color:#D4AF37;"></i> Administrateurs</h3>
           </div>
           <p class="text-muted mb-2">Les emails suivants ont accès au panel admin:</p>
           <div class="admin-emails-list" id="admin-emails-list">
@@ -128,7 +389,7 @@
         <!-- Notifications -->
         <div class="glass-card">
           <div class="card-header">
-            <h3 class="card-title">🔔 Notifications</h3>
+            <h3 class="card-title"><i data-lucide="bell" style="width:18px;height:18px;vertical-align:-3px;color:#D4AF37;"></i> Notifications</h3>
           </div>
           <div class="form-group">
             <label class="d-flex align-center gap-2" style="cursor: pointer;">
@@ -153,7 +414,7 @@
         <!-- Horaires -->
         <div class="glass-card">
           <div class="card-header">
-            <h3 class="card-title">🕐 Horaires d'ouverture</h3>
+            <h3 class="card-title"><i data-lucide="clock" style="width:18px;height:18px;vertical-align:-3px;color:#D4AF37;"></i> Horaires d'ouverture</h3>
           </div>
           <div class="schedule-grid" style="display: grid; gap: 0.5rem;">
             <div class="d-flex justify-between align-center" style="padding: 0.5rem 0; border-bottom: 1px solid var(--admin-border);">
@@ -177,7 +438,7 @@
         <!-- Database -->
         <div class="glass-card">
           <div class="card-header">
-            <h3 class="card-title">🗄️ Base de données</h3>
+            <h3 class="card-title"><i data-lucide="database" style="width:18px;height:18px;vertical-align:-3px;color:#D4AF37;"></i> Base de données</h3>
           </div>
           <div class="d-flex gap-1 mb-2">
             <div class="stat-icon blue" style="width: 40px; height: 40px;">
@@ -196,14 +457,48 @@
 
       </div>
 
+      
+      <!-- Homepage Media & Photos Manager — full width -->
+      <div class="glass-card" style="margin-top:0;grid-column:1/-1;" id="homepage-media-section">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+          <div>
+            <h3 class="card-title"><i data-lucide="camera" style="width:18px;height:18px;vertical-align:-3px;color:#D4AF37;"></i> Gestion des Photos Accueil (index.html)</h3>
+            <p class="card-subtitle">Personnalisez toutes les photos de la page d'accueil avec les dimensions idéales pour ordinateurs et téléphones mobiles</p>
+          </div>
+          <div style="display:flex;gap:0.75rem;align-items:center;">
+            <a href="../index.html" target="_blank" class="btn btn-secondary" style="font-size:0.82rem;display:inline-flex;align-items:center;gap:0.4rem;text-decoration:none;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              Voir l'accueil
+            </a>
+            <button class="btn btn-primary" onclick="saveHomepageMedia()" id="btn-save-homepage-media" style="background:linear-gradient(135deg, #c9a227, #e2c974);color:#0f1d15;font-weight:700;box-shadow:0 4px 15px rgba(201,162,39,0.3);">
+              <i data-lucide="save" style="width:15px;height:15px;vertical-align:-2px;"></i> Enregistrer les Photos
+            </button>
+          </div>
+        </div>
+
+        <!-- Responsive Dimension Guide Alert -->
+        <div style="background:rgba(201,162,39,0.08);border:1px solid rgba(201,162,39,0.25);border-radius:10px;padding:0.9rem 1.2rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem;">
+          <div style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;background:rgba(201,162,39,0.15);color:#D4AF37;flex-shrink:0;"><i data-lucide="maximize-2" style="width:20px;height:20px;"></i></div>
+          <div style="font-size:0.84rem;line-height:1.5;color:rgba(245,245,240,0.9);">
+            <strong style="color:#D4AF37;">Guide des Dimensions & Ratios :</strong> Pour garantir que vos photos ne soient jamais écrasées ou déformées (<em>« pa kraze »</em>), utilisez les résolutions recommandées ci-dessous. Le site DALIGHT charge dynamiquement la photo <strong>Grand Écran (16:9)</strong> sur PC / Laptop et la photo <strong>Portrait (9:16)</strong> sur Smartphone !
+          </div>
+        </div>
+
+        <!-- Media Grid -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(330px, 1fr));gap:1.25rem;" id="homepage-media-container">
+          <div class="text-center text-muted" style="padding:2rem;grid-column:1/-1;">Chargement des médias...</div>
+        </div>
+      </div>
+
+
       <!-- Payment Methods — full width -->
       <div class="glass-card" style="margin-top:0;grid-column:1/-1;">
         <div class="card-header">
-          <div><h3 class="card-title">💳 Modes de Paiement</h3><p class="card-subtitle">Gérez les méthodes affichées au client lors du checkout et des réservations</p></div>
+          <div><h3 class="card-title"><i data-lucide="credit-card" style="width:18px;height:18px;vertical-align:-3px;color:#D4AF37;"></i> Modes de Paiement</h3><p class="card-subtitle">Gérez les méthodes affichées au client lors du checkout et des réservations</p></div>
         </div>
         <!-- Form add/edit -->
         <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:1rem;margin-bottom:1.25rem;">
-          <div style="font-size:.8rem;font-weight:600;margin-bottom:.75rem;color:rgba(255,255,255,.6);" id="pm-form-title">➕ Ajouter un mode de paiement</div>
+          <div style="font-size:.8rem;font-weight:600;margin-bottom:.75rem;color:rgba(255,255,255,.6);" id="pm-form-title"><i data-lucide="plus" style="width:14px;height:14px;vertical-align:-2px;"></i> Ajouter un mode de paiement</div>
           <input type="hidden" id="pm-edit-id">
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;">
             <div class="form-group" style="margin-bottom:0;">
@@ -238,7 +533,7 @@
             </div>
             <div style="display:flex;gap:.4rem;align-items:flex-end;">
               <button class="btn btn-primary btn-sm" onclick="savePm()" id="pm-save-btn">Enregistrer</button>
-              <button class="btn btn-secondary btn-sm" onclick="resetPmForm()">✕</button>
+              <button class="btn btn-secondary btn-sm" onclick="resetPmForm()"><i data-lucide="x" style="width:14px;height:14px;vertical-align:-2px;"></i></button>
             </div>
           </div>
         </div>
@@ -256,7 +551,7 @@
         <!-- Danger Zone -->
         <div class="glass-card" style="border-color: rgba(248, 113, 113, 0.3);">
           <div class="card-header">
-            <h3 class="card-title text-danger">⚠️ Zone dangereuse</h3>
+            <h3 class="card-title text-danger"><i data-lucide="alert-triangle" style="width:18px;height:18px;vertical-align:-3px;"></i> Zone dangereuse</h3>
           </div>
           <p class="text-muted mb-2">Actions irréversibles. À utiliser avec précaution.</p>
           <div class="d-flex gap-1" style="flex-wrap: wrap;">
@@ -274,6 +569,7 @@
   </main>
 
   <script src="../vendor/supabase/supabase.min.js"></script>
+  <script src="../vendor/lucide/lucide.min.js"></script>
   <script src="js/admin-core.js?v=202607081600"></script>
   <script>
     let pmList = [];
@@ -284,6 +580,7 @@
       if (!session) return;
       initForms();
       loadPaymentMethods();
+      loadHomepageMedia();
     });
 
     function initForms() {
@@ -316,9 +613,10 @@
         tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:1rem;">Aucun mode configuré.</td></tr>';
         return;
       }
+      setTimeout(() => { if (window.lucide) lucide.createIcons(); }, 10);
       tbody.innerHTML = pmList.map(p => `
         <tr>
-          <td>${p.logo_url ? `<img src="${p.logo_url}" style="height:32px;border-radius:4px;object-fit:contain;">` : '<span style="font-size:1.4rem;">💳</span>'}</td>
+          <td>${p.logo_url ? `<img src="${p.logo_url}" style="height:32px;border-radius:4px;object-fit:contain;">` : '<i data-lucide="credit-card" style="width:22px;height:22px;color:rgba(255,255,255,0.6);"></i>'}</td>
           <td><strong>${esc(p.name)}</strong><br><code style="font-size:.72rem;">${esc(p.slug)}</code></td>
           <td style="font-size:.82rem;">${esc(p.account_name || '—')}</td>
           <td style="font-size:.82rem;font-family:monospace;">${esc(p.account_number || '—')}</td>
@@ -326,8 +624,8 @@
           <td><label class="toggle-switch"><input type="checkbox" ${p.is_active ? 'checked' : ''} onchange="togglePm('${p.id}',this.checked)"><span class="toggle-slider"></span></label></td>
           <td>
             <div class="action-btns">
-              <button class="btn btn-secondary btn-sm btn-icon" onclick="editPm('${p.id}')">✏️</button>
-              <button class="btn btn-danger btn-sm btn-icon" onclick="deletePm('${p.id}','${esc(p.name)}')">🗑️</button>
+              <button class="btn btn-secondary btn-sm btn-icon" onclick="editPm('${p.id}')"><i data-lucide="edit" style="width:14px;height:14px;"></i></button>
+              <button class="btn btn-danger btn-sm btn-icon" onclick="deletePm('${p.id}','${esc(p.name)}')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
             </div>
           </td>
         </tr>`).join('');
@@ -346,7 +644,7 @@
       document.getElementById('pm-requires-proof').checked = p.requires_proof;
       const prev = document.getElementById('pm-logo-preview');
       if (p.logo_url) { prev.src = p.logo_url; prev.style.display = 'block'; } else { prev.style.display = 'none'; }
-      document.getElementById('pm-form-title').textContent = '✏️ Modifier: ' + p.name;
+      document.getElementById('pm-form-title').textContent = '<i data-lucide="edit-2" style="width:14px;height:14px;vertical-align:-2px;"></i> Modifier: ' + p.name;
       document.getElementById('pm-save-btn').textContent = 'Modifier';
     }
 
@@ -356,7 +654,7 @@
       });
       document.getElementById('pm-requires-proof').checked = true;
       document.getElementById('pm-logo-preview').style.display = 'none';
-      document.getElementById('pm-form-title').textContent = '➕ Ajouter un mode de paiement';
+      document.getElementById('pm-form-title').textContent = '<i data-lucide="plus" style="width:14px;height:14px;vertical-align:-2px;"></i> Ajouter un mode de paiement';
       document.getElementById('pm-save-btn').textContent = 'Enregistrer';
       document.getElementById('pm-logo-file').value = '';
     }
@@ -404,12 +702,12 @@
         if (editId) {
           const { error } = await sb().from('payment_methods').update(payload).eq('id', editId);
           if (error) throw error;
-          window.adminCore?.showToast('Mode de paiement mis à jour ✓');
+          window.adminCore?.showToast('Mode de paiement mis à jour');
         } else {
           const nextOrder = pmList.length ? Math.max(...pmList.map(p => p.sort_order||0)) + 1 : 1;
           const { error } = await sb().from('payment_methods').insert({ ...payload, slug, sort_order: nextOrder });
           if (error) throw error;
-          window.adminCore?.showToast('Mode de paiement ajouté ✓');
+          window.adminCore?.showToast('Mode de paiement ajouté');
         }
         resetPmForm();
         await loadPaymentMethods();
@@ -421,7 +719,7 @@
       try {
         const { error } = await sb().from('payment_methods').delete().eq('id', id);
         if (error) throw error;
-        window.adminCore?.showToast('Supprimé ✓');
+        window.adminCore?.showToast('Supprimé');
         await loadPaymentMethods();
       } catch(err) { alert('Erreur: ' + err.message); }
     }

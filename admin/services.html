@@ -7,7 +7,138 @@
   
   <link href="../vendor/fonts/inter-fonts.css" rel="stylesheet">
   <link rel="stylesheet" href="css/admin.css?v=202611190137">
-  <script src="../vendor/supabase/supabase.min.js"></script>
+  <script src="../vendor/supabase/supabase.min.js">
+    // ————————— PDF SERVICE CATALOGUE EXPORT —————————
+    window.openPdfCatalogueModal = function() {
+      const modal = document.getElementById('pdf-catalogue-modal');
+      if (modal) {
+        modal.style.display = 'flex';
+        renderPdfCatalogue();
+      }
+    };
+
+    window.closePdfCatalogueModal = function() {
+      const modal = document.getElementById('pdf-catalogue-modal');
+      if (modal) modal.style.display = 'none';
+    };
+
+    window.switchPdfTheme = function(theme) {
+      const container = document.getElementById('pdf-modal-container');
+      if (container) {
+        if (theme === 'light') {
+          container.classList.remove('pdf-theme-dark');
+          container.classList.add('pdf-theme-light');
+        } else {
+          container.classList.remove('pdf-theme-light');
+          container.classList.add('pdf-theme-dark');
+        }
+      }
+    };
+
+    window.triggerPrintCatalogue = function() {
+      window.print();
+    };
+
+    window.copyWhatsappCatalogue = function() {
+      if (!allServices || !allServices.length) return;
+
+      let msg = '🌿 *DALIGHT HEAD SPA & BIEN-ÊTRE* 🌿\n';
+      msg += '📍 Delmas 65, Rue Durandisse #10\n';
+      msg += '📞 +509 4747-7221 · www.dalightbeauty.com\n\n';
+      msg += '✨ *CARTE OFFICIELLE DES SOINS & TARIFS* ✨\n\n';
+
+      const groups = {};
+      allServices.filter(s => s.is_active !== false).forEach(s => {
+        const cat = CATEGORY_LABELS[s.category] || s.category || 'Nos Soins';
+        if (!groups[cat]) groups[cat] = [];
+        groups[cat].push(s);
+      });
+
+      Object.keys(groups).forEach(cat => {
+        msg += '────────────\n';
+        msg += '⚜️ *' + cat.toUpperCase() + '*\n';
+        msg += '────────────\n';
+        groups[cat].forEach(s => {
+          msg += '• *' + s.name + '* (' + (s.duration || '60 min') + ')\n';
+          if (s.description) msg += '  _' + s.description.trim() + '_\n';
+          msg += '  💰 *' + Number(s.price_htg || 0).toLocaleString() + ' HTG*\n\n';
+        });
+      });
+
+      msg += '🕒 *Horaires :* Mar-Sam 08h-20h | Dim-Lun 08h-18h\n';
+      msg += '📱 _Réservez directement sur WhatsApp ou en ligne !_';
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(msg).then(() => {
+          alert('Le menu complet des soins a été copié au format WhatsApp ! Vous pouvez le coller directement dans votre conversation avec le client.');
+        }).catch(() => prompt('Copiez le texte WhatsApp ci-dessous :', msg));
+      } else {
+        prompt('Copiez le texte WhatsApp ci-dessous :', msg);
+      }
+    };
+
+    function renderPdfCatalogue() {
+      const container = document.getElementById('catalogue-services-body');
+      if (!container) return;
+
+      if (!allServices || !allServices.length) {
+        container.innerHTML = '<div class="text-center text-muted" style="padding:2rem;">Aucun service disponible pour l\'instant.</div>';
+        return;
+      }
+
+      // Group active services by category
+      const activeServices = allServices.filter(s => s.is_active !== false && !s.is_extra);
+      const groups = {};
+
+      activeServices.forEach(s => {
+        const catKey = s.category || 'autre';
+        const catTitle = CATEGORY_LABELS[catKey] || catKey;
+        if (!groups[catTitle]) groups[catTitle] = [];
+        groups[catTitle].push(s);
+      });
+
+      let htmlContent = '';
+
+      Object.keys(groups).forEach(catTitle => {
+        const services = groups[catTitle];
+        htmlContent += `
+          <div class="pdf-cat-block" style="margin-bottom:1.5rem;">
+            <div class="pdf-cat-header" style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;letter-spacing:0.12em;text-transform:uppercase;color:#D4AF37;border-bottom:1px solid rgba(201,162,39,0.35);padding-bottom:0.4rem;margin-bottom:0.9rem;display:flex;align-items:center;justify-content:space-between;">
+              <span style="display:inline-flex;align-items:center;gap:0.45rem;"><i data-lucide="sparkles" style="width:16px;height:16px;color:#D4AF37;"></i> ${esc(catTitle)}</span>
+              <span style="font-family:'Outfit',sans-serif;font-size:0.75rem;letter-spacing:0.04em;opacity:0.7;font-weight:400;">${services.length} soin${services.length > 1 ? 's' : ''}</span>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(360px, 1fr));gap:0.85rem;">
+              ${services.map(s => {
+                const priceHtg = Number(s.price_htg || 0).toLocaleString() + ' HTG';
+                return `
+                  <div class="pdf-card-box" style="background:rgba(255,255,255,0.03);border:1px solid rgba(201,162,39,0.18);border-radius:10px;padding:0.9rem 1.1rem;display:flex;flex-direction:column;justify-content:space-between;gap:0.5rem;">
+                    <div>
+                      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:0.5rem;">
+                        <h4 style="margin:0;font-size:0.98rem;font-weight:700;color:#FAF8F5;" class="pdf-card-title">${esc(s.name)}</h4>
+                        <span class="pdf-meta-pill" style="font-size:0.72rem;background:rgba(201,162,39,0.15);color:#D4AF37;padding:0.15rem 0.5rem;border-radius:12px;font-weight:600;white-space:nowrap;">
+                          ${esc(s.duration || '60 MIN')}
+                        </span>
+                      </div>
+                      ${s.description ? `<p style="margin:0.35rem 0 0;font-size:0.79rem;line-height:1.45;color:rgba(245,245,240,0.7);" class="pdf-card-desc">${esc(s.description)}</p>` : ''}
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px dashed rgba(255,255,255,0.08);padding-top:0.4rem;margin-top:0.2rem;" class="pdf-divider">
+                      <span style="font-size:0.72rem;color:rgba(245,245,240,0.5);">Tarif par séance</span>
+                      <strong class="pdf-gold-text" style="font-size:1.05rem;font-weight:800;color:#D4AF37;">${priceHtg}</strong>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = htmlContent;
+      if (window.lucide) lucide.createIcons(); // pdf catalogue
+    }
+
+</script>
   <script src="../vendor/lucide/lucide.min.js"></script>
   <style>
     .toggle-switch{position:relative;width:44px;height:24px;display:inline-block;vertical-align:middle}
@@ -17,6 +148,106 @@
     .toggle-switch input:checked+.toggle-slider{background:var(--admin-success)}
     .toggle-switch input:checked+.toggle-slider::before{transform:translateX(20px)}
   </style>
+
+  <style>
+    /* PDF Catalogue Modal & Print Styles */
+    .pdf-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 1.25rem;
+    }
+    .pdf-theme-dark #dalight-printable-catalogue {
+      background: #121B12;
+      color: #FAF8F5;
+      border: 1px solid rgba(201, 162, 39, 0.4);
+    }
+    .pdf-theme-light #dalight-printable-catalogue {
+      background: #ffffff;
+      color: #1a1a1a;
+      border: 1px solid #d1d5db;
+    }
+    .pdf-theme-light .pdf-gold-text {
+      color: #92400e !important;
+    }
+    .pdf-theme-light .pdf-card-box {
+      background: #f9fafb !important;
+      border: 1px solid #e5e7eb !important;
+    }
+    .pdf-theme-light .pdf-meta-pill {
+      background: #e5e7eb !important;
+      color: #374151 !important;
+    }
+    .pdf-theme-light .pdf-divider {
+      border-color: #e5e7eb !important;
+    }
+    .pdf-theme-light .pdf-cat-header {
+      border-bottom: 2px solid #b45309 !important;
+      color: #92400e !important;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden !important;
+      }
+      #pdf-catalogue-modal,
+      #pdf-catalogue-modal .modal,
+      #dalight-printable-catalogue,
+      #dalight-printable-catalogue * {
+        visibility: visible !important;
+      }
+      #pdf-catalogue-modal {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: transparent !important;
+        overflow: visible !important;
+        z-index: 99999 !important;
+      }
+      #pdf-catalogue-modal .modal {
+        box-shadow: none !important;
+        border: none !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+      }
+      .pdf-modal-toolbar, .modal-close, .modal-header {
+        display: none !important;
+      }
+      #dalight-printable-catalogue {
+        margin: 0 auto !important;
+        padding: 10mm !important;
+        border: none !important;
+        box-shadow: none !important;
+        width: 100% !important;
+      }
+      @page {
+        size: A4 portrait;
+        margin: 10mm;
+      }
+      .pdf-card-box {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      .pdf-cat-block {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+    }
+  </style>
+
 </head>
 <body>
   <!-- Sidebar -->
@@ -122,6 +353,10 @@
         <a href="reservations.html#availability" class="btn btn-secondary" style="text-decoration: none;">
           <i data-lucide="calendar" style="width:16px;height:16px;vertical-align:-3px;"></i> Gestion des disponibilités
         </a>
+        <button class="btn btn-secondary" id="export-pdf-btn" onclick="openPdfCatalogueModal()" style="display:inline-flex;align-items:center;gap:0.45rem;border:1px solid rgba(212,175,55,0.4);color:#D4AF37;background:rgba(212,175,55,0.08);font-weight:600;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Exporter Carte PDF
+        </button>
         <button class="btn btn-primary" id="add-service-btn">+ Ajouter un service</button>
         <button class="header-btn" id="logout-btn" title="Déconnexion">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
@@ -956,6 +1191,74 @@
       return d.innerHTML;
     }
   </script>
+
+  <!-- PDF Service Catalogue Export Modal -->
+  <div class="modal-overlay" id="pdf-catalogue-modal" style="display:none;">
+    <div class="modal pdf-theme-dark" id="pdf-modal-container" style="max-width:920px;width:95%;max-height:92vh;display:flex;flex-direction:column;padding:1.5rem;overflow:hidden;">
+      <div class="modal-header" style="padding-bottom:0.75rem;">
+        <h3 class="modal-title" style="display:flex;align-items:center;gap:0.5rem;">
+          <span><i data-lucide="book-open" style="width:18px;height:18px;color:#D4AF37;vertical-align:-3px;margin-right:0.4rem;"></i> Carte des Soins DALIGHT</span>
+          <span style="font-size:0.75rem;padding:0.2rem 0.6rem;background:rgba(201,162,39,0.2);color:#D4AF37;border-radius:20px;font-weight:700;">Format PDF & Impression</span>
+        </h3>
+        <button class="modal-close" onclick="closePdfCatalogueModal()">&times;</button>
+      </div>
+
+      <!-- Action Toolbar (hidden during print) -->
+      <div class="pdf-modal-toolbar">
+        <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="triggerPrintCatalogue()" style="background:linear-gradient(135deg, #c9a227, #e2c974);color:#0f1d15;font-weight:700;display:inline-flex;align-items:center;gap:0.4rem;box-shadow:0 4px 14px rgba(201,162,39,0.35);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            Télécharger en PDF (Print)
+          </button>
+          <button class="btn btn-secondary" onclick="copyWhatsappCatalogue()" style="font-size:0.82rem;display:inline-flex;align-items:center;gap:0.4rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            Copier Menu WhatsApp
+          </button>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <span style="font-size:0.78rem;color:rgba(255,255,255,0.7);">Thème :</span>
+          <select id="pdf-theme-select" onchange="switchPdfTheme(this.value)" class="form-select" style="font-size:0.8rem;padding:0.25rem 0.6rem;background:rgba(255,255,255,0.08);color:#fff;border-radius:6px;border:1px solid rgba(255,255,255,0.2);">
+            <option value="dark">Luxe Noir & Or (Site officiel)</option>
+            <option value="light">Fond Blanc Épuré (Économie d'encre)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Printable Area -->
+      <div style="overflow-y:auto;flex:1;padding-right:0.5rem;" id="pdf-scroll-container">
+        <div id="dalight-printable-catalogue" style="border-radius:14px;padding:2.5rem 2.2rem;box-shadow:0 15px 40px rgba(0,0,0,0.4);font-family:'Outfit',-apple-system,sans-serif;">
+          
+          <!-- Catalogue Brand Header -->
+          <div style="text-align:center;margin-bottom:2.2rem;border-bottom:1px solid rgba(201,162,39,0.3);padding-bottom:1.5rem;" class="pdf-divider">
+            <div style="width:72px;height:72px;margin:0 auto 0.75rem;background:radial-gradient(circle, rgba(201,162,39,0.2) 0%, rgba(0,0,0,0) 70%);border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid rgba(201,162,39,0.5);">
+              <img src="../assets/images/logodaligth.png?v=2" alt="DALIGHT" style="width:54px;height:54px;object-fit:contain;">
+            </div>
+            <h1 style="font-family:'Cormorant Garamond',serif;font-size:2rem;letter-spacing:0.18em;margin:0;font-weight:700;" class="pdf-gold-text">D A L I G H T</h1>
+            <div style="font-size:0.82rem;letter-spacing:0.25em;text-transform:uppercase;color:rgba(201,162,39,0.9);margin-top:0.25rem;font-weight:600;" class="pdf-gold-text">Head Spa Japonais &amp; Bien-Être Privé</div>
+            <div style="font-size:0.78rem;color:rgba(245,245,240,0.65);margin-top:0.6rem;line-height:1.4;">
+              Delmas 65, Rue Durandisse #10, Port-au-Prince, Haïti · Téléphone &amp; WhatsApp : +509 4747-7221<br>
+              Site officiel : <strong>www.dalightbeauty.com</strong> · Instagram : <strong>@dalightbeauty</strong>
+            </div>
+          </div>
+
+          <!-- Dynamic Service Categories Section -->
+          <div id="catalogue-services-body" style="display:flex;flex-direction:column;gap:1.8rem;">
+            <div class="text-center text-muted" style="padding:2rem;">Génération de la carte des soins...</div>
+          </div>
+
+          <!-- Etiquette & Booking Policy Footer -->
+          <div style="margin-top:2.5rem;padding-top:1.25rem;border-top:1px solid rgba(201,162,39,0.3);font-size:0.75rem;line-height:1.5;color:rgba(245,245,240,0.65);text-align:center;" class="pdf-divider">
+            <div style="font-weight:700;letter-spacing:0.05em;color:var(--spa-gold, #c9a227);margin-bottom:0.35rem;" class="pdf-gold-text">HORAIRES &amp; RÉSERVATIONS</div>
+            <div>Mardi au Samedi : 08h00 – 20h00 · Dimanche &amp; Lundi : 08h00 – 18h00</div>
+            <div style="margin-top:0.3rem;">Les soins sont dispensés sur réservation préalable. Un acompte confirme votre créneau horaire personnalisé.</div>
+            <div style="margin-top:0.5rem;font-size:0.7rem;opacity:0.6;">© DALIGHT Beauty &amp; Spa Suite · Document officiel généré par l'administration</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
 

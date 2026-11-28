@@ -450,22 +450,41 @@ function setupNavToggle() {
     });
   }
 
-  // SPA Hamburger Support
-  const spaHamburger = document.getElementById('spa-hamburger') || document.querySelector('.spa-hamburger-btn');
-  const spaMenu = document.getElementById('spa-mobile-menu') || document.querySelector('.spa-mobile-menu');
-  if (spaHamburger && spaMenu) {
-    spaHamburger.addEventListener('click', (e) => {
+  // Global robust delegated handler for all SPA hamburger buttons across the entire site
+  window.toggleDalightMobileMenu = function(force) {
+    const spaMenu = document.getElementById('spa-mobile-menu') || document.querySelector('.spa-mobile-menu');
+    if (!spaMenu) return;
+    const isCurrentlyOpen = spaMenu.classList.contains('open');
+    const targetState = force !== undefined ? !!force : !isCurrentlyOpen;
+    spaMenu.classList.toggle('open', targetState);
+  };
+
+  // Delegated click handler on document to guarantee clicks on SVG, lines, or dynamically rendered buttons are caught
+  document.addEventListener('click', (e) => {
+    const hamburgerBtn = e.target.closest('#spa-hamburger, .spa-hamburger-btn, [data-action="toggle-mobile-menu"]');
+    const spaMenu = document.getElementById('spa-mobile-menu') || document.querySelector('.spa-mobile-menu');
+
+    if (hamburgerBtn) {
       e.preventDefault();
       e.stopPropagation();
-      spaMenu.classList.toggle('open');
-    });
+      if (spaMenu) {
+        spaMenu.classList.toggle('open');
+      }
+      return;
+    }
 
-    document.addEventListener('click', (e) => {
-      if (spaMenu.classList.contains('open') && !spaMenu.contains(e.target) && !spaHamburger.contains(e.target)) {
+    if (spaMenu && spaMenu.classList.contains('open')) {
+      // If clicking inside menu on a link, close menu smoothly
+      if (e.target.closest('a')) {
+        spaMenu.classList.remove('open');
+        return;
+      }
+      // If clicking outside menu, close it
+      if (!spaMenu.contains(e.target)) {
         spaMenu.classList.remove('open');
       }
-    });
-  }
+    }
+  });
 }
 
 function syncMobileNavVisibility() {

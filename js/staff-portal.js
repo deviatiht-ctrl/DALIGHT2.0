@@ -386,12 +386,11 @@ function updateOnlineUI(isOnline) {
     dot.className = isOnline ? 'live-status-dot online' : 'live-status-dot offline';
   }
   if (label) {
-    label.textContent = isOnline ? 'EN LIGNE (Au salon)' : 'HORS LIGNE';
+    label.textContent = isOnline ? 'EN LIGNE' : 'HORS LIGNE';
     label.style.color = isOnline ? '#4ade80' : '#94a3b8';
   }
   if (toggleWrap) {
-    toggleWrap.style.borderColor = isOnline ? 'rgba(74,222,128,0.4)' : 'rgba(255,255,255,0.1)';
-    toggleWrap.style.background = isOnline ? 'rgba(34,197,94,0.12)' : 'rgba(255,255,255,0.04)';
+    toggleWrap.classList.toggle('is-online', !!isOnline);
   }
 
   const homeBanner = document.getElementById('home-online-status-banner');
@@ -403,32 +402,51 @@ function updateOnlineUI(isOnline) {
 function renderOnlineBannerContent(isOnline) {
   if (isOnline) {
     return `
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
-        <div style="display:flex; align-items:center; gap:0.75rem;">
-          <span class="live-status-dot online" style="width:14px; height:14px;"></span>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.25rem; padding:0.25rem 0.5rem;">
+        <div style="display:flex; align-items:center; gap:0.9rem;">
+          <div style="width:44px; height:44px; border-radius:50%; background:rgba(34,197,94,0.18); border:1.5px solid #22c55e; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <span class="live-status-dot online" style="width:16px; height:16px;"></span>
+          </div>
           <div>
-            <div style="font-weight:700; color:#4ade80; font-size:1rem;">Vous êtes actuellement EN LIGNE (Au salon)</div>
-            <div style="color:var(--muted); font-size:0.82rem;">Le système d'assignation intelligent de DALIGHT peut vous attribuer des rendez-vous &amp; captations vidéo.</div>
+            <div style="font-weight:700; color:#4ade80; font-size:1.05rem; display:flex; align-items:center; gap:0.5rem;">
+              <span>Statut : EN LIGNE (Présent au Salon)</span>
+              <span class="badge badge-green" style="font-size:0.7rem;">Actif</span>
+            </div>
+            <div style="color:var(--muted); font-size:0.84rem; margin-top:0.2rem;">
+              Vous pouvez maintenant choisir des soins clients et recevoir vos notifications instantanées par WhatsApp et Email.
+            </div>
           </div>
         </div>
-        <button class="btn btn-secondary btn-sm" onclick="toggleMyOnlineStatus(false)" style="border-color:rgba(239,68,68,0.4); color:#fca5a5; display:inline-flex; align-items:center; gap:0.4rem;">
-          Passer Hors Ligne
-        </button>
+        <div style="display:flex; align-items:center; gap:0.8rem;">
+          <button class="btn btn-secondary btn-sm" onclick="toggleMyOnlineStatus(false)" style="border-color:rgba(239,68,68,0.5); color:#fca5a5; display:inline-flex; align-items:center; gap:0.4rem; padding:0.55rem 1rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+            Passer Hors Ligne (Pause)
+          </button>
+        </div>
       </div>
     `;
   } else {
     return `
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
-        <div style="display:flex; align-items:center; gap:0.75rem;">
-          <span class="live-status-dot offline" style="width:14px; height:14px;"></span>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.25rem; padding:0.25rem 0.5rem;">
+        <div style="display:flex; align-items:center; gap:0.9rem;">
+          <div style="width:44px; height:44px; border-radius:50%; background:rgba(148,163,184,0.12); border:1.5px solid rgba(148,163,184,0.3); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <span class="live-status-dot offline" style="width:16px; height:16px;"></span>
+          </div>
           <div>
-            <div style="font-weight:700; color:#cbd5e1; font-size:1rem;">Vous êtes actuellement HORS LIGNE</div>
-            <div style="color:var(--muted); font-size:0.82rem;">Vous n'êtes pas marqué(e) présent(e) au salon. Activez votre présence dès votre arrivée pour recevoir vos assignations.</div>
+            <div style="font-weight:700; color:#cbd5e1; font-size:1.05rem; display:flex; align-items:center; gap:0.5rem;">
+              <span>Statut : HORS LIGNE (Non Disponible)</span>
+              <span class="badge badge-muted" style="font-size:0.7rem;">Inactif</span>
+            </div>
+            <div style="color:var(--muted); font-size:0.84rem; margin-top:0.2rem;">
+              Pour sélectionner de nouveaux rendez-vous de soins et recevoir les alertes clients, activez votre statut En Ligne ci-dessous.
+            </div>
           </div>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="toggleMyOnlineStatus(true)" style="background:linear-gradient(135deg,#22c55e,#15803d); border:none; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
-          <span class="live-status-dot online"></span> Me mettre EN LIGNE (Je suis au salon)
-        </button>
+        <div style="display:flex; align-items:center; gap:0.8rem;">
+          <button class="btn btn-primary btn-sm" onclick="toggleMyOnlineStatus(true)" style="background:linear-gradient(135deg,#22c55e,#15803d); border:none; font-weight:700; display:inline-flex; align-items:center; gap:0.5rem; padding:0.65rem 1.25rem; box-shadow:0 4px 15px rgba(34,197,94,0.35);">
+            <span class="live-status-dot online"></span> Activer Mon Statut EN LIGNE
+          </button>
+        </div>
       </div>
     `;
   }
@@ -659,6 +677,217 @@ function statCard(color, bg, value, label, icon) {
 }
 
 // ---- APPOINTMENTS ---------------------------------------------------
+// Available Soins Card Component (NO PRICES SHOWN)
+function availableCard(r) {
+  const dur = Number(r.duration_minutes) || (r.service && r.service.includes('Royale') ? 90 : (r.service && r.service.includes('Express') ? 45 : 60));
+  const endTime = calculatePortalEndTime(r.time, dur);
+  const clientName = esc(r.user_name || 'Client');
+  const svc = esc(r.service || 'Soin');
+
+  return `<div class="list-item" style="display:flex;align-items:center;gap:.85rem;padding:1rem;border-radius:14px;background:rgba(20,28,20,0.85);border:1.5px solid rgba(212,175,55,0.35);margin-bottom:.75rem;flex-wrap:wrap;">
+    <div class="avatar" style="width:48px;height:48px;font-size:1rem;flex-shrink:0;background:rgba(212,175,55,0.15);color:#d4af37;border:1.5px solid rgba(212,175,55,0.4);">${getInitials(r.user_name || 'C')}</div>
+    <div style="flex:1;min-width:220px;">
+      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+        <span style="font-weight:700;font-size:1.02rem;color:#FAF8F5;">${clientName}</span>
+        <span class="badge badge-gold" style="font-weight:700;display:inline-flex;align-items:center;gap:0.35rem;">${lucideIcon('check-circle', 13)} Disponible à Choisir</span>
+        <span class="badge ${r.status === 'CONFIRMED' ? 'badge-green' : 'badge-gold'}">${esc(r.status)}</span>
+      </div>
+      <div style="color:#FAF8F5;font-size:.92rem;margin-top:.25rem;font-weight:600;">
+        Prestation : <span style="color:#D4AF37;">${svc}</span>
+      </div>
+      <div style="color:var(--admin-text-muted);font-size:.82rem;margin-top:.15rem;">
+        Date : <strong>${fmtDate(r.date)}</strong> · Horaire : <strong style="color:#FAF8F5;">${fmtTime(r.time)} → ${endTime}</strong> (${dur} min)
+      </div>
+      ${r.notes ? `<div style="font-size:0.78rem;color:rgba(245,248,245,0.65);margin-top:0.25rem;">Note : ${esc(r.notes.replace(/\[VIDEO_META:[^\]]+\]/g, '').trim())}</div>` : ''}
+    </div>
+    <div style="display:flex;gap:.5rem;align-items:center;">
+      <button class="btn btn-gold btn-sm" onclick="claimReservation('${r.id}')" style="font-weight:700;padding:0.6rem 1.15rem;display:inline-flex;align-items:center;gap:0.4rem;box-shadow:0 4px 15px rgba(212,175,55,0.35);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        M'assigner ce soin
+      </button>
+    </div>
+  </div>`;
+}
+
+// Automated Notifications (WhatsApp + Email + DB) on assignment
+async function sendStaffAssignmentAlerts(reservation, employee) {
+  // A. In-app staff notification in Supabase
+  try {
+    await sb.from('staff_notifications').insert({
+      employee_id: employee.id,
+      type: 'assignment',
+      title: 'Nouveau soin auto-assigné',
+      body: `Vous avez pris en charge le soin "${reservation.service || 'Soin'}" pour ${reservation.user_name || 'Client'} le ${fmtDate(reservation.date)} à ${fmtTime(reservation.time)}.`,
+      data: { reservation_id: reservation.id },
+      read: false
+    });
+  } catch(e) {
+    console.warn('DB notification error:', e);
+  }
+
+  // B. WhatsApp notification to employee
+  if (employee.phone) {
+    try {
+      const raw = String(employee.phone).replace(/\D/g, '');
+      const toPhone = raw.length === 8 ? '509' + raw : raw;
+      if (toPhone.length >= 8) {
+        const waMsg =
+          `*DALIGHT — CONFIRMATION D'ASSIGNATION*\n\n` +
+          `Bonjour *${employee.full_name}*,\n` +
+          `Vous venez de vous assigner un nouveau soin chez *DALIGHT* :\n\n` +
+          `• Client(e) : *${reservation.user_name || 'Client(e)'}*\n` +
+          `• Prestation : *${reservation.service || 'Head Spa / Soin'}*\n` +
+          `• Date : *${fmtDate(reservation.date)}*\n` +
+          `• Heure : *${fmtTime(reservation.time)}* (${reservation.duration_minutes || 60} min)\n` +
+          (reservation.phone ? `• Téléphone Client : *${reservation.phone}*\n` : '') +
+          `• Lieu : Delmas 65, Rue Durandisse #10\n\n` +
+          `Connectez-vous à votre portail employé pour consulter la fiche de consentement et démarrer la prestation à l'heure convenue.`;
+
+        const CVISUAL_GATEWAY_URL = 'https://cvisual-whatsapp-gateway-e79p.onrender.com';
+        const DEFAULT_CVISUAL_KEY = 'cv_live_c49cffb16d81c93c65e3458349643294ada76c645b16e40c';
+        await fetch(`${CVISUAL_GATEWAY_URL}/api/v1/messages/send`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${DEFAULT_CVISUAL_KEY}`,
+            'Content-Type': 'application/json',
+            'Idempotency-Key': `assign_emp_${reservation.id}_${Date.now()}`
+          },
+          body: JSON.stringify({
+            to: toPhone,
+            message: waMsg,
+            kind: 'receipt',
+            account_index: 3
+          })
+        });
+      }
+    } catch(waErr) {
+      console.warn('WhatsApp alert error:', waErr);
+    }
+  }
+
+  // C. Email notification to employee
+  if (employee.email) {
+    try {
+      const emailHtml = `
+        <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:560px;margin:0 auto;background:#121B12;color:#FAF8F5;border:1.5px solid #D4AF37;border-radius:18px;padding:26px;box-shadow:0 15px 40px rgba(0,0,0,0.5);">
+          <div style="text-align:center;margin-bottom:18px;">
+            <h2 style="color:#D4AF37;margin:0;font-size:22px;letter-spacing:1px;">DALIGHT SANCTUARY</h2>
+            <div style="font-size:12px;color:#D5CEBF;letter-spacing:2px;text-transform:uppercase;margin-top:4px;">Portail Employé — Confirmation de Prise en Charge</div>
+          </div>
+          <p style="font-size:15px;line-height:1.5;">Bonjour <strong>${esc(employee.full_name)}</strong>,</p>
+          <p style="font-size:14px;color:#D5CEBF;line-height:1.5;">Vous vous êtes assigné(e) le rendez-vous suivant au salon :</p>
+          <div style="background:rgba(255,255,255,0.06);border-left:4px solid #D4AF37;padding:14px 18px;border-radius:10px;margin:18px 0;">
+            <p style="margin:5px 0;font-size:14px;"><strong style="color:#D4AF37;">Client :</strong> ${esc(reservation.user_name || 'Client')}</p>
+            <p style="margin:5px 0;font-size:14px;"><strong style="color:#D4AF37;">Prestation :</strong> ${esc(reservation.service || 'Service')}</p>
+            <p style="margin:5px 0;font-size:14px;"><strong style="color:#D4AF37;">Date &amp; Heure :</strong> ${fmtDate(reservation.date)} à ${fmtTime(reservation.time)}</p>
+            <p style="margin:5px 0;font-size:14px;"><strong style="color:#D4AF37;">Durée :</strong> ${reservation.duration_minutes || 60} minutes</p>
+            ${reservation.phone ? `<p style="margin:5px 0;font-size:14px;"><strong style="color:#D4AF37;">Téléphone :</strong> ${esc(reservation.phone)}</p>` : ''}
+          </div>
+          <p style="font-size:13px;color:#D5CEBF;margin-top:20px;">Lieu : Delmas 65, Rue Durandisse #10, Port-au-Prince.<br>Pensez à être prêt(e) 10 minutes avant le début du soin.</p>
+        </div>
+      `;
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer re_WNFsawq8_NbVdiFmSj1gSLuzhJ5qr4knr',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: 'DALIGHT <concierge@dalight.com>',
+          to: [employee.email],
+          subject: `Rendez-vous Assigné : ${reservation.service || 'Soin'} (${fmtDate(reservation.date)})`,
+          html: emailHtml
+        })
+      });
+    } catch(emErr) {
+      console.warn('Email alert error:', emErr);
+    }
+  }
+}
+
+// Self-claim action with fair distribution logic
+window.claimReservation = async function(resId) {
+  if (!currentEmployee) {
+    toast('Veuillez vous reconnecter.', 'error');
+    return;
+  }
+
+  // 1. Online check
+  if (!currentLiveOnline) {
+    toast('Ou dwe mete w EN LIGNE (ONLINE) anvan pou w ka chwazi yon sèvis !', 'warning');
+    return;
+  }
+
+  try {
+    const { data: r, error: rErr } = await sb.from('reservations').select('*').eq('id', resId).single();
+    if (rErr || !r) {
+      toast('Rendez-vous introuvable.', 'error');
+      return;
+    }
+
+    if (r.assigned_employee_id) {
+      toast('Ce rendez-vous a déjà été pris par un collègue.', 'warning');
+      reloadAppointments();
+      return;
+    }
+
+    // 2. Fair distribution rule: check employee's active bookings for this date
+    const { data: currentActive, error: activeErr } = await sb.from('reservations')
+      .select('id')
+      .eq('assigned_employee_id', currentEmployee.id)
+      .eq('date', r.date)
+      .neq('status', 'CANCELLED')
+      .neq('status', 'COMPLETED');
+
+    if (!activeErr && currentActive && currentActive.length >= 3) {
+      toast('Règ distribisyon ekitab : Ou genyen deja ' + currentActive.length + ' rezèvasyon pou jounen sa a. Kite lòt kòlèg yo jwenn pa yo tou !', 'warning');
+      return;
+    }
+
+    // 3. Atomically assign in DB
+    const { error: updErr } = await sb.from('reservations').update({
+      assigned_employee_id: currentEmployee.id,
+      assigned_employee_name: currentEmployee.full_name,
+      assigned_at: new Date().toISOString()
+    }).eq('id', resId).is('assigned_employee_id', null);
+
+    if (updErr) {
+      toast('Erreur lors de l\'assignation: ' + updErr.message, 'error');
+      return;
+    }
+
+    // 4. Record in reservation_employees table
+    try {
+      await sb.from('reservation_employees').insert([{
+        reservation_id: resId,
+        employee_id: currentEmployee.id,
+        employee_name: currentEmployee.full_name,
+        is_primary: true
+      }]);
+    } catch(e) {}
+
+    // 5. Send automated employee notifications (WhatsApp + Email + DB)
+    await sendStaffAssignmentAlerts(r, currentEmployee);
+
+    toast('Félicitations ! Vous avez pris en charge ce soin. Notification envoyée sur WhatsApp et Email.', 'success');
+    const c = document.getElementById('section-content');
+    if (c) {
+      c._subTab = 'assigned';
+      renderAppointments(c);
+    }
+  } catch(err) {
+    console.error('claimReservation error:', err);
+    toast('Erreur: ' + (err?.message || err), 'error');
+  }
+};
+
+window.switchApptTab = function(tab) {
+  const c = document.getElementById('section-content');
+  if (!c) return;
+  c._subTab = tab;
+  renderAppointments(c);
+};
+
 let loadedAppointments = [];
 let cfModule = null;
 let loadedConsent = null;
@@ -668,6 +897,7 @@ function seesAllAppointments() {
 }
 async function renderAppointments(c) {
   const date = c._date || '';
+  const currentSubTab = c._subTab || 'assigned';
   const seesAll = seesAllAppointments();
   let data = [], error = null;
   if (seesAll) {
@@ -714,6 +944,23 @@ async function renderAppointments(c) {
   if (date) list = list.filter(r => r.date === date);
   loadedAppointments = list;
 
+  // Available bookings to claim (reservations without assigned employee)
+  let unassignedList = [];
+  try {
+    let unassignedQ = sb.from('reservations')
+      .select('*, reservation_employees(*)')
+      .is('assigned_employee_id', null)
+      .in('status', ['PENDING', 'CONFIRMED'])
+      .gte('date', todayStr())
+      .order('date', { ascending: true })
+      .order('time', { ascending: true });
+    if (date) unassignedQ = unassignedQ.eq('date', date);
+    const unRes = await unassignedQ;
+    unassignedList = (unRes.data || []).filter(r => (r.reservation_employees || []).length === 0);
+  } catch(e) {
+    console.warn('unassigned load error:', e);
+  }
+
   try {
     if (!cfModule) cfModule = await import('./consent-forms.js');
     const ids = list.map(r => r.id);
@@ -734,19 +981,64 @@ async function renderAppointments(c) {
   }
 
   c.innerHTML = `
-    <div class="card" style="margin-bottom:1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
-      <div class="form-group" style="margin:0;">
-        <label>Filtrer par date</label>
-        <input type="date" class="input" id="appt-date" value="${date}" onchange="reloadAppointments(this.value)">
+    <!-- Top Filter & Navigation Bar -->
+    <div class="card" style="margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+        <button class="btn btn-sm ${currentSubTab === 'assigned' ? 'btn-gold' : 'btn-ghost'}" onclick="switchApptTab('assigned')" style="display:inline-flex;align-items:center;gap:0.4rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Mes Soins Assignés (${list.length})
+        </button>
+        <button class="btn btn-sm ${currentSubTab === 'available' ? 'btn-gold' : 'btn-ghost'}" onclick="switchApptTab('available')" style="display:inline-flex;align-items:center;gap:0.4rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+          ${lucideIcon('sparkles', 15)} Soins Disponibles (${unassignedList.length})
+        </button>
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="reloadAppointments('')">Toutes les dates</button>
-      <div style="color:var(--admin-text-muted);font-size:.85rem;">${list.length} rendez-vous</div>
+
+      <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+        <div class="form-group" style="margin:0;">
+          <input type="date" class="input" id="appt-date" value="${date}" onchange="reloadAppointments(this.value)" style="padding:0.45rem 0.75rem;font-size:0.85rem;">
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="reloadAppointments('')">Toutes les dates</button>
+      </div>
     </div>
-    <div id="appt-list">
-      ${error ? `<div class="empty">Erreur: ${esc(error.message)}</div>` :
-        list.length === 0 ? '<div class="empty">Aucun rendez-vous assigné.</div>' :
-        list.map(apptCard).join('')}
-    </div>
+
+    ${currentSubTab === 'available' ? `
+      <!-- Available Reservations Section -->
+      <div class="card" style="margin-bottom:1.25rem;border:1px solid rgba(212,175,55,0.3);background:rgba(20,28,20,0.85);">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.6rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>
+          <strong style="color:#FAF8F5;font-size:1.05rem;">Rendez-vous Libres en Attente d'Assignation</strong>
+        </div>
+        <p style="font-size:0.84rem;color:var(--muted);margin:0;line-height:1.5;">
+          Sélectionnez les prestations qui correspondent à vos spécialités (Head Spa, Massage, Esthétique, Onglerie).
+          <span style="color:#D4AF37;">Règle d'équité :</span> vous devez être <strong>EN LIGNE</strong> et vous pouvez prendre en charge jusqu'à 3 soins par jour.
+        </p>
+      </div>
+
+      <div id="available-appt-list">
+        ${unassignedList.length === 0 ? `
+          <div class="empty">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(212,175,55,0.4)" stroke-width="1.6" style="margin-bottom:0.5rem;"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+            <div>Aucun soin libre en attente pour l'instant.</div>
+            <div style="font-size:0.78rem;margin-top:0.25rem;">Tous les rendez-vous ont été pris en charge ou planifiés.</div>
+          </div>
+        ` : unassignedList.map(availableCard).join('')}
+      </div>
+    ` : `
+      <!-- My Assigned Appointments Section -->
+      <div id="appt-list">
+        ${error ? `<div class="empty">Erreur: ${esc(error.message)}</div>` :
+          list.length === 0 ? `
+            <div class="empty">
+              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(212,175,55,0.4)" stroke-width="1.6" style="margin-bottom:0.5rem;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <div>Aucun rendez-vous assigné pour cette date.</div>
+              <div style="font-size:0.8rem;margin-top:0.35rem;">
+                Consultez l'onglet <a href="javascript:void(0)" onclick="switchApptTab('available')" style="color:#D4AF37;font-weight:700;text-decoration:underline;">Soins Disponibles</a> pour prendre en charge un nouveau rendez-vous.
+              </div>
+            </div>
+          ` : list.map(apptCard).join('')}
+      </div>
+    `}
   `;
 }
 window.reloadAppointments = function (date) {
@@ -805,7 +1097,7 @@ function apptCard(r) {
           <span style="font-weight:700;font-size:.95rem;color:#FAF8F5;">${clientName}</span>
           <span class="badge badge-purple" style="font-weight:700;"><i data-lucide="video" style="width:11px;height:11px;vertical-align:-1px;"></i> Tournage Vidéo 4K CVISUAL</span>
           <span class="badge ${statusBadge}">${esc(r.status)}</span>
-          ${isPrivate ? '<span class="badge badge-muted" style="font-size:0.7rem;">🔒 Privé</span>' : '<span class="badge badge-green" style="font-size:0.7rem;">✨ Public</span>'}
+          ${isPrivate ? '<span class="badge badge-muted" style="font-size:0.7rem;display:inline-flex;align-items:center;gap:0.25rem;">' + lucideIcon('lock', 11) + ' Privé</span>' : '<span class="badge badge-green" style="font-size:0.7rem;display:inline-flex;align-items:center;gap:0.25rem;">' + lucideIcon('globe', 11) + ' Public</span>'}
           ${countdown}
         </div>
         <div style="color:var(--admin-text);font-size:.86rem;margin-top:.2rem;">
@@ -1139,46 +1431,162 @@ window.cancelSession = async function () {
   showSection('service');
 };
 
-// ---- STATS (community manager / manager) ----------------------------
+// ---- STATS (Performance hebdomadaire & historique employé) ---------
 async function renderStats(c) {
-  const [postsRes, subsRes] = await Promise.all([
-    sb.from('posts').select('*').order('created_at', { ascending: false }),
-    sb.from('subscribers').select('id', { count: 'exact' }),
-  ]);
-  const posts = postsRes.data || [];
-  const totalLikes = posts.reduce((s, p) => s + (p.likes || 0), 0);
-  const subs = subsRes.count || (subsRes.data ? subsRes.data.length : 0);
+  const empId = currentEmployee.id;
 
-  // group posts per month (last 6)
-  const months = [];
+  // 1. Calculate Monday to Sunday of the current week
   const now = new Date();
-  for (let i = 5; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); months.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label: d.toLocaleDateString('fr-FR', { month: 'short' }), count: 0, likes: 0 }); }
-  posts.forEach(p => { if (!p.created_at) return; const d = new Date(p.created_at); const k = `${d.getFullYear()}-${d.getMonth()}`; const m = months.find(x => x.key === k); if (m) { m.count++; m.likes += (p.likes || 0); } });
+  const dayOfWeek = now.getDay(); // 0 is Sunday, 1 is Monday
+  const diffToMonday = (dayOfWeek === 0 ? -6 : 1) - dayOfWeek;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + diffToMonday);
+  monday.setHours(0, 0, 0, 0);
+
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+
+  const mondayISO = monday.toISOString().split('T')[0];
+  const sundayISO = sunday.toISOString().split('T')[0];
+
+  // 2. Query reservations for this week
+  const [weekRes, allCompletedRes, evalRes] = await Promise.all([
+    sb.from('reservations')
+      .select('id,user_name,service,date,time,status,duration_minutes')
+      .eq('assigned_employee_id', empId)
+      .gte('date', mondayISO)
+      .lte('date', sundayISO)
+      .neq('status', 'CANCELLED')
+      .order('date', { ascending: true })
+      .order('time', { ascending: true }),
+    sb.from('reservations')
+      .select('id,duration_minutes')
+      .eq('assigned_employee_id', empId)
+      .eq('status', 'COMPLETED'),
+    sb.from('staff_evaluations')
+      .select('overall_score')
+      .eq('employee_id', empId)
+      .eq('visible_to_employee', true)
+  ]);
+
+  const weekAppts = weekRes.data || [];
+  const completedThisWeek = weekAppts.filter(r => r.status === 'COMPLETED');
+  const evals = evalRes.data || [];
+
+  const avgRating = evals.length
+    ? (evals.reduce((s, e) => s + (Number(e.overall_score) || 0), 0) / evals.length).toFixed(1)
+    : '5.0';
+
+  const totalMinutesThisWeek = weekAppts.reduce((sum, r) => sum + (Number(r.duration_minutes) || 60), 0);
+  const weekHours = Math.floor(totalMinutesThisWeek / 60);
+  const weekMins = totalMinutesThisWeek % 60;
+
+  // Day by day counts (Lun - Dim)
+  const dayNames = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+  const dayCounts = [0, 0, 0, 0, 0, 0, 0];
+  weekAppts.forEach(r => {
+    if (!r.date) return;
+    const [y, m, d] = r.date.split('-').map(Number);
+    const dObj = new Date(y, m - 1, d);
+    let idx = dObj.getDay() - 1;
+    if (idx === -1) idx = 6; // Sunday
+    if (idx >= 0 && idx < 7) dayCounts[idx]++;
+  });
 
   c.innerHTML = `
-    <div class="grid cards-4" style="margin-bottom:1.3rem;">
-      ${statCard('#8b5cf6', 'rgba(139,92,246,.16)', posts.length, 'Publications', 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z')}
-      ${statCard('#ef4444', 'rgba(239,68,68,.16)', totalLikes, 'J\'aime total', 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z')}
-      ${statCard('#22c55e', 'rgba(34,197,94,.16)', subs, 'Abonnés', 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z')}
-      ${statCard('#c9a227', 'rgba(201,162,39,.16)', posts.length ? Math.round(totalLikes / posts.length) : 0, 'Moy. j\'aime/post', 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6')}
+    <!-- Top weekly period badge -->
+    <div class="card" style="margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem; border:1px solid rgba(212,175,55,0.3); background:rgba(20,28,20,0.85);">
+      <div>
+        <h3 style="margin:0 0 0.25rem 0; font-size:1.15rem; color:#FAF8F5;">Performance de la Semaine</h3>
+        <div style="font-size:0.82rem; color:var(--muted);">
+          Du <strong>${monday.toLocaleDateString('fr-FR', { day:'2-digit', month:'short' })}</strong> au <strong>${sunday.toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' })}</strong>
+        </div>
+      </div>
+      <span class="badge badge-gold" style="font-size:0.8rem; padding:0.4rem 0.85rem;">
+        Semaine en cours
+      </span>
     </div>
-    <div class="grid cards-2">
-      <div class="card"><div class="card-title">Publications (6 mois)</div><div class="chart-wrap"><canvas id="chart-posts"></canvas></div></div>
-      <div class="card"><div class="card-title">Engagement (j'aime)</div><div class="chart-wrap"><canvas id="chart-likes"></canvas></div></div>
+
+    <!-- 4 KPI Cards -->
+    <div class="grid cards-4" style="margin-bottom:1.3rem;">
+      ${statCard('#22c55e', 'rgba(34,197,94,.16)', weekAppts.length, 'Clients cette semaine', 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z')}
+      ${statCard('#3b82f6', 'rgba(59,130,246,.16)', completedThisWeek.length, 'Soins terminés', 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z')}
+      ${statCard('#8b5cf6', 'rgba(139,92,246,.16)', `${weekHours}h ${weekMins > 0 ? weekMins + 'm' : ''}`, 'Heures de prestation', 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z')}
+      ${statCard('#c9a227', 'rgba(201,162,39,.16)', avgRating + ' / 5', 'Note satisfaction client', 'M11 3.049c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915')}
+    </div>
+
+    <!-- Weekly Chart -->
+    <div class="card" style="margin-bottom:1.3rem;">
+      <div class="card-title">
+        <span>Répartition des Soins de la Semaine</span>
+        <span style="font-size:0.8rem; font-weight:normal; color:var(--muted);">${weekAppts.length} soin(s) au total</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-week-clients"></canvas>
+      </div>
+    </div>
+
+    <!-- Clients list of the week (NO PRICES EVER) -->
+    <div class="card">
+      <div class="card-title">Vos Clients Accompagnés cette Semaine</div>
+      ${weekAppts.length === 0 ? `
+        <div class="empty">Aucun rendez-vous assigné pour cette semaine pour l'instant.</div>
+      ` : `
+        <div style="display:flex; flex-direction:column; gap:0.65rem;">
+          ${weekAppts.map(r => `
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem; padding:0.85rem 1rem; background:var(--surface-2); border:1px solid var(--admin-border); border-radius:12px;">
+              <div style="display:flex; align-items:center; gap:0.75rem;">
+                <div class="avatar" style="width:40px; height:40px; font-size:0.85rem; flex-shrink:0;">
+                  ${getInitials(r.user_name || 'C')}
+                </div>
+                <div>
+                  <div style="font-weight:700; color:#FAF8F5; font-size:0.95rem;">${esc(r.user_name || 'Client')}</div>
+                  <div style="color:var(--admin-accent); font-size:0.84rem; font-weight:600;">${esc(r.service || 'Soin')}</div>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+                <div style="font-size:0.8rem; color:var(--muted); text-align:right;">
+                  <div>${fmtDate(r.date)}</div>
+                  <div style="font-weight:600; color:#FAF8F5;">${fmtTime(r.time)} (${r.duration_minutes || 60}m)</div>
+                </div>
+                <span class="badge ${r.status === 'COMPLETED' ? 'badge-green' : (r.status === 'CONFIRMED' ? 'badge-blue' : 'badge-gold')}">
+                  ${esc(r.status)}
+                </span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `}
     </div>
   `;
 
-  const gridColor = '#e8ebf2', tickColor = '#64748b';
-  new Chart(document.getElementById('chart-posts'), {
-    type: 'bar',
-    data: { labels: months.map(m => m.label), datasets: [{ label: 'Posts', data: months.map(m => m.count), backgroundColor: 'rgba(139,92,246,.6)', borderRadius: 6 }] },
-    options: chartOpts(gridColor, tickColor),
-  });
-  new Chart(document.getElementById('chart-likes'), {
-    type: 'line',
-    data: { labels: months.map(m => m.label), datasets: [{ label: 'J\'aime', data: months.map(m => m.likes), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,.15)', fill: true, tension: .35 }] },
-    options: chartOpts(gridColor, tickColor),
-  });
+  // Render Bar Chart
+  if (document.getElementById('chart-week-clients')) {
+    new Chart(document.getElementById('chart-week-clients'), {
+      type: 'bar',
+      data: {
+        labels: dayNames,
+        datasets: [{
+          label: 'Clients / Soins',
+          data: dayCounts,
+          backgroundColor: 'rgba(212, 175, 55, 0.65)',
+          borderColor: '#D4AF37',
+          borderWidth: 1.5,
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { beginAtZero: true, ticks: { stepSize: 1, color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.06)' } },
+          x: { ticks: { color: '#FAF8F5' }, grid: { display: false } }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
 }
 function chartOpts(grid, tick) {
   return { responsive: true, maintainAspectRatio: false,

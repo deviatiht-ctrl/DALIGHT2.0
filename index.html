@@ -631,6 +631,68 @@
         }
       });
     </script>
+    
+    <!-- Dynamic Responsive Homepage Media Loader -->
+    <script>
+      (function() {
+        function applyMedia(media) {
+          if (!media) return;
+
+          // 1. Responsive Hero: Laptop / Desktop vs Phone / Mobile
+          const heroBg = document.querySelector('.spa-hero-bg');
+          if (heroBg) {
+            function updateHeroBg() {
+              const isMobile = window.innerWidth <= 768;
+              const targetImg = (isMobile && media.hero_mobile) ? media.hero_mobile : (media.hero_desktop || './assets/images/hero_spa.jpg');
+              heroBg.style.backgroundImage = 'url("' + targetImg + '")';
+            }
+            updateHeroBg();
+            window.addEventListener('resize', updateHeroBg, { passive: true });
+          }
+
+          // 2. The 4 Arched Service Cards
+          const archedCards = document.querySelectorAll('.spa-arched-grid .spa-arched-card .spa-arch-frame img');
+          if (archedCards.length >= 1 && media.service_1) archedCards[0].src = media.service_1;
+          if (archedCards.length >= 2 && media.service_2) archedCards[1].src = media.service_2;
+          if (archedCards.length >= 3 && media.service_3) archedCards[2].src = media.service_3;
+          if (archedCards.length >= 4 && media.service_4) archedCards[3].src = media.service_4;
+
+          // 3. Collage & Ambiance Mosaic
+          const colItem1 = document.querySelector('.spa-collage-item-1 img');
+          if (colItem1 && media.ambiance_1) colItem1.src = media.ambiance_1;
+
+          const colItem2 = document.querySelector('.spa-collage-item-2 img');
+          if (colItem2 && media.ambiance_2) colItem2.src = media.ambiance_2;
+
+          const colItem3 = document.querySelector('.spa-collage-item-3 img');
+          if (colItem3 && media.ambiance_3) colItem3.src = media.ambiance_3;
+        }
+
+        // Fast render from local cache
+        try {
+          const cached = localStorage.getItem('dalight_homepage_media');
+          if (cached) applyMedia(JSON.parse(cached));
+        } catch(e) {}
+
+        // Fetch fresh configuration from Supabase
+        const SUPABASE_URL = 'https://rbwoiejztrkghfkpxquo.supabase.co';
+        const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJid29pZWp6dHJrZ2hma3B4cXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDI1OTcsImV4cCI6MjA5MTc3ODU5N30.4NnApWYerIEcS8IBixBdsVHSgTUDO4OTTi6fSxdxu_U';
+
+        fetch(SUPABASE_URL + '/rest/v1/settings?key=eq.homepage_media&select=value', {
+          headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON }
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(rows) {
+          if (rows && rows.length > 0 && rows[0].value) {
+            const media = rows[0].value;
+            try { localStorage.setItem('dalight_homepage_media', JSON.stringify(media)); } catch(e) {}
+            applyMedia(media);
+          }
+        })
+        .catch(function(err) { console.debug('Homepage media fallback:', err); });
+      })();
+    </script>
+
     <!-- Visitor Tracking -->
     <script src="js/visitor-tracking.js" defer></script>
   </body>
